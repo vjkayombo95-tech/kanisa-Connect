@@ -119,6 +119,7 @@ export async function submitMassIntention(payload: {
   offering_amount: number | null;
   member_id: string;
   church_id: string;
+  requested_mass_date?: string | null;
   status?: MassIntentionStatus;
 }) {
   const message = payload.message.trim();

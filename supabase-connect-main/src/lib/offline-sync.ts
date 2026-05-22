@@ -48,6 +48,7 @@ type OfflineSyncAction =
         intentionType: string;
         message: string;
         offeringAmount: number;
+        requestedMassDate?: string | null;
       };
     }
   | {
@@ -175,13 +176,17 @@ async function processAction(action: OfflineSyncAction) {
     const net = action.payload.offeringAmount;
     const gross = roundCurrency(net / (1 - PLATFORM_FEE_PERCENT / 100));
     const fee = roundCurrency(gross - net);
+    const message = action.payload.requestedMassDate
+      ? `Tarehe ya Misa: ${action.payload.requestedMassDate}\n\n${action.payload.message.trim()}`
+      : action.payload.message;
 
     const intention = await submitMassIntention({
       intention_type: action.payload.intentionType,
-      message: action.payload.message,
+      message,
       offering_amount: net,
       member_id: action.payload.memberId,
       church_id: action.payload.churchId,
+      requested_mass_date: action.payload.requestedMassDate ?? null,
     });
 
     const { error: feeError } = await supabase.from("platform_fees").insert({
@@ -201,7 +206,7 @@ async function processAction(action: OfflineSyncAction) {
       amount: net,
       donor_name: action.payload.memberName,
       member_id: action.payload.memberId,
-      notes: `Mass Intention: ${action.payload.intentionType || "thanksgiving"} - ${action.payload.message.trim().slice(0, 80)} (TZS ${fee.toLocaleString()} platform fee)`,
+      notes: `Nia ya Misa: ${action.payload.intentionType}${action.payload.requestedMassDate ? ` - ${action.payload.requestedMassDate}` : ""} - ${action.payload.message.trim().slice(0, 80)} (TZS ${fee.toLocaleString()} platform fee)`,
     });
     if (contributionError) throw contributionError;
 

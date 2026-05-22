@@ -261,10 +261,8 @@ export default function MemberDashboard() {
 
   const home = data ?? emptyMemberHome("Mshirika");
   const giveVisible = getFeatureState("give").visible;
-  const prayerVisible = getFeatureState("prayer_requests").visible;
   const massVisible = getFeatureState("mass_intentions").visible;
   const announcementsVisible = getFeatureState("announcements").visible;
-  const prayerActionTo = prayerVisible ? "/portal/prayer-requests" : "/portal/mass-intentions";
 
   return (
     <div className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-5 pb-28 lg:px-8 lg:pb-8">
@@ -319,8 +317,8 @@ export default function MemberDashboard() {
           {giveVisible ? (
             <BigAction icon={HandCoins} label="Lipa Sasa" hint="Toa mchango au sadaka" to="/portal/give" primary />
           ) : null}
-          {prayerVisible || massVisible ? (
-            <BigAction icon={HeartHandshake} label="Omba Misa / Sala" hint="Tuma ombi lako kwa kanisa" to={prayerActionTo} />
+          {massVisible ? (
+            <BigAction icon={HeartHandshake} label="Nia za Misa" hint="Wasilisha nia ya Misa na sadaka" to="/portal/mass-intentions" />
           ) : null}
           <BigAction icon={History} label="Historia Yangu" hint="Angalia malipo na wasifu" to="/portal/dashboard" />
           {announcementsVisible ? (

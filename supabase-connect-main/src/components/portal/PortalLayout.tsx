@@ -108,7 +108,7 @@ const FULL_GROUPS: NavGroup[] = [
 const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
   { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
   { titleKey: "Lipa", url: "/portal/give", icon: ContributionsIcon, featureKey: "give" },
-  { titleKey: "Misa/Sala", url: "/portal/prayer-requests", icon: PrayerIcon, featureKey: "prayer_requests" },
+  { titleKey: "Nia za Misa", url: "/portal/mass-intentions", icon: MassIntentionsIcon, featureKey: "mass_intentions" },
   { titleKey: "Matangazo", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
   { titleKey: "Wasifu", url: "/portal/dashboard", icon: PortalIcon, featureKey: null },
 ];
@@ -117,7 +117,6 @@ const SIMPLE_MEMBER_ALLOWED_PATHS = [
   "/portal",
   "/portal/dashboard",
   "/portal/give",
-  "/portal/prayer-requests",
   "/portal/mass-intentions",
   "/portal/announcements",
 ];

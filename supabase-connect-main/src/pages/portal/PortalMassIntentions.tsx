@@ -10,8 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Flame, Plus, Loader2, User } from "lucide-react";
+import { CalendarDays, Flame, Heart, Loader2, Plus, User } from "lucide-react";
 import { formatTZS } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
 import { MASS_INTENTION_SELECT, mapMassIntentionRecord, submitMassIntention, type MassIntentionWithMember } from "@/lib/member-linked-requests";
@@ -21,18 +20,25 @@ import { enqueueOfflineSyncAction, processOfflineSyncQueue, removeOfflineSyncAct
 import { useOfflineSyncQueue } from "@/hooks/useOfflineSyncQueue";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { useTranslation } from "react-i18next";
-import { translateMassIntentionType, translateStatus } from "@/lib/translation-helpers";
+import { translateStatus } from "@/lib/translation-helpers";
 
 const intentionTypeOptions = [
-  { value: "thanksgiving", labelKey: "mass_intentions_labels.thanksgiving" },
-  { value: "healing", labelKey: "mass_intentions_labels.healing" },
-  { value: "remembrance", labelKey: "mass_intentions_labels.remembrance" },
-  { value: "special_intention", labelKey: "mass_intentions_labels.special" },
-  { value: "for_the_departed", labelKey: "mass_intentions_labels.departed" },
-  { value: "for_peace", labelKey: "mass_intentions_labels.peace" },
+  { value: "shukrani", label: "Shukrani", description: "Nia ya kumshukuru Mungu" },
+  { value: "marehemu", label: "Marehemu", description: "Kwa roho za waliofariki" },
+  { value: "maombi_maalum", label: "Maombi Maalum", description: "Nia maalum ya familia au binafsi" },
+  { value: "wagonjwa", label: "Wagonjwa", description: "Kwa uponyaji na faraja" },
+  { value: "safari", label: "Safari", description: "Kwa ulinzi na baraka safarini" },
+  { value: "mtakatifu_wa_familia", label: "Mtakatifu wa Familia", description: "Kwa maombezi ya mtakatifu wa familia" },
+  { value: "other", label: "Other", description: "Nia nyingine ya Misa" },
 ] as const;
 
+type IntentionTypeValue = (typeof intentionTypeOptions)[number]["value"];
+
 const DEFAULT_OFFERING = 5000;
+
+function getIntentionTypeLabel(value: string) {
+  return intentionTypeOptions.find((option) => option.value === value)?.label ?? value;
+}
 
 function useMemberRecord() {
   const { user, churchId } = useAuth();
@@ -57,9 +63,10 @@ function useMemberRecord() {
 
 export default function PortalMassIntentions() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [intentionType, setIntentionType] = useState("");
+  const [intentionType, setIntentionType] = useState<IntentionTypeValue>("shukrani");
   const [message, setMessage] = useState("");
   const [offeringAmount, setOfferingAmount] = useState(String(DEFAULT_OFFERING));
+  const [massDate, setMassDate] = useState("");
   const [tab, setTab] = useState("all");
   const { churchId } = useAuth();
   const { isOnline } = useNetworkStatus();
@@ -86,19 +93,24 @@ export default function PortalMassIntentions() {
   useEffect(() => {
     if (!massDraftKey) return;
     const draft = readOfflineDraft(massDraftKey, {
-      intentionType: "",
+      intentionType: "shukrani",
       message: "",
       offeringAmount: String(DEFAULT_OFFERING),
+      massDate: "",
     });
-    setIntentionType(draft.intentionType || "");
+    const draftType = intentionTypeOptions.some((option) => option.value === draft.intentionType)
+      ? (draft.intentionType as IntentionTypeValue)
+      : "shukrani";
+    setIntentionType(draftType);
     setMessage(draft.message || "");
     setOfferingAmount(draft.offeringAmount || String(DEFAULT_OFFERING));
+    setMassDate(draft.massDate || "");
   }, [massDraftKey]);
 
   useEffect(() => {
     if (!massDraftKey) return;
-    writeOfflineDraft(massDraftKey, { intentionType, message, offeringAmount });
-  }, [massDraftKey, intentionType, message, offeringAmount]);
+    writeOfflineDraft(massDraftKey, { intentionType, message, offeringAmount, massDate });
+  }, [massDraftKey, intentionType, message, offeringAmount, massDate]);
 
   const { data: intentions = [], isLoading } = useQuery({
     queryKey: ["portal-mass-intentions", churchId],
@@ -162,6 +174,10 @@ export default function PortalMassIntentions() {
     mutationFn: async () => {
       if (!churchId) throw new Error(t("mass_intentions_form.error_no_church"));
       if (!member?.id) throw new Error(t("mass_intentions_form.error_no_member"));
+      const netAmount = parseFloat(offeringAmount) || DEFAULT_OFFERING;
+      if (!message.trim()) throw new Error(t("mass_intentions_form.error_message_required"));
+      if (!massDate) throw new Error("Please select the Mass date.");
+      if (netAmount < 1000) throw new Error(t("mass_intentions_form.error_minimum_offering"));
 
       if (!isOnline) {
         enqueueOfflineSyncAction({
@@ -170,28 +186,28 @@ export default function PortalMassIntentions() {
             churchId,
             memberId: member.id,
             memberName: member.full_name,
-            intentionType: intentionType || "thanksgiving",
+            intentionType,
             message,
-            offeringAmount: parseFloat(offeringAmount) || DEFAULT_OFFERING,
+            offeringAmount: netAmount,
+            requestedMassDate: massDate || null,
           },
         });
         return { queuedOffline: true };
       }
 
-      const netAmount = parseFloat(offeringAmount) || DEFAULT_OFFERING;
       const amount = Number((netAmount / (1 - PLATFORM_FEE_PERCENT / 100)).toFixed(2));
-      if (!message.trim()) throw new Error(t("mass_intentions_form.error_message_required"));
-      if (netAmount < 1000) throw new Error(t("mass_intentions_form.error_minimum_offering"));
 
       const fee = Number((amount - netAmount).toFixed(2));
       const net = netAmount;
+      const savedMessage = `Tarehe ya Misa: ${massDate}\n\n${message.trim()}`;
 
       const intentionData = await submitMassIntention({
-        intention_type: intentionType || "thanksgiving",
-        message,
+        intention_type: intentionType,
+        message: savedMessage,
         offering_amount: net,
         member_id: member.id,
         church_id: churchId,
+        requested_mass_date: massDate || null,
       });
 
       await supabase.from("platform_fees").insert({
@@ -210,7 +226,7 @@ export default function PortalMassIntentions() {
         amount: net,
         donor_name: member.full_name,
         member_id: member.id,
-        notes: `Mass Intention: ${intentionType || "thanksgiving"} - ${message.trim().slice(0, 80)} (${formatTZS(fee)} platform fee)`,
+        notes: `Nia ya Misa: ${getIntentionTypeLabel(intentionType)}${massDate ? ` - ${massDate}` : ""} - ${message.trim().slice(0, 80)} (${formatTZS(fee)} platform fee)`,
       });
       return { queuedOffline: false };
     },
@@ -237,9 +253,10 @@ export default function PortalMassIntentions() {
             }),
       });
       setDialogOpen(false);
-      setIntentionType("");
+      setIntentionType("shukrani");
       setMessage("");
       setOfferingAmount(String(DEFAULT_OFFERING));
+      setMassDate("");
     },
     onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
@@ -263,7 +280,7 @@ export default function PortalMassIntentions() {
                     {translateStatus(t, intention.status)}
                   </Badge>
                 </div>
-                <p className="mb-1 text-xs text-primary">{translateMassIntentionType(t, intention.intention_type)}</p>
+                <p className="mb-1 text-xs text-primary">{getIntentionTypeLabel(intention.intention_type)}</p>
                 <p className="text-sm text-muted-foreground">{intention.message}</p>
                 {intention.offering_amount && (
                   <p className="mt-2 text-xs text-primary">{t("mass_intentions_form.offering", { amount: formatTZS(intention.offering_amount) })}</p>
@@ -282,19 +299,19 @@ export default function PortalMassIntentions() {
       <div className="mx-auto max-w-3xl">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="font-serif text-2xl font-bold md:text-3xl">{t("mass_intentions_form.page_title")}</h1>
-            <p className="mt-1 text-muted-foreground">{t("mass_intentions_form.page_description")}</p>
+            <h1 className="font-serif text-2xl font-bold md:text-3xl">Nia za Misa</h1>
+            <p className="mt-1 text-muted-foreground">Wasilisha nia ya Misa, chagua tarehe, na toa sadaka ya Misa kwa urahisi.</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                {t("mass_intentions_form.submit_intention")}
+                Wasilisha Nia
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle className="font-serif">{t("mass_intentions_form.dialog_title")}</DialogTitle>
+                <DialogTitle className="font-serif">Wasilisha Nia ya Misa</DialogTitle>
               </DialogHeader>
               <form
                 className="space-y-4"
@@ -310,36 +327,72 @@ export default function PortalMassIntentions() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label>{t("mass_intentions_form.intention_type_label")}</Label>
-                  <Select value={intentionType} onValueChange={setIntentionType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("mass_intentions_form.select_type")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {intentionTypeOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {t(option.labelKey)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Aina ya Nia ya Misa *</Label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {intentionTypeOptions.map((option) => {
+                      const selected = intentionType === option.value;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setIntentionType(option.value)}
+                          className={[
+                            "rounded-2xl border p-3 text-left transition-all",
+                            selected
+                              ? "border-primary/40 bg-primary/10 shadow-[0_16px_36px_-28px_hsl(var(--primary))]"
+                              : "border-border/70 bg-background/60 hover:border-primary/25 hover:bg-primary/5",
+                          ].join(" ")}
+                        >
+                          <span className="flex items-start gap-3">
+                            <span
+                              className={[
+                                "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border",
+                                selected ? "border-primary/35 bg-primary text-primary-foreground" : "border-border bg-muted text-muted-foreground",
+                              ].join(" ")}
+                            >
+                              <Heart className="h-4 w-4" />
+                            </span>
+                            <span>
+                              <span className="block text-sm font-semibold">{option.label}</span>
+                              <span className="mt-1 block text-xs leading-5 text-muted-foreground">{option.description}</span>
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>{t("mass_intentions_form.message_label")}</Label>
+                  <Label htmlFor="mass_date">Tarehe ya Misa *</Label>
+                  <div className="relative">
+                    <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="mass_date"
+                      type="date"
+                      value={massDate}
+                      onChange={(event) => setMassDate(event.target.value)}
+                      className="pl-9"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Nia / Ujumbe *</Label>
                   <Textarea
-                    rows={3}
-                    placeholder={t("mass_intentions_form.message_placeholder")}
+                    rows={4}
+                    placeholder="Andika jina, familia, au ujumbe wa nia ya Misa..."
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t("mass_intentions_form.offering_label")}</Label>
+                  <Label>Kiasi cha Sadaka ya Misa *</Label>
                   <Input
                     type="number"
                     min="1000"
-                    placeholder={t("mass_intentions_form.offering_placeholder")}
+                    placeholder="5000"
                     value={offeringAmount}
                     onChange={(event) => setOfferingAmount(event.target.value)}
                     required
@@ -369,7 +422,7 @@ export default function PortalMassIntentions() {
                   <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
                     {t("common.cancel")}
                   </Button>
-                  <Button type="submit" disabled={submit.isPending || !message.trim() || !offeringAmount || !member?.id}>
+                  <Button type="submit" disabled={submit.isPending || !message.trim() || !massDate || !offeringAmount || !member?.id}>
                     {submit.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {t("mass_intentions_form.submit_and_pay", { amount: formatTZS(grossAmount) })}
                   </Button>
@@ -412,7 +465,10 @@ export default function PortalMassIntentions() {
                   <div key={item.id} className="rounded-lg border border-border/60 bg-background/70 p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-medium">{translateMassIntentionType(t, item.payload.intentionType)}</p>
+                        <p className="text-sm font-medium">{getIntentionTypeLabel(item.payload.intentionType)}</p>
+                        {item.payload.requestedMassDate ? (
+                          <p className="mt-1 text-xs text-muted-foreground">Tarehe ya Misa: {item.payload.requestedMassDate}</p>
+                        ) : null}
                         <p className="mt-1 text-sm text-muted-foreground">{item.payload.message}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {t("mass_intentions_form.saved_at", { date: new Date(item.createdAt).toLocaleString() })}
