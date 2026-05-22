@@ -1,0 +1,4 @@
+project_id = "mahufgvgjnpxvtppysij"
+
+[functions.send-invitation]
+verify_jwt = false
