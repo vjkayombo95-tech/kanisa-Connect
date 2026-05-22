@@ -25,6 +25,7 @@ import { clearOfflineDraft, readOfflineDraft, writeOfflineDraft } from "@/lib/of
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { assertPhoneIsAvailable, normalizeTanzanianPhone } from "@/lib/phone-auth";
 
 type ChurchRow = Pick<Tables<"churches">, "id" | "name" | "code" | "metadata">;
 type CommunityRow = Pick<Tables<"communities">, "id" | "name">;
@@ -276,6 +277,10 @@ export default function RegisterPage() {
 
       const normalizedEmail = (user?.email || email).trim().toLowerCase();
       if (!normalizedEmail) throw new Error("Email is required.");
+      const normalizedPhone = normalizeTanzanianPhone(phone);
+      if (!normalizedPhone.valid) throw new Error(normalizedPhone.error);
+      await assertPhoneIsAvailable(normalizedPhone.e164, church.id);
+
       const persistedCooldown = !user ? readSignupCooldown(normalizedEmail) : null;
       if (persistedCooldown && persistedCooldown > Date.now()) {
         const waitSeconds = Math.max(1, Math.ceil((persistedCooldown - Date.now()) / 1000));
@@ -304,6 +309,8 @@ export default function RegisterPage() {
                 data: {
                   full_name: fullName.trim(),
                   church_code: church.code,
+                  phone: normalizedPhone.e164,
+                  phone_verified: false,
                 },
               },
             });
@@ -346,7 +353,7 @@ export default function RegisterPage() {
           _church_id: church.id,
           _full_name: fullName.trim(),
           _email: normalizedEmail,
-          _phone: phone.trim() || null,
+          _phone: normalizedPhone.e164,
           _gender: gender || null,
           _photo_url: photoUrl,
           _community_id: selectedCommunityId || null,
@@ -728,7 +735,8 @@ export default function RegisterPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone *</Label>
-                      <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+255..." required />
+                      <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="07XXXXXXXX" required />
+                      <p className="text-xs text-muted-foreground">Supports 07XXXXXXXX, +2557XXXXXXXX, or 2557XXXXXXXX.</p>
                     </div>
 
                     {!user && (

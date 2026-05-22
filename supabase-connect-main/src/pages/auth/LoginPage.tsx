@@ -7,8 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Church, Eye, EyeOff, Loader2, Mail } from "lucide-react";
+import { Church, Eye, EyeOff, Loader2, Mail, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  assertPhoneIsAvailable,
+  looksLikeEmail,
+  normalizeTanzanianPhone,
+  resolveMemberEmailForPhoneLogin,
+} from "@/lib/phone-auth";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PENDING_REGISTRATION_REDIRECT_PREFIX = "pending-registration-redirect:";
@@ -29,7 +35,8 @@ function clearPendingRegistrationRedirect(email: string) {
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
-  const [email, setEmail] = useState("");
+  const [identity, setIdentity] = useState("");
+  const [signupPhone, setSignupPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,8 +47,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { user, profile, isSuperAdmin, churchId, userRole, isLoading: isAuthLoading } = useAuth();
   const pendingRegistrationRedirect = useMemo(
-    () => getPendingRegistrationRedirect(user?.email || email),
-    [email, user?.email],
+    () => getPendingRegistrationRedirect(user?.email || identity),
+    [identity, user?.email],
   );
   const redirectTarget = useMemo(() => {
     const rawRedirect = searchParams.get("redirect");
@@ -60,7 +67,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (presetEmail) {
-      setEmail(presetEmail);
+      setIdentity(presetEmail);
     }
   }, [presetEmail]);
 
@@ -94,20 +101,16 @@ export default function LoginPage() {
     }
 
     setIsAwaitingRedirect(false);
-    clearPendingRegistrationRedirect(user.email || email);
+    clearPendingRegistrationRedirect(user.email || identity);
     navigate(redirectTarget, { replace: true });
-  }, [churchId, email, isAwaitingRedirect, isAuthLoading, isSuperAdmin, navigate, pendingRegistrationRedirect, profile, redirectTarget, searchParams, user, userRole]);
+  }, [churchId, identity, isAwaitingRedirect, isAuthLoading, isSuperAdmin, navigate, pendingRegistrationRedirect, profile, redirectTarget, searchParams, user, userRole]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    const normalizedEmail = email.trim();
+    const rawIdentity = identity.trim();
 
-    if (!normalizedEmail || !password) {
-      toast({ title: "Missing fields", description: "Please enter both email and password.", variant: "destructive" });
-      return;
-    }
-    if (!EMAIL_REGEX.test(normalizedEmail)) {
-      toast({ title: "Invalid email", description: "Please enter a valid email address", variant: "destructive" });
+    if (!rawIdentity || !password) {
+      toast({ title: "Missing fields", description: "Please enter your email or phone number and password.", variant: "destructive" });
       return;
     }
     if (isSignUp && !fullName) {
@@ -116,22 +119,49 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     try {
+      const isEmail = looksLikeEmail(rawIdentity);
+
       if (isSignUp) {
-        console.log("EMAIL:", normalizedEmail);
-        console.log("PASSWORD:", password);
+        if (!isEmail) {
+          throw new Error("Please enter a valid email address to create a password account. Phone-only signup will be available when SMS OTP is enabled.");
+        }
+
+        const normalizedEmail = rawIdentity.toLowerCase();
+        const normalizedPhone = normalizeTanzanianPhone(signupPhone);
+        if (!normalizedPhone.valid) {
+          throw new Error(normalizedPhone.error);
+        }
+
+        await assertPhoneIsAvailable(normalizedPhone.e164);
 
         const { error } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}${redirectTarget}`,
-            data: { full_name: fullName },
+            data: { full_name: fullName, phone: normalizedPhone.e164, phone_verified: false },
           },
         });
         if (error) throw error;
         toast({ title: "Check your email", description: "We sent you a confirmation link." });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+        let authEmail = "";
+        if (isEmail) {
+          authEmail = rawIdentity.toLowerCase();
+        } else {
+          const normalizedPhone = normalizeTanzanianPhone(rawIdentity);
+          if (!normalizedPhone.valid) {
+            throw new Error(normalizedPhone.error);
+          }
+          const resolved = await resolveMemberEmailForPhoneLogin(normalizedPhone.e164);
+          authEmail = resolved.email;
+        }
+
+        if (!EMAIL_REGEX.test(authEmail)) {
+          throw new Error("This account is not linked to a valid email login. Please contact your church office.");
+        }
+
+        const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password });
         if (error) throw error;
         setIsAwaitingRedirect(true);
       }
@@ -143,7 +173,9 @@ export default function LoginPage() {
         title: "Authentication error",
         description: normalizedMessage.includes("email not confirmed")
           ? "Your account exists, but your email is not confirmed yet. Check your inbox and then sign in again."
-          : message || "Something went wrong.",
+          : normalizedMessage.includes("invalid login credentials")
+            ? "The email/phone number or password is incorrect."
+            : message || "Something went wrong.",
         variant: "destructive",
       });
     } finally {
@@ -201,18 +233,40 @@ export default function LoginPage() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label>Email</Label>
+                <Label>{isSignUp ? "Email" : "Email or Phone Number"}</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  {isSignUp ? (
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  )}
                   <Input
-                    type="email"
-                    placeholder="you@example.com"
+                    type={isSignUp ? "email" : "text"}
+                    placeholder={isSignUp ? "you@example.com" : "Email or Phone Number"}
                     className="pl-9"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={identity}
+                    onChange={(e) => setIdentity(e.target.value)}
+                    autoComplete={isSignUp ? "email" : "username"}
                   />
                 </div>
               </div>
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label>Phone Number</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="tel"
+                      placeholder="07XXXXXXXX"
+                      className="pl-9"
+                      value={signupPhone}
+                      onChange={(e) => setSignupPhone(e.target.value)}
+                      autoComplete="tel"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Supports 07XXXXXXXX, +2557XXXXXXXX, or 2557XXXXXXXX.</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Password</Label>
                 <div className="relative">
