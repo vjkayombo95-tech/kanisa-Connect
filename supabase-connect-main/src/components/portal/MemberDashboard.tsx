@@ -65,6 +65,10 @@ function getContributionCategory(row: any) {
   return category?.name || "Malipo";
 }
 
+function logMemberDashboardError(label: string, error: unknown) {
+  console.warn(`[MemberDashboard] ${label} could not be loaded`, error);
+}
+
 function useSimpleMemberHomeData() {
   const { user, churchId } = useAuth();
 
@@ -108,9 +112,9 @@ function useSimpleMemberHomeData() {
         supabase.from("churches").select("name").eq("id", member.church_id).maybeSingle(),
         supabase
           .from("contributions")
-          .select("id, amount, created_at, date, contribution_categories(name)")
+          .select("id, amount, created_at, date, contribution_categories!contributions_category_id_fkey(name)")
           .eq("church_id", member.church_id)
-          .or(`member_id.eq.${member.id},created_by.eq.${user.id}`)
+          .eq("member_id", member.id)
           .order("created_at", { ascending: false })
           .limit(50),
         supabase
@@ -129,13 +133,13 @@ function useSimpleMemberHomeData() {
       ]);
 
       if (churchResult.error) throw churchResult.error;
-      if (contributionsResult.error) throw contributionsResult.error;
-      if (pledgesResult.error) throw pledgesResult.error;
-      if (announcementsResult.error) throw announcementsResult.error;
+      if (contributionsResult.error) logMemberDashboardError("contributions", contributionsResult.error);
+      if (pledgesResult.error) logMemberDashboardError("pledges", pledgesResult.error);
+      if (announcementsResult.error) logMemberDashboardError("announcements", announcementsResult.error);
 
-      const contributions = (contributionsResult.data ?? []) as any[];
-      const pledges = (pledgesResult.data ?? []) as any[];
-      const latestAnnouncement = ((announcementsResult.data ?? []) as any[])[0] ?? null;
+      const contributions = (contributionsResult.error ? [] : contributionsResult.data ?? []) as any[];
+      const pledges = (pledgesResult.error ? [] : pledgesResult.data ?? []) as any[];
+      const latestAnnouncement = ((announcementsResult.error ? [] : announcementsResult.data ?? []) as any[])[0] ?? null;
       const lastContribution = contributions[0] ?? null;
 
       return {
