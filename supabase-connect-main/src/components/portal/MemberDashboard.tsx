@@ -59,12 +59,6 @@ function formatDate(value: string | null) {
   });
 }
 
-function getContributionCategory(row: any) {
-  const category = row?.contribution_categories;
-  if (Array.isArray(category)) return category[0]?.name || "Malipo";
-  return category?.name || "Malipo";
-}
-
 function logMemberDashboardError(label: string, error: unknown) {
   console.warn(`[MemberDashboard] ${label} could not be loaded`, error);
 }
@@ -86,11 +80,12 @@ function useSimpleMemberHomeData() {
         .select(memberSelect)
         .eq("user_id", user.id)
         .eq("church_id", churchId)
+        .limit(1)
         .maybeSingle();
 
-      if (linkedMemberError) throw linkedMemberError;
+      if (linkedMemberError) logMemberDashboardError("linked member", linkedMemberError);
 
-      let member = linkedMember;
+      let member = linkedMemberError ? null : linkedMember;
       const normalizedEmail = user.email?.trim().toLowerCase();
 
       if (!member && normalizedEmail) {
@@ -102,60 +97,49 @@ function useSimpleMemberHomeData() {
           .limit(1)
           .maybeSingle();
 
-        if (emailMemberError) throw emailMemberError;
-        member = emailMember;
+        if (emailMemberError) logMemberDashboardError("email member", emailMemberError);
+        member = emailMemberError ? null : emailMember;
       }
 
       if (!member) return emptyState;
 
-      const [churchResult, contributionsResult, pledgesResult, announcementsResult] = await Promise.all([
+      const [churchResult, contributionsResult, announcementsResult] = await Promise.all([
         supabase.from("churches").select("name").eq("id", member.church_id).maybeSingle(),
         supabase
           .from("contributions")
-          .select("id, amount, created_at, date, contribution_categories!contributions_category_id_fkey(name)")
+          .select("id, amount, created_at, date, category_id")
           .eq("church_id", member.church_id)
           .eq("member_id", member.id)
           .order("created_at", { ascending: false })
           .limit(50),
         supabase
-          .from("pledges")
-          .select("id, amount_pledged, amount_paid, status")
-          .eq("member_id", member.id)
-          .order("created_at", { ascending: false }),
-        supabase
           .from("announcements")
           .select("id, title, content, created_at")
           .eq("church_id", member.church_id)
           .eq("is_published", true)
-          .is("archived_at", null)
           .order("created_at", { ascending: false })
           .limit(1),
       ]);
 
-      if (churchResult.error) throw churchResult.error;
+      if (churchResult.error) logMemberDashboardError("church", churchResult.error);
       if (contributionsResult.error) logMemberDashboardError("contributions", contributionsResult.error);
-      if (pledgesResult.error) logMemberDashboardError("pledges", pledgesResult.error);
       if (announcementsResult.error) logMemberDashboardError("announcements", announcementsResult.error);
 
       const contributions = (contributionsResult.error ? [] : contributionsResult.data ?? []) as any[];
-      const pledges = (pledgesResult.error ? [] : pledgesResult.data ?? []) as any[];
       const latestAnnouncement = ((announcementsResult.error ? [] : announcementsResult.data ?? []) as any[])[0] ?? null;
       const lastContribution = contributions[0] ?? null;
 
       return {
         memberId: member.id,
         memberName: member.full_name || fallbackName,
-        churchName: churchResult.data?.name ?? null,
+        churchName: churchResult.error ? null : churchResult.data?.name ?? null,
         totalPaid: contributions.reduce((sum, row) => sum + Number(row.amount ?? 0), 0),
-        pendingAmount: pledges.reduce(
-          (sum, row) => sum + Math.max(Number(row.amount_pledged ?? 0) - Number(row.amount_paid ?? 0), 0),
-          0,
-        ),
+        pendingAmount: 0,
         lastPayment: lastContribution
           ? {
               amount: Number(lastContribution.amount ?? 0),
               date: lastContribution.date ?? lastContribution.created_at ?? null,
-              label: getContributionCategory(lastContribution),
+              label: "Malipo",
             }
           : null,
         latestAnnouncement: latestAnnouncement

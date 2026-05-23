@@ -2054,6 +2054,16 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { _token: string }; Returns: Json }
+      create_church_workspace: {
+        Args: {
+          _address?: string | null
+          _email?: string | null
+          _name: string
+          _owner_name?: string | null
+          _phone?: string | null
+        }
+        Returns: Json
+      }
       create_pledge: {
         Args: {
           _amount_pledged: number

@@ -157,31 +157,50 @@ export default function OnboardingPage() {
     if (!user) return toast({ title: "Not authenticated", description: "Please sign in first.", variant: "destructive" });
     setIsLoading(true);
     try {
-      const { data: church, error: churchError } = await supabase.from("churches").insert({ name: churchName, email: churchEmail, phone: churchPhone || null, address: churchAddress || null, created_by: user.id }).select().single();
+      const { data: createdChurch, error: churchError } = await supabase.rpc("create_church_workspace", {
+        _name: churchName.trim(),
+        _email: churchEmail.trim() || null,
+        _phone: churchPhone.trim() || null,
+        _address: churchAddress.trim() || null,
+        _owner_name: user.user_metadata?.full_name || user.email || "Admin",
+      });
       if (churchError) throw churchError;
-      let logoUrl: string | null = null;
-      let bannerUrl: string | null = null;
-      if (logoFile) logoUrl = await uploadFile(logoFile, church.id, "logo");
-      if (bannerFile) bannerUrl = await uploadFile(bannerFile, church.id, "banner");
-      if (logoUrl || bannerUrl) await supabase.from("churches").update({ ...(logoUrl && { logo_url: logoUrl }), ...(bannerUrl && { banner_url: bannerUrl }) }).eq("id", church.id);
-      const { error: roleError } = await supabase.from("user_roles").insert({ user_id: user.id, church_id: church.id, role: "church_admin" as const });
-      if (roleError) throw roleError;
-      const { error: memberError } = await supabase.from("members").insert({ church_id: church.id, user_id: user.id, full_name: user.user_metadata?.full_name || user.email || "Admin", email: user.email });
-      if (memberError) throw memberError;
-      await supabase.from("contribution_categories").insert([
-        { church_id: church.id, name: "Tithe", description: "Regular tithe" },
-        { church_id: church.id, name: "Offering", description: "General offering" },
-        { church_id: church.id, name: "Building Fund", description: "Church building fund", is_special: true },
-        { church_id: church.id, name: "Donations", description: "General donations" },
-      ]);
-      const { data: freePlan } = await supabase.from("subscription_plans").select("id").eq("name", "free").maybeSingle();
-      if (freePlan) await supabase.from("church_subscriptions").insert({ church_id: church.id, plan_id: freePlan.id, status: "active" as const, current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() });
-      toast({ title: "Church created!", description: `${churchName} (${church.code}) is ready.` });
+      const church = createdChurch as { id: string; code: string; name: string } | null;
+      if (!church?.id) throw new Error("Church workspace could not be created.");
+
+      try {
+        let logoUrl: string | null = null;
+        let bannerUrl: string | null = null;
+        if (logoFile) logoUrl = await uploadFile(logoFile, church.id, "logo");
+        if (bannerFile) bannerUrl = await uploadFile(bannerFile, church.id, "banner");
+        if (logoUrl || bannerUrl) {
+          const { error: brandingError } = await supabase
+            .from("churches")
+            .update({ ...(logoUrl && { logo_url: logoUrl }), ...(bannerUrl && { banner_url: bannerUrl }) })
+            .eq("id", church.id);
+          if (brandingError) throw brandingError;
+        }
+      } catch (brandingError) {
+        console.warn("Church created, but branding upload failed:", brandingError);
+        toast({
+          title: "Church created without images",
+          description: "You can upload your branding later from settings.",
+        });
+      }
+
+      toast({ title: "Church created!", description: `${church.name} (${church.code}) is ready.` });
       await refreshUserData();
       navigate("/church-admin");
     } catch (err: any) {
       console.error("Onboarding error:", err);
-      toast({ title: "Error creating church", description: err.message || "Something went wrong.", variant: "destructive" });
+      const missingFunction = err?.code === "PGRST202" || `${err?.message || ""}`.includes("create_church_workspace");
+      toast({
+        title: "Error creating church",
+        description: missingFunction
+          ? "The latest database setup has not been applied. Apply the Supabase workspace-creation migration, then try again."
+          : err.message || "Something went wrong.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
