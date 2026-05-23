@@ -6,6 +6,7 @@ import { ChurchThemeProvider } from "@/contexts/ChurchThemeContext";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { PreviewViewport } from "@/components/PreviewViewport";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/toaster";
 import { isSupabaseConfigured } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
@@ -219,6 +220,7 @@ const App = () => {
               </ChurchThemeProvider>
             </AuthProvider>
           )}
+          <Toaster />
         </AppErrorBoundary>
       </BrowserRouter>
     </QueryClientProvider>

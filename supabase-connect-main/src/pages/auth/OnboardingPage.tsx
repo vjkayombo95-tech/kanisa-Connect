@@ -5,13 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, ArrowRight, BadgeCheck, Check, CheckCircle2, Church, ImageIcon, LayoutDashboard, Loader2, Mail, MapPin, Menu, Palette, Phone, ShieldCheck, Sparkles, Upload, UserRound, Users, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, BadgeCheck, Check, CheckCircle2, Church, ImageIcon, LayoutDashboard, Loader2, Mail, MapPin, Menu, Palette, Phone, ShieldAlert, ShieldCheck, Sparkles, Upload, UserRound, Users, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
@@ -62,6 +63,8 @@ export default function OnboardingPage() {
   const [step, setStep] = useState<StepId>(1);
   const [mobileStepsOpen, setMobileStepsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, refreshUserData } = useAuth();
@@ -155,6 +158,8 @@ export default function OnboardingPage() {
   const handleSubmit = async () => {
     if (!validateCurrentStep(1)) return;
     if (!user) return toast({ title: "Not authenticated", description: "Please sign in first.", variant: "destructive" });
+    setSubmissionError(null);
+    setSubmissionMessage("Creating your church workspace...");
     setIsLoading(true);
     try {
       const { data: createdChurch, error: churchError } = await supabase.rpc("create_church_workspace", {
@@ -188,17 +193,21 @@ export default function OnboardingPage() {
         });
       }
 
+      setSubmissionMessage("Church created. Opening your dashboard...");
       toast({ title: "Church created!", description: `${church.name} (${church.code}) is ready.` });
-      await refreshUserData();
-      navigate("/church-admin");
+      void refreshUserData();
+      navigate("/church-admin", { replace: true });
     } catch (err: any) {
       console.error("Onboarding error:", err);
       const missingFunction = err?.code === "PGRST202" || `${err?.message || ""}`.includes("create_church_workspace");
+      const description = missingFunction
+        ? "The latest database setup has not been applied. Apply the Supabase workspace-creation migration, then try again."
+        : err.message || "Something went wrong.";
+      setSubmissionMessage(null);
+      setSubmissionError(description);
       toast({
         title: "Error creating church",
-        description: missingFunction
-          ? "The latest database setup has not been applied. Apply the Supabase workspace-creation migration, then try again."
-          : err.message || "Something went wrong.",
+        description,
         variant: "destructive",
       });
     } finally {
@@ -248,6 +257,17 @@ export default function OnboardingPage() {
           <Card className="rounded-3xl border-border/70 bg-card/80 xl:col-span-2"><CardHeader className="pb-4"><CardTitle className="flex items-center gap-3 text-lg font-semibold"><span className="rounded-2xl border border-primary/20 bg-primary/10 p-2 text-primary"><Users className="h-4 w-4" /></span>Leadership Roles</CardTitle></CardHeader><CardContent className="grid gap-3 md:grid-cols-3">{[{ title: "Pastor", value: pastorName }, { title: "Treasurer", value: treasurerName }, { title: "Secretary", value: secretaryName }].map((item) => <div key={item.title} className="rounded-2xl border border-border/70 bg-background/40 p-4"><p className="text-sm font-medium">{item.title}</p><p className="mt-1 text-sm text-muted-foreground">{item.value || "Not assigned during onboarding"}</p></div>)}</CardContent></Card>
         </div>
         <Card className="rounded-3xl border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-background"><CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between"><div className="space-y-1"><p className="text-sm font-semibold text-primary">Workspace creation summary</p><p className="text-sm text-muted-foreground">Your church will launch with a church admin role, default contribution categories, and a free plan setup.</p></div><div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-background/70 px-4 py-2 text-sm"><CheckCircle2 className="h-4 w-4 text-primary" />Ready to create</div></CardContent></Card>
+        {submissionError ? (
+          <Alert variant="destructive" className="rounded-2xl">
+            <ShieldAlert className="h-4 w-4" />
+            <AlertDescription>{submissionError}</AlertDescription>
+          </Alert>
+        ) : submissionMessage ? (
+          <Alert className="rounded-2xl border-primary/25 bg-primary/5 text-foreground">
+            <Loader2 className={cn("h-4 w-4 text-primary", isLoading && "animate-spin")} />
+            <AlertDescription>{submissionMessage}</AlertDescription>
+          </Alert>
+        ) : null}
       </div>
     );
   };
@@ -259,7 +279,7 @@ export default function OnboardingPage() {
           <Card className="overflow-hidden rounded-3xl border-primary/20 bg-card/80 shadow-[0_24px_80px_-50px_rgba(212,175,55,0.6)] backdrop-blur"><CardContent className="p-4"><div className="flex items-center justify-between gap-4"><div><p className="text-xs uppercase tracking-[0.24em] text-primary/80">Setup flow</p><p className="mt-1 text-sm font-medium">{currentStep.title}</p></div><CollapsibleTrigger asChild><Button variant="outline" size="sm" className="rounded-full border-primary/20 bg-background/50"><Menu className="h-4 w-4" />Steps</Button></CollapsibleTrigger></div><CollapsibleContent className="pt-4"><div className="space-y-2">{steps.map((item) => { const Icon = item.icon; const isActive = item.id === step; const isComplete = item.id < step; return <button key={item.id} type="button" onClick={() => goToStep(item.id)} className={cn("flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-all duration-200", isActive ? "border-primary/40 bg-primary/10 text-foreground" : "border-border/60 bg-background/40 text-muted-foreground hover:border-primary/25 hover:bg-background/60")}><span className={cn("flex h-10 w-10 items-center justify-center rounded-2xl border", isComplete ? "border-primary/30 bg-primary text-primary-foreground" : isActive ? "border-primary/25 bg-primary/15 text-primary" : "border-border/60 bg-background/70")} >{isComplete ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}</span><div><p className="text-sm font-medium">{item.title}</p><p className="text-xs text-muted-foreground">{item.description}</p></div></button>; })}</div></CollapsibleContent></CardContent></Card>
         </Collapsible>
         <aside className="hidden lg:block"><div className="sticky top-6"><Card className="overflow-hidden rounded-[32px] border-primary/20 bg-card/80 shadow-[0_30px_100px_-60px_rgba(212,175,55,0.65)] backdrop-blur"><CardHeader className="space-y-4 border-b border-border/60 pb-6"><div className="flex items-center gap-3"><div className="rounded-2xl bg-primary p-3 text-primary-foreground shadow-lg shadow-primary/20"><LayoutDashboard className="h-5 w-5" /></div><div><p className="text-xs uppercase tracking-[0.24em] text-primary/80">Kanisa Connect Setup</p><CardTitle className="mt-1 text-xl font-semibold">Launch your church workspace</CardTitle></div></div><CardDescription className="text-sm leading-6">Complete a polished setup flow with branding, leadership details, and a final launch review.</CardDescription></CardHeader><CardContent className="space-y-3 p-4">{steps.map((item) => { const Icon = item.icon; const isActive = item.id === step; const isComplete = item.id < step; return <motion.button key={item.id} type="button" layout onClick={() => goToStep(item.id)} className={cn("flex w-full items-start gap-4 rounded-3xl border px-4 py-4 text-left transition-all duration-300", isActive ? "border-primary/40 bg-primary/12 shadow-[0_20px_60px_-45px_rgba(212,175,55,0.8)]" : "border-border/60 bg-background/35 hover:border-primary/25 hover:bg-background/55")}><span className={cn("mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition-colors", isComplete ? "border-primary/30 bg-primary text-primary-foreground" : isActive ? "border-primary/25 bg-primary/10 text-primary" : "border-border/60 bg-background/80 text-muted-foreground")}>{isComplete ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}</span><div className="min-w-0"><div className="flex items-center gap-2"><p className={cn("text-sm font-medium", isActive ? "text-foreground" : "text-foreground/90")}>{item.title}</p>{isComplete && <CheckCircle2 className="h-4 w-4 text-primary" />}</div><p className="mt-1 text-xs leading-5 text-muted-foreground">{item.description}</p></div></motion.button>; })}<Separator className="my-4 bg-border/60" /><div className="rounded-3xl border border-primary/15 bg-primary/6 p-4"><p className="text-xs uppercase tracking-[0.22em] text-primary/80">Progress</p><p className="mt-2 text-sm font-medium">{completedSteps} of 3 setup stages completed</p><p className="mt-1 text-sm text-muted-foreground">One final step unlocks your full admin workspace.</p></div></CardContent></Card></div></aside>
-        <main><motion.div layout className="space-y-6"><Card className="overflow-hidden rounded-[32px] border-primary/20 bg-card/80 shadow-[0_32px_110px_-70px_rgba(212,175,55,0.7)] backdrop-blur"><CardHeader className="space-y-5 border-b border-border/60 pb-6"><div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"><div className="space-y-2"><p className="text-xs uppercase tracking-[0.26em] text-primary/80">{`Step ${step} of ${steps.length}`}</p><CardTitle className="text-2xl font-semibold tracking-tight sm:text-3xl">{currentStep.title}</CardTitle><CardDescription className="max-w-2xl text-sm leading-6">{currentStep.description}</CardDescription></div><div className="inline-flex items-center gap-2 self-start rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary"><Sparkles className="h-4 w-4" />Premium onboarding</div></div><div className="space-y-3"><div className="flex items-center justify-between gap-3 overflow-x-auto pb-1">{steps.map((item) => <div key={item.id} className={cn("min-w-fit text-xs font-medium transition-colors sm:text-sm", item.id === step ? "text-foreground" : item.id < step ? "text-primary" : "text-muted-foreground")}>{item.title}</div>)}</div><Progress value={progressValue} className="h-2 rounded-full bg-secondary/60 [&>div]:bg-gradient-to-r [&>div]:from-primary [&>div]:to-[#f1d27a]" /></div></CardHeader><CardContent className="p-0"><div className="p-6 sm:p-8"><AnimatePresence mode="wait" initial={false}><motion.div key={step} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.24, ease: "easeOut" }} className="min-h-[420px]">{renderStepContent()}</motion.div></AnimatePresence></div><div className="sticky bottom-0 border-t border-border/60 bg-background/80 px-6 py-4 backdrop-blur-xl sm:px-8"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-muted-foreground">{step === 4 ? "Everything looks ready for launch." : "Your progress is saved in this session while you finish setup."}</p><div className="flex items-center gap-3 self-end"><Button variant="outline" onClick={goBack} disabled={step === 1 || isLoading} className="rounded-xl border-border/70 bg-background/60 hover:border-primary/30 hover:bg-background"><ArrowLeft className="h-4 w-4" />Back</Button>{step === 4 ? <Button onClick={handleSubmit} disabled={isLoading} className="rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}Create Church</Button> : <Button onClick={goNext} className="rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">Next<ArrowRight className="h-4 w-4" /></Button>}</div></div></div></CardContent></Card></motion.div></main>
+        <main><motion.div layout className="space-y-6"><Card className="overflow-hidden rounded-[32px] border-primary/20 bg-card/80 shadow-[0_32px_110px_-70px_rgba(212,175,55,0.7)] backdrop-blur"><CardHeader className="space-y-5 border-b border-border/60 pb-6"><div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"><div className="space-y-2"><p className="text-xs uppercase tracking-[0.26em] text-primary/80">{`Step ${step} of ${steps.length}`}</p><CardTitle className="text-2xl font-semibold tracking-tight sm:text-3xl">{currentStep.title}</CardTitle><CardDescription className="max-w-2xl text-sm leading-6">{currentStep.description}</CardDescription></div><div className="inline-flex items-center gap-2 self-start rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary"><Sparkles className="h-4 w-4" />Premium onboarding</div></div><div className="space-y-3"><div className="flex items-center justify-between gap-3 overflow-x-auto pb-1">{steps.map((item) => <div key={item.id} className={cn("min-w-fit text-xs font-medium transition-colors sm:text-sm", item.id === step ? "text-foreground" : item.id < step ? "text-primary" : "text-muted-foreground")}>{item.title}</div>)}</div><Progress value={progressValue} className="h-2 rounded-full bg-secondary/60 [&>div]:bg-gradient-to-r [&>div]:from-primary [&>div]:to-[#f1d27a]" /></div></CardHeader><CardContent className="p-0"><div className="p-6 sm:p-8"><AnimatePresence mode="wait" initial={false}><motion.div key={step} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.24, ease: "easeOut" }} className="min-h-[420px]">{renderStepContent()}</motion.div></AnimatePresence></div><div className="sticky bottom-0 border-t border-border/60 bg-background/80 px-6 py-4 backdrop-blur-xl sm:px-8"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-sm text-muted-foreground">{submissionError ? "Creation failed. Review the message above and try again." : submissionMessage || (step === 4 ? "Everything looks ready for launch." : "Your progress is saved in this session while you finish setup.")}</p><div className="flex items-center gap-3 self-end"><Button type="button" variant="outline" onClick={goBack} disabled={step === 1 || isLoading} className="rounded-xl border-border/70 bg-background/60 hover:border-primary/30 hover:bg-background"><ArrowLeft className="h-4 w-4" />Back</Button>{step === 4 ? <Button type="button" onClick={() => void handleSubmit()} disabled={isLoading} className="rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}Create Church</Button> : <Button type="button" onClick={goNext} className="rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">Next<ArrowRight className="h-4 w-4" /></Button>}</div></div></div></CardContent></Card></motion.div></main>
       </div>
     </div>
   );
