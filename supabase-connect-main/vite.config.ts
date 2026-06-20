@@ -23,14 +23,16 @@ export default defineConfig(() => ({
       output: {
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
+          // Keep React bindings with React itself. Splitting react-i18next into
+          // i18n-vendor caused production chunks to evaluate with React undefined.
+          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|react-i18next|use-sync-external-store)[\\/]/.test(id)) return "react-vendor";
           if (id.includes("clsx") || id.includes("tailwind-merge")) return "utils-vendor";
           if (id.includes("react-qr-reader") || id.includes("@zxing")) return "scanner-vendor";
           if (id.includes("@supabase")) return "supabase-vendor";
           if (id.includes("@tanstack")) return "query-vendor";
-          if (id.includes("i18next") || id.includes("react-i18next")) return "i18n-vendor";
+          if (id.includes("i18next")) return "i18n-vendor";
           if (id.includes("@radix-ui") || id.includes("cmdk") || id.includes("vaul")) return "ui-vendor";
           if (id.includes("framer-motion")) return "motion-vendor";
-          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom)[\\/]/.test(id)) return "react-vendor";
           if (id.includes("date-fns")) return "date-vendor";
           if (id.includes("lucide-react")) return "icons-vendor";
         },
@@ -41,6 +43,6 @@ export default defineConfig(() => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    dedupe: ["react", "react-dom", "react/jsx-runtime", "react-router", "react-router-dom"],
+    dedupe: ["react", "react-dom", "react/jsx-runtime", "react-router", "react-router-dom", "react-i18next"],
   },
 }));
