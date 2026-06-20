@@ -157,6 +157,7 @@ const groupedSections: AccordionGroup[] = [
       { titleKey: "data_import", url: "/church-admin/data-import", icon: ImportIcon, featureKey: null },
       { titleKey: "audit_logs", url: "/church-admin/audit-logs", icon: AuditIcon, featureKey: null },
       { titleKey: "System Logs", url: "/church-admin/system-logs", icon: AuditIcon, featureKey: null },
+      { titleKey: "Record Preservation", url: "/church-admin/record-preservation", icon: ReportsIcon, featureKey: null },
       { titleKey: "roles", url: "/church-admin/roles", icon: RolesIcon, featureKey: "roles" },
       { titleKey: "settings", url: "/church-admin/settings", icon: SettingsIcon, featureKey: null },
       { titleKey: "billing", url: "/church-admin/settings/billing", icon: BillingIcon, featureKey: null },

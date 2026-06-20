@@ -10,6 +10,14 @@ import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { COMMUNITY_HELP_SELECT, MASS_INTENTION_SELECT, enrichCommunityHelpRequests, mapMassIntentionRecord } from "@/lib/member-linked-requests";
 import { useMemberPledges } from "@/lib/pledges";
 import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
+import {
+  RECORD_PRESERVATION_AMOUNT,
+  RECORD_PRESERVATION_PAGE_SIZE,
+  RECORD_PRESERVATION_YEARLY_AMOUNT,
+  hasActiveRecordPreservation,
+  isCurrentMonthDate,
+  useMemberRecordPreservation,
+} from "@/lib/member-record-preservation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +32,7 @@ import {
   User, Mail, Phone, Calendar, Shield, Users, Church, Heart,
   HandCoins, TrendingUp, ArrowRight, BookOpen, Megaphone, Flame,
   HelpCircle, FileText, Search, ChevronLeft, ChevronRight, Wallet,
-  MapPin, Clock, Star, Gift, BarChart3, PieChart, Pencil, Loader2, Lock, Building2, Target,
+  MapPin, Clock, Star, Gift, BarChart3, PieChart, Pencil, Loader2, Lock, Building2, Target, Archive, Upload,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { optimizeImage, uploadFile, validateFile } from "@/lib/file-upload";
@@ -33,7 +41,7 @@ import { translateContributionCategory } from "@/lib/translation-helpers";
 
 const PortalContributionCharts = lazy(() => import("./PortalContributionCharts"));
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = RECORD_PRESERVATION_PAGE_SIZE;
 const DASHBOARD_QUERY_OPTIONS = {
   refetchOnMount: false,
   refetchOnWindowFocus: false,
@@ -236,22 +244,58 @@ function useMemberFamily(memberId: string | undefined) {
   });
 }
 
-function useMemberContributions(memberId: string | undefined, enabled = true) {
+function useMemberContributions({
+  memberId,
+  enabled = true,
+  includeHistory = false,
+  page = 0,
+  search = "",
+  category = "all",
+}: {
+  memberId: string | undefined;
+  enabled?: boolean;
+  includeHistory?: boolean;
+  page?: number;
+  search?: string;
+  category?: string;
+}) {
   return useQuery({
-    queryKey: ["my-contributions-all", memberId],
+    queryKey: ["my-contributions", memberId, includeHistory ? "archive" : "current-month", page, search, category],
     queryFn: async () => {
-      if (!memberId) return [];
-      const { data, error } = await supabase
+      if (!memberId) return { records: [], totalCount: 0 };
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      let query = supabase
         .from("contributions")
-        .select("*, contribution_categories!contributions_category_id_fkey(name)")
+        .select("*, contribution_categories!contributions_category_id_fkey(name)", { count: "exact" })
         .eq("member_id", memberId)
         .order("date", { ascending: false });
+
+      if (!includeHistory) {
+        query = query.gte("date", startOfMonth.toISOString().slice(0, 10));
+      }
+
+      const safeSearch = search.trim().replace(/[%,]/g, "");
+      if (safeSearch) {
+        query = query.or(`donor_name.ilike.%${safeSearch}%,notes.ilike.%${safeSearch}%,payment_reference.ilike.%${safeSearch}%`);
+      }
+
+      const { data, error, count } = await query.range(from, to);
 
       if (error) {
         throw error;
       }
 
-      return data ?? [];
+      let records = data ?? [];
+      if (category !== "all") {
+        records = records.filter((contribution: any) => (contribution.contribution_categories as any)?.name === category);
+      }
+
+      return { records, totalCount: count ?? records.length };
     },
     enabled: enabled && !!memberId,
     ...DASHBOARD_QUERY_OPTIONS,
@@ -262,38 +306,61 @@ function getContributionDate(contribution: any) {
   return contribution?.date ?? contribution?.created_at ?? null;
 }
 
-function useMemberPrayers(memberId: string | undefined, enabled = true) {
+function useMemberPrayers(memberId: string | undefined, enabled = true, includeHistory = false, page = 0) {
   return useQuery({
-    queryKey: ["my-prayers", memberId],
+    queryKey: ["my-prayers", memberId, includeHistory ? "archive" : "current-month", page],
     queryFn: async () => {
-      if (!memberId) return [];
-      const { data } = await supabase
+      if (!memberId) return { records: [], totalCount: 0 };
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      let query = supabase
         .from("prayer_requests")
-        .select("id, request_text, status, created_at")
+        .select("id, request_text, status, created_at", { count: "exact" })
         .eq("member_id", memberId)
-        .order("created_at", { ascending: false })
-        .limit(20);
-      return data ?? [];
+        .order("created_at", { ascending: false });
+
+      if (!includeHistory) {
+        query = query.gte("created_at", startOfMonth.toISOString());
+      }
+
+      const { data, count } = await query.range(from, to);
+      return { records: data ?? [], totalCount: count ?? data?.length ?? 0 };
     },
     enabled: enabled && !!memberId,
     ...DASHBOARD_QUERY_OPTIONS,
   });
 }
 
-function useMemberMassIntentions(memberId: string | undefined, enabled = true) {
+function useMemberMassIntentions(memberId: string | undefined, enabled = true, includeHistory = false, page = 0) {
   const { churchId } = useAuth();
   return useQuery({
-    queryKey: ["my-mass-intentions-dashboard", memberId, churchId],
+    queryKey: ["my-mass-intentions-dashboard", memberId, churchId, includeHistory ? "archive" : "current-month", page],
     queryFn: async () => {
-      if (!memberId || !churchId) return [];
-      const { data } = await supabase
+      if (!memberId || !churchId) return { records: [], totalCount: 0 };
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      let query = supabase
         .from("mass_intentions")
-        .select(MASS_INTENTION_SELECT)
+        .select(MASS_INTENTION_SELECT, { count: "exact" })
         .eq("church_id", churchId)
         .eq("member_id", memberId)
-        .order("created_at", { ascending: false })
-        .limit(20);
-      return (data ?? []).map((row: any) => mapMassIntentionRecord(row));
+        .order("created_at", { ascending: false });
+
+      if (!includeHistory) {
+        query = query.gte("created_at", startOfMonth.toISOString());
+      }
+
+      const { data, count } = await query.range(from, to);
+      const records = (data ?? []).map((row: any) => mapMassIntentionRecord(row));
+      return { records, totalCount: count ?? records.length };
     },
     enabled: enabled && !!memberId && !!churchId,
     ...DASHBOARD_QUERY_OPTIONS,
@@ -502,21 +569,43 @@ export default function PortalDashboard() {
   const { toast } = useToast();
   const { data: member, isLoading: memberLoading } = useMemberRecord();
   const [loadDashboardDetails, setLoadDashboardDetails] = useState(false);
+  const [verseOfDay, setVerseOfDay] = useState<any | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [preservationOpen, setPreservationOpen] = useState(false);
+  const [preservationTransactionId, setPreservationTransactionId] = useState("");
+  const [preservationProofFile, setPreservationProofFile] = useState<File | null>(null);
+  const [preservationPlan, setPreservationPlan] = useState<"monthly" | "yearly">("monthly");
+  const [searchQ, setSearchQ] = useState("");
+  const [catFilter, setCatFilter] = useState("all");
+  const [page, setPage] = useState(0);
+  const [prayerPage, setPrayerPage] = useState(0);
+  const [massIntentionPage, setMassIntentionPage] = useState(0);
   const { data: community } = useMemberCommunity(member);
   const { data: ministries = [] } = useMemberMinistries(member);
   const { data: family } = useMemberFamily(member?.id);
   const { data: church } = useChurchSummary(churchId);
   const { data: ledCommunities = [] } = useLedCommunities();
-  const { data: contributions = [], isLoading: contribLoading } = useMemberContributions(member?.id, loadDashboardDetails);
+  const { data: recordPreservation } = useMemberRecordPreservation(member?.id, churchId);
+  const activeRecordPreservation = hasActiveRecordPreservation(recordPreservation?.active);
+  const latestRecordPreservation = recordPreservation?.latest;
+  const { data: contributionPageData = { records: [], totalCount: 0 }, isLoading: contribLoading } = useMemberContributions({
+    memberId: member?.id,
+    enabled: loadDashboardDetails,
+    includeHistory: activeRecordPreservation,
+    page,
+    search: searchQ,
+    category: catFilter,
+  });
+  const contributions = contributionPageData.records;
   const { data: pledges = [] } = useMemberPledges(member?.id, { enabled: loadDashboardDetails });
-  const { data: prayers = [] } = useMemberPrayers(member?.id, loadDashboardDetails);
-  const { data: massIntentions = [] } = useMemberMassIntentions(member?.id, loadDashboardDetails);
+  const { data: prayerPageData = { records: [], totalCount: 0 } } = useMemberPrayers(member?.id, loadDashboardDetails, activeRecordPreservation, prayerPage);
+  const prayers = prayerPageData.records;
+  const { data: massIntentionPageData = { records: [], totalCount: 0 } } = useMemberMassIntentions(member?.id, loadDashboardDetails, activeRecordPreservation, massIntentionPage);
+  const massIntentions = massIntentionPageData.records;
   const { data: helpRequests = [] } = useMemberHelpRequests(member?.id, loadDashboardDetails);
   const { data: communities = [] } = useCommunities(churchId, loadDashboardDetails);
   const queryClient = useQueryClient();
   const { t } = useTranslation();
-  const [verseOfDay, setVerseOfDay] = useState<any | null>(null);
-  const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { data: roleProfile } = useParticipationAndLeadershipProfile({
     member,
@@ -544,6 +633,12 @@ export default function PortalDashboard() {
     const timeoutId = window.setTimeout(load, 450);
     return () => window.clearTimeout(timeoutId);
   }, [member?.id, memberLoading]);
+
+  useEffect(() => {
+    setPage(0);
+    setPrayerPage(0);
+    setMassIntentionPage(0);
+  }, [member?.id, activeRecordPreservation, searchQ, catFilter]);
 
   // Announcements & events
   const { data: announcements = [] } = useQuery({
@@ -598,31 +693,47 @@ export default function PortalDashboard() {
   const thisYearStart = `${now.getFullYear()}-01-01`;
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().slice(0, 10);
   const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().slice(0, 10);
+  const visibleContributions = useMemo(
+    () => activeRecordPreservation
+      ? contributions
+      : contributions.filter((contribution: any) => isCurrentMonthDate(getContributionDate(contribution))),
+    [activeRecordPreservation, contributions],
+  );
+  const visiblePrayers = useMemo(
+    () => activeRecordPreservation ? prayers : prayers.filter((prayer: any) => isCurrentMonthDate(prayer.created_at)),
+    [activeRecordPreservation, prayers],
+  );
+  const visibleMassIntentions = useMemo(
+    () => activeRecordPreservation
+      ? massIntentions
+      : massIntentions.filter((intention: any) => isCurrentMonthDate(intention.created_at)),
+    [activeRecordPreservation, massIntentions],
+  );
 
   const stats = useMemo(() => {
-    const total = contributions.reduce((s: number, c: any) => s + Number(c.amount), 0);
-    const todayTotal = contributions.filter((c: any) => {
+    const total = visibleContributions.reduce((s: number, c: any) => s + Number(c.amount), 0);
+    const todayTotal = visibleContributions.filter((c: any) => {
       const contributionDate = getContributionDate(c);
       return contributionDate ? contributionDate.slice(0, 10) === today : false;
     }).reduce((s: number, c: any) => s + Number(c.amount), 0);
-    const monthTotal = contributions.filter((c: any) => {
+    const monthTotal = visibleContributions.filter((c: any) => {
       const contributionDate = getContributionDate(c);
       return contributionDate ? contributionDate.slice(0, 10) >= thisMonthStart : false;
     }).reduce((s: number, c: any) => s + Number(c.amount), 0);
-    const yearTotal = contributions.filter((c: any) => {
+    const yearTotal = visibleContributions.filter((c: any) => {
       const contributionDate = getContributionDate(c);
       return contributionDate ? contributionDate.slice(0, 10) >= thisYearStart : false;
     }).reduce((s: number, c: any) => s + Number(c.amount), 0);
-    const lastMonthTotal = contributions.filter((c: any) => {
+    const lastMonthTotal = visibleContributions.filter((c: any) => {
       const contributionDate = getContributionDate(c);
       if (!contributionDate) return false;
       const normalizedDate = contributionDate.slice(0, 10);
       return normalizedDate >= lastMonthStart && normalizedDate <= lastMonthEnd;
     }).reduce((s: number, c: any) => s + Number(c.amount), 0);
-    const lastContrib = contributions.length > 0 ? contributions[0] : null;
+    const lastContrib = visibleContributions.length > 0 ? visibleContributions[0] : null;
     // category breakdown
     const catMap: Record<string, number> = {};
-    contributions.forEach((c: any) => {
+    visibleContributions.forEach((c: any) => {
       const name = (c.contribution_categories as any)?.name || "Other";
       catMap[name] = (catMap[name] || 0) + Number(c.amount);
     });
@@ -633,7 +744,7 @@ export default function PortalDashboard() {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const mStart = d.toISOString().slice(0, 10);
       const mEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10);
-      const mTotal = contributions.filter((c: any) => {
+      const mTotal = visibleContributions.filter((c: any) => {
         const contributionDate = getContributionDate(c);
         if (!contributionDate) return false;
         const normalizedDate = contributionDate.slice(0, 10);
@@ -641,8 +752,8 @@ export default function PortalDashboard() {
       }).reduce((s: number, c: any) => s + Number(c.amount), 0);
       monthlyTrend.push({ month: d.toLocaleDateString("en-US", { month: "short" }), amount: mTotal });
     }
-    return { total, todayTotal, monthTotal, yearTotal, lastMonthTotal, count: contributions.length, lastContrib, categoryBreakdown, monthlyTrend };
-  }, [contributions, t]);
+    return { total, todayTotal, monthTotal, yearTotal, lastMonthTotal, count: visibleContributions.length, lastContrib, categoryBreakdown, monthlyTrend };
+  }, [visibleContributions, t]);
 
   const handleRequestAssignment = useCallback(() => {
     toast({
@@ -661,32 +772,22 @@ export default function PortalDashboard() {
   const pledgeProgress = pledgeSummary.pledged > 0 ? (pledgeSummary.paid / pledgeSummary.pledged) * 100 : 0;
 
   // ── Contribution History State ──
-  const [searchQ, setSearchQ] = useState("");
-  const [catFilter, setCatFilter] = useState("all");
-  const [page, setPage] = useState(0);
-
   const filteredContribs = useMemo(() => {
-    let list = contributions;
-    if (searchQ) {
-      const q = searchQ.toLowerCase();
-      list = list.filter((c: any) => (c.donor_name || "").toLowerCase().includes(q) || (c.notes || "").toLowerCase().includes(q) || (c.payment_reference || "").toLowerCase().includes(q));
-    }
-    if (catFilter !== "all") {
-      list = list.filter((c: any) => (c.contribution_categories as any)?.name === catFilter);
-    }
-    return list;
-  }, [contributions, searchQ, catFilter]);
+    return visibleContributions;
+  }, [visibleContributions]);
 
-  const totalPages = Math.ceil(filteredContribs.length / PAGE_SIZE);
-  const pagedContribs = filteredContribs.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(contributionPageData.totalCount / PAGE_SIZE));
+  const pagedContribs = filteredContribs;
+  const prayerTotalPages = Math.max(1, Math.ceil(prayerPageData.totalCount / PAGE_SIZE));
+  const massIntentionTotalPages = Math.max(1, Math.ceil(massIntentionPageData.totalCount / PAGE_SIZE));
   const categoryNames = useMemo(() => {
     const set = new Set<string>();
-    contributions.forEach((c: any) => {
+    visibleContributions.forEach((c: any) => {
       const n = (c.contribution_categories as any)?.name;
       if (n) set.add(n);
     });
     return Array.from(set);
-  }, [contributions]);
+  }, [visibleContributions]);
 
   const displayName = member?.full_name || profile?.full_name || "Member";
   const ministryNames = ministries.map((ministry: any) => ministry.name).filter(Boolean);
@@ -722,12 +823,59 @@ export default function PortalDashboard() {
     onSettled: () => setAvatarUploading(false),
   });
 
+  const submitRecordPreservation = useMutation({
+    mutationFn: async () => {
+      if (!churchId || !member?.id) throw new Error("Member profile not found.");
+      const transactionId = preservationTransactionId.trim();
+      if (!transactionId) throw new Error("Transaction ID is required.");
+
+      let proofPath: string | null = null;
+      if (preservationProofFile) {
+        const safeName = preservationProofFile.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+        proofPath = `${churchId}/${member.id}/${crypto.randomUUID()}-${safeName}`;
+        const { error: uploadError } = await supabase.storage
+          .from("record-preservation-proofs")
+          .upload(proofPath, preservationProofFile, { upsert: false });
+
+        if (uploadError) throw uploadError;
+      }
+
+      const { error } = await supabase.from("member_record_subscriptions" as never).insert({
+        church_id: churchId,
+        member_id: member.id,
+        amount: preservationPlan === "yearly" ? RECORD_PRESERVATION_YEARLY_AMOUNT : RECORD_PRESERVATION_AMOUNT,
+        plan_interval: preservationPlan,
+        status: "pending",
+        transaction_id: transactionId,
+        proof_url: proofPath,
+      } as never);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setPreservationOpen(false);
+      setPreservationTransactionId("");
+      setPreservationProofFile(null);
+      setPreservationPlan("monthly");
+      void queryClient.invalidateQueries({ queryKey: ["member-record-preservation", member?.id, churchId] });
+      toast({
+        title: "Preservation request submitted",
+        description: "Your Digital Record Preservation request is pending admin review.",
+      });
+    },
+    onError: (err: any) => toast({ title: "Unable to submit request", description: err.message, variant: "destructive" }),
+  });
+
   const handleAvatarSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     uploadMemberPhoto.mutate(file);
     event.target.value = "";
   }, [uploadMemberPhoto]);
+
+  const handlePreservationProofSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setPreservationProofFile(event.target.files?.[0] ?? null);
+  }, []);
 
   const isLoading = memberLoading;
   const limitedPortal = billing.memberPortalAccess === "limited";
@@ -898,6 +1046,98 @@ export default function PortalDashboard() {
       </Card>
 
       {/* ── Summary Cards ── */}
+      <Card className="border-primary/15">
+        <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+              <Archive className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-semibold">Digital Record Preservation</h2>
+                <Badge variant={activeRecordPreservation ? "default" : latestRecordPreservation?.status === "pending" ? "secondary" : "outline"}>
+                  {activeRecordPreservation ? "Active" : latestRecordPreservation?.status === "pending" ? "Pending review" : "Archive renewal"}
+                </Badge>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {activeRecordPreservation && recordPreservation?.active?.end_date
+                  ? `Your records are preserved until ${new Date(recordPreservation.active.end_date).toLocaleDateString()}.`
+                  : latestRecordPreservation?.status === "pending"
+                    ? "Your Secure Church Record Archive request is awaiting admin review."
+                    : "Your historical records are no longer being actively preserved. Renew your preservation plan for TSh 3,000/month or TSh 30,000/year."}
+              </p>
+              {!activeRecordPreservation ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Current month activity remains visible. Historical Records, yearly summaries, and downloadable archive records are included with preservation.
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <Dialog open={preservationOpen} onOpenChange={setPreservationOpen}>
+            <DialogTrigger asChild>
+              <Button variant={activeRecordPreservation ? "outline" : "default"}>
+                {activeRecordPreservation ? "Extend archive" : "Preserve records"}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Digital Record Preservation</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="rounded-lg border border-border/60 bg-muted/30 p-3 text-sm">
+                  <p className="font-medium">
+                    {preservationPlan === "yearly" ? "TSh 30,000 / year" : "TSh 3,000 / month"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Submit your payment transaction ID for the Secure Church Record Archive. Your normal member app access remains free.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Preservation plan</Label>
+                  <Select value={preservationPlan} onValueChange={(value) => setPreservationPlan(value as "monthly" | "yearly")}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select plan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monthly">Monthly - TSh 3,000</SelectItem>
+                      <SelectItem value="yearly">Yearly - TSh 30,000</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="preservation-transaction">Transaction ID</Label>
+                  <Input
+                    id="preservation-transaction"
+                    value={preservationTransactionId}
+                    onChange={(event) => setPreservationTransactionId(event.target.value)}
+                    placeholder="Enter payment transaction ID"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="preservation-proof">Payment proof</Label>
+                  <Input id="preservation-proof" type="file" accept="image/*,.pdf" onChange={handlePreservationProofSelect} />
+                  {preservationProofFile ? (
+                    <p className="text-xs text-muted-foreground">{preservationProofFile.name}</p>
+                  ) : null}
+                </div>
+                <Button
+                  className="w-full"
+                  onClick={() => submitRecordPreservation.mutate()}
+                  disabled={submitRecordPreservation.isPending}
+                >
+                  {submitRecordPreservation.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="mr-2 h-4 w-4" />
+                  )}
+                  Submit for review
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <SummaryCard icon={HandCoins} label="Total Given" value={formatTZS(stats.total)} />
         <SummaryCard icon={TrendingUp} label="This Month" value={formatTZS(stats.monthTotal)} />
@@ -922,7 +1162,7 @@ export default function PortalDashboard() {
               <Skeleton className="h-56 rounded-xl" />
               <Skeleton className="h-56 rounded-xl" />
             </div>
-          ) : contributions.length === 0 ? (
+          ) : visibleContributions.length === 0 ? (
             <EmptyState icon={HandCoins} title="No contributions yet" desc="Your contribution analytics will appear here once you start giving." />
           ) : (
             <Suspense fallback={
@@ -963,6 +1203,11 @@ export default function PortalDashboard() {
           </div>
         </CardHeader>
         <CardContent>
+          {!activeRecordPreservation ? (
+            <div className="mb-4 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+              Current month activity is shown here. Historical Records and statement downloads are part of the Secure Church Record Archive.
+            </div>
+          ) : null}
           {filteredContribs.length === 0 ? (
             <EmptyState icon={HandCoins} title="No records found" desc="Your contribution history will show here." />
           ) : (
@@ -1016,11 +1261,11 @@ export default function PortalDashboard() {
           <CardContent>
             {detailsLoading ? (
               <Skeleton className="h-32 rounded-xl" />
-            ) : prayers.length === 0 ? (
+            ) : visiblePrayers.length === 0 ? (
               <EmptyState icon={Flame} title="No prayer requests yet" desc="Submit a prayer request and it will appear here." />
             ) : (
               <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                {prayers.map((p: any) => (
+                {visiblePrayers.map((p: any) => (
                   <div key={p.id} className="flex items-start justify-between gap-2 pb-3 border-b border-border/50 last:border-0">
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{p.request_text}</p>
@@ -1029,6 +1274,15 @@ export default function PortalDashboard() {
                     <Badge variant={p.status === "pending" ? "default" : "secondary"} className="shrink-0 text-xs">{p.status}</Badge>
                   </div>
                 ))}
+                {prayerTotalPages > 1 && (
+                  <div className="flex items-center justify-between pt-2">
+                    <p className="text-xs text-muted-foreground">Page {prayerPage + 1} of {prayerTotalPages}</p>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" disabled={prayerPage === 0} onClick={() => setPrayerPage((current) => current - 1)}><ChevronLeft className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" disabled={prayerPage >= prayerTotalPages - 1} onClick={() => setPrayerPage((current) => current + 1)}><ChevronRight className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
@@ -1043,11 +1297,11 @@ export default function PortalDashboard() {
           <CardContent>
             {detailsLoading ? (
               <Skeleton className="h-32 rounded-xl" />
-            ) : massIntentions.length === 0 ? (
+            ) : visibleMassIntentions.length === 0 ? (
               <EmptyState icon={Heart} title="No mass intentions yet" desc="Submit a mass intention and it will appear here." />
             ) : (
               <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                {massIntentions.map((m: any) => (
+                {visibleMassIntentions.map((m: any) => (
                   <div key={m.id} className="flex items-start justify-between gap-2 pb-3 border-b border-border/50 last:border-0">
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{m.member_name} — {m.intention_type}</p>
@@ -1057,6 +1311,15 @@ export default function PortalDashboard() {
                     <Badge variant={m.status === "pending" ? "outline" : "secondary"} className="shrink-0 text-xs">{m.status}</Badge>
                   </div>
                 ))}
+                {massIntentionTotalPages > 1 && (
+                  <div className="flex items-center justify-between pt-2">
+                    <p className="text-xs text-muted-foreground">Page {massIntentionPage + 1} of {massIntentionTotalPages}</p>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" disabled={massIntentionPage === 0} onClick={() => setMassIntentionPage((current) => current - 1)}><ChevronLeft className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" disabled={massIntentionPage >= massIntentionTotalPages - 1} onClick={() => setMassIntentionPage((current) => current + 1)}><ChevronRight className="h-4 w-4" /></Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

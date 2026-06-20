@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LockedFeatureNotice } from "@/components/billing/LockedFeatureNotice";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Building2, HandCoins } from "lucide-react";
+import { Archive, BarChart3, Building2, HandCoins } from "lucide-react";
 import { StatCard } from "@/components/church-admin/StatCard";
 import { formatTZS } from "@/lib/currency";
 import { useBillingAccess } from "@/hooks/use-billing-access";
@@ -78,6 +78,32 @@ export default function AnalyticsPage() {
           return data as unknown as AnalyticsSnapshotRow | null;
         },
         readOfflineCache(snapshotCacheKey, null as AnalyticsSnapshotRow | null),
+      );
+    },
+    enabled: !!churchId && billing.hasFeature("analytics"),
+  });
+
+  const { data: preservationRevenue = 0 } = useQuery({
+    queryKey: ["analytics-preservation-revenue", churchId],
+    queryFn: async () => {
+      if (!churchId) return 0;
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const { data, error } = await supabase
+        .from("member_record_subscriptions" as never)
+        .select("amount")
+        .eq("church_id", churchId)
+        .eq("status", "active")
+        .gte("reviewed_at", monthStart);
+
+      if (error) {
+        if (error.message?.includes("member_record_subscriptions")) return 0;
+        throw error;
+      }
+
+      return ((data ?? []) as unknown as Array<{ amount: number | string | null }>).reduce(
+        (sum, row) => sum + Number(row.amount ?? 0),
+        0,
       );
     },
     enabled: !!churchId && billing.hasFeature("analytics"),
@@ -174,11 +200,12 @@ export default function AnalyticsPage() {
         </Card>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <StatCard title="This Month" value={formatTZS(payload.thisTotal)} icon={HandCoins} trend={{ value: Math.round(Math.abs(payload.overallChange)), positive: isGrowth }} />
             <StatCard title="Last Month" value={formatTZS(payload.lastTotal)} icon={HandCoins} />
             <StatCard title="Transactions" value={payload.transactionCount} icon={BarChart3} />
             <StatCard title="Categories" value={payload.categoryCount} icon={Building2} />
+            <StatCard title="Preservation Revenue" value={formatTZS(preservationRevenue)} icon={Archive} />
           </div>
 
           {showCharts && chartPayload ? (
