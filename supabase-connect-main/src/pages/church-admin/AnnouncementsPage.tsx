@@ -135,6 +135,18 @@ const mockTemplates: Record<SuggestionType, Record<LanguageType, Array<Pick<Mess
   },
 };
 
+const templateTypeAliases: Record<SuggestionType, string[]> = {
+  service: ["service", "sunday_service"],
+  youth: ["youth", "youth_meeting"],
+  prayer: ["prayer", "prayer_meeting"],
+  event: ["event", "special_event"],
+};
+
+type MessageTemplateLike = Partial<MessageTemplateRecord> & {
+  body?: string | null;
+  content?: string | null;
+};
+
 function shuffleTemplates(items: MessageTemplateRecord[]) {
   const copy = [...items];
 
@@ -155,6 +167,26 @@ function getFallbackTitle(type: SuggestionType, selectedLanguage: LanguageType) 
     suggestionOptions.find((option) => option.type === type)?.fallbackTitle[selectedLanguage] ??
     suggestionOptions[0].fallbackTitle[selectedLanguage]
   );
+}
+
+function normalizeMessageTemplate(
+  template: MessageTemplateLike,
+  fallbackType: SuggestionType,
+  fallbackLanguage: LanguageType,
+  index: number,
+): MessageTemplateRecord | null {
+  const content = (template.content ?? template.body ?? "").trim();
+  if (!content) return null;
+
+  return {
+    id: template.id ?? `live-${fallbackType}-${fallbackLanguage}-${index}`,
+    type: template.type ?? fallbackType,
+    language: template.language ?? fallbackLanguage,
+    title: template.title ?? null,
+    content,
+    created_at: template.created_at ?? new Date().toISOString(),
+    updated_at: template.updated_at ?? template.created_at ?? new Date().toISOString(),
+  };
 }
 
 function getMockTemplates(type: SuggestionType, selectedLanguage: LanguageType): MessageTemplateRecord[] {
@@ -220,6 +252,21 @@ function isMissingAnnouncementRpc(error: unknown) {
   const text = `${record.message ?? ""} ${record.details ?? ""} ${record.hint ?? ""}`.toLowerCase();
 
   return record.code === "PGRST202" || text.includes("schema cache") || text.includes("could not find the function");
+}
+
+function isMissingAiMessageStorage(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+
+  const record = error as { code?: string; message?: string; details?: string; hint?: string };
+  const text = `${record.message ?? ""} ${record.details ?? ""} ${record.hint ?? ""}`.toLowerCase();
+
+  return (
+    record.code === "PGRST202" ||
+    text.includes("schema cache") ||
+    text.includes("public.messages") ||
+    text.includes("could not find the table") ||
+    text.includes("relation \"public.messages\" does not exist")
+  );
 }
 
 export default function AnnouncementsPage() {
@@ -516,7 +563,7 @@ export default function AnnouncementsPage() {
         supabase
           .from("message_templates")
           .select("*")
-          .eq("type", type)
+          .in("type", templateTypeAliases[type] ?? [type])
           .eq("language", selectedLanguage),
         pause(AI_GENERATION_DELAY_MS),
       ]);
@@ -524,7 +571,9 @@ export default function AnnouncementsPage() {
       const { data, error } = response;
       if (error) throw error;
 
-      const templates = (data ?? []) as MessageTemplateRecord[];
+      const templates = ((data ?? []) as MessageTemplateLike[])
+        .map((template, index) => normalizeMessageTemplate(template, type, selectedLanguage, index))
+        .filter((template): template is MessageTemplateRecord => Boolean(template));
       if (templates.length === 0) {
         throw new Error("No templates returned from Supabase for this selection.");
       }
@@ -574,6 +623,7 @@ export default function AnnouncementsPage() {
     mutationFn: async () => {
       if (!churchId) throw new Error("No church context");
       if (!aiDraft.content.trim()) throw new Error("Choose a template or write a message first.");
+      assertClientRateLimit(`announcement-post:${churchId}`, 10, 10 * 60 * 1000, "announcement posts");
 
       const payload: MessageInsert = {
         church_id: churchId,
@@ -585,11 +635,55 @@ export default function AnnouncementsPage() {
         created_by: user?.id ?? null,
       };
 
-      const { error } = await supabase.from("messages").insert(payload);
-      if (error) throw error;
+      const { data: announcementResult, error: announcementError } = await supabase.rpc("save_church_announcement" as never, {
+        _announcement_id: null,
+        _church_id: churchId,
+        _title: payload.title,
+        _content: payload.content,
+        _is_published: true,
+      } as never);
+
+      if (announcementError) {
+        if (!isMissingAnnouncementRpc(announcementError)) throw announcementError;
+
+        const { error: insertError } = await supabase
+          .from("announcements")
+          .insert({
+            church_id: churchId,
+            title: payload.title,
+            content: payload.content,
+            is_published: true,
+            published_at: new Date().toISOString(),
+            created_by: user?.id ?? null,
+          });
+
+        if (insertError) throw insertError;
+      } else {
+        const result = announcementResult as AnnouncementMutationResult | null;
+        if (!result?.success) {
+          throw new Error(result?.error || "Announcement publish failed.");
+        }
+      }
+
+      const { error: messageError } = await supabase.from("messages").insert(payload);
+      if (messageError && !isMissingAiMessageStorage(messageError)) {
+        console.warn("Generated message was published as an announcement, but message history storage failed:", messageError);
+      }
+
+      return { stored: !messageError };
     },
-    onSuccess: () => {
-      toast({ title: "Message sent", description: "The generated message has been stored as sent." });
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["announcements", churchId] });
+      queryClient.invalidateQueries({ queryKey: ["portal-announcements"] });
+      queryClient.invalidateQueries({ queryKey: ["portal-announcements-all"] });
+      queryClient.invalidateQueries({ queryKey: ["dash-announcements"] });
+      queryClient.invalidateQueries({ queryKey: ["portal-home"] });
+      toast({
+        title: "Announcement sent",
+        description: result.stored
+          ? "Members can now see it in their announcements."
+          : "Members can now see it. Message history storage will be available after the schema refresh.",
+      });
       setAiDraft(EMPTY_AI_FORM);
     },
     onError: (err: unknown) => {

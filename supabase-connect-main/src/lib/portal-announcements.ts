@@ -14,6 +14,11 @@ export type PortalAnnouncementRecord = {
   archived_at: string | null;
 };
 
+export function getPortalAnnouncementsCache(churchId: string | null | undefined, limit = 50) {
+  if (!churchId) return [] as PortalAnnouncementRecord[];
+  return readOfflineCache(`offline-cache:portal-announcements-latest:${churchId}:${limit}`, [] as PortalAnnouncementRecord[]);
+}
+
 export async function fetchPortalAnnouncements(churchId: string | null | undefined, limit = 50) {
   if (!churchId) return [];
   const cacheKey = `offline-cache:portal-announcements-latest:${churchId}:${limit}`;

@@ -8,13 +8,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Palette, Church, Loader2, Image, Check, RotateCcw, Eye, CreditCard } from "lucide-react";
+import { Palette, Church, Loader2, Image, Check, RotateCcw, Eye, CreditCard, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useBillingAccess } from "@/hooks/use-billing-access";
 import OptimizedImageUpload from "@/components/church-admin/OptimizedImageUpload";
 import type { UploadResult } from "@/lib/file-upload";
+import {
+  birthdayBibleVerseOptions,
+  fetchChurchMessageTemplate,
+  getDefaultTemplate,
+  renderChurchMessageTemplate,
+  saveChurchMessageTemplate,
+  type ChurchMessageTemplate,
+  type ChurchMessageTemplateType,
+} from "@/lib/church-message-templates";
+
+const templateTypeOptions: Array<{ value: ChurchMessageTemplateType; label: string }> = [
+  { value: "birthday_wish", label: "Birthday wishes" },
+  { value: "wedding_anniversary_wish", label: "Wedding anniversary wishes" },
+  { value: "service_recognition", label: "Service / volunteer recognition" },
+  { value: "contribution_appreciation", label: "Contribution appreciation" },
+];
 
 export default function SettingsPage() {
   const { churchId } = useAuth();
@@ -31,6 +48,8 @@ export default function SettingsPage() {
   const [customHex, setCustomHex] = useState("");
   const [customError, setCustomError] = useState("");
   const [previewColor, setPreviewColor] = useState<string | null>(null);
+  const [templateType, setTemplateType] = useState<ChurchMessageTemplateType>("birthday_wish");
+  const [messageTemplate, setMessageTemplate] = useState<ChurchMessageTemplate>(() => getDefaultTemplate("birthday_wish", null));
 
   const { data: church } = useQuery({
     queryKey: ["church-settings", churchId],
@@ -54,6 +73,11 @@ export default function SettingsPage() {
     },
     enabled: !!churchId,
   });
+  const { data: savedTemplate, isLoading: templateLoading } = useQuery({
+    queryKey: ["church-message-template", churchId, templateType],
+    queryFn: () => fetchChurchMessageTemplate(churchId, templateType),
+    enabled: !!churchId,
+  });
 
   useEffect(() => {
     if (church) {
@@ -65,6 +89,10 @@ export default function SettingsPage() {
       setThemeColor(church.theme_color || "#d4a017");
     }
   }, [church]);
+
+  useEffect(() => {
+    setMessageTemplate(savedTemplate ?? getDefaultTemplate(templateType, churchId ?? null));
+  }, [churchId, savedTemplate, templateType]);
 
   const saveGeneral = useMutation({
     mutationFn: async () => {
@@ -100,6 +128,17 @@ export default function SettingsPage() {
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
+  const saveMessageTemplate = useMutation({
+    mutationFn: async () => {
+      await saveChurchMessageTemplate({ ...messageTemplate, church_id: churchId ?? null, template_type: templateType });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["church-message-template", churchId, templateType] });
+      toast({ title: "Message template saved" });
+    },
+    onError: (err: any) => toast({ title: "Unable to save template", description: err.message, variant: "destructive" }),
+  });
+
   const handlePresetSelect = (hex: string) => {
     setThemeColor(hex);
     setPreviewColor(hex);
@@ -126,6 +165,10 @@ export default function SettingsPage() {
     setPreviewColor("#d4a017");
     setCustomHex("");
     setCustomError("");
+  };
+
+  const resetMessageTemplate = () => {
+    setMessageTemplate(getDefaultTemplate(templateType, churchId ?? null));
   };
 
   const handleLogoUploaded = async (result: UploadResult) => {
@@ -173,6 +216,12 @@ export default function SettingsPage() {
 
   const isChanged = themeColor !== activeThemeColor;
   const selectedPreset = THEME_PRESETS.find(p => p.hex.toLowerCase() === themeColor.toLowerCase());
+  const renderedTemplatePreview = renderChurchMessageTemplate(messageTemplate, {
+    church_name: churchName || church?.name,
+    member_name: "Tino Chrisostom",
+    date: new Date().toLocaleDateString("en-TZ"),
+    community_name: "Mt. Rita",
+  });
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -190,6 +239,9 @@ export default function SettingsPage() {
           </TabsTrigger>
           <TabsTrigger value="billing">
             <CreditCard className="mr-1.5 h-3.5 w-3.5" /> Billing / Plan
+          </TabsTrigger>
+          <TabsTrigger value="messages">
+            <MessageCircle className="mr-1.5 h-3.5 w-3.5" /> Messages
           </TabsTrigger>
         </TabsList>
 
@@ -287,6 +339,84 @@ export default function SettingsPage() {
               <Button asChild>
                 <Link to="/church-admin/settings/billing">Open Billing & Plan Management</Link>
               </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="messages" className="mt-4 space-y-4">
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="text-base font-sans flex items-center gap-2">
+                <MessageCircle className="h-4 w-4 text-primary" /> Personal Message Templates
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Template type</Label>
+                  <select
+                    value={templateType}
+                    onChange={(event) => setTemplateType(event.target.value as ChurchMessageTemplateType)}
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    {templateTypeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Default Bible verse</Label>
+                  <select
+                    value={messageTemplate.default_bible_verse ?? ""}
+                    onChange={(event) =>
+                      setMessageTemplate((current) => ({ ...current, default_bible_verse: event.target.value || null }))
+                    }
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">No verse</option>
+                    {birthdayBibleVerseOptions.map((option) => (
+                      <option key={option.reference} value={option.reference}>{option.reference}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Title</Label>
+                <Input
+                  value={messageTemplate.title}
+                  onChange={(event) => setMessageTemplate((current) => ({ ...current, title: event.target.value }))}
+                  disabled={templateLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Template body</Label>
+                <Textarea
+                  rows={10}
+                  value={messageTemplate.body}
+                  onChange={(event) => setMessageTemplate((current) => ({ ...current, body: event.target.value }))}
+                  disabled={templateLoading}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Placeholders: {"{church_name}"}, {"{member_name}"}, {"{first_name}"}, {"{date}"}, {"{bible_verse}"}, {"{community_name}"}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border bg-secondary/25 p-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preview</p>
+                <p className="whitespace-pre-wrap text-sm leading-6">{renderedTemplatePreview}</p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={() => saveMessageTemplate.mutate()} disabled={saveMessageTemplate.isPending || templateLoading}>
+                  {saveMessageTemplate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Template
+                </Button>
+                <Button variant="outline" onClick={resetMessageTemplate}>
+                  <RotateCcw className="mr-2 h-4 w-4" /> Reset to Default
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

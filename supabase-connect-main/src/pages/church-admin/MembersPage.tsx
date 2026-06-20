@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, Phone, Mail, Calendar, Building2, BookOpen, Heart, HandCoins, Loader2, Send, User } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, Phone, Mail, Calendar, Building2, BookOpen, Heart, HandCoins, Loader2, Send, User, MessageCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useBillingAccess } from "@/hooks/use-billing-access";
@@ -27,6 +27,8 @@ import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { getEdgeFunctionErrorMessage } from "@/lib/edge-function-error";
 import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { PaginationFooter } from "@/components/ui/pagination-footer";
+import { fetchChurchMessageTemplate, renderChurchMessageTemplate } from "@/lib/church-message-templates";
+import { openWhatsAppShare } from "@/lib/whatsapp-share";
 
 type MemberRow = Tables<"members">;
 type InviteInsert = TablesInsert<"invitations">;
@@ -60,6 +62,45 @@ export default function MembersPage() {
   const billing = useBillingAccess();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const { data: church } = useQuery({
+    queryKey: ["members-page-church", churchId],
+    queryFn: async () => {
+      if (!churchId) return null;
+      const { data, error } = await supabase.from("churches").select("name").eq("id", churchId).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!churchId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: birthdayTemplate } = useQuery({
+    queryKey: ["church-message-template", churchId, "birthday_wish"],
+    queryFn: () => fetchChurchMessageTemplate(churchId, "birthday_wish"),
+    enabled: !!churchId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: anniversaryTemplate } = useQuery({
+    queryKey: ["church-message-template", churchId, "wedding_anniversary_wish"],
+    queryFn: () => fetchChurchMessageTemplate(churchId, "wedding_anniversary_wish"),
+    enabled: !!churchId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const shareMemberMessage = useCallback((member: MemberRow, type: "birthday" | "anniversary") => {
+    const template = type === "birthday" ? birthdayTemplate : anniversaryTemplate;
+    if (!template) return;
+
+    openWhatsAppShare(
+      renderChurchMessageTemplate(template, {
+        church_name: church?.name,
+        member_name: member.full_name,
+        date: new Date().toLocaleDateString("en-TZ"),
+      }),
+    );
+  }, [anniversaryTemplate, birthdayTemplate, church?.name]);
 
   const {
     data: memberContext,
@@ -526,6 +567,16 @@ export default function MembersPage() {
                       {sendingInviteId === m.id ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Send className="mr-2 h-3 w-3" />}
                       {invitedMemberIds.includes(m.id) ? "Invited" : "Send Invite"}
                     </Button>
+                    {m.date_of_birth && (
+                      <Button size="sm" variant="outline" onClick={() => shareMemberMessage(m, "birthday")}>
+                        <MessageCircle className="mr-2 h-3 w-3" /> Share Birthday Wish to WhatsApp
+                      </Button>
+                    )}
+                    {m.wedding_date && (
+                      <Button size="sm" variant="outline" onClick={() => shareMemberMessage(m, "anniversary")}>
+                        <MessageCircle className="mr-2 h-3 w-3" /> Share Anniversary Wish to WhatsApp
+                      </Button>
+                    )}
                     <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(m.id)}><Trash2 className="mr-2 h-3 w-3" /> Remove</Button>
                   </div>
                 </div>
@@ -574,7 +625,7 @@ export default function MembersPage() {
         </Dialog>
       );
     };
-  }, [detailMember, getMemberCommunity, getMemberMinistry, getMemberFamily, getCommunityName, getMinistryName, getFamilyName, getMemberContribs, invitedMemberIds, statusColor, openEdit, sendInvite, sendingInviteId, setDetailMember, setDeleteConfirm]);
+  }, [detailMember, getMemberCommunity, getMemberMinistry, getMemberFamily, getCommunityName, getMinistryName, getFamilyName, getMemberContribs, invitedMemberIds, statusColor, openEdit, sendInvite, sendingInviteId, setDetailMember, setDeleteConfirm, shareMemberMessage]);
 
   if (authLoading || memberContextLoading) {
     return (

@@ -25,8 +25,10 @@ import { useBillingAccess } from "@/hooks/use-billing-access";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureBirthdayAnnouncements } from "@/lib/birthday-announcements";
+import { fetchChurchMessageTemplate, renderChurchMessageTemplate } from "@/lib/church-message-templates";
 import { formatTZS } from "@/lib/currency";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
+import { openWhatsAppShare } from "@/lib/whatsapp-share";
 
 type ContributionRow = {
   id: string;
@@ -237,6 +239,12 @@ export default function ChurchDashboard() {
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+  const { data: birthdayTemplate } = useQuery({
+    queryKey: ["church-message-template", churchId, "birthday_wish"],
+    queryFn: () => fetchChurchMessageTemplate(churchId, "birthday_wish"),
+    enabled: !!churchId && loadDeferredDashboardData,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const now = new Date();
   const isDeferredPending = !loadDeferredDashboardData || isDeferredLoading;
@@ -305,6 +313,7 @@ export default function ChurchDashboard() {
       title: `${member.full_name} has a birthday today`,
       detail: "Birthday reminder",
       date: now.toISOString(),
+      memberName: member.full_name,
     }));
     return [...birthdays, ...payments, ...notices, ...events]
       .sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())
@@ -337,6 +346,17 @@ export default function ChurchDashboard() {
     if (!joinLink) return;
     const message = `Join ${data?.churchName || "our church"} on Kanisa Connect: ${joinLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  };
+
+  const shareBirthdayWishOnWhatsApp = (memberName: string) => {
+    if (!birthdayTemplate) return;
+    openWhatsAppShare(
+      renderChurchMessageTemplate(birthdayTemplate, {
+        church_name: data?.churchName,
+        member_name: memberName,
+        date: now.toLocaleDateString("en-TZ"),
+      }),
+    );
   };
 
   return (
@@ -571,6 +591,18 @@ export default function ChurchDashboard() {
                   <p className="text-sm font-medium text-white">{item.title}</p>
                   <p className="mt-1 text-sm text-white/58">{item.detail}</p>
                   <p className="mt-2 text-xs text-white/40">{relativeDate(item.date)}</p>
+                  {"memberName" in item && item.memberName ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-3 border-white/15 bg-transparent"
+                      onClick={() => shareBirthdayWishOnWhatsApp(item.memberName)}
+                    >
+                      <MessageCircle className="mr-2 h-3.5 w-3.5" />
+                      Share Birthday Wish to WhatsApp
+                    </Button>
+                  ) : null}
                 </div>
               ))}
               {!recentActivity.length ? (

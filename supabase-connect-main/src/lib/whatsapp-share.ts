@@ -97,3 +97,7 @@ export function buildContributionShareMessage({
 }) {
   return `Changia ${clean(churchName) || "kanisa"} kupitia Kanisani Connect:\n${givingLink}`;
 }
+
+export function buildRenderedChurchMessageShare(renderedMessage: string) {
+  return clean(renderedMessage);
+}

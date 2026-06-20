@@ -9,8 +9,7 @@ import { Megaphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CommentThread, type CommentReactionSummary } from "@/components/portal/CommentThread";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
-import { ensureBirthdayAnnouncements } from "@/lib/birthday-announcements";
-import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
+import { fetchPortalAnnouncements, getPortalAnnouncementsCache } from "@/lib/portal-announcements";
 
 const ANNOUNCEMENT_REACTION_EMOJIS = ["🎉", "❤️", "🙏", "🥳", "👏", "😊"] as const;
 const ANNOUNCEMENT_COMMENT_EMOJIS = ["🎉", "❤️", "🙏", "👏", "😊"] as const;
@@ -37,12 +36,19 @@ export default function PortalAnnouncements() {
     queryKey: ["portal-announcements-all", user?.id, churchId],
     queryFn: async () => {
       if (!churchId) return [];
-      await ensureBirthdayAnnouncements(churchId);
-      const announcementRows = await fetchPortalAnnouncements(churchId, 50);
-      const announcementIds = announcementRows.map((row) => row.id);
+      const announcementRows = await fetchPortalAnnouncements(churchId, 25);
+      const celebrationRows = announcementRows.filter((announcement) =>
+        isCelebrationAnnouncement(announcement.title, announcement.content),
+      );
+      const announcementIds = celebrationRows.map((row) => row.id);
 
       if (announcementIds.length === 0) {
-        return [];
+        return announcementRows.map((announcement) => ({
+          ...announcement,
+          isCelebration: false,
+          reactions: [],
+          comments: [],
+        }));
       }
 
       const [{ data: reactions, error: reactionsError }, { data: comments, error: commentsError }] = await Promise.all([
@@ -57,8 +63,15 @@ export default function PortalAnnouncements() {
           .order("created_at", { ascending: true }),
       ]);
 
-      if (reactionsError) throw reactionsError;
-      if (commentsError) throw commentsError;
+      if (reactionsError || commentsError) {
+        console.warn("Announcement reactions/comments unavailable; showing announcements only.", reactionsError || commentsError);
+        return announcementRows.map((announcement) => ({
+          ...announcement,
+          isCelebration: isCelebrationAnnouncement(announcement.title, announcement.content),
+          reactions: [],
+          comments: [],
+        }));
+      }
 
       const commenterIds = [...new Set(((comments as any[]) ?? []).map((comment) => comment.user_id).filter(Boolean))];
       const { data: profiles, error: profilesError } = commenterIds.length
@@ -144,6 +157,14 @@ export default function PortalAnnouncements() {
       }));
     },
     enabled: !!churchId && isFeatureEnabled("announcements"),
+    initialData: () =>
+      getPortalAnnouncementsCache(churchId, 25).map((announcement) => ({
+        ...announcement,
+        isCelebration: isCelebrationAnnouncement(announcement.title, announcement.content),
+        reactions: [],
+        comments: [],
+      })),
+    staleTime: 30_000,
   });
 
   const toggleReaction = useMutation({
