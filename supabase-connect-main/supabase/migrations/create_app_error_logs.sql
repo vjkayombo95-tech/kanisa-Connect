@@ -45,11 +45,7 @@ on public.app_error_logs
 for select
 to authenticated
 using (
-  exists (
-    select 1
-    from public.super_admins sa
-    where sa.id = auth.uid()
-  )
+  public.is_super_admin(auth.uid())
   or (
     church_id is not null
     and exists (

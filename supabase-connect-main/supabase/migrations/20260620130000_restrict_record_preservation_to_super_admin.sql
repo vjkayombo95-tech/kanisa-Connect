@@ -7,18 +7,10 @@ on public.member_record_subscriptions
 for all
 to authenticated
 using (
-  exists (
-    select 1
-    from public.super_admins sa
-    where sa.id = auth.uid()
-  )
+  public.is_super_admin(auth.uid())
 )
 with check (
-  exists (
-    select 1
-    from public.super_admins sa
-    where sa.id = auth.uid()
-  )
+  public.is_super_admin(auth.uid())
 );
 
 drop policy if exists "Admins read record preservation proofs" on storage.objects;
@@ -29,11 +21,7 @@ for select
 to authenticated
 using (
   bucket_id = 'record-preservation-proofs'
-  and exists (
-    select 1
-    from public.super_admins sa
-    where sa.id = auth.uid()
-  )
+  and public.is_super_admin(auth.uid())
 );
 
 create or replace function public.review_member_record_subscription(
@@ -66,11 +54,7 @@ begin
 
   if not (
     auth.role() = 'service_role'
-    or exists (
-      select 1
-      from public.super_admins sa
-      where sa.id = auth.uid()
-    )
+    or public.is_super_admin(auth.uid())
   ) then
     raise exception 'Only platform super admins can review record preservation payments.';
   end if;
@@ -147,11 +131,7 @@ begin
   -- Expiry only locks historical archive visibility. Never delete member records because preservation is inactive.
   if not (
     auth.role() = 'service_role'
-    or exists (
-      select 1
-      from public.super_admins sa
-      where sa.id = auth.uid()
-    )
+    or public.is_super_admin(auth.uid())
   ) then
     raise exception 'Only platform super admins can expire record preservation subscriptions.';
   end if;

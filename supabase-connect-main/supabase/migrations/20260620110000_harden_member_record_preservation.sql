@@ -63,11 +63,7 @@ begin
   end if;
 
   if not (
-    exists (
-      select 1
-      from public.super_admins sa
-      where sa.id = auth.uid()
-    )
+    public.is_super_admin(auth.uid())
     or exists (
       select 1
       from public.user_roles ur

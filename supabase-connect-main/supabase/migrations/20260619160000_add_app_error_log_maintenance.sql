@@ -25,11 +25,7 @@ begin
   end if;
 
   if not (
-    exists (
-      select 1
-      from public.super_admins sa
-      where sa.id = auth.uid()
-    )
+    public.is_super_admin(auth.uid())
     or (
       v_log.church_id is not null
       and exists (
@@ -68,11 +64,7 @@ as $$
 declare
   v_deleted_count integer := 0;
 begin
-  if not exists (
-    select 1
-    from public.super_admins sa
-    where sa.id = auth.uid()
-  ) then
+  if not public.is_super_admin(auth.uid()) then
     raise exception 'Only super admins can delete old application logs.';
   end if;
 

@@ -14,15 +14,6 @@ export type PortalAnnouncementRecord = {
   archived_at: string | null;
 };
 
-function isMissingRpc(error: unknown) {
-  if (!error || typeof error !== "object") return false;
-
-  const record = error as { code?: string; message?: string; details?: string; hint?: string };
-  const text = `${record.message ?? ""} ${record.details ?? ""} ${record.hint ?? ""}`.toLowerCase();
-
-  return record.code === "PGRST202" || text.includes("schema cache") || text.includes("could not find the function");
-}
-
 export async function fetchPortalAnnouncements(churchId: string | null | undefined, limit = 50) {
   if (!churchId) return [];
   const cacheKey = `offline-cache:portal-announcements-latest:${churchId}:${limit}`;
@@ -39,11 +30,7 @@ export async function fetchPortalAnnouncements(churchId: string | null | undefin
         return ((data ?? []) as PortalAnnouncementRecord[]);
       }
 
-      if (!isMissingRpc(error)) {
-        throw error;
-      }
-
-      console.warn("Portal announcements RPC unavailable; using direct Supabase fallback:", error);
+      console.warn("Portal announcements RPC failed; using direct Supabase fallback:", error);
 
       const { data: fallbackData, error: fallbackError } = await supabase
         .from("announcements")

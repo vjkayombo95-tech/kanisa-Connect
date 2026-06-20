@@ -7,11 +7,7 @@ on public.app_error_logs
 for select
 to authenticated
 using (
-  exists (
-    select 1
-    from public.super_admins sa
-    where sa.id = auth.uid()
-  )
+  public.is_super_admin(auth.uid())
 );
 
 -- Keep direct table inserts blocked. Frontend logging must use public.log_app_error().
@@ -28,11 +24,7 @@ declare
 begin
   if not (
     auth.role() = 'service_role'
-    or exists (
-      select 1
-      from public.super_admins sa
-      where sa.id = auth.uid()
-    )
+    or public.is_super_admin(auth.uid())
   ) then
     raise exception 'Only platform super admins can resolve application logs.';
   end if;
@@ -67,11 +59,7 @@ declare
 begin
   if not (
     auth.role() = 'service_role'
-    or exists (
-      select 1
-      from public.super_admins sa
-      where sa.id = auth.uid()
-    )
+    or public.is_super_admin(auth.uid())
   ) then
     raise exception 'Only platform super admins can delete old application logs.';
   end if;
