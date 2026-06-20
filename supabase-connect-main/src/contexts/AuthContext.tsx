@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
+import { captureException, logSupabaseError } from "@/lib/error-logger";
 
 type AppRole = "super_admin" | "church_admin" | "pastor" | "secretary" | "treasurer" | "member";
 
@@ -48,6 +50,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (typeof window === "undefined") return;
     if (window.location.pathname === path) return;
     window.location.replace(path);
+  };
+
+  const resetUserData = () => {
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setIsSuperAdmin(false);
+    setChurchId(null);
+    setUserRole(null);
+    setIsLoading(false);
+  };
+
+  const isInvalidRefreshTokenError = (error: unknown) => {
+    const message = String((error as { message?: string } | null)?.message || "").toLowerCase();
+    return message.includes("invalid refresh token") || message.includes("refresh token not found");
+  };
+
+  const returnToLoginAfterExpiredSession = () => {
+    if (typeof window === "undefined" || window.location.pathname === "/login") return;
+    const redirect = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+    window.location.replace(`/login?reason=session_expired&redirect=${redirect}`);
   };
 
   const resolveChurchContext = async (
@@ -119,15 +142,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadUserData = async (currentUser: User | null) => {
     if (!currentUser) {
-      setProfile(null);
-      setIsSuperAdmin(false);
-      setChurchId(null);
-      setUserRole(null);
-      setIsLoading(false);
+      resetUserData();
       return;
     }
 
     try {
+      const authCacheKey = `offline-cache:auth-context:${currentUser.id}`;
+      const cachedContext = readOfflineCache<{
+        profile: any | null;
+        isSuperAdmin: boolean;
+        churchId: string | null;
+        userRole: AppRole | null;
+      } | null>(authCacheKey, null);
+
+      if (cachedContext) {
+        setProfile(cachedContext.profile);
+        setIsSuperAdmin(cachedContext.isSuperAdmin);
+        setChurchId(cachedContext.churchId);
+        setUserRole(cachedContext.userRole);
+      }
+
       const { data: superAdmin, error: superAdminError } = await supabase
         .from("super_admins")
         .select("id")
@@ -136,13 +170,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (superAdminError) throw superAdminError;
 
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", currentUser.id)
-        .maybeSingle();
+      const profileData = await withOfflineCache(
+        `offline-cache:profile:${currentUser.id}`,
+        async () => {
+          const { data, error: profileError } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", currentUser.id)
+            .maybeSingle();
 
-      if (profileError) throw profileError;
+          if (profileError) throw profileError;
+          return data;
+        },
+        cachedContext?.profile ?? null,
+      );
 
       setProfile(profileData);
 
@@ -154,6 +195,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setChurchId(resolvedContext.churchId);
       setUserRole(resolvedContext.role);
 
+      window.localStorage.setItem(authCacheKey, JSON.stringify({
+        profile: profileData,
+        isSuperAdmin: isUserSuperAdmin,
+        churchId: resolvedContext.churchId,
+        userRole: resolvedContext.role,
+      }));
+
       if (shouldAutoNavigate()) {
         if (isUserSuperAdmin) {
           redirectTo("/super-admin");
@@ -164,7 +212,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (err) {
-      console.error("Error loading user data:", err);
+      captureException(err, {
+        page: "Authentication",
+        component: "AuthProvider",
+        function: "loadUserData",
+        user_id: currentUser.id,
+      });
       setProfile(null);
       setIsSuperAdmin(false);
       setChurchId(null);
@@ -188,7 +241,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setTimeout(() => loadUserData(newSession?.user ?? null), 0);
     });
 
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: existingSession }, error }) => {
+      if (error) {
+        if (isInvalidRefreshTokenError(error)) {
+          logSupabaseError(error, {
+            page: "Authentication",
+            component: "AuthProvider",
+            function: "restoreSession",
+            operation: "auth.getSession",
+            metadata: { reason: "invalid_refresh_token" },
+          });
+          await supabase.auth.signOut({ scope: "local" });
+          resetUserData();
+          returnToLoginAfterExpiredSession();
+          return;
+        }
+
+        logSupabaseError(error, {
+          page: "Authentication",
+          component: "AuthProvider",
+          function: "restoreSession",
+          operation: "auth.getSession",
+        });
+        resetUserData();
+        return;
+      }
+
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
       loadUserData(existingSession?.user ?? null);
@@ -199,12 +277,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-    setIsSuperAdmin(false);
-    setChurchId(null);
-    setUserRole(null);
+    resetUserData();
   };
 
   const refreshUserData = async () => {

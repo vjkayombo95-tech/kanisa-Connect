@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Church, ArrowRight, Users, HandCoins, Calendar, BookOpen, Shield, Building2, Sparkles, TrendingUp, HeartHandshake, Activity, CreditCard, BarChart3, CheckCircle2, Smartphone, Check, Crown, Gem, Quote, Star } from "lucide-react";
+import { Church, ArrowRight, Users, HandCoins, Calendar, BookOpen, Shield, Building2, Sparkles, TrendingUp, HeartHandshake, Activity, CreditCard, BarChart3, CheckCircle2, Smartphone, Check, Crown, Gem, Quote, Star, LockKeyhole, EyeOff } from "lucide-react";
 
 const features = [
   { icon: CreditCard, title: "Digital Giving", desc: "Accept offerings, tithes, and donations seamlessly" },
@@ -77,6 +77,7 @@ const previewActivity = [
 
 const ministryHealthBars = [42, 58, 82, 65, 74, 92];
 const careTeamBars = [78, 64, 88];
+const onboardingSignupPath = "/login?mode=signup&redirect=%2Fonboarding";
 
 const experiences = [
   { title: "Church Admin", desc: "Full workspace for managing your church operations", url: "/church-admin", icon: Building2 },
@@ -84,12 +85,14 @@ const experiences = [
   { title: "Super Admin", desc: "Platform-level management and analytics", url: "/super-admin", icon: Shield },
 ];
 
-const trustedChurches = [
-  "Grace Covenant Church",
-  "Redeemed Worship Centre",
-  "New Life Cathedral",
-  "Hope Chapel Network",
-  "Kingdom Harvest Fellowship",
+const trustedMediaPartners = [
+  "Dar Business Daily",
+  "Swahili Digital News",
+  "Bongo Culture",
+  "Arusha Travel Guide",
+  "Mwanza Sports Hub",
+  "Dodoma Tech Review",
+  "Zanzibar Lifestyle",
 ];
 
 const testimonials = [
@@ -122,33 +125,39 @@ const testimonials = [
 const pricingPlans = [
   {
     title: "Basic",
-    price: "Free",
+    priceLabel: "Sign in to view pricing",
+    summary: "For churches beginning their digital workspace.",
+    metric: "Starter tools",
     features: ["Member management", "Basic reports", "Event tracking"],
-    cta: "Get Started",
-    href: "/onboarding",
+    cta: "Login for price",
+    href: "/login",
     icon: Shield,
   },
   {
     title: "Pro",
-    price: "TZS 70,000 / month",
+    priceLabel: "Login to unlock rates",
+    summary: "For growing teams that need giving, attendance, and deeper reporting.",
+    metric: "Most requested",
     features: [
       "Everything in Basic",
       "QR attendance system",
       "Digital giving (M-Pesa, Airtel Money)",
       "Advanced reports",
     ],
-    cta: "Start Free Trial",
-    href: "/onboarding",
+    cta: "Login for price",
+    href: "/login",
     badge: "Most Popular",
     featured: true,
     icon: Crown,
   },
   {
     title: "Enterprise",
-    price: "Custom",
+    priceLabel: "Request pricing after login",
+    summary: "For dioceses, networks, and multi-site ministries with custom needs.",
+    metric: "Tailored setup",
     features: ["All Pro features", "Custom integrations", "Dedicated support"],
-    cta: "Contact Us",
-    href: "#contact",
+    cta: "Login for price",
+    href: "/login",
     icon: Gem,
   },
 ];
@@ -364,7 +373,7 @@ export default function Index() {
               className="premium-button h-11 rounded-xl border border-primary/30 px-4 text-sm shadow-[0_16px_40px_-20px_rgba(245,158,11,0.9)] sm:px-5 hover:shadow-[0_20px_50px_-20px_rgba(245,158,11,0.45)]"
               asChild
             >
-              <Link to="/onboarding">
+              <Link to={onboardingSignupPath}>
                 Get Started <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -503,7 +512,7 @@ export default function Index() {
                       className="premium-button button-premium-glow h-14 rounded-2xl border border-primary/30 px-8 text-base font-semibold text-primary-foreground shadow-[0_20px_55px_-25px_rgba(245,158,11,0.95)] hover:shadow-[0_0_48px_rgba(245,158,11,0.32)]"
                       asChild
                     >
-                      <Link to="/onboarding">
+                      <Link to={onboardingSignupPath}>
                         Start Building Your Church Hub <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
@@ -802,27 +811,29 @@ export default function Index() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                    {trustedChurches.map((church, index) => (
-                      <motion.div
-                        key={church}
-                        initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
-                        whileInView={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.4 }}
-                        transition={{
-                          duration: prefersReducedMotion ? 0 : 0.65,
-                          delay: prefersReducedMotion ? 0 : 0.06 * index,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
-                        className="premium-card premium-layered-card group rounded-[1.35rem] border border-white/10 px-4 py-4 text-center transition-all duration-300 hover:border-primary/30 hover:bg-white/[0.06]"
-                      >
-                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary shadow-[0_0_24px_rgba(245,158,11,0.14)] transition-transform duration-300 group-hover:scale-105">
-                          <Church className="h-5 w-5" />
+                  <div className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#25231f]/90 shadow-[0_24px_80px_-50px_rgba(0,0,0,0.9)]">
+                    <div className="flex min-h-20 items-center gap-8 px-5 sm:px-7">
+                      <div className="shrink-0 text-[11px] font-semibold uppercase leading-5 tracking-[0.28em] text-white/58">
+                        Trusted media
+                        <br />
+                        access across
+                        <br />
+                        Tanzania
+                      </div>
+                      <div className="trusted-media-marquee min-w-0 flex-1 overflow-hidden">
+                        <div className="trusted-media-track">
+                          {[...trustedMediaPartners, ...trustedMediaPartners].map((partner, index) => (
+                            <span
+                              key={`${partner}-${index}`}
+                              className="trusted-media-item"
+                              aria-hidden={index >= trustedMediaPartners.length}
+                            >
+                              {partner}
+                            </span>
+                          ))}
                         </div>
-                        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/60">Partner Church</p>
-                        <p className="mt-2 text-sm leading-6 text-white/86">{church}</p>
-                      </motion.div>
-                    ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1137,10 +1148,10 @@ export default function Index() {
                 Pricing
               </div>
               <h2 className="mt-6 text-balance text-4xl font-bold font-serif text-white sm:text-5xl">
-                Simple, Transparent Pricing
+                Pricing Tailored to Your Church
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-white/68 sm:text-lg sm:leading-9">
-                Choose a plan that fits your church
+                Compare the plans publicly, then sign in to view current rates and choose the right fit.
               </p>
             </motion.div>
 
@@ -1161,10 +1172,10 @@ export default function Index() {
                 >
                   <div
                     className={[
-                      "premium-card premium-layered-card relative h-full rounded-[1.8rem] border p-6 transition-all duration-300",
+                      "premium-card premium-layered-card relative flex h-full flex-col rounded-[1.8rem] border p-6 transition-all duration-300 sm:p-7",
                       plan.featured
-                        ? "border-primary/40 shadow-[0_28px_90px_-38px_rgba(245,158,11,0.3)]"
-                        : "border-white/10 hover:border-primary/20 hover:shadow-[0_28px_80px_-36px_rgba(245,158,11,0.18)]",
+                        ? "border-primary/45 bg-primary/5 shadow-[0_34px_110px_-44px_rgba(245,158,11,0.42)]"
+                        : "border-white/10 hover:border-primary/24 hover:shadow-[0_28px_80px_-36px_rgba(245,158,11,0.18)]",
                     ].join(" ")}
                   >
                     {plan.badge ? (
@@ -1173,16 +1184,36 @@ export default function Index() {
                       </div>
                     ) : null}
 
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 text-primary shadow-[0_0_30px_rgba(245,158,11,0.14)]">
-                      <plan.icon className="h-5 w-5" />
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10 text-primary shadow-[0_0_30px_rgba(245,158,11,0.14)]">
+                        <plan.icon className="h-5 w-5" />
+                      </div>
+                      <div className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/62 backdrop-blur-md">
+                        {plan.metric}
+                      </div>
                     </div>
 
                     <div className="mt-6">
                       <h3 className="text-2xl font-semibold text-white">{plan.title}</h3>
-                      <p className="mt-3 text-3xl font-bold font-serif text-white">{plan.price}</p>
+                      <p className="mt-3 text-sm leading-7 text-white/62">{plan.summary}</p>
                     </div>
 
-                    <div className="mt-8 space-y-3">
+                    <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/10 text-primary">
+                          <LockKeyhole className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/78">Price hidden</p>
+                          <p className="mt-1 text-xl font-semibold text-white">{plan.priceLabel}</p>
+                          <p className="mt-2 text-xs leading-5 text-white/48">
+                            Rates are shown inside your account so your team always sees the latest available pricing.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 flex-1 space-y-3">
                       {plan.features.map((feature) => (
                         <div key={feature} className="flex items-start gap-3 text-white/72">
                           <div className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary/12 text-primary">
@@ -1193,10 +1224,15 @@ export default function Index() {
                       ))}
                     </div>
 
+                    <div className="mt-8 flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/58">
+                      <EyeOff className="h-4 w-4 text-primary/78" />
+                      <span>No public prices displayed</span>
+                    </div>
+
                     <Button
                       size="lg"
                       className={[
-                        "premium-button mt-10 h-13 w-full rounded-2xl text-base font-semibold",
+                        "premium-button mt-4 h-14 w-full rounded-2xl text-base font-semibold",
                         plan.featured
                           ? "button-premium-glow border border-primary/30 shadow-[0_18px_40px_-20px_rgba(245,158,11,0.95)] hover:shadow-[0_0_48px_rgba(245,158,11,0.4)]"
                           : "border border-white/12 bg-white/5 text-white hover:bg-white/10",
@@ -1289,7 +1325,7 @@ export default function Index() {
                   className="premium-button button-premium-glow h-14 rounded-2xl border border-primary/30 px-9 text-base font-semibold shadow-[0_22px_55px_-22px_rgba(245,158,11,0.95)] hover:shadow-[0_0_52px_rgba(245,158,11,0.36)]"
                   asChild
                 >
-                  <Link to="/onboarding">
+                  <Link to={onboardingSignupPath}>
                     Get Started Now <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>

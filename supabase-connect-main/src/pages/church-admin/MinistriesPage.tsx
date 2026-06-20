@@ -171,7 +171,7 @@ export default function MinistriesPage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base font-sans">{m.name}</CardTitle>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-success/20 text-success border-success/30">{m.status || "active"}</Badge>
+                    <Badge variant="outline" className="bg-success/20 text-success border-success/30">active</Badge>
                     <Button
                       variant="ghost"
                       size="icon"

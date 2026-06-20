@@ -56,7 +56,12 @@ Deno.serve(async (req) => {
     const resendFromEmail = Deno.env.get("RESEND_FROM_EMAIL");
 
     if (!resendApiKey || !resendFromEmail) {
-      throw new Error("Missing email provider configuration");
+      return new Response(JSON.stringify({
+        error: "Invitation email is not configured. Set RESEND_API_KEY and RESEND_FROM_EMAIL in Supabase function secrets.",
+      }), {
+        status: 500,
+        headers: jsonHeaders,
+      });
     }
 
     const origin = getOrigin(req);
@@ -78,7 +83,21 @@ Deno.serve(async (req) => {
 
     if (!emailResponse.ok) {
       const errorText = await emailResponse.text();
-      throw new Error(errorText || "Failed to send invitation email");
+      let providerMessage = errorText || "The provider rejected this email.";
+
+      try {
+        const providerError = JSON.parse(errorText) as { message?: string; error?: { message?: string } };
+        providerMessage = providerError.message || providerError.error?.message || providerMessage;
+      } catch {
+        // Leave the provider response text intact when it is not JSON.
+      }
+
+      return new Response(JSON.stringify({
+        error: `Email provider rejected invitation: ${providerMessage}`,
+      }), {
+        status: 502,
+        headers: jsonHeaders,
+      });
     }
 
     return new Response(JSON.stringify({ success: true }), {

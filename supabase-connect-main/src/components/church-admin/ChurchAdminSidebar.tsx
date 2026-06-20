@@ -9,7 +9,7 @@ import {
   Lock,
   ShieldCheck,
 } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
@@ -18,6 +18,7 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
+import { useBillingAccess } from "@/hooks/use-billing-access";
 import { supabase } from "@/integrations/supabase/client";
 import type { ChurchAdminFeatureKey } from "@/lib/church-admin-features";
 import { cn } from "@/lib/utils";
@@ -155,9 +156,10 @@ const groupedSections: AccordionGroup[] = [
       { titleKey: "analytics", url: "/church-admin/analytics", icon: AnalyticsIcon, featureKey: "reports" },
       { titleKey: "data_import", url: "/church-admin/data-import", icon: ImportIcon, featureKey: null },
       { titleKey: "audit_logs", url: "/church-admin/audit-logs", icon: AuditIcon, featureKey: null },
-      { titleKey: "billing", url: "/church-admin/billing", icon: BillingIcon, featureKey: null },
+      { titleKey: "System Logs", url: "/church-admin/system-logs", icon: AuditIcon, featureKey: null },
       { titleKey: "roles", url: "/church-admin/roles", icon: RolesIcon, featureKey: "roles" },
       { titleKey: "settings", url: "/church-admin/settings", icon: SettingsIcon, featureKey: null },
+      { titleKey: "billing", url: "/church-admin/settings/billing", icon: BillingIcon, featureKey: null },
     ],
   },
 ];
@@ -172,6 +174,10 @@ const panelTransition = {
 };
 
 function isItemActive(pathname: string, url: string) {
+  if (url === "/church-admin/settings") {
+    return pathname === url;
+  }
+
   return url === "/church-admin" ? pathname === url : pathname === url || pathname.startsWith(`${url}/`);
 }
 
@@ -270,6 +276,7 @@ export function ChurchAdminSidebar() {
   const location = useLocation();
   const { churchId } = useAuth();
   const { getFeatureState } = useFeatureAccess();
+  const billing = useBillingAccess();
   const { t, i18n } = useTranslation();
 
   const { data: church } = useQuery({
@@ -281,6 +288,29 @@ export function ChurchAdminSidebar() {
     },
     enabled: !!churchId,
     staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: recentErrorCount = 0 } = useQuery({
+    queryKey: ["system-log-alert-count", churchId],
+    queryFn: async () => {
+      const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      let query = supabase
+        .from("app_error_logs" as never)
+        .select("id", { count: "exact", head: true })
+        .eq("level", "error")
+        .eq("resolved", false)
+        .gte("created_at", since);
+
+      if (churchId) {
+        query = query.or(`church_id.eq.${churchId},church_id.is.null`);
+      }
+
+      const { count, error } = await query;
+      if (error) return 0;
+      return count ?? 0;
+    },
+    enabled: !!churchId,
+    refetchInterval: 60 * 1000,
   });
 
   const visibleCoreItems = useMemo(
@@ -319,6 +349,12 @@ export function ChurchAdminSidebar() {
 
     setOpenGroups((current) => {
       const merged = [...activeGroupIds, ...current.filter((id) => !activeGroupIds.includes(id))].slice(0, 2);
+      const isUnchanged = merged.length === current.length && merged.every((id, index) => id === current[index]);
+
+      if (isUnchanged) {
+        return current;
+      }
+
       return merged;
     });
   }, [activeGroupIds, collapsed]);
@@ -360,6 +396,13 @@ export function ChurchAdminSidebar() {
         active={active}
         collapsed={collapsed}
         locked={!!featureState?.locked}
+        badge={
+          item.url === "/church-admin/system-logs" && recentErrorCount >= 5 ? (
+            <span className="rounded-full border border-destructive/25 bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-destructive">
+              {recentErrorCount}
+            </span>
+          ) : null
+        }
         delay={delay}
       />
     );
@@ -387,7 +430,7 @@ export function ChurchAdminSidebar() {
             className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-primary/20 bg-[linear-gradient(145deg,rgba(250,204,21,0.24),rgba(250,204,21,0.08))] shadow-[0_18px_34px_-24px_rgba(250,204,21,0.55)]"
           >
             {church?.logo_url ? (
-              <img src={church.logo_url} alt={`${church?.name || "Church"} logo`} className="h-full w-full object-contain" />
+              <img src={church.logo_url} alt={`${church?.name || "Church"} logo`} loading="lazy" decoding="async" className="h-full w-full object-contain" />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-primary">
                 <DashboardIcon active className="h-5 w-5" />
@@ -408,7 +451,11 @@ export function ChurchAdminSidebar() {
                   Church OS
                 </p>
                 <h2 className="truncate text-sm font-semibold text-foreground">{church?.name || "Kanisa Connect"}</h2>
-                <p className="truncate text-xs text-muted-foreground">{church?.code || "Premium Workspace"}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {billing.isLoading
+                    ? "Loading plan..."
+                    : `${billing.currentPlanDefinition.name} ${billing.isTrial ? "Trial" : "Plan"}`}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -531,10 +578,17 @@ export function ChurchAdminSidebar() {
                       <Lock className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">Premium Control</p>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                        Grouped navigation keeps the workspace faster to scan while preserving your full admin toolkit.
+                      <p className="text-sm font-medium text-foreground">
+                        {billing.isLoading ? "Loading subscription..." : `${billing.currentPlanDefinition.name} Plan`}
                       </p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        {billing.isTrial
+                          ? `${billing.trialDaysRemaining} trial day(s) remaining.`
+                          : `Subscription status: ${billing.currentStatus}.`}
+                      </p>
+                      <Link to="/church-admin/settings/billing" className="mt-2 inline-block text-xs font-medium text-primary hover:underline">
+                        View billing
+                      </Link>
                     </div>
                   </div>
                 </motion.div>

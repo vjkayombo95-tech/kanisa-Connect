@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,8 @@ import {
   normalizeTanzanianPhone,
   resolveMemberEmailForPhoneLogin,
 } from "@/lib/phone-auth";
+import { assertClientRateLimit } from "@/lib/client-rate-limit";
+import { logSupabaseError } from "@/lib/error-logger";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PENDING_REGISTRATION_REDIRECT_PREFIX = "pending-registration-redirect:";
@@ -43,6 +45,9 @@ export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [fullName, setFullName] = useState("");
   const [isAwaitingRedirect, setIsAwaitingRedirect] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState("");
+  const [isResendingConfirmation, setIsResendingConfirmation] = useState(false);
+  const expiredSessionNoticeShown = useRef(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, profile, isSuperAdmin, churchId, userRole, isLoading: isAuthLoading } = useAuth();
@@ -58,6 +63,16 @@ export default function LoginPage() {
   }, [pendingRegistrationRedirect, searchParams]);
   const initialMode = searchParams.get("mode");
   const presetEmail = searchParams.get("email");
+
+  useEffect(() => {
+    if (searchParams.get("reason") !== "session_expired" || expiredSessionNoticeShown.current) return;
+    expiredSessionNoticeShown.current = true;
+    toast({
+      title: "Session expired",
+      description: "Please sign in again before creating your church workspace.",
+      variant: "destructive",
+    });
+  }, [searchParams, toast]);
 
   useEffect(() => {
     if (initialMode === "signup") {
@@ -119,6 +134,7 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     try {
+      assertClientRateLimit(`auth-login:${rawIdentity.toLowerCase() || "unknown"}`, 5, 10 * 60 * 1000, "login attempts");
       const isEmail = looksLikeEmail(rawIdentity);
 
       if (isSignUp) {
@@ -134,7 +150,7 @@ export default function LoginPage() {
 
         await assertPhoneIsAvailable(normalizedPhone.e164);
 
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
           options: {
@@ -142,8 +158,25 @@ export default function LoginPage() {
             data: { full_name: fullName, phone: normalizedPhone.e164, phone_verified: false },
           },
         });
-        if (error) throw error;
-        toast({ title: "Check your email", description: "We sent you a confirmation link." });
+        if (error) {
+          logSupabaseError(error, {
+            page: "Login",
+            component: "LoginPage",
+            function: "signUp",
+            operation: "auth.signUp",
+            metadata: { mode: "signup", identity_type: "email" },
+          });
+          throw error;
+        }
+
+        if (signUpData.session) {
+          toast({ title: "Account created", description: "Opening church setup..." });
+          setIsAwaitingRedirect(true);
+          return;
+        }
+
+        setConfirmationEmail(normalizedEmail);
+        toast({ title: "Confirm your email", description: `We sent a confirmation link to ${normalizedEmail}.` });
       } else {
         let authEmail = "";
         if (isEmail) {
@@ -162,7 +195,16 @@ export default function LoginPage() {
         }
 
         const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password });
-        if (error) throw error;
+        if (error) {
+          logSupabaseError(error, {
+            page: "Login",
+            component: "LoginPage",
+            function: "signInWithPassword",
+            operation: "auth.signInWithPassword",
+            metadata: { mode: "signin", identity_type: isEmail ? "email" : "phone" },
+          });
+          throw error;
+        }
         setIsAwaitingRedirect(true);
       }
     } catch (err: any) {
@@ -178,17 +220,68 @@ export default function LoginPage() {
             : message || "Something went wrong.",
         variant: "destructive",
       });
+
+      if (normalizedMessage.includes("email not confirmed") && looksLikeEmail(rawIdentity)) {
+        setConfirmationEmail(rawIdentity.toLowerCase());
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleResendConfirmation = async () => {
+    const normalizedEmail = confirmationEmail.trim().toLowerCase();
+    if (!normalizedEmail) return;
+
+    setIsResendingConfirmation(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: normalizedEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}${redirectTarget}`,
+        },
+      });
+      if (error) {
+        logSupabaseError(error, {
+          page: "Login",
+          component: "LoginPage",
+          function: "resendConfirmation",
+          operation: "auth.resend",
+          metadata: { email: normalizedEmail },
+        });
+        throw error;
+      }
+      toast({ title: "Confirmation resent", description: `Check ${normalizedEmail} for the new link.` });
+    } catch (err: any) {
+      toast({
+        title: "Could not resend confirmation",
+        description: err?.message || "Please check your Supabase email settings and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResendingConfirmation(false);
+    }
+  };
+
   const handleGoogleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}${redirectTarget}` },
-    });
-    if (error) {
+    try {
+      assertClientRateLimit("auth-login:google", 5, 10 * 60 * 1000, "login attempts");
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}${redirectTarget}` },
+      });
+      if (error) {
+        logSupabaseError(error, {
+          page: "Login",
+          component: "LoginPage",
+          function: "googleLogin",
+          operation: "auth.signInWithOAuth",
+          metadata: { provider: "google" },
+        });
+        throw error;
+      }
+    } catch (error: any) {
       toast({ title: "Google login failed", description: error.message, variant: "destructive" });
     }
   };
@@ -268,7 +361,14 @@ export default function LoginPage() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label>Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Password</Label>
+                  {!isSignUp && (
+                    <Link to="/forgot-password" className="text-xs font-medium text-primary hover:underline">
+                      Forgot password?
+                    </Link>
+                  )}
+                </div>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
@@ -291,9 +391,28 @@ export default function LoginPage() {
               </Button>
             </form>
 
+            {confirmationEmail && (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
+                <p className="font-medium">Waiting for email confirmation</p>
+                <p className="mt-1 text-muted-foreground">
+                  Confirm {confirmationEmail}, then sign in again to continue creating your church.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 w-full"
+                  disabled={isResendingConfirmation}
+                  onClick={handleResendConfirmation}
+                >
+                  {isResendingConfirmation && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Resend confirmation link
+                </Button>
+              </div>
+            )}
+
             <p className="text-center text-sm text-muted-foreground">
               {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-              <button onClick={() => setIsSignUp(!isSignUp)} className="text-primary hover:underline font-medium">
+              <button onClick={() => { setIsSignUp(!isSignUp); setConfirmationEmail(""); }} className="text-primary hover:underline font-medium">
                 {isSignUp ? "Sign in" : "Sign up"}
               </button>
             </p>

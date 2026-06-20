@@ -371,6 +371,34 @@
     pointer-events: none;
   }
 
+  .trusted-media-marquee {
+    mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  }
+
+  .trusted-media-track {
+    display: flex;
+    width: max-content;
+    align-items: center;
+    gap: 3.5rem;
+    animation: trusted-media-scroll 24s linear infinite;
+    will-change: transform;
+  }
+
+  .trusted-media-marquee:hover .trusted-media-track {
+    animation-play-state: paused;
+  }
+
+  .trusted-media-item {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    color: hsl(0 0% 100% / 0.72);
+    font-size: clamp(0.9rem, 1.4vw, 1.05rem);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
+  }
+
   .cta-section-backdrop {
     position: absolute;
     inset: 0;
@@ -677,6 +705,16 @@
   }
 }
 
+@keyframes trusted-media-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
 @keyframes typewriter-char-flicker {
   from {
     opacity: 0.55;
@@ -728,12 +766,17 @@
   .preview-device-glow,
   .pricing-section-glow,
   .cta-section-glow,
+  .trusted-media-track,
   .bible-icon-shell,
   .bible-icon-aura,
   .verse-copy-enter,
   .verse-ambient,
   .verse-particle {
     animation: none !important;
+  }
+
+  .trusted-media-track {
+    transform: none !important;
   }
 
   .verse-copy {

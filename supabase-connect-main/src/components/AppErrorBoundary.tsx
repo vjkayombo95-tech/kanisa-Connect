@@ -1,6 +1,7 @@
-import { Component, ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import { captureException } from "@/lib/error-logger";
 
 interface AppErrorBoundaryProps {
   children: ReactNode;
@@ -27,8 +28,15 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
     };
   }
 
-  componentDidCatch(error: unknown) {
-    console.error("AppErrorBoundary caught an error:", error);
+  componentDidCatch(error: unknown, errorInfo: ErrorInfo) {
+    captureException(error, {
+      component: "AppErrorBoundary",
+      page: "Application",
+      function: "componentDidCatch",
+      metadata: {
+        componentStack: errorInfo.componentStack,
+      },
+    });
   }
 
   private handleReload = () => {

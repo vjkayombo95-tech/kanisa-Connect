@@ -20,7 +20,7 @@ export default function SubscriptionsPage() {
   const [extensionDays, setExtensionDays] = useState<Record<string, string>>({});
   const queryClient = useQueryClient();
 
-  const { data: subscriptions = [] } = useQuery({
+  const { data: subscriptions = [], isLoading, isError, error } = useQuery({
     queryKey: ["sa-subscriptions"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -102,7 +102,19 @@ export default function SubscriptionsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {subscriptions.length === 0 ? (
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
+                        Loading subscriptions...
+                      </TableCell>
+                    </TableRow>
+                  ) : isError ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="py-12 text-center text-destructive">
+                        Unable to load subscriptions: {(error as Error)?.message || "Unknown error"}
+                      </TableCell>
+                    </TableRow>
+                  ) : subscriptions.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
                         No subscriptions yet.

@@ -1,64 +1,177 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, CreditCard, Lock, Puzzle, Sparkles, Star, Users } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { CheckCircle2, Clock, CreditCard, Loader2, Lock, Puzzle, Star, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBillingAccess } from "@/hooks/use-billing-access";
 import { BILLING_ADDONS, BILLING_PLANS, BillingPlan, ENABLE_MEMBER_PORTAL_BILLING, getPlanDefinition } from "@/lib/billing";
 import { formatTZS } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
+import { usePaginatedQuery } from "@/hooks/use-paginated-query";
+import { assertClientRateLimit } from "@/lib/client-rate-limit";
+import { logSupabaseError } from "@/lib/error-logger";
 
-function nextBillingDate(plan: BillingPlan) {
-  if (plan === "free") {
-    return null;
-  }
+type SubscriptionPayment = {
+  id: string;
+  plan: BillingPlan;
+  amount: number;
+  payment_reference: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  rejection_reason: string | null;
+};
 
-  const nextDate = new Date();
-  nextDate.setMonth(nextDate.getMonth() + 1);
-  return nextDate.toISOString();
-}
+const DEFAULT_PAYMENT_INSTRUCTIONS = {
+  billing_payment_method: "Mobile Money / Lipa Namba",
+  billing_lipa_number: "Contact support for the current Lipa Namba",
+  billing_payment_instructions: "Pay the exact amount, then enter your transaction reference below for verification.",
+};
 
 export default function BillingPage() {
   const { churchId } = useAuth();
   const queryClient = useQueryClient();
-  const { subscription, addons, currentPlan, currentPlanDefinition, isExpired, hasAddon, isLoading, isTrial, trialDaysRemaining } = useBillingAccess();
+  const [selectedPlan, setSelectedPlan] = useState<BillingPlan | null>(null);
+  const [paymentReference, setPaymentReference] = useState("");
+  const [payerPhone, setPayerPhone] = useState("");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [paymentTotalCount, setPaymentTotalCount] = useState(0);
+  const paymentPagination = usePaginatedQuery({ totalCount: paymentTotalCount, resetKey: churchId });
+  const { subscription, addons, currentPlan, currentPlanDefinition, currentStatus, memberLimit, isExpired, hasAddon, isLoading, isTrial, trialDaysRemaining } = useBillingAccess();
+  const { data: memberCount = 0 } = useQuery({
+    queryKey: ["billing-member-count", churchId],
+    queryFn: async () => {
+      if (!churchId) return 0;
+      const { count, error } = await supabase
+        .from("members")
+        .select("id", { count: "exact", head: true })
+        .eq("church_id", churchId);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!churchId,
+  });
+  const memberUsageRatio = memberLimit ? memberCount / memberLimit : 0;
+  const nearMemberLimit = memberLimit !== null && memberUsageRatio >= 0.8;
 
-  const upgradePlanMutation = useMutation({
+  const { data: paymentInstructions = DEFAULT_PAYMENT_INSTRUCTIONS } = useQuery({
+    queryKey: ["billing-payment-instructions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("platform_settings")
+        .select("billing_payment_method, billing_lipa_number, billing_payment_instructions")
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data ?? DEFAULT_PAYMENT_INSTRUCTIONS;
+    },
+  });
+
+  const { data: paymentRequestsPage = { rows: [] as SubscriptionPayment[], count: 0 } } = useQuery({
+    queryKey: ["subscription-payments", churchId, paymentPagination.page, paymentPagination.pageSize],
+    queryFn: async () => {
+      if (!churchId) return { rows: [] as SubscriptionPayment[], count: 0 };
+      const { data, error, count } = await supabase
+        .from("subscription_payments")
+        .select("id, plan, amount, payment_reference, status, created_at, rejection_reason", { count: "exact" })
+        .eq("church_id", churchId)
+        .order("created_at", { ascending: false })
+        .range(paymentPagination.from, paymentPagination.to);
+
+      if (error) throw error;
+      return { rows: (data ?? []) as SubscriptionPayment[], count: count ?? 0 };
+    },
+    enabled: !!churchId,
+  });
+  const paymentRequests = paymentRequestsPage.rows;
+
+  useEffect(() => {
+    setPaymentTotalCount(paymentRequestsPage.count);
+  }, [paymentRequestsPage.count]);
+  const pendingPayment = paymentRequests.find((payment) => payment.status === "pending");
+  const mostRecentRejectedPayment = paymentRequests.find((payment) => payment.status === "rejected");
+
+  const submitPaymentMutation = useMutation({
     mutationFn: async (plan: BillingPlan) => {
       if (!churchId) {
         throw new Error("No church selected.");
       }
 
-      await supabase
-        .from("subscriptions")
-        .update({
-          status: "expired",
-          expires_at: new Date().toISOString(),
-        })
-        .eq("church_id", churchId)
-        .eq("status", "active");
+      if (plan === "free") {
+        throw new Error("Select a paid plan to submit payment.");
+      }
 
-      const { error } = await supabase.from("subscriptions").insert({
-        church_id: churchId,
-        plan,
-        status: "active",
-        started_at: new Date().toISOString(),
-        expires_at: nextBillingDate(plan),
+      if (!paymentReference.trim()) {
+        throw new Error("Enter your mobile-money transaction reference.");
+      }
+
+      assertClientRateLimit(`payment-submit:${churchId}`, 3, 15 * 60 * 1000, "payment submissions");
+
+      let receiptUrl: string | null = null;
+      if (receiptFile) {
+        if (receiptFile.size > 5 * 1024 * 1024) {
+          throw new Error("Receipt file must be 5MB or smaller.");
+        }
+
+        const safeFileName = receiptFile.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+        const receiptPath = `${churchId}/${crypto.randomUUID()}-${safeFileName}`;
+        const { error: uploadError } = await supabase.storage
+          .from("billing-receipts")
+          .upload(receiptPath, receiptFile, { contentType: receiptFile.type || undefined });
+
+        if (uploadError) {
+          logSupabaseError(uploadError, {
+            page: "Billing",
+            component: "BillingPage",
+            function: "submitPayment",
+            church_id: churchId,
+            operation: "storage.upload",
+            bucket: "billing-receipts",
+            metadata: { plan, receipt_size: receiptFile.size },
+          });
+          throw uploadError;
+        }
+        receiptUrl = receiptPath;
+      }
+
+      const { error } = await supabase.rpc("submit_subscription_payment", {
+        _church_id: churchId,
+        _plan: plan,
+        _payment_reference: paymentReference.trim(),
+        _payer_phone: payerPhone.trim() || null,
+        _receipt_url: receiptUrl,
       });
 
       if (error) {
+        logSupabaseError(error, {
+          page: "Billing",
+          component: "BillingPage",
+          function: "submitPayment",
+          church_id: churchId,
+          operation: "rpc",
+          rpc: "submit_subscription_payment",
+          metadata: { plan, has_receipt: !!receiptUrl },
+        });
         throw error;
       }
     },
     onSuccess: async (_, plan) => {
-      toast.success(`${getPlanDefinition(plan).name} plan activated.`);
-      await queryClient.invalidateQueries({ queryKey: ["billing-subscription", churchId] });
+      toast.success(`${getPlanDefinition(plan).name} payment submitted for verification.`);
+      setSelectedPlan(null);
+      setPaymentReference("");
+      setPayerPhone("");
+      setReceiptFile(null);
+      await queryClient.invalidateQueries({ queryKey: ["subscription-payments", churchId] });
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Unable to update plan.");
+      toast.error(error.message || "Unable to submit payment.");
     },
   });
 
@@ -114,7 +227,7 @@ export default function BillingPage() {
             <div className="flex items-center gap-2">
               <h2 className="text-2xl font-bold font-serif">{currentPlanDefinition.name}</h2>
               {isExpired && <Badge variant="outline" className="border-destructive/30 text-destructive">Expired</Badge>}
-              {!isExpired && <Badge variant="outline" className="border-success/30 text-success">{subscription.status}</Badge>}
+              {!isExpired && <Badge variant="outline" className="border-success/30 text-success capitalize">{currentStatus}</Badge>}
             </div>
             <p className="text-sm text-muted-foreground">{currentPlanDefinition.description}</p>
             <p className="text-sm text-muted-foreground">
@@ -122,11 +235,11 @@ export default function BillingPage() {
             </p>
             {subscription.expires_at && (
               <p className="text-xs text-muted-foreground">
-                Expires on {new Date(subscription.expires_at).toLocaleDateString()}
+                {isTrial ? "Trial expires" : "Expires"} on {new Date(subscription.expires_at).toLocaleDateString()}
               </p>
             )}
             <p className="text-xs text-muted-foreground">
-              Member limit: {currentPlanDefinition.maxMembers ? `${currentPlanDefinition.maxMembers} members` : "Unlimited members"}
+              Member usage: {memberLimit === null ? `${memberCount} / Unlimited` : `${memberCount} / ${memberLimit} members`}
             </p>
           </div>
 
@@ -149,6 +262,47 @@ export default function BillingPage() {
           </div>
         </CardContent>
       </Card>
+
+      {nearMemberLimit && (
+        <Card className="glass-card border-primary/30 bg-primary/8">
+          <CardContent className="p-5">
+            <p className="text-sm font-semibold text-primary">You are approaching your member limit</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Your workspace is using {memberCount} of {memberLimit} member places. Upgrade to keep adding members without interruption.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {pendingPayment && (
+        <Card className="glass-card border-primary/30 bg-primary/8">
+          <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="flex items-center gap-2 text-sm font-semibold text-primary">
+                <Clock className="h-4 w-4" />
+                Payment pending verification
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your {getPlanDefinition(pendingPayment.plan).name} payment of {formatTZS(Number(pendingPayment.amount))} was submitted on{" "}
+                {new Date(pendingPayment.created_at).toLocaleDateString()}. Your current plan remains active until approval.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">Reference: {pendingPayment.payment_reference}</p>
+            </div>
+            <Badge variant="outline" className="w-fit border-primary/30 text-primary">Pending</Badge>
+          </CardContent>
+        </Card>
+      )}
+
+      {!pendingPayment && mostRecentRejectedPayment && (
+        <Card className="glass-card border-destructive/25 bg-destructive/5">
+          <CardContent className="p-5">
+            <p className="text-sm font-semibold text-destructive">Latest payment submission was rejected</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {mostRecentRejectedPayment.rejection_reason || "Please check the payment reference or receipt and submit again."}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {isTrial && (
         <Card className="glass-card border-primary/30 bg-primary/8">
@@ -174,7 +328,7 @@ export default function BillingPage() {
           {BILLING_PLANS.map((plan) => {
             const isCurrent = plan.id === currentPlan;
             const isRecommended = plan.highlighted;
-            const isBusy = upgradePlanMutation.isPending && upgradePlanMutation.variables === plan.id;
+            const isBusy = submitPaymentMutation.isPending && submitPaymentMutation.variables === plan.id;
 
             return (
               <Card
@@ -224,14 +378,18 @@ export default function BillingPage() {
                       <Button className="w-full" disabled>
                         Current Plan
                       </Button>
+                    ) : plan.price === 0 ? (
+                      <Button className="w-full" variant="outline" disabled>
+                        Free Plan
+                      </Button>
                     ) : (
                       <Button
                         className="w-full"
                         variant={isRecommended ? "default" : "outline"}
-                        onClick={() => upgradePlanMutation.mutate(plan.id)}
-                        disabled={upgradePlanMutation.isPending || !churchId}
+                        onClick={() => setSelectedPlan(plan.id)}
+                        disabled={submitPaymentMutation.isPending || !!pendingPayment || !churchId}
                       >
-                        {isBusy ? "Updating..." : "Upgrade"}
+                        {isBusy ? "Submitting..." : pendingPayment ? "Verification Pending" : "Select & Pay"}
                       </Button>
                     )}
                   </div>
@@ -335,8 +493,8 @@ export default function BillingPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>Each church has a single active subscription. Default plan is `Free`.</p>
-            <p>Upgrades create a fresh active subscription and mark the previous one as expired.</p>
+            <p>Each church has a single current subscription. New workspaces begin on a Pro trial.</p>
+            <p>Paid upgrades become active only after Super Admin verifies the submitted mobile-money payment.</p>
             <p>Expiry is supported through the `expires_at` column and automatically falls back to `Free` in the UI.</p>
           </CardContent>
         </Card>
@@ -345,6 +503,82 @@ export default function BillingPage() {
       {isLoading && (
         <p className="text-sm text-muted-foreground">Loading billing details...</p>
       )}
+
+      <Dialog open={selectedPlan !== null} onOpenChange={(open) => !open && setSelectedPlan(null)}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Submit Lipa Namba Payment</DialogTitle>
+            <DialogDescription>
+              Your plan changes only after a Super Admin verifies this payment.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedPlan && (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium">{getPlanDefinition(selectedPlan).name} Plan</p>
+                  <p className="text-lg font-semibold text-primary">{formatTZS(getPlanDefinition(selectedPlan).price)}</p>
+                </div>
+                <p className="mt-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">{paymentInstructions.billing_payment_method}</p>
+                <p className="mt-1 text-xl font-semibold">{paymentInstructions.billing_lipa_number}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{paymentInstructions.billing_payment_instructions}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Use your church name as the payment reference where possible, then provide the mobile-money transaction code below.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="payment-reference">Transaction Reference *</Label>
+                <Input
+                  id="payment-reference"
+                  value={paymentReference}
+                  onChange={(event) => setPaymentReference(event.target.value)}
+                  placeholder="e.g. QFH4AB12CD"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payer-phone">Payer Phone Number</Label>
+                <Input
+                  id="payer-phone"
+                  value={payerPhone}
+                  onChange={(event) => setPayerPhone(event.target.value)}
+                  placeholder="e.g. 2557..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payment-receipt">Receipt (optional)</Label>
+                <Input
+                  id="payment-receipt"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,application/pdf"
+                  onChange={(event) => setReceiptFile(event.target.files?.[0] ?? null)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  PNG, JPG, WebP, or PDF up to 5MB. Receipts are stored privately for verification.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedPlan(null)} disabled={submitPaymentMutation.isPending}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => selectedPlan && submitPaymentMutation.mutate(selectedPlan)}
+              disabled={!selectedPlan || !paymentReference.trim() || submitPaymentMutation.isPending}
+            >
+              {submitPaymentMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="mr-2 h-4 w-4" />
+              )}
+              Submit Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

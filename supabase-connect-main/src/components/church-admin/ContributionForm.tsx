@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ContributionCategorySelector } from "@/components/ui/ContributionCategorySelector";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { HandCoins, Loader2 } from "lucide-react";
 import { readOfflineDraft, writeOfflineDraft } from "@/lib/offline-drafts";
 import { useTranslation } from "react-i18next";
+import { RemoteMemberSelect, type RemoteMemberOption } from "@/components/members/RemoteMemberSelect";
 
 interface MemberOption {
   id: string;
@@ -32,6 +32,7 @@ export interface ContributionFormValues {
 
 interface ContributionFormProps {
   isEdit: boolean;
+  churchId?: string | null;
   members: MemberOption[];
   categories: CategoryOption[];
   initialValues?: Partial<ContributionFormValues>;
@@ -61,6 +62,7 @@ const sanitizeAmount = (value: string) => {
 
 export function ContributionForm({
   isEdit,
+  churchId,
   members,
   categories,
   initialValues,
@@ -70,34 +72,43 @@ export function ContributionForm({
   onSubmit,
 }: ContributionFormProps) {
   const [values, setValues] = useState<ContributionFormValues>(EMPTY_VALUES);
+  const [selectedMember, setSelectedMember] = useState<RemoteMemberOption | null>(null);
   const { t } = useTranslation();
 
   useEffect(() => {
     if (!isEdit && draftStorageKey) {
-      setValues(readOfflineDraft(draftStorageKey, { ...EMPTY_VALUES, ...initialValues }));
+      const nextValues = readOfflineDraft(draftStorageKey, { ...EMPTY_VALUES, ...initialValues });
+      setValues(nextValues);
+      setSelectedMember(
+        members.find((member) => member.id === nextValues.member_id) ??
+          (nextValues.member_id && nextValues.donor_name
+            ? { id: nextValues.member_id, full_name: nextValues.donor_name }
+            : null),
+      );
       return;
     }
 
-    setValues({ ...EMPTY_VALUES, ...initialValues });
-  }, [draftStorageKey, initialValues, isEdit]);
+    const nextValues = { ...EMPTY_VALUES, ...initialValues };
+    setValues(nextValues);
+    setSelectedMember(
+      members.find((member) => member.id === nextValues.member_id) ??
+        (nextValues.member_id && nextValues.donor_name
+          ? { id: nextValues.member_id, full_name: nextValues.donor_name }
+          : null),
+    );
+  }, [draftStorageKey, initialValues, isEdit, members]);
 
   useEffect(() => {
     if (!draftStorageKey || isEdit) return;
     writeOfflineDraft(draftStorageKey, values);
   }, [draftStorageKey, isEdit, values]);
 
-  const memberItems = useMemo(
-    () => members.map((member) => <SelectItem key={member.id} value={member.id}>{member.full_name}</SelectItem>),
-    [members],
-  );
-
-  const handleMemberChange = (selectedMemberId: string) => {
-    const selectedMember = members.find((member) => member.id === selectedMemberId);
-
+  const handleMemberChange = (member: RemoteMemberOption | null) => {
+    setSelectedMember(member);
     setValues((prev) => ({
       ...prev,
-      member_id: selectedMemberId,
-      donor_name: selectedMember?.full_name ?? prev.donor_name,
+      member_id: member?.id ?? "",
+      donor_name: member?.full_name ?? "",
     }));
   };
 
@@ -119,12 +130,12 @@ export function ContributionForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Member</Label>
-          <Select value={values.member_id} onValueChange={handleMemberChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select member" />
-            </SelectTrigger>
-            <SelectContent>{memberItems}</SelectContent>
-          </Select>
+          <RemoteMemberSelect
+            churchId={churchId}
+            value={values.member_id}
+            selectedMember={selectedMember}
+            onValueChange={handleMemberChange}
+          />
         </div>
 
         <div className="space-y-2">

@@ -20,6 +20,8 @@ import { enqueueOfflineSyncAction, processOfflineSyncQueue, removeOfflineSyncAct
 import { useOfflineSyncQueue } from "@/hooks/useOfflineSyncQueue";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { CommentThread, type CommentReactionSummary, type ThreadComment } from "@/components/portal/CommentThread";
+import { assertClientRateLimit } from "@/lib/client-rate-limit";
+import { logSupabaseError } from "@/lib/error-logger";
 
 const QUICK_COMMENT_EMOJIS = ["🙏", "❤️", "🙌", "🕊️"];
 
@@ -148,6 +150,15 @@ function PrayerRequestCard({
       toast({ title: prayerStats.prayedByMe ? "Prayer mark removed" : "Marked as prayed" });
     },
     onError: (error: Error) => {
+      logSupabaseError(error, {
+        page: "Portal Prayer Requests",
+        component: "PortalPrayerRequests",
+        function: "submitPrayerRequest",
+        church_id: churchId,
+        operation: "insert",
+        table: "prayer_requests",
+        metadata: { member_id: member?.id, has_offering: Number(offeringAmount || 0) > 0 },
+      });
       toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
@@ -350,7 +361,8 @@ export default function PortalPrayerRequests() {
             .from("prayer_requests")
             .select(PRAYER_REQUEST_SELECT)
             .eq("church_id", churchId)
-            .order("created_at", { ascending: false });
+            .order("created_at", { ascending: false })
+            .limit(25);
 
           if (error) throw error;
 
@@ -368,6 +380,7 @@ export default function PortalPrayerRequests() {
     },
     enabled: !!churchId,
   });
+  const visiblePrayerRequestIds = useMemo(() => requests.map((request) => request.id), [requests]);
 
   const { data: myRequests = [] } = useQuery({
     queryKey: ["my-prayer-requests", member?.id],
@@ -383,7 +396,8 @@ export default function PortalPrayerRequests() {
             .from("prayer_requests")
             .select(PRAYER_REQUEST_SELECT)
             .eq("member_id", member.id)
-            .order("created_at", { ascending: false });
+            .order("created_at", { ascending: false })
+            .limit(25);
 
           if (error) throw error;
 
@@ -396,13 +410,15 @@ export default function PortalPrayerRequests() {
   });
 
   const { data: prayerMarks = [] } = useQuery({
-    queryKey: ["prayer-request-prayers", churchId],
+    queryKey: ["prayer-request-prayers", churchId, visiblePrayerRequestIds],
     queryFn: async () => {
-      if (!churchId) return [];
+      if (!churchId || visiblePrayerRequestIds.length === 0) return [];
       const { data, error } = await supabase
         .from("prayer_request_prayers")
         .select("prayer_request_id, member_id")
-        .eq("church_id", churchId);
+        .eq("church_id", churchId)
+        // Query safety: only load prayer marks for the visible, capped request page.
+        .in("prayer_request_id", visiblePrayerRequestIds);
 
       if (error) {
         throw error;
@@ -410,7 +426,7 @@ export default function PortalPrayerRequests() {
 
       return data ?? [];
     },
-    enabled: !!churchId,
+    enabled: !!churchId && visiblePrayerRequestIds.length > 0,
   });
 
   const prayerStatsByRequest = useMemo(() => {
@@ -437,6 +453,7 @@ export default function PortalPrayerRequests() {
     mutationFn: async () => {
       if (!churchId) throw new Error("No church context");
       if (!member?.id) throw new Error("No member profile found");
+      assertClientRateLimit(`prayer-request:${churchId}:${member.id}`, 5, 60 * 60 * 1000, "prayer request submissions");
 
       if (!isOnline) {
         enqueueOfflineSyncAction({

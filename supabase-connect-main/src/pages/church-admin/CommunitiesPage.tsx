@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Building2, Users, Loader2, Crown, UserPlus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePaginatedQuery } from "@/hooks/use-paginated-query";
+import { PaginationFooter } from "@/components/ui/pagination-footer";
 
 const LEADERSHIP_ROLES = [
   { key: "mwenyekiti_id", label: "Mwenyekiti" },
@@ -28,13 +30,6 @@ const LEADERSHIP_ROLES = [
 type LeadershipFieldKey = (typeof LEADERSHIP_ROLES)[number]["key"];
 
 function getLeadershipUpdatePayload(field: LeadershipFieldKey, value: string | null) {
-  if (field === "mwenyekiti_id") {
-    return {
-      mwenyekiti_id: value,
-      leader_id: value,
-    };
-  }
-
   return { [field]: value };
 }
 
@@ -61,31 +56,46 @@ export default function CommunitiesPage() {
   const { churchId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [totalCount, setTotalCount] = useState(0);
+  const pagination = usePaginatedQuery({ totalCount, resetKey: churchId });
 
-  const { data: communities = [], isLoading } = useQuery({
-    queryKey: ["communities", churchId],
+  const { data: communitiesPage = { rows: [] as any[], count: 0 }, isLoading } = useQuery({
+    queryKey: ["communities", churchId, pagination.page, pagination.pageSize],
     queryFn: async () => {
-      if (!churchId) return [];
-      const { data } = await supabase.from("communities").select("*").eq("church_id", churchId).order("name");
-      return data ?? [];
+      if (!churchId) return { rows: [] as any[], count: 0 };
+      const { data, count, error } = await supabase
+        .from("communities")
+        .select("*", { count: "exact" })
+        .eq("church_id", churchId)
+        .order("name")
+        .range(pagination.from, pagination.to);
+      if (error) throw error;
+      return { rows: data ?? [], count: count ?? 0 };
     },
     enabled: !!churchId,
   });
+  const communities = communitiesPage.rows;
+  const communityIds = communities.map((community: any) => community.id);
+
+  useEffect(() => {
+    setTotalCount(communitiesPage.count);
+  }, [communitiesPage.count]);
 
   const { data: communityMembers = [] } = useQuery({
-    queryKey: ["community-members-all", churchId],
+    queryKey: ["community-members-all", churchId, communityIds],
     queryFn: async () => {
-      if (!churchId) return [];
+      if (!churchId || communityIds.length === 0) return [];
       const { data, error } = await supabase
         .from("member_communities")
-        .select("id, member_id, community_id, created_at, members(full_name, id)");
+        .select("id, member_id, community_id, created_at, members(full_name, id)")
+        .in("community_id", communityIds);
       if (error) {
         console.error("Error fetching community members:", error);
         return [];
       }
       return data ?? [];
     },
-    enabled: !!churchId,
+    enabled: !!churchId && communityIds.length > 0,
   });
 
   const { data: allMembers = [] } = useQuery({
@@ -99,13 +109,7 @@ export default function CommunitiesPage() {
   });
 
   const getCommunityMembers = (communityId: string) => communityMembers.filter((cm: any) => cm.community_id === communityId);
-  const getLeadershipValue = (community: any, key: LeadershipFieldKey) => {
-    if (key === "mwenyekiti_id") {
-      return community?.mwenyekiti_id ?? community?.leader_id ?? null;
-    }
-
-    return community?.[key] ?? null;
-  };
+  const getLeadershipValue = (community: any, key: LeadershipFieldKey) => community?.[key] ?? null;
   const getMemberName = (memberId: string | null) => allMembers.find((m: any) => m.id === memberId)?.full_name || "—";
 
   const create = useMutation({
@@ -119,7 +123,6 @@ export default function CommunitiesPage() {
         name: trimmedName,
         description: description.trim() || null,
         mwenyekiti_id: chairperson || null,
-        leader_id: chairperson || null,
         makamu_mwenyekiti_id: viceChairperson || null,
         mweka_hazina_id: treasurer || null,
         katibu_id: katibu || null,
@@ -308,47 +311,59 @@ export default function CommunitiesPage() {
           <p>No communities yet. Create your first Jumuiya.</p>
         </CardContent></Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {communities.map((c: any) => {
-            const mCount = getCommunityMembers(c.id).length;
-            return (
-              <Card key={c.id} className="glass-card hover:gold-glow transition-shadow cursor-pointer" onClick={() => setDetailCommunity(c)}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base font-sans">{c.name}</CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={c.status === "active" ? "bg-success/20 text-success border-success/30" : ""}>{c.status}</Badge>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setDeleteCommunityId(c.id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {communities.map((c: any) => {
+              const mCount = getCommunityMembers(c.id).length;
+              return (
+                <Card key={c.id} className="glass-card hover:gold-glow transition-shadow cursor-pointer" onClick={() => setDetailCommunity(c)}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base font-sans">{c.name}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-success/20 text-success border-success/30">active</Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setDeleteCommunityId(c.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-3">{c.description || "No description"}</p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground"><Users className="h-3 w-3" /> {mCount} members</div>
-                  {/* Show leadership summary */}
-                  {LEADERSHIP_ROLES.some((r) => getLeadershipValue(c, r.key)) && (
-                    <div className="mt-2 space-y-1">
-                      {LEADERSHIP_ROLES.filter((r) => getLeadershipValue(c, r.key)).map((r) => (
-                        <div key={r.key} className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Crown className="h-3 w-3 text-primary" /> {r.label}: {getMemberName(getLeadershipValue(c, r.key))}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-3">{c.description || "No description"}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground"><Users className="h-3 w-3" /> {mCount} members</div>
+                    {/* Show leadership summary */}
+                    {LEADERSHIP_ROLES.some((r) => getLeadershipValue(c, r.key)) && (
+                      <div className="mt-2 space-y-1">
+                        {LEADERSHIP_ROLES.filter((r) => getLeadershipValue(c, r.key)).map((r) => (
+                          <div key={r.key} className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Crown className="h-3 w-3 text-primary" /> {r.label}: {getMemberName(getLeadershipValue(c, r.key))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          <PaginationFooter
+            page={pagination.page}
+            pageSize={pagination.pageSize}
+            totalCount={pagination.totalCount}
+            hasPreviousPage={pagination.hasPreviousPage}
+            hasNextPage={pagination.hasNextPage}
+            previousPage={pagination.previousPage}
+            nextPage={pagination.nextPage}
+            isLoading={isLoading}
+          />
         </div>
       )}
 

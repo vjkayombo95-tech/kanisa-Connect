@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { isAdminRole, type AppRole } from "@/lib/role-utils";
@@ -12,6 +12,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, requireSuperAdmin, requireChurch, requireAdmin }: ProtectedRouteProps) {
   const { user, isSuperAdmin, churchId, userRole, isLoading } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -21,7 +22,14 @@ export function ProtectedRoute({ children, requireSuperAdmin, requireChurch, req
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    const redirectPath = `${location.pathname}${location.search}`;
+    const params = new URLSearchParams({ redirect: redirectPath });
+    if (location.pathname === "/onboarding") {
+      params.set("mode", "signup");
+    }
+    return <Navigate to={`/login?${params.toString()}`} replace />;
+  }
 
   if (requireSuperAdmin && !isSuperAdmin) return <Navigate to="/" replace />;
 

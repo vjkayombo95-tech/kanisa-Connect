@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,30 +10,43 @@ import { MessageSquare, Star } from "lucide-react";
 import { formatTZS } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
 import { PRAYER_REQUEST_SELECT, mapPrayerRequestRecord, type PrayerRequestWithMember } from "@/lib/prayer-requests";
+import { usePaginatedQuery } from "@/hooks/use-paginated-query";
+import { PaginationFooter } from "@/components/ui/pagination-footer";
 
 export default function PrayerRequestsPage() {
   const { churchId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [totalCount, setTotalCount] = useState(0);
+  const pagination = usePaginatedQuery({ totalCount, resetKey: churchId });
 
-  const { data: requests = [], isLoading } = useQuery({
-    queryKey: ["prayer-requests", churchId],
+  const { data: requestsPage = { rows: [] as PrayerRequestWithMember[], count: 0 }, isLoading } = useQuery({
+    queryKey: ["prayer-requests", churchId, pagination.page, pagination.pageSize],
     queryFn: async () => {
-      if (!churchId) return [];
-      const { data, error } = await supabase
+      if (!churchId) return { rows: [] as PrayerRequestWithMember[], count: 0 };
+      const { data, error, count } = await supabase
         .from("prayer_requests")
-        .select(PRAYER_REQUEST_SELECT)
+        .select(PRAYER_REQUEST_SELECT, { count: "exact" })
         .eq("church_id", churchId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(pagination.from, pagination.to);
 
       if (error) {
         throw error;
       }
 
-      return (data ?? []).map((row: any) => mapPrayerRequestRecord(row as PrayerRequestWithMember));
+      return {
+        rows: (data ?? []).map((row: any) => mapPrayerRequestRecord(row as PrayerRequestWithMember)),
+        count: count ?? 0,
+      };
     },
     enabled: !!churchId,
   });
+  const requests = requestsPage.rows;
+
+  useEffect(() => {
+    setTotalCount(requestsPage.count);
+  }, [requestsPage.count]);
 
   const rejectRequest = useMutation({
     mutationFn: async (id: string) => {
@@ -179,6 +193,18 @@ export default function PrayerRequestsPage() {
             {renderList(reviewedRequests)}
           </TabsContent>
         </Tabs>
+      )}
+      {!isLoading && (
+        <PaginationFooter
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          totalCount={pagination.totalCount}
+          hasPreviousPage={pagination.hasPreviousPage}
+          hasNextPage={pagination.hasNextPage}
+          previousPage={pagination.previousPage}
+          nextPage={pagination.nextPage}
+          isLoading={isLoading}
+        />
       )}
     </div>
   );

@@ -131,7 +131,7 @@ async function processAction(action: OfflineSyncAction) {
     });
 
     if (error) throw error;
-    return ["contributions"] as string[];
+    return ["contributions", "my-contributions-all", "simple-member-home"] as string[];
   }
 
   if (action.type === "prayer_request_create") {
@@ -169,7 +169,7 @@ async function processAction(action: OfflineSyncAction) {
       if (contributionError) throw contributionError;
     }
 
-    return ["portal-prayer-requests", "my-prayer-requests", "my-prayers", "my-contributions-all", "contributions"] as string[];
+    return ["portal-prayer-requests", "my-prayer-requests", "my-prayers", "my-contributions-all", "simple-member-home", "contributions"] as string[];
   }
 
   if (action.type === "mass_intention_create") {
@@ -210,7 +210,7 @@ async function processAction(action: OfflineSyncAction) {
     });
     if (contributionError) throw contributionError;
 
-    return ["portal-mass-intentions", "my-mass-intentions", "my-mass-intentions-dashboard", "my-contributions-all", "contributions"] as string[];
+    return ["portal-mass-intentions", "my-mass-intentions", "my-mass-intentions-dashboard", "my-contributions-all", "simple-member-home", "contributions"] as string[];
   }
 
   const request = await submitCommunityHelpRequest({

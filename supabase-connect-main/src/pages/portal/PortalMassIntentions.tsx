@@ -21,6 +21,8 @@ import { useOfflineSyncQueue } from "@/hooks/useOfflineSyncQueue";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { useTranslation } from "react-i18next";
 import { translateStatus } from "@/lib/translation-helpers";
+import { assertClientRateLimit } from "@/lib/client-rate-limit";
+import { logSupabaseError } from "@/lib/error-logger";
 
 const intentionTypeOptions = [
   { value: "shukrani", label: "Shukrani", description: "Nia ya kumshukuru Mungu" },
@@ -126,7 +128,8 @@ export default function PortalMassIntentions() {
             .from("mass_intentions")
             .select(MASS_INTENTION_SELECT)
             .eq("church_id", churchId)
-            .order("created_at", { ascending: false });
+            .order("created_at", { ascending: false })
+            .limit(25);
 
           if (error) throw error;
 
@@ -153,7 +156,8 @@ export default function PortalMassIntentions() {
             .select(MASS_INTENTION_SELECT)
             .eq("church_id", churchId)
             .eq("member_id", member.id)
-            .order("created_at", { ascending: false });
+            .order("created_at", { ascending: false })
+            .limit(25);
 
           if (error) throw error;
 
@@ -178,6 +182,7 @@ export default function PortalMassIntentions() {
       if (!message.trim()) throw new Error(t("mass_intentions_form.error_message_required"));
       if (!massDate) throw new Error("Please select the Mass date.");
       if (netAmount < 1000) throw new Error(t("mass_intentions_form.error_minimum_offering"));
+      assertClientRateLimit(`mass-intention:${churchId}:${member.id}`, 5, 60 * 60 * 1000, "mass intention submissions");
 
       if (!isOnline) {
         enqueueOfflineSyncAction({
@@ -258,7 +263,18 @@ export default function PortalMassIntentions() {
       setOfferingAmount(String(DEFAULT_OFFERING));
       setMassDate("");
     },
-    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => {
+      logSupabaseError(err, {
+        page: "Portal Mass Intentions",
+        component: "PortalMassIntentions",
+        function: "submitMassIntention",
+        church_id: churchId,
+        operation: "insert",
+        table: "mass_intentions",
+        metadata: { member_id: member?.id, intention_type: intentionType, offering_amount: offeringAmount },
+      });
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
   });
 
   const statusColor = (status: string) => {

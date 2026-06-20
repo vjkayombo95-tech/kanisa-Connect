@@ -14,6 +14,8 @@ import { PledgeCreateDialog } from "@/components/pledges/PledgeCreateDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
+import { usePaginatedQuery } from "@/hooks/use-paginated-query";
+import { PaginationFooter } from "@/components/ui/pagination-footer";
 
 export default function PledgesPage() {
   const { churchId } = useAuth();
@@ -22,7 +24,6 @@ export default function PledgesPage() {
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
   const summaryCacheKey = churchId ? `offline-cache:church-pledges-summary:${churchId}` : null;
-  const pledgeMembersCacheKey = churchId ? `offline-cache:pledge-members:${churchId}` : null;
   const pledgeCommunitiesCacheKey = churchId ? `offline-cache:pledge-communities:${churchId}` : null;
 
   const { data: summary = [], isLoading } = useQuery({
@@ -55,33 +56,10 @@ export default function PledgesPage() {
     },
     enabled: !!churchId,
   });
+  const summaryPagination = usePaginatedQuery({ totalCount: summary.length, resetKey: churchId });
   const createPledge = useCreatePledge();
   const realtimeKeys = useMemo(() => [["church-pledges-summary", churchId]] as const, [churchId]);
   usePledgeRealtime(realtimeKeys as unknown as (readonly unknown[])[]);
-
-  const { data: members = [] } = useQuery({
-    queryKey: ["pledge-members", churchId],
-    queryFn: async () => {
-      if (!churchId) return [];
-      if (!isOnline) {
-        return readOfflineCache(pledgeMembersCacheKey, [] as any[]);
-      }
-      return withOfflineCache(
-        pledgeMembersCacheKey,
-        async () => {
-          const { data, error } = await supabase
-            .from("members")
-            .select("id, full_name, community_id")
-            .eq("church_id", churchId)
-            .order("full_name");
-          if (error) throw error;
-          return data ?? [];
-        },
-        readOfflineCache(pledgeMembersCacheKey, [] as any[]),
-      );
-    },
-    enabled: !!churchId,
-  });
 
   const { data: communities = [] } = useQuery({
     queryKey: ["pledge-communities", churchId],
@@ -117,6 +95,10 @@ export default function PledgesPage() {
       { pledged: 0, paid: 0, balance: 0 },
     );
   }, [summary]);
+  const visibleSummary = useMemo(
+    () => summary.slice(summaryPagination.from, summaryPagination.to + 1),
+    [summary, summaryPagination.from, summaryPagination.to],
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -145,7 +127,7 @@ export default function PledgesPage() {
           ) : summary.length === 0 ? (
             <p className="text-sm text-muted-foreground">No community pledge data yet.</p>
           ) : (
-            summary.map((row) => (
+            visibleSummary.map((row) => (
               <div key={row.community_id} className="rounded-2xl border border-border/60 p-4">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex-1 space-y-2">
@@ -170,15 +152,28 @@ export default function PledgesPage() {
               </div>
             ))
           )}
+          {!isLoading && summary.length > 0 && (
+            <PaginationFooter
+              page={summaryPagination.page}
+              pageSize={summaryPagination.pageSize}
+              totalCount={summaryPagination.totalCount}
+              hasPreviousPage={summaryPagination.hasPreviousPage}
+              hasNextPage={summaryPagination.hasNextPage}
+              previousPage={summaryPagination.previousPage}
+              nextPage={summaryPagination.nextPage}
+              isLoading={isLoading}
+            />
+          )}
         </CardContent>
       </Card>
 
       <PledgeCreateDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
+        churchId={churchId}
         title="Create Church Pledge"
         description="Assign a pledge to any member and optionally update the community target."
-        members={members}
+        members={[]}
         communities={communities}
         allowTargetAmount
         isSubmitting={createPledge.isPending}

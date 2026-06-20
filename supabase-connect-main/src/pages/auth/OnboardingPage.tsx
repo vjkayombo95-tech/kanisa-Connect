@@ -25,6 +25,13 @@ const steps = [
 ] as const;
 type StepId = (typeof steps)[number]["id"];
 
+function formatCreationError(error: any) {
+  const parts = [error?.message, error?.details, error?.hint].filter(
+    (part) => typeof part === "string" && part.trim(),
+  );
+  return parts.join(" ") || "Something went wrong while creating your church workspace.";
+}
+
 function InputWithIcon({ label, icon: Icon, className, ...props }: React.ComponentProps<typeof Input> & { label: string; icon: React.ComponentType<{ className?: string }> }) {
   return (
     <div className={cn("space-y-2", className)}>
@@ -81,6 +88,7 @@ export default function OnboardingPage() {
   const [pastorName, setPastorName] = useState("");
   const [treasurerName, setTreasurerName] = useState("");
   const [secretaryName, setSecretaryName] = useState("");
+  const adminAccountEmail = user?.email?.trim() || "Signed-in account";
 
   useEffect(() => () => {
     if (logoPreview) URL.revokeObjectURL(logoPreview);
@@ -198,11 +206,16 @@ export default function OnboardingPage() {
       void refreshUserData();
       navigate("/church-admin", { replace: true });
     } catch (err: any) {
-      console.error("Onboarding error:", err);
+      console.error("Onboarding error:", {
+        code: err?.code,
+        message: err?.message,
+        details: err?.details,
+        hint: err?.hint,
+      });
       const missingFunction = err?.code === "PGRST202" || `${err?.message || ""}`.includes("create_church_workspace");
       const description = missingFunction
         ? "The latest database setup has not been applied. Apply the Supabase workspace-creation migration, then try again."
-        : err.message || "Something went wrong.";
+        : formatCreationError(err);
       setSubmissionMessage(null);
       setSubmissionError(description);
       toast({
@@ -220,11 +233,12 @@ export default function OnboardingPage() {
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
           <InputWithIcon label="Church Name *" icon={Church} placeholder="e.g. St. Mary's Parish" value={churchName} onChange={(e) => setChurchName(e.target.value)} />
-          <InputWithIcon label="Church Email *" icon={Mail} type="email" placeholder="info@church.org" value={churchEmail} onChange={(e) => setChurchEmail(e.target.value)} />
+          <InputWithIcon label="Church Contact Email *" icon={Mail} type="email" placeholder="info@church.org" value={churchEmail} onChange={(e) => setChurchEmail(e.target.value)} />
           <InputWithIcon label="Phone" icon={Phone} placeholder="+255..." value={churchPhone} onChange={(e) => setChurchPhone(e.target.value)} />
           <InputWithIcon label="Address" icon={MapPin} placeholder="Church address" value={churchAddress} onChange={(e) => setChurchAddress(e.target.value)} />
         </div>
-        <Card className="rounded-2xl border-primary/15 bg-primary/5"><CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-start"><div className="rounded-2xl border border-primary/20 bg-primary/10 p-3 text-primary"><Sparkles className="h-5 w-5" /></div><div className="space-y-1"><p className="text-sm font-medium">Set the foundation for your church workspace</p><p className="text-sm text-muted-foreground">These details power your workspace identity, communication touchpoints, and admin setup.</p></div></CardContent></Card>
+        <Card className="rounded-2xl border-primary/15 bg-primary/5"><CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-start"><div className="rounded-2xl border border-primary/20 bg-primary/10 p-3 text-primary"><Sparkles className="h-5 w-5" /></div><div className="space-y-1"><p className="text-sm font-medium">Set the foundation for your church workspace</p><p className="text-sm text-muted-foreground">These details power your workspace identity and communication touchpoints. Your admin login is the signed-in account below.</p></div></CardContent></Card>
+        <Card className="rounded-2xl border-border/70 bg-card/70"><CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between"><div className="flex items-start gap-3"><div className="rounded-2xl border border-primary/20 bg-primary/10 p-3 text-primary"><UserRound className="h-5 w-5" /></div><div className="space-y-1"><p className="text-sm font-medium">Church admin login account</p><p className="text-sm text-muted-foreground">Use this email to sign back in and manage the church after logout.</p></div></div><div className="rounded-xl border border-border/70 bg-background/60 px-4 py-2 text-sm font-medium">{adminAccountEmail}</div></CardContent></Card>
       </div>
     );
 
@@ -252,11 +266,11 @@ export default function OnboardingPage() {
     return (
       <div className="space-y-6">
         <div className="grid gap-4 xl:grid-cols-2">
-          <Card className="rounded-3xl border-border/70 bg-card/80"><CardHeader className="pb-4"><CardTitle className="flex items-center gap-3 text-lg font-semibold"><span className="rounded-2xl border border-primary/20 bg-primary/10 p-2 text-primary"><Church className="h-4 w-4" /></span>Church Information</CardTitle></CardHeader><CardContent className="space-y-3">{[{ icon: Church, label: "Church name", value: churchName }, { icon: Mail, label: "Church email", value: churchEmail }, { icon: Phone, label: "Phone number", value: churchPhone }, { icon: MapPin, label: "Address", value: churchAddress }].map((item) => <div key={item.label} className="flex items-start gap-3"><item.icon className="mt-0.5 h-4 w-4 text-primary" /><div><p className="text-sm font-medium">{item.value || "Not provided"}</p><p className="text-sm text-muted-foreground">{item.label}</p></div></div>)}</CardContent></Card>
+          <Card className="rounded-3xl border-border/70 bg-card/80"><CardHeader className="pb-4"><CardTitle className="flex items-center gap-3 text-lg font-semibold"><span className="rounded-2xl border border-primary/20 bg-primary/10 p-2 text-primary"><Church className="h-4 w-4" /></span>Church Information</CardTitle></CardHeader><CardContent className="space-y-3">{[{ icon: Church, label: "Church name", value: churchName }, { icon: Mail, label: "Church contact email", value: churchEmail }, { icon: UserRound, label: "Admin login email", value: adminAccountEmail }, { icon: Phone, label: "Phone number", value: churchPhone }, { icon: MapPin, label: "Address", value: churchAddress }].map((item) => <div key={item.label} className="flex items-start gap-3"><item.icon className="mt-0.5 h-4 w-4 text-primary" /><div><p className="text-sm font-medium">{item.value || "Not provided"}</p><p className="text-sm text-muted-foreground">{item.label}</p></div></div>)}</CardContent></Card>
           <Card className="rounded-3xl border-border/70 bg-card/80"><CardHeader className="pb-4"><CardTitle className="flex items-center gap-3 text-lg font-semibold"><span className="rounded-2xl border border-primary/20 bg-primary/10 p-2 text-primary"><Palette className="h-4 w-4" /></span>Branding</CardTitle></CardHeader><CardContent className="space-y-4"><div className="grid gap-3 sm:grid-cols-2"><div className="rounded-2xl border border-border/70 bg-background/40 p-4"><p className="text-sm font-medium">Logo</p><p className="mt-1 text-sm text-muted-foreground">{logoFile ? logoFile.name : "No logo uploaded"}</p></div><div className="rounded-2xl border border-border/70 bg-background/40 p-4"><p className="text-sm font-medium">Banner</p><p className="mt-1 text-sm text-muted-foreground">{bannerFile ? bannerFile.name : "No banner uploaded"}</p></div></div>{(logoPreview || bannerPreview) && <div className="grid gap-3 sm:grid-cols-2">{logoPreview && <div className="overflow-hidden rounded-2xl border border-border/70 bg-background/50"><img src={logoPreview} alt="Logo preview" className="h-28 w-full object-contain p-3" /></div>}{bannerPreview && <div className="overflow-hidden rounded-2xl border border-border/70 bg-background/50"><img src={bannerPreview} alt="Banner preview" className="h-28 w-full object-cover" /></div>}</div>}</CardContent></Card>
           <Card className="rounded-3xl border-border/70 bg-card/80 xl:col-span-2"><CardHeader className="pb-4"><CardTitle className="flex items-center gap-3 text-lg font-semibold"><span className="rounded-2xl border border-primary/20 bg-primary/10 p-2 text-primary"><Users className="h-4 w-4" /></span>Leadership Roles</CardTitle></CardHeader><CardContent className="grid gap-3 md:grid-cols-3">{[{ title: "Pastor", value: pastorName }, { title: "Treasurer", value: treasurerName }, { title: "Secretary", value: secretaryName }].map((item) => <div key={item.title} className="rounded-2xl border border-border/70 bg-background/40 p-4"><p className="text-sm font-medium">{item.title}</p><p className="mt-1 text-sm text-muted-foreground">{item.value || "Not assigned during onboarding"}</p></div>)}</CardContent></Card>
         </div>
-        <Card className="rounded-3xl border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-background"><CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between"><div className="space-y-1"><p className="text-sm font-semibold text-primary">Workspace creation summary</p><p className="text-sm text-muted-foreground">Your church will launch with a church admin role, default contribution categories, and a free plan setup.</p></div><div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-background/70 px-4 py-2 text-sm"><CheckCircle2 className="h-4 w-4 text-primary" />Ready to create</div></CardContent></Card>
+        <Card className="rounded-3xl border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-background"><CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between"><div className="space-y-1"><p className="text-sm font-semibold text-primary">Workspace creation summary</p><p className="text-sm text-muted-foreground">Your church will launch with a church admin role, default contribution categories, and a Pro trial subscription.</p></div><div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-background/70 px-4 py-2 text-sm"><CheckCircle2 className="h-4 w-4 text-primary" />Ready to create</div></CardContent></Card>
         {submissionError ? (
           <Alert variant="destructive" className="rounded-2xl">
             <ShieldAlert className="h-4 w-4" />

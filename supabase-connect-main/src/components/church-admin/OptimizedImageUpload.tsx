@@ -109,6 +109,8 @@ export default function OptimizedImageUpload({
           <img
             src={displayUrl}
             alt={typeLabel}
+            loading="lazy"
+            decoding="async"
             className={`rounded-lg border border-border object-cover ${
               profile === "logo" ? "h-20 w-20" :
               profile === "member-photo" ? "h-24 w-24 rounded-full" :

@@ -48,7 +48,8 @@ export function getPledgeProgress(record: Pick<PledgeRecord, "amount_pledged" | 
   return Math.max(0, Math.min(100, Number(((record.amount_paid / record.amount_pledged) * 100).toFixed(1))));
 }
 
-export function useMemberPledges(memberId?: string | null) {
+export function useMemberPledges(memberId?: string | null, options: { enabled?: boolean } = {}) {
+  const enabled = options.enabled ?? true;
   return useQuery({
     queryKey: ["member-pledges", memberId],
     queryFn: async () => {
@@ -57,7 +58,7 @@ export function useMemberPledges(memberId?: string | null) {
       if (error) throw error;
       return ((data ?? []) as any[]).map(mapPledgeRecord);
     },
-    enabled: !!memberId,
+    enabled: enabled && !!memberId,
   });
 }
 
@@ -135,6 +136,10 @@ export function usePledgeRealtime(queryKeys: (readonly unknown[])[]) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    if (import.meta.env.VITE_ENABLE_PLEDGE_REALTIME !== "true") {
+      return;
+    }
+
     const invalidate = () => {
       queryKeys.forEach((key) => queryClient.invalidateQueries({ queryKey: key }));
     };

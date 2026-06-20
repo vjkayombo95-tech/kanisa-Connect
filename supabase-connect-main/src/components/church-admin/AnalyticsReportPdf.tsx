@@ -5,9 +5,40 @@ type AnalyticsIntentType =
   | "top_contributors"
   | "monthly_report"
   | "category_breakdown"
-  | "summary_report";
+  | "giving_trend"
+  | "inactive_contributors"
+  | "active_contributors"
+  | "pledge_summary"
+  | "outstanding_pledges"
+  | "pledge_follow_up"
+  | "quarterly_report"
+  | "yearly_report"
+  | "member_statement"
+  | "offerings_vs_tithes"
+  | "payment_method_breakdown"
+  | "announcement_draft"
+  | "contributor_growth"
+  | "contribution_forecast"
+  | "follow_up_candidates"
+  | "first_time_contributors"
+  | "recurring_contributors"
+  | "church_summary"
+  | "general_summary";
 
-type AnalyticsDateRange = "current_month" | "last_month" | "year_to_date" | "all_time";
+type AnalyticsDateRange =
+  | "today"
+  | "yesterday"
+  | "this_week"
+  | "last_week"
+  | "current_month"
+  | "last_month"
+  | "current_quarter"
+  | "last_quarter"
+  | "year_to_date"
+  | "last_year"
+  | "past_90_days"
+  | "all_time"
+  | "custom";
 
 type AnalyticsCategory = "all" | "tithe" | "offering" | "building" | "missions" | "youth";
 
@@ -38,12 +69,47 @@ type AnalyticsSummary = {
 type AnalyticsResponse = {
   query: string;
   intent: AnalyticsIntent;
+  dateRange?: AnalyticsDateRange;
+  reportTitle?: string;
+  confidence?: number;
+  detectedFilters?: {
+    dateLabel?: string;
+    category?: AnalyticsCategory;
+    memberName?: string | null;
+  };
   summary: AnalyticsSummary;
+  shortSummary: string;
+  keyMetrics: { label: string; value: string }[];
+  insight: string;
+  recommendedAction: string;
+  forecast?: {
+    expectedAmount: number;
+    bestCase: number;
+    worstCase: number;
+    confidence: number;
+    direction: string;
+    basis: string;
+  } | null;
+  proactiveDashboard?: {
+    healthScore: {
+      score: number;
+      status: string;
+      mainReason: string;
+    };
+    insights: Array<{
+      title: string;
+      explanation: string;
+      severity: string;
+      recommendedAction: string;
+    }>;
+  } | null;
   topContributors: ContributorSummary[];
   categoryBreakdown: CategorySummary[];
+  paymentMethodBreakdown: CategorySummary[];
   insights: string[];
   generatedAt: string;
-  source: "supabase" | "mock";
+  dateRangeLabel: string;
+  source: "supabase";
   warning?: string | null;
 };
 
@@ -356,11 +422,28 @@ function getDateRangeLabel(dateRange: AnalyticsDateRange) {
   const labels: Record<AnalyticsDateRange, string> = {
     current_month: "Current Month",
     last_month: "Last Month",
+    today: "Today",
+    yesterday: "Yesterday",
+    this_week: "This Week",
+    last_week: "Last Week",
+    current_quarter: "Current Quarter",
+    last_quarter: "Last Quarter",
     year_to_date: "Year to Date",
+    last_year: "Last Year",
+    past_90_days: "Past 90 Days",
     all_time: "All Time",
+    custom: "Custom Range",
   };
 
   return labels[dateRange];
+}
+
+function getSafeDateRange(report: AnalyticsResponse) {
+  return report.dateRange || report.intent?.dateRange || "all_time";
+}
+
+function getSafeCategory(report: AnalyticsResponse) {
+  return report.intent?.category || "all";
 }
 
 function getCategoryLabel(category: AnalyticsCategory) {
@@ -398,7 +481,7 @@ export function AnalyticsReportPdf({
           </View>
 
           <View style={styles.titleWrap}>
-            <Text style={styles.reportTitle}>AI Analytics Report</Text>
+            <Text style={styles.reportTitle}>{report.reportTitle || "AI Analytics Report"}</Text>
           </View>
 
           <View style={styles.divider} />
@@ -406,7 +489,7 @@ export function AnalyticsReportPdf({
           <View style={styles.metaGrid}>
             <View style={styles.metaCard}>
               <Text style={styles.metaLabel}>Date Range</Text>
-              <Text style={styles.metaValue}>{getDateRangeLabel(report.intent.dateRange)}</Text>
+              <Text style={styles.metaValue}>{report.detectedFilters?.dateLabel || report.dateRangeLabel || getDateRangeLabel(getSafeDateRange(report))}</Text>
             </View>
             <View style={styles.metaCard}>
               <Text style={styles.metaLabel}>Generated Date</Text>
@@ -414,7 +497,7 @@ export function AnalyticsReportPdf({
             </View>
             <View style={styles.metaCard}>
               <Text style={styles.metaLabel}>Category</Text>
-              <Text style={styles.metaValue}>{getCategoryLabel(report.intent.category)}</Text>
+              <Text style={styles.metaValue}>{getCategoryLabel(report.detectedFilters?.category || getSafeCategory(report))}</Text>
             </View>
           </View>
 
@@ -430,18 +513,79 @@ export function AnalyticsReportPdf({
           <View style={styles.summaryGrid}>
             <View style={styles.summaryCard}>
               <Text style={styles.summaryLabel}>Total Giving</Text>
-              <Text style={styles.summaryValue}>{formatAssistantCurrency(report.summary.totalGiving)}</Text>
+              <Text style={styles.summaryValue}>{formatAssistantCurrency(report.summary?.totalGiving ?? 0)}</Text>
             </View>
             <View style={styles.summaryCard}>
               <Text style={styles.summaryLabel}>Contributors</Text>
-              <Text style={styles.summaryValue}>{report.summary.contributorCount}</Text>
+              <Text style={styles.summaryValue}>{report.summary?.contributorCount ?? 0}</Text>
             </View>
             <View style={styles.summaryCard}>
               <Text style={styles.summaryLabel}>Average Gift</Text>
-              <Text style={styles.summaryValue}>{formatAssistantCurrency(report.summary.averageGift)}</Text>
+              <Text style={styles.summaryValue}>{formatAssistantCurrency(report.summary?.averageGift ?? 0)}</Text>
             </View>
           </View>
         </View>
+
+        {report.proactiveDashboard ? (
+          <View style={styles.section}>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>Church Health Score</Text>
+              <Text style={styles.sectionTag}>{report.proactiveDashboard.healthScore.status}</Text>
+            </View>
+
+            <View style={styles.insightsCard}>
+              <Text style={styles.insightText}>
+                {report.proactiveDashboard.healthScore.score}/100 - {report.proactiveDashboard.healthScore.mainReason}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
+        <View style={styles.section}>
+          <View style={styles.sectionTitleRow}>
+            <Text style={styles.sectionTitle}>Detected Filters</Text>
+            <Text style={styles.sectionTag}>Query Context</Text>
+          </View>
+          <View style={styles.card}>
+            <Text style={styles.valueText}>Date Range: {report.detectedFilters?.dateLabel || report.dateRangeLabel || getDateRangeLabel(getSafeDateRange(report))}</Text>
+            <Text style={styles.valueText}>Category: {getCategoryLabel(report.detectedFilters?.category || getSafeCategory(report))}</Text>
+            <Text style={styles.valueText}>Member: {report.detectedFilters?.memberName || "All allowed"}</Text>
+          </View>
+        </View>
+
+        {report.proactiveDashboard?.insights?.length ? (
+          <View style={styles.section}>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>AI Insights Feed</Text>
+              <Text style={styles.sectionTag}>Proactive</Text>
+            </View>
+            <View style={styles.insightsCard}>
+              {report.proactiveDashboard.insights.map((insight, index) => (
+                <View key={`${insight.title}-${index}`} style={styles.insightRow}>
+                  <Text style={styles.insightBullet}>+</Text>
+                  <Text style={styles.insightText}>
+                    {insight.title}: {insight.explanation} Recommended action: {insight.recommendedAction}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {report.forecast ? (
+          <View style={styles.section}>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>Forecast</Text>
+              <Text style={styles.sectionTag}>{Math.round(report.forecast.confidence * 100)}% Confidence</Text>
+            </View>
+            <View style={styles.card}>
+              <Text style={styles.valueText}>Expected: {formatAssistantCurrency(report.forecast.expectedAmount)}</Text>
+              <Text style={styles.valueText}>Best case: {formatAssistantCurrency(report.forecast.bestCase)}</Text>
+              <Text style={styles.valueText}>Worst case: {formatAssistantCurrency(report.forecast.worstCase)}</Text>
+              <Text style={styles.valueText}>{report.forecast.basis} Trend direction: {report.forecast.direction}</Text>
+            </View>
+          </View>
+        ) : null}
 
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
@@ -457,10 +601,10 @@ export function AnalyticsReportPdf({
               <Text style={[styles.headerText, styles.percentCol]}>Share</Text>
             </View>
 
-            {report.topContributors.length === 0 ? (
+            {(report.topContributors ?? []).length === 0 ? (
               <Text style={styles.emptyState}>No contributor data was available for the selected filter.</Text>
             ) : (
-              report.topContributors.map((contributor, index) => (
+              (report.topContributors ?? []).map((contributor, index) => (
                 <View
                   key={`${contributor.name}-${index}`}
                   style={[styles.row, index === report.topContributors.length - 1 ? styles.lastRow : null]}
@@ -488,10 +632,10 @@ export function AnalyticsReportPdf({
               <Text style={[styles.headerText, styles.percentCol]}>Share</Text>
             </View>
 
-            {report.categoryBreakdown.length === 0 ? (
+            {(report.categoryBreakdown ?? []).length === 0 ? (
               <Text style={styles.emptyState}>No category data was available for the selected filter.</Text>
             ) : (
-              report.categoryBreakdown.map((category, index) => (
+              (report.categoryBreakdown ?? []).map((category, index) => (
                 <View
                   key={`${category.category}-${index}`}
                   style={[styles.row, index === report.categoryBreakdown.length - 1 ? styles.lastRow : null]}
@@ -508,25 +652,23 @@ export function AnalyticsReportPdf({
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Text style={styles.sectionTitle}>Insights</Text>
-            <Text style={styles.sectionTag}>AI Highlights</Text>
+            <Text style={styles.sectionTag}>Highlights</Text>
           </View>
 
           <View style={styles.insightsCard}>
-            <Text style={styles.insightsIntro}>Key signals the analytics assistant surfaced from the selected giving data.</Text>
-            {report.insights.length === 0 ? (
-              <Text style={styles.emptyState}>No insights were generated for this report.</Text>
-            ) : (
-              report.insights.map((insight, index) => (
-                <View key={`${index}-${insight}`} style={styles.insightRow}>
-                  <Text style={styles.insightBullet}>+</Text>
-                  <Text style={styles.insightText}>{insight}</Text>
-                </View>
-              ))
-            )}
+            <Text style={styles.insightsIntro}>Template-based signals surfaced from live Supabase giving data.</Text>
+            {[report.shortSummary, report.insight, `Recommended action: ${report.recommendedAction}`]
+              .filter(Boolean)
+              .map((insight, index) => (
+              <View key={`${index}-${insight}`} style={styles.insightRow}>
+                <Text style={styles.insightBullet}>+</Text>
+                <Text style={styles.insightText}>{insight}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
-        <Text style={styles.footer}>Generated by Kanisa Connect AI Platform</Text>
+        <Text style={styles.footer}>Generated by Kanisa Connect Analytics Assistant from live Supabase records</Text>
       </Page>
     </Document>
   );
@@ -550,3 +692,5 @@ export async function downloadAnalyticsReportPdf(
   anchor.click();
   URL.revokeObjectURL(url);
 }
+
+export const generateAnalyticsPdf = downloadAnalyticsReportPdf;

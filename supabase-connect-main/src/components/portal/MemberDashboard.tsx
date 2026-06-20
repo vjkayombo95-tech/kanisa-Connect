@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { supabase } from "@/integrations/supabase/client";
 import { formatTZS } from "@/lib/currency";
+import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
 import { cn } from "@/lib/utils";
 
 type MemberHomeData = {
@@ -38,6 +39,17 @@ type MemberHomeData = {
     date: string | null;
   } | null;
 };
+
+function readContributionTotal(rows: unknown) {
+  const firstRow = Array.isArray(rows) ? (rows[0] as Record<string, unknown> | undefined) : null;
+  const total =
+    firstRow?.sum ??
+    firstRow?.amount_sum ??
+    firstRow?.total ??
+    (firstRow?.amount as Record<string, unknown> | undefined)?.sum;
+
+  return Number(total ?? 0);
+}
 
 const emptyMemberHome = (name: string): MemberHomeData => ({
   memberId: null,
@@ -103,42 +115,41 @@ function useSimpleMemberHomeData() {
 
       if (!member) return emptyState;
 
-      const [churchResult, contributionsResult, announcementsResult] = await Promise.all([
+      const [churchResult, latestContributionResult, contributionTotalResult, announcementRows] = await Promise.all([
         supabase.from("churches").select("name").eq("id", member.church_id).maybeSingle(),
         supabase
           .from("contributions")
-          .select("id, amount, created_at, date, category_id")
+          .select("id, amount, date, category_id")
           .eq("church_id", member.church_id)
           .eq("member_id", member.id)
-          .order("created_at", { ascending: false })
-          .limit(50),
-        supabase
-          .from("announcements")
-          .select("id, title, content, created_at")
-          .eq("church_id", member.church_id)
-          .eq("is_published", true)
-          .order("created_at", { ascending: false })
+          .order("date", { ascending: false })
           .limit(1),
+        supabase
+          .from("contributions")
+          .select("amount.sum()")
+          .eq("church_id", member.church_id)
+          .eq("member_id", member.id),
+        fetchPortalAnnouncements(member.church_id, 1),
       ]);
 
       if (churchResult.error) logMemberDashboardError("church", churchResult.error);
-      if (contributionsResult.error) logMemberDashboardError("contributions", contributionsResult.error);
-      if (announcementsResult.error) logMemberDashboardError("announcements", announcementsResult.error);
+      if (latestContributionResult.error) logMemberDashboardError("latest contribution", latestContributionResult.error);
+      if (contributionTotalResult.error) logMemberDashboardError("contribution total", contributionTotalResult.error);
 
-      const contributions = (contributionsResult.error ? [] : contributionsResult.data ?? []) as any[];
-      const latestAnnouncement = ((announcementsResult.error ? [] : announcementsResult.data ?? []) as any[])[0] ?? null;
-      const lastContribution = contributions[0] ?? null;
+      const latestContribution = (latestContributionResult.error ? null : latestContributionResult.data?.[0] ?? null) as any;
+      const latestAnnouncement = announcementRows[0] ?? null;
+      const totalPaid = contributionTotalResult.error ? 0 : readContributionTotal(contributionTotalResult.data);
 
       return {
         memberId: member.id,
         memberName: member.full_name || fallbackName,
         churchName: churchResult.error ? null : churchResult.data?.name ?? null,
-        totalPaid: contributions.reduce((sum, row) => sum + Number(row.amount ?? 0), 0),
+        totalPaid,
         pendingAmount: 0,
-        lastPayment: lastContribution
+        lastPayment: latestContribution
           ? {
-              amount: Number(lastContribution.amount ?? 0),
-              date: lastContribution.date ?? lastContribution.created_at ?? null,
+              amount: Number(latestContribution.amount ?? 0),
+              date: latestContribution.date ?? null,
               label: "Malipo",
             }
           : null,

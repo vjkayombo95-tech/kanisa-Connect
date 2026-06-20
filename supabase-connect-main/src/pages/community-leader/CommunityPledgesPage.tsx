@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { formatTZS } from "@/lib/currency";
 import { getPledgeProgress, useCommunityPledges, useCreatePledge, useMakePledgePayment, usePledgeRealtime } from "@/lib/pledges";
-import { useCommunityMembers } from "@/hooks/use-community-leader";
 import { PledgeCreateDialog } from "@/components/pledges/PledgeCreateDialog";
 import { PledgePaymentDialog } from "@/components/pledges/PledgePaymentDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +22,6 @@ export default function CommunityPledgesPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [activePledge, setActivePledge] = useState<any | null>(null);
 
-  const { data: communityMembers = [] } = useCommunityMembers(communityId);
   const { data: pledges = [], isLoading } = useCommunityPledges(communityId);
   const createPledge = useCreatePledge();
   const makePayment = useMakePledgePayment();
@@ -40,18 +38,6 @@ export default function CommunityPledgesPage() {
       { pledged: 0, paid: 0, balance: 0 },
     );
   }, [pledges]);
-
-  const memberOptions = useMemo(
-    () =>
-      communityMembers
-        .map((entry: any) => ({
-          id: entry.member_id,
-          full_name: entry.members?.full_name || "Member",
-          community_id: communityId,
-        }))
-        .sort((a: any, b: any) => a.full_name.localeCompare(b.full_name)),
-    [communityId, communityMembers],
-  );
 
   return (
     <div className="space-y-6">
@@ -114,9 +100,10 @@ export default function CommunityPledgesPage() {
       <PledgeCreateDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
+        churchId={churchId}
         title="Create Community Pledge"
         description="Assign a pledge to a community member and optionally raise the community target."
-        members={memberOptions}
+        members={[]}
         communities={[{ id: communityId, name: community?.name || "Community" }]}
         defaultCommunityId={communityId}
         lockCommunity

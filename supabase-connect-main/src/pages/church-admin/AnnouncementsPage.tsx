@@ -26,6 +26,9 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ensureBirthdayAnnouncements } from "@/lib/birthday-announcements";
+import { assertClientRateLimit } from "@/lib/client-rate-limit";
+import { logSupabaseError } from "@/lib/error-logger";
 
 type AnnouncementRecord = {
   id: string;
@@ -208,6 +211,15 @@ function formatAiGeneratorError(error: unknown) {
   return message;
 }
 
+function isMissingAnnouncementRpc(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+
+  const record = error as { code?: string; message?: string; details?: string; hint?: string };
+  const text = `${record.message ?? ""} ${record.details ?? ""} ${record.hint ?? ""}`.toLowerCase();
+
+  return record.code === "PGRST202" || text.includes("schema cache") || text.includes("could not find the function");
+}
+
 export default function AnnouncementsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -232,6 +244,7 @@ export default function AnnouncementsPage() {
     queryKey: ["announcements", churchId],
     queryFn: async () => {
       if (!churchId) return [];
+      await ensureBirthdayAnnouncements(churchId);
       const { data, error } = await supabase
         .from("announcements")
         .select("*")
@@ -278,6 +291,7 @@ export default function AnnouncementsPage() {
   const saveAnnouncement = useMutation({
     mutationFn: async () => {
       if (!churchId) throw new Error("No church context");
+      assertClientRateLimit(`announcement-post:${churchId}`, 10, 10 * 60 * 1000, "announcement posts");
       const { data, error } = await supabase.rpc("save_church_announcement" as never, {
         _announcement_id: form.id,
         _church_id: churchId,
@@ -286,7 +300,44 @@ export default function AnnouncementsPage() {
         _is_published: form.isPublished,
       } as never);
 
-      if (error) throw error;
+      if (error) {
+        if (!isMissingAnnouncementRpc(error)) throw error;
+
+        console.warn("Announcement save RPC unavailable; using direct Supabase fallback:", error);
+        const publishedAt = form.isPublished ? new Date().toISOString() : null;
+
+        if (form.id) {
+          const { error: updateError } = await supabase
+            .from("announcements")
+            .update({
+              title: form.title.trim(),
+              content: form.content.trim(),
+              is_published: form.isPublished,
+              published_at: publishedAt,
+              archived_at: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", form.id)
+            .eq("church_id", churchId);
+
+          if (updateError) throw updateError;
+          return;
+        }
+
+        const { error: insertError } = await supabase
+          .from("announcements")
+          .insert({
+            church_id: churchId,
+            title: form.title.trim(),
+            content: form.content.trim(),
+            is_published: form.isPublished,
+            published_at: publishedAt,
+            created_by: user?.id ?? null,
+          });
+
+        if (insertError) throw insertError;
+        return;
+      }
 
       const result = data as AnnouncementMutationResult | null;
       if (!result?.success) {
@@ -304,7 +355,15 @@ export default function AnnouncementsPage() {
       resetForm();
     },
     onError: (err: Error) => {
-      console.error("Failed to save announcement:", err);
+      logSupabaseError(err, {
+        page: "Announcements",
+        component: "AnnouncementsPage",
+        function: "saveAnnouncement",
+        church_id: churchId,
+        operation: "rpc",
+        rpc: "save_church_announcement",
+        metadata: { announcement_id: form.id, published: form.isPublished },
+      });
       toast({ title: "Error", description: err.message, variant: "destructive" });
     },
   });
@@ -316,7 +375,25 @@ export default function AnnouncementsPage() {
         _archived: !announcement.archived_at,
       } as never);
 
-      if (error) throw error;
+      if (error) {
+        if (!isMissingAnnouncementRpc(error)) throw error;
+
+        console.warn("Announcement archive RPC unavailable; using direct Supabase fallback:", error);
+        const archiving = !announcement.archived_at;
+        const { error: updateError } = await supabase
+          .from("announcements")
+          .update({
+            archived_at: archiving ? new Date().toISOString() : null,
+            is_published: archiving ? false : announcement.is_published,
+            published_at: archiving ? null : announcement.published_at,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", announcement.id)
+          .eq("church_id", churchId ?? "");
+
+        if (updateError) throw updateError;
+        return;
+      }
 
       const result = data as AnnouncementMutationResult | null;
       if (!result?.success) {
@@ -344,7 +421,14 @@ export default function AnnouncementsPage() {
       toast({ title: announcement.archived_at ? "Announcement restored" : "Announcement archived" });
     },
     onError: (err: Error) => {
-      console.error("Failed to archive announcement:", err);
+      logSupabaseError(err, {
+        page: "Announcements",
+        component: "AnnouncementsPage",
+        function: "archiveAnnouncement",
+        church_id: churchId,
+        operation: "rpc",
+        rpc: "set_church_announcement_archived",
+      });
       toast({ title: "Error", description: err.message, variant: "destructive" });
     },
   });
@@ -355,7 +439,19 @@ export default function AnnouncementsPage() {
         _announcement_id: announcement.id,
       } as never);
 
-      if (error) throw error;
+      if (error) {
+        if (!isMissingAnnouncementRpc(error)) throw error;
+
+        console.warn("Announcement delete RPC unavailable; using direct Supabase fallback:", error);
+        const { error: deleteError } = await supabase
+          .from("announcements")
+          .delete()
+          .eq("id", announcement.id)
+          .eq("church_id", churchId ?? "");
+
+        if (deleteError) throw deleteError;
+        return;
+      }
 
       const result = data as AnnouncementMutationResult | null;
       if (!result?.success) {
@@ -371,7 +467,14 @@ export default function AnnouncementsPage() {
       toast({ title: "Announcement deleted" });
     },
     onError: (err: Error) => {
-      console.error("Failed to delete announcement:", err);
+      logSupabaseError(err, {
+        page: "Announcements",
+        component: "AnnouncementsPage",
+        function: "deleteAnnouncement",
+        church_id: churchId,
+        operation: "rpc",
+        rpc: "delete_church_announcement",
+      });
       toast({ title: "Error", description: err.message, variant: "destructive" });
     },
   });

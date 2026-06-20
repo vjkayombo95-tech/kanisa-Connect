@@ -11,6 +11,7 @@ type SidebarItemProps = {
   active?: boolean;
   collapsed?: boolean;
   locked?: boolean;
+  badge?: ReactNode;
   delay?: number;
   onClick?: () => void;
 };
@@ -29,6 +30,7 @@ export function SidebarItem({
   active = false,
   collapsed = false,
   locked = false,
+  badge,
   delay = 0,
   onClick,
 }: SidebarItemProps) {
@@ -114,6 +116,7 @@ export function SidebarItem({
                       Lock
                     </span>
                   )}
+                  {badge}
                 </motion.div>
               </motion.div>
             )}

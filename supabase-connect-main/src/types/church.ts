@@ -24,11 +24,13 @@ export interface Member {
   gender: 'male' | 'female' | null;
   photo_url: string | null;
   status: 'active' | 'inactive' | 'pending';
-  date_joined: string | null;
   date_of_birth: string | null;
   group_id: string | null;
+  family_id: string | null;
+  family_role: string | null;
+  wedding_date: string | null;
+  spouse_name: string | null;
   created_at: string;
-  updated_at: string;
 }
 
 export interface Role {
@@ -53,8 +55,10 @@ export interface Community {
   church_id: string;
   name: string;
   description: string | null;
-  leader_id: string | null;
-  status: 'active' | 'inactive';
+  mwenyekiti_id: string | null;
+  makamu_mwenyekiti_id: string | null;
+  mweka_hazina_id: string | null;
+  katibu_id: string | null;
   created_at: string;
 }
 
@@ -62,7 +66,7 @@ export interface CommunityMember {
   id: string;
   community_id: string;
   member_id: string;
-  joined_at: string;
+  created_at: string;
 }
 
 export interface Ministry {
@@ -70,8 +74,6 @@ export interface Ministry {
   church_id: string;
   name: string;
   description: string | null;
-  leader_id: string | null;
-  status: 'active' | 'inactive';
   created_at: string;
 }
 
@@ -88,13 +90,6 @@ export interface Family {
   church_id: string;
   name: string;
   created_at: string;
-}
-
-export interface FamilyMember {
-  id: string;
-  family_id: string;
-  member_id: string;
-  role: 'father' | 'mother' | 'child' | 'guardian' | 'other';
 }
 
 export interface ContributionCategory {

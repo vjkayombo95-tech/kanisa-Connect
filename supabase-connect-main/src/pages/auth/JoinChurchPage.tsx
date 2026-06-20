@@ -5,19 +5,21 @@ import { ArrowRight, Church, Loader2, LogIn, ShieldAlert, UserPlus } from "lucid
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { fetchPublicRegistrationChurch, isPublicRegistrationEnabled } from "@/lib/public-registration";
+import { fetchPublicJoinChurch, fetchPublicRegistrationChurch, isPublicRegistrationEnabled } from "@/lib/public-registration";
 
 export default function JoinChurchPage() {
-  const { churchCode = "" } = useParams<{ churchCode: string }>();
+  const { slug = "" } = useParams<{ slug: string }>();
   const { user } = useAuth();
 
   const churchQuery = useQuery({
-    queryKey: ["public-join-church", churchCode],
+    queryKey: ["public-join-church", slug],
     queryFn: async () => {
-      if (!churchCode.trim()) return null;
-      return fetchPublicRegistrationChurch({ churchCode, churchId: null });
+      if (!slug.trim()) return null;
+      const churchBySlug = await fetchPublicJoinChurch(slug);
+      if (churchBySlug) return churchBySlug;
+      return fetchPublicRegistrationChurch({ churchCode: slug, churchId: null });
     },
-    enabled: Boolean(churchCode),
+    enabled: Boolean(slug),
   });
 
   if (churchQuery.isLoading) {
@@ -35,6 +37,11 @@ export default function JoinChurchPage() {
 
   const church = churchQuery.data;
   const registrationEnabled = isPublicRegistrationEnabled(church?.metadata);
+  const registrationPath = church?.slug
+    ? `/register?churchSlug=${encodeURIComponent(church.slug)}`
+    : church?.code
+      ? `/register/${church.code}`
+      : "/register";
 
   if (!church) {
     return (
@@ -93,9 +100,13 @@ export default function JoinChurchPage() {
           <div className="grid lg:grid-cols-[1.05fr_1.2fr]">
             <div className="border-b border-border/60 bg-muted/30 p-8 lg:border-b-0 lg:border-r">
               <div className="space-y-6">
-                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
-                  <Church className="h-7 w-7" />
-                </div>
+                {church.logo_url ? (
+                  <img src={church.logo_url} alt={`${church.name} logo`} loading="lazy" decoding="async" className="h-16 w-16 rounded-2xl border border-border/60 bg-background object-cover shadow-lg" />
+                ) : (
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
+                    <Church className="h-7 w-7" />
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   <p className="text-sm font-medium uppercase tracking-[0.24em] text-primary/80">Church Onboarding</p>
@@ -108,10 +119,10 @@ export default function JoinChurchPage() {
                 </div>
 
                 <div className="rounded-2xl border border-border/60 bg-background/80 p-5">
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Church Code</p>
-                  <p className="mt-2 text-lg font-semibold">{church.code}</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Welcome</p>
+                  <p className="mt-2 text-lg font-semibold">{church.name}</p>
                   <p className="mt-3 text-sm text-muted-foreground">
-                    Your church will already be prefilled when you continue to registration.
+                    Your membership will be securely connected to this church after registration.
                   </p>
                 </div>
               </div>
@@ -133,7 +144,7 @@ export default function JoinChurchPage() {
                 <div className="grid gap-4">
                   {user ? (
                     <Button asChild size="lg" className="justify-between">
-                      <Link to={`/register/${church.code}`}>
+                      <Link to={registrationPath}>
                         Continue to member registration
                         <ArrowRight className="h-4 w-4" />
                       </Link>
@@ -141,14 +152,14 @@ export default function JoinChurchPage() {
                   ) : (
                     <>
                       <Button asChild size="lg" className="justify-between">
-                        <Link to={`/register/${church.code}`}>
+                        <Link to={registrationPath}>
                           Create account and register
                           <UserPlus className="h-4 w-4" />
                         </Link>
                       </Button>
 
                       <Button asChild size="lg" variant="outline" className="justify-between">
-                        <Link to={`/login?redirect=${encodeURIComponent(`/register/${church.code}`)}`}>
+                        <Link to={`/login?redirect=${encodeURIComponent(registrationPath)}`}>
                           Sign in to continue
                           <LogIn className="h-4 w-4" />
                         </Link>

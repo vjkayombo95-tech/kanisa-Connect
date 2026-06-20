@@ -23,6 +23,9 @@ type PlatformSettingsRecord = {
   grace_period_days: number;
   auto_expire_trials: boolean;
   allow_downgrades: boolean;
+  billing_payment_method: string;
+  billing_lipa_number: string;
+  billing_payment_instructions: string;
   welcome_email_subject: string;
   welcome_email_body: string;
   invite_email_subject: string;
@@ -42,6 +45,9 @@ const DEFAULT_SETTINGS = {
   grace_period_days: 7,
   auto_expire_trials: true,
   allow_downgrades: true,
+  billing_payment_method: "Mobile Money / Lipa Namba",
+  billing_lipa_number: "Configure Lipa Namba in Platform Settings",
+  billing_payment_instructions: "Pay the exact plan amount, then submit the mobile-money transaction reference for verification.",
   welcome_email_subject: "Welcome to Kanisa Connect!",
   welcome_email_body: "Thank you for joining Kanisa Connect. Your church is now set up and ready to go.",
   invite_email_subject: "You've been invited to join a church on Kanisa Connect",
@@ -85,6 +91,9 @@ export default function PlatformSettingsPage() {
         grace_period_days: settings.grace_period_days,
         auto_expire_trials: settings.auto_expire_trials,
         allow_downgrades: settings.allow_downgrades,
+        billing_payment_method: settings.billing_payment_method,
+        billing_lipa_number: settings.billing_lipa_number,
+        billing_payment_instructions: settings.billing_payment_instructions,
         welcome_email_subject: settings.welcome_email_subject,
         welcome_email_body: settings.welcome_email_body,
         invite_email_subject: settings.invite_email_subject,
@@ -234,6 +243,39 @@ export default function PlatformSettingsPage() {
                   <p className="text-xs text-muted-foreground">Churches can downgrade their plan</p>
                 </div>
                 <Switch checked={form.allow_downgrades} onCheckedChange={(checked) => setField("allow_downgrades", checked)} />
+              </div>
+              <Separator />
+              <div>
+                <p className="text-sm font-semibold">Manual Mobile Money Payments</p>
+                <p className="text-xs text-muted-foreground">
+                  These instructions appear when a church administrator requests a paid-plan upgrade.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Payment Method Label</Label>
+                  <Input
+                    value={form.billing_payment_method}
+                    onChange={(e) => setField("billing_payment_method", e.target.value)}
+                    placeholder="Mobile Money / Lipa Namba"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Lipa Number</Label>
+                  <Input
+                    value={form.billing_lipa_number}
+                    onChange={(e) => setField("billing_lipa_number", e.target.value)}
+                    placeholder="e.g. 123456"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Payment Instructions</Label>
+                  <Textarea
+                    rows={3}
+                    value={form.billing_payment_instructions}
+                    onChange={(e) => setField("billing_payment_instructions", e.target.value)}
+                  />
+                </div>
               </div>
               <Button onClick={() => saveSettings.mutate({})} disabled={saveSettings.isPending}>
                 {saveSettings.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

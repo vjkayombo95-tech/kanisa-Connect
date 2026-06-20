@@ -287,6 +287,7 @@ export type Database = {
           metadata: Json | null
           name: string
           phone: string | null
+          slug: string
           status: Database["public"]["Enums"]["church_status"]
           theme_color: string | null
           updated_at: string
@@ -303,6 +304,7 @@ export type Database = {
           metadata?: Json | null
           name: string
           phone?: string | null
+          slug?: string
           status?: Database["public"]["Enums"]["church_status"]
           theme_color?: string | null
           updated_at?: string
@@ -319,6 +321,7 @@ export type Database = {
           metadata?: Json | null
           name?: string
           phone?: string | null
+          slug?: string
           status?: Database["public"]["Enums"]["church_status"]
           theme_color?: string | null
           updated_at?: string
@@ -327,46 +330,49 @@ export type Database = {
       }
       communities: {
         Row: {
+          chairperson_id: string | null
           church_id: string
           created_at: string
           description: string | null
           id: string
           katibu_id: string | null
-          leader_id: string | null
           makamu_mwenyekiti_id: string | null
           mweka_hazina_id: string | null
           mwenyekiti_id: string | null
           name: string
-          status: Database["public"]["Enums"]["church_status"]
-          updated_at: string
+          secretary_id: string | null
+          treasurer_id: string | null
+          vice_chairperson_id: string | null
         }
         Insert: {
+          chairperson_id?: string | null
           church_id: string
           created_at?: string
           description?: string | null
           id?: string
           katibu_id?: string | null
-          leader_id?: string | null
           makamu_mwenyekiti_id?: string | null
           mweka_hazina_id?: string | null
           mwenyekiti_id?: string | null
           name: string
-          status?: Database["public"]["Enums"]["church_status"]
-          updated_at?: string
+          secretary_id?: string | null
+          treasurer_id?: string | null
+          vice_chairperson_id?: string | null
         }
         Update: {
+          chairperson_id?: string | null
           church_id?: string
           created_at?: string
           description?: string | null
           id?: string
           katibu_id?: string | null
-          leader_id?: string | null
           makamu_mwenyekiti_id?: string | null
           mweka_hazina_id?: string | null
           mwenyekiti_id?: string | null
           name?: string
-          status?: Database["public"]["Enums"]["church_status"]
-          updated_at?: string
+          secretary_id?: string | null
+          treasurer_id?: string | null
+          vice_chairperson_id?: string | null
         }
         Relationships: [
           {
@@ -379,13 +385,6 @@ export type Database = {
           {
             foreignKeyName: "communities_katibu_id_fkey"
             columns: ["katibu_id"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "communities_leader_id_fkey"
-            columns: ["leader_id"]
             isOneToOne: false
             referencedRelation: "members"
             referencedColumns: ["id"]
@@ -464,35 +463,35 @@ export type Database = {
           },
         ]
       }
-      community_members: {
+      member_communities: {
         Row: {
           community_id: string
+          created_at: string
           id: string
-          joined_at: string
           member_id: string
         }
         Insert: {
           community_id: string
+          created_at?: string
           id?: string
-          joined_at?: string
           member_id: string
         }
         Update: {
           community_id?: string
+          created_at?: string
           id?: string
-          joined_at?: string
           member_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "community_members_community_id_fkey"
+            foreignKeyName: "member_communities_community_id_fkey"
             columns: ["community_id"]
             isOneToOne: false
             referencedRelation: "communities"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "community_members_member_id_fkey"
+            foreignKeyName: "member_communities_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
@@ -885,24 +884,18 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          updated_at: string
-          wedding_date: string | null
         }
         Insert: {
           church_id: string
           created_at?: string
           id?: string
           name: string
-          updated_at?: string
-          wedding_date?: string | null
         }
         Update: {
           church_id?: string
           created_at?: string
           id?: string
           name?: string
-          updated_at?: string
-          wedding_date?: string | null
         }
         Relationships: [
           {
@@ -910,42 +903,6 @@ export type Database = {
             columns: ["church_id"]
             isOneToOne: false
             referencedRelation: "churches"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      family_members: {
-        Row: {
-          family_id: string
-          id: string
-          member_id: string
-          role: Database["public"]["Enums"]["family_role"]
-        }
-        Insert: {
-          family_id: string
-          id?: string
-          member_id: string
-          role?: Database["public"]["Enums"]["family_role"]
-        }
-        Update: {
-          family_id?: string
-          id?: string
-          member_id?: string
-          role?: Database["public"]["Enums"]["family_role"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "family_members_family_id_fkey"
-            columns: ["family_id"]
-            isOneToOne: false
-            referencedRelation: "families"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "family_members_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "members"
             referencedColumns: ["id"]
           },
         ]
@@ -1198,55 +1155,67 @@ export type Database = {
       }
       members: {
         Row: {
-          address: string | null
           church_id: string
+          community_id: string | null
           created_at: string
-          date_joined: string | null
           date_of_birth: string | null
           email: string | null
+          family_id: string | null
+          family_role: string | null
           full_name: string
           gender: Database["public"]["Enums"]["gender_type"] | null
+          group_id: string | null
           id: string
-          notes: string | null
+          jumuiya_id: string | null
+          ministry_id: string | null
           phone: string | null
           photo_url: string | null
+          spouse_name: string | null
           status: Database["public"]["Enums"]["member_status"]
-          updated_at: string
           user_id: string | null
+          wedding_date: string | null
         }
         Insert: {
-          address?: string | null
           church_id: string
+          community_id?: string | null
           created_at?: string
-          date_joined?: string | null
           date_of_birth?: string | null
           email?: string | null
+          family_id?: string | null
+          family_role?: string | null
           full_name: string
           gender?: Database["public"]["Enums"]["gender_type"] | null
+          group_id?: string | null
           id?: string
-          notes?: string | null
+          jumuiya_id?: string | null
+          ministry_id?: string | null
           phone?: string | null
           photo_url?: string | null
+          spouse_name?: string | null
           status?: Database["public"]["Enums"]["member_status"]
-          updated_at?: string
           user_id?: string | null
+          wedding_date?: string | null
         }
         Update: {
-          address?: string | null
           church_id?: string
+          community_id?: string | null
           created_at?: string
-          date_joined?: string | null
           date_of_birth?: string | null
           email?: string | null
+          family_id?: string | null
+          family_role?: string | null
           full_name?: string
           gender?: Database["public"]["Enums"]["gender_type"] | null
+          group_id?: string | null
           id?: string
-          notes?: string | null
+          jumuiya_id?: string | null
+          ministry_id?: string | null
           phone?: string | null
           photo_url?: string | null
+          spouse_name?: string | null
           status?: Database["public"]["Enums"]["member_status"]
-          updated_at?: string
           user_id?: string | null
+          wedding_date?: string | null
         }
         Relationships: [
           {
@@ -1264,30 +1233,21 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
-          leader_id: string | null
           name: string
-          status: Database["public"]["Enums"]["church_status"]
-          updated_at: string
         }
         Insert: {
           church_id: string
           created_at?: string
           description?: string | null
           id?: string
-          leader_id?: string | null
           name: string
-          status?: Database["public"]["Enums"]["church_status"]
-          updated_at?: string
         }
         Update: {
           church_id?: string
           created_at?: string
           description?: string | null
           id?: string
-          leader_id?: string | null
           name?: string
-          status?: Database["public"]["Enums"]["church_status"]
-          updated_at?: string
         }
         Relationships: [
           {
@@ -1297,44 +1257,37 @@ export type Database = {
             referencedRelation: "churches"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "ministries_leader_id_fkey"
-            columns: ["leader_id"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
         ]
       }
-      ministry_members: {
+      member_ministries: {
         Row: {
+          created_at: string
           id: string
-          joined_at: string
           member_id: string
           ministry_id: string
         }
         Insert: {
+          created_at?: string
           id?: string
-          joined_at?: string
           member_id: string
           ministry_id: string
         }
         Update: {
+          created_at?: string
           id?: string
-          joined_at?: string
           member_id?: string
           ministry_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "ministry_members_member_id_fkey"
+            foreignKeyName: "member_ministries_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ministry_members_ministry_id_fkey"
+            foreignKeyName: "member_ministries_ministry_id_fkey"
             columns: ["ministry_id"]
             isOneToOne: false
             referencedRelation: "ministries"
@@ -1453,6 +1406,9 @@ export type Database = {
         Row: {
           allow_downgrades: boolean
           auto_expire_trials: boolean
+          billing_lipa_number: string
+          billing_payment_instructions: string
+          billing_payment_method: string
           created_at: string
           default_trial_days: number
           grace_period_days: number
@@ -1474,6 +1430,9 @@ export type Database = {
         Insert: {
           allow_downgrades?: boolean
           auto_expire_trials?: boolean
+          billing_lipa_number?: string
+          billing_payment_instructions?: string
+          billing_payment_method?: string
           created_at?: string
           default_trial_days?: number
           grace_period_days?: number
@@ -1495,6 +1454,9 @@ export type Database = {
         Update: {
           allow_downgrades?: boolean
           auto_expire_trials?: boolean
+          billing_lipa_number?: string
+          billing_payment_instructions?: string
+          billing_payment_method?: string
           created_at?: string
           default_trial_days?: number
           grace_period_days?: number
@@ -1925,6 +1887,68 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_payments: {
+        Row: {
+          amount: number
+          church_id: string
+          created_at: string
+          id: string
+          payer_phone: string | null
+          payment_method: string
+          payment_reference: string
+          plan: Database["public"]["Enums"]["billing_plan"]
+          receipt_url: string | null
+          rejection_reason: string | null
+          requested_by: string
+          status: "pending" | "approved" | "rejected"
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          amount: number
+          church_id: string
+          created_at?: string
+          id?: string
+          payer_phone?: string | null
+          payment_method?: string
+          payment_reference: string
+          plan: Database["public"]["Enums"]["billing_plan"]
+          receipt_url?: string | null
+          rejection_reason?: string | null
+          requested_by: string
+          status?: "pending" | "approved" | "rejected"
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          amount?: number
+          church_id?: string
+          created_at?: string
+          id?: string
+          payer_phone?: string | null
+          payment_method?: string
+          payment_reference?: string
+          plan?: Database["public"]["Enums"]["billing_plan"]
+          receipt_url?: string | null
+          rejection_reason?: string | null
+          requested_by?: string
+          status?: "pending" | "approved" | "rejected"
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           church_id: string
@@ -2054,6 +2078,20 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { _token: string }; Returns: Json }
+      get_public_invitation: {
+        Args: { _token: string }
+        Returns: {
+          church_id: string
+          created_at: string | null
+          email: string | null
+          expires_at: string | null
+          id: string
+          invited_by: string | null
+          role: string | null
+          status: string | null
+          token: string | null
+        }[]
+      }
       create_church_workspace: {
         Args: {
           _address?: string | null
@@ -2087,7 +2125,32 @@ export type Database = {
           updated_at: string
         }
       }
+      review_subscription_payment: {
+        Args: { _approved: boolean; _payment_id: string; _rejection_reason?: string | null }
+        Returns: Database["public"]["Tables"]["subscription_payments"]["Row"]
+      }
+      submit_subscription_payment: {
+        Args: {
+          _church_id: string
+          _payer_phone?: string | null
+          _payment_reference: string
+          _plan: string
+          _receipt_url?: string | null
+        }
+        Returns: Database["public"]["Tables"]["subscription_payments"]["Row"]
+      }
       generate_church_code: { Args: never; Returns: string }
+      get_public_join_church: {
+        Args: { _slug: string }
+        Returns: {
+          code: string
+          id: string
+          logo_url: string | null
+          metadata: Json
+          name: string
+          slug: string
+        }[]
+      }
       get_church_pledges_summary: {
         Args: { _church_id: string }
         Returns: {
@@ -2159,6 +2222,19 @@ export type Database = {
       is_church_member: {
         Args: { _church_id: string; _user_id: string }
         Returns: boolean
+      }
+      join_church_workspace: {
+        Args: {
+          _community_id?: string | null
+          _email?: string | null
+          _full_name: string
+          _gender?: string | null
+          _ministry_ids?: string[]
+          _phone?: string | null
+          _photo_url?: string | null
+          _slug: string
+        }
+        Returns: Json
       }
       is_community_leader: {
         Args: { _community_id: string; _user_id: string }

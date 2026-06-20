@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { acceptInviteForUser, getInviteChurch, type InviteRecord } from "@/lib/invite-flow";
+import { getInviteChurch, type InviteRecord } from "@/lib/invite-flow";
 import { supabase } from "@/integrations/supabase/client";
 
 function isInviteValid(invite: InviteRecord | null | undefined) {
@@ -65,11 +65,9 @@ export default function InvitePage() {
         console.log("PRIMARY INVITE ERROR:", error);
       }
 
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from("invitations" as never)
-        .select("*")
-        .eq("token", token)
-        .maybeSingle();
+      const { data: fallbackRows, error: fallbackError } = await supabase
+        .rpc("get_public_invitation", { _token: token });
+      const fallbackData = fallbackRows?.[0] ?? null;
 
       console.log("FALLBACK INVITE:", fallbackData);
 
@@ -115,7 +113,14 @@ export default function InvitePage() {
         throw new Error(`Please sign in as ${inviteQuery.data.email} to accept this invite.`);
       }
 
-      await acceptInviteForUser(inviteQuery.data, currentUser.id);
+      const { data, error } = await supabase.rpc("accept_invitation", { _token: inviteQuery.data.token });
+      if (error) throw error;
+
+      const result = data as { success?: boolean; error?: string } | null;
+      if (!result?.success) {
+        throw new Error(result?.error || "Could not accept this invitation.");
+      }
+
       await refreshUserData();
     },
     onSuccess: async () => {

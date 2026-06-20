@@ -40,6 +40,8 @@ import { useOfflineSyncQueue } from "@/hooks/useOfflineSyncQueue";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { useTranslation } from "react-i18next";
 import { translateContributionCategory } from "@/lib/translation-helpers";
+import { usePaginatedQuery } from "@/hooks/use-paginated-query";
+import { PaginationFooter } from "@/components/ui/pagination-footer";
 
 export default function ContributionsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -53,6 +55,7 @@ export default function ContributionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
   const [isSyncingPending, setIsSyncingPending] = useState(false);
+  const [transactionTotalCount, setTransactionTotalCount] = useState(0);
 
   const { churchId, user, profile } = useAuth();
   const { isOnline } = useNetworkStatus();
@@ -62,7 +65,7 @@ export default function ContributionsPage() {
   const offlineQueue = useOfflineSyncQueue();
   const contributionsCacheKey = churchId ? `offline-cache:church-contributions:${churchId}` : null;
   const pledgePaymentsCacheKey = churchId ? `offline-cache:church-pledge-payments:${churchId}` : null;
-  const membersCacheKey = churchId ? `offline-cache:church-members-select:${churchId}` : null;
+  const pagination = usePaginatedQuery({ totalCount: transactionTotalCount, resetKey: churchId });
 
   const fetchContributions = useCallback(async () => {
     setIsLoading(true);
@@ -70,6 +73,7 @@ export default function ContributionsPage() {
     if (!churchId) {
       setContributions([]);
       setPledgePayments([]);
+      setTransactionTotalCount(0);
       setIsLoading(false);
       return;
     }
@@ -80,6 +84,7 @@ export default function ContributionsPage() {
     if (cachedContributions.length > 0 || cachedPledges.length > 0) {
       setContributions(cachedContributions);
       setPledgePayments(cachedPledges);
+      setTransactionTotalCount(cachedContributions.length + cachedPledges.length);
       setLastUpdatedAt(new Date());
       setIsLoading(false);
     }
@@ -87,6 +92,7 @@ export default function ContributionsPage() {
     if (!isOnline) {
       setContributions(cachedContributions);
       setPledgePayments(cachedPledges);
+      setTransactionTotalCount(cachedContributions.length + cachedPledges.length);
       setLastUpdatedAt(new Date());
       setIsLoading(false);
       return;
@@ -97,68 +103,82 @@ export default function ContributionsPage() {
         withOfflineCache(
           contributionsCacheKey,
           async () => {
-            const { data, error } = await supabase
+            const { data, error, count } = await supabase
               .from("contributions")
-              .select("*, contribution_categories!contributions_category_id_fkey(name), members!contributions_member_id_fkey(full_name)")
+              .select("*, contribution_categories!contributions_category_id_fkey(name), members!contributions_member_id_fkey(full_name)", { count: "exact" })
               .eq("church_id", churchId)
-              .order("created_at", { ascending: false });
+              .order("created_at", { ascending: false })
+              .range(0, pagination.to);
 
             if (error) throw error;
-            return data || [];
+            return { rows: data || [], count: count ?? 0 };
           },
-          readOfflineCache(contributionsCacheKey, [] as any[]),
+          { rows: readOfflineCache(contributionsCacheKey, [] as any[]), count: readOfflineCache(contributionsCacheKey, [] as any[]).length },
         ),
         withOfflineCache(
           pledgePaymentsCacheKey,
           async () => {
-            const [pledgePaymentsResult, pledgeFeesResult] = await Promise.all([
-              supabase
-                .from("pledge_payments")
-                .select("id, amount, created_at, payment_method, member_id, members(full_name), pledges!inner(church_id)")
-                .eq("pledges.church_id", churchId)
-                .order("created_at", { ascending: false }),
-              supabase
+            const pledgePaymentsResult = await supabase
+              .from("pledge_payments")
+              .select("id, amount, created_at, payment_method, member_id, members(full_name), pledges!inner(church_id)", { count: "exact" })
+              .eq("pledges.church_id", churchId)
+              .order("created_at", { ascending: false })
+              .range(0, pagination.to);
+
+            if (pledgePaymentsResult.error) throw pledgePaymentsResult.error;
+
+            const sourceIds = (pledgePaymentsResult.data || []).map((payment) => payment.id);
+            const pledgeFeesResult = sourceIds.length > 0
+              ? await supabase
                 .from("platform_fees")
                 .select("source_id, net_amount")
                 .eq("church_id", churchId)
-                .eq("source_type", "pledge_payment"),
-            ]);
+                .eq("source_type", "pledge_payment")
+                .in("source_id", sourceIds)
+              : { data: [], error: null };
 
-            if (pledgePaymentsResult.error) throw pledgePaymentsResult.error;
             if (pledgeFeesResult.error) throw pledgeFeesResult.error;
 
             const pledgeFeeMap = new Map(
               (pledgeFeesResult.data || []).map((fee) => [fee.source_id, Number(fee.net_amount ?? 0)]),
             );
 
-            return (pledgePaymentsResult.data || []).map((payment) => ({
-              ...payment,
-              net_amount: pledgeFeeMap.has(payment.id)
-                ? pledgeFeeMap.get(payment.id)
-                : Number((Number(payment.amount || 0) / 1.01).toFixed(2)),
-            }));
+            return {
+              rows: (pledgePaymentsResult.data || []).map((payment) => ({
+                ...payment,
+                net_amount: pledgeFeeMap.has(payment.id)
+                  ? pledgeFeeMap.get(payment.id)
+                  : Number((Number(payment.amount || 0) / 1.01).toFixed(2)),
+              })),
+              count: pledgePaymentsResult.count ?? 0,
+            };
           },
-          readOfflineCache(pledgePaymentsCacheKey, [] as any[]),
+          { rows: readOfflineCache(pledgePaymentsCacheKey, [] as any[]), count: readOfflineCache(pledgePaymentsCacheKey, [] as any[]).length },
         ),
       ]);
 
+      let nextTotalCount = 0;
+
       if (contributionsResult.status === "fulfilled") {
-        setContributions(contributionsResult.value);
+        setContributions(contributionsResult.value.rows);
+        nextTotalCount += contributionsResult.value.count;
       } else {
         console.error("Failed to fetch contributions:", contributionsResult.reason);
       }
 
       if (pledgeResult.status === "fulfilled") {
-        setPledgePayments(pledgeResult.value);
+        setPledgePayments(pledgeResult.value.rows);
+        nextTotalCount += pledgeResult.value.count;
       } else {
         console.error("Failed to fetch pledge payments:", pledgeResult.reason);
       }
 
+      setTransactionTotalCount(nextTotalCount);
       setLastUpdatedAt(new Date());
     } finally {
       setIsLoading(false);
     }
-  }, [churchId, contributionsCacheKey, isOnline, pledgePaymentsCacheKey]);
+  }, [churchId, contributionsCacheKey, isOnline, pagination.from, pagination.pageSize, pagination.to, pledgePaymentsCacheKey]);
 
   useEffect(() => {
     fetchContributions();
@@ -186,35 +206,9 @@ export default function ContributionsPage() {
     fetchCategories();
   }, [churchId, isOnline]);
 
-  const { data: members = [] } = useQuery({
-    queryKey: ["members-select", churchId],
-    queryFn: async () => {
-      if (!churchId) return [];
-      if (!isOnline) {
-        return readOfflineCache(membersCacheKey, [] as any[]);
-      }
-      return withOfflineCache(
-        membersCacheKey,
-        async () => {
-          const { data, error } = await supabase
-            .from("members")
-            .select("id, full_name")
-            .eq("church_id", churchId)
-            .eq("status", "active")
-            .order("full_name");
-          if (error) throw error;
-          return data ?? [];
-        },
-        readOfflineCache(membersCacheKey, [] as any[]),
-      );
-    },
-    enabled: !!churchId,
-  });
-
   const createContribution = useMutation({
     mutationFn: async (values: ContributionFormValues) => {
       if (!churchId) throw new Error("No church context");
-      const selectedMember = members.find((member) => member.id === values.member_id);
 
       if (!isOnline) {
         const queuedAction = enqueueOfflineSyncAction({
@@ -223,7 +217,7 @@ export default function ContributionsPage() {
             churchId,
             amount: parseFloat(values.amount),
             memberId: values.member_id || null,
-            donorName: values.member_id ? selectedMember?.full_name || null : values.donor_name || null,
+            donorName: values.donor_name || null,
             phone: values.phone || null,
             paymentReference: values.payment_reference || null,
             categoryId: values.category_id || null,
@@ -238,7 +232,7 @@ export default function ContributionsPage() {
         church_id: churchId,
         amount: parseFloat(values.amount),
         member_id: values.member_id || null,
-        donor_name: values.member_id ? selectedMember?.full_name : values.donor_name || null,
+        donor_name: values.donor_name || null,
         phone: values.phone || null,
         payment_reference: values.payment_reference || null,
         category_id: values.category_id || null,
@@ -275,7 +269,6 @@ export default function ContributionsPage() {
       if (!editingContrib) throw new Error("Contribution not selected");
       if (!values.reason.trim()) throw new Error("Add a reason for this edit before saving.");
 
-      const selectedMember = members.find((member) => member.id === values.member_id);
       const newAmount = parseFloat(values.amount);
       const contributionId =
         editingContrib?.id ||
@@ -306,7 +299,7 @@ export default function ContributionsPage() {
         .update({
           amount: newAmount,
           category_id: values.category_id || null,
-          donor_name: values.member_id ? selectedMember?.full_name : values.donor_name || null,
+          donor_name: values.donor_name || null,
           member_id: values.member_id || null,
           phone: values.phone || null,
           payment_reference: values.payment_reference || null,
@@ -342,9 +335,7 @@ export default function ContributionsPage() {
                 ...contribution,
                 amount: updatedAmount,
                 category_id: values.category_id || null,
-                donor_name: values.member_id
-                  ? members.find((member) => member.id === values.member_id)?.full_name || contribution.donor_name
-                  : values.donor_name || null,
+                donor_name: values.donor_name || null,
                 member_id: values.member_id || null,
                 phone: values.phone || null,
                 payment_reference: values.payment_reference || null,
@@ -423,9 +414,7 @@ export default function ContributionsPage() {
     return offlineQueue
       .filter((item) => item.type === "church_contribution_create" && item.payload.churchId === churchId)
       .map((item) => {
-        const memberName = item.payload.memberId
-          ? members.find((member) => member.id === item.payload.memberId)?.full_name || null
-          : null;
+        const memberName = item.payload.donorName || null;
         const categoryName = item.payload.categoryId
           ? categories.find((category) => category.id === item.payload.categoryId)?.name || null
           : null;
@@ -443,7 +432,7 @@ export default function ContributionsPage() {
           isOfflinePending: true,
         };
       });
-  }, [categories, churchId, members, offlineQueue]);
+  }, [categories, churchId, offlineQueue]);
 
   const transactions = useMemo(() => {
     const deriveSourceLabel = (contribution: any) => {
@@ -494,7 +483,7 @@ export default function ContributionsPage() {
   }, [contributions, pendingOfflineContributions, pledgePayments, t]);
 
   const pendingContributionCount = pendingOfflineContributions.length;
-  const visibleTransactions = transactions;
+  const visibleTransactions = transactions.slice(pagination.from, pagination.to + 1);
 
   const { total, thisMonth } = useMemo(() => {
     const now = new Date();
@@ -545,7 +534,8 @@ export default function ContributionsPage() {
               </DialogHeader>
               <ContributionForm
                 isEdit={false}
-                members={members}
+                churchId={churchId}
+                members={[]}
                 categories={categories}
                 draftStorageKey={churchId ? `offline-draft:church-contribution:${churchId}` : undefined}
                 isSubmitting={createContribution.isPending && isOnline}
@@ -667,6 +657,16 @@ export default function ContributionsPage() {
               )}
             </TableBody>
           </Table>
+          <PaginationFooter
+            page={pagination.page}
+            pageSize={pagination.pageSize}
+            totalCount={pagination.totalCount}
+            hasPreviousPage={pagination.hasPreviousPage}
+            hasNextPage={pagination.hasNextPage}
+            previousPage={pagination.previousPage}
+            nextPage={pagination.nextPage}
+            isLoading={isLoading}
+          />
         </CardContent>
       </Card>
 
@@ -684,7 +684,15 @@ export default function ContributionsPage() {
           </DialogHeader>
           <ContributionForm
             isEdit
-            members={members}
+            churchId={churchId}
+            members={
+              editingContrib?.member_id
+                ? [{
+                    id: editingContrib.member_id,
+                    full_name: editingContrib.members?.full_name || editingContrib.donor_name || "Selected member",
+                  }]
+                : []
+            }
             categories={categories}
             initialValues={
               editingContrib

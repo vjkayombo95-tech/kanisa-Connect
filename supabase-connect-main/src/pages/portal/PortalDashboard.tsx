@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { useLedCommunities } from "@/hooks/use-community-leader";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { COMMUNITY_HELP_SELECT, MASS_INTENTION_SELECT, enrichCommunityHelpRequests, mapMassIntentionRecord } from "@/lib/member-linked-requests";
 import { useMemberPledges } from "@/lib/pledges";
+import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,20 +26,12 @@ import {
   HelpCircle, FileText, Search, ChevronLeft, ChevronRight, Wallet,
   MapPin, Clock, Star, Gift, BarChart3, PieChart, Pencil, Loader2, Lock, Building2, Target,
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer, PieChart as RPieChart, Pie, Cell } from "recharts";
 import { useToast } from "@/hooks/use-toast";
 import { optimizeImage, uploadFile, validateFile } from "@/lib/file-upload";
 import { useTranslation } from "react-i18next";
 import { translateContributionCategory } from "@/lib/translation-helpers";
 
-const CHART_COLORS = [
-  "hsl(var(--primary))",
-  "hsl(var(--chart-2, 160 60% 45%))",
-  "hsl(var(--chart-3, 30 80% 55%))",
-  "hsl(var(--chart-4, 280 65% 60%))",
-  "hsl(var(--chart-5, 340 75% 55%))",
-  "hsl(200 70% 50%)",
-];
+const PortalContributionCharts = lazy(() => import("./PortalContributionCharts"));
 
 const PAGE_SIZE = 10;
 const DASHBOARD_QUERY_OPTIONS = {
@@ -121,7 +114,7 @@ function useMemberCommunity(member: any | null | undefined) {
       if (member.community_id) {
         const { data } = await supabase
           .from("communities")
-          .select("id, name, description, leader_id, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id")
+          .select("id, name, description, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id")
           .eq("id", member.community_id)
           .maybeSingle();
 
@@ -131,7 +124,7 @@ function useMemberCommunity(member: any | null | undefined) {
       if (!community) {
         const { data } = await supabase
           .from("member_communities")
-          .select("community_id, communities(id, name, description, leader_id, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id)")
+          .select("community_id, communities(id, name, description, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id)")
           .eq("member_id", member.id)
           .limit(1)
           .maybeSingle();
@@ -142,10 +135,9 @@ function useMemberCommunity(member: any | null | undefined) {
       if (!community && member.church_id) {
         const { data } = await supabase
           .from("communities")
-          .select("id, name, description, leader_id, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id")
+          .select("id, name, description, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id")
           .eq("church_id", member.church_id)
           .or([
-            `leader_id.eq.${member.id}`,
             `mwenyekiti_id.eq.${member.id}`,
             `makamu_mwenyekiti_id.eq.${member.id}`,
             `mweka_hazina_id.eq.${member.id}`,
@@ -161,7 +153,7 @@ function useMemberCommunity(member: any | null | undefined) {
 
       // Try to get leader name
       let leaderName: string | null = null;
-      const leaderId = community?.mwenyekiti_id ?? community?.leader_id;
+      const leaderId = community?.mwenyekiti_id;
       if (leaderId) {
         const { data: ldr } = await supabase.from("members").select("full_name").eq("id", leaderId).maybeSingle();
         leaderName = ldr?.full_name ?? null;
@@ -244,7 +236,7 @@ function useMemberFamily(memberId: string | undefined) {
   });
 }
 
-function useMemberContributions(memberId: string | undefined) {
+function useMemberContributions(memberId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: ["my-contributions-all", memberId],
     queryFn: async () => {
@@ -253,7 +245,7 @@ function useMemberContributions(memberId: string | undefined) {
         .from("contributions")
         .select("*, contribution_categories!contributions_category_id_fkey(name)")
         .eq("member_id", memberId)
-        .order("created_at", { ascending: false });
+        .order("date", { ascending: false });
 
       if (error) {
         throw error;
@@ -261,7 +253,7 @@ function useMemberContributions(memberId: string | undefined) {
 
       return data ?? [];
     },
-    enabled: !!memberId,
+    enabled: enabled && !!memberId,
     ...DASHBOARD_QUERY_OPTIONS,
   });
 }
@@ -270,7 +262,7 @@ function getContributionDate(contribution: any) {
   return contribution?.date ?? contribution?.created_at ?? null;
 }
 
-function useMemberPrayers(memberId: string | undefined) {
+function useMemberPrayers(memberId: string | undefined, enabled = true) {
   return useQuery({
     queryKey: ["my-prayers", memberId],
     queryFn: async () => {
@@ -283,12 +275,12 @@ function useMemberPrayers(memberId: string | undefined) {
         .limit(20);
       return data ?? [];
     },
-    enabled: !!memberId,
+    enabled: enabled && !!memberId,
     ...DASHBOARD_QUERY_OPTIONS,
   });
 }
 
-function useMemberMassIntentions(memberId: string | undefined) {
+function useMemberMassIntentions(memberId: string | undefined, enabled = true) {
   const { churchId } = useAuth();
   return useQuery({
     queryKey: ["my-mass-intentions-dashboard", memberId, churchId],
@@ -303,12 +295,12 @@ function useMemberMassIntentions(memberId: string | undefined) {
         .limit(20);
       return (data ?? []).map((row: any) => mapMassIntentionRecord(row));
     },
-    enabled: !!memberId && !!churchId,
+    enabled: enabled && !!memberId && !!churchId,
     ...DASHBOARD_QUERY_OPTIONS,
   });
 }
 
-function useMemberHelpRequests(memberId: string | undefined) {
+function useMemberHelpRequests(memberId: string | undefined, enabled = true) {
   const { churchId } = useAuth();
   return useQuery({
     queryKey: ["my-help-requests-dashboard", memberId, churchId],
@@ -323,12 +315,12 @@ function useMemberHelpRequests(memberId: string | undefined) {
         .limit(20);
       return enrichCommunityHelpRequests((data ?? []) as any[]);
     },
-    enabled: !!memberId && !!churchId,
+    enabled: enabled && !!memberId && !!churchId,
     ...DASHBOARD_QUERY_OPTIONS,
   });
 }
 
-function useCommunities(churchId: string | null) {
+function useCommunities(churchId: string | null, enabled = true) {
   return useQuery({
     queryKey: ["communities-list", churchId],
     queryFn: async () => {
@@ -336,7 +328,7 @@ function useCommunities(churchId: string | null) {
       const { data } = await supabase.from("communities").select("id, name").eq("church_id", churchId).order("name");
       return data ?? [];
     },
-    enabled: !!churchId,
+    enabled: enabled && !!churchId,
     ...DASHBOARD_QUERY_OPTIONS,
   });
 }
@@ -509,17 +501,18 @@ export default function PortalDashboard() {
   const { isFeatureEnabled } = useFeatureAccess();
   const { toast } = useToast();
   const { data: member, isLoading: memberLoading } = useMemberRecord();
+  const [loadDashboardDetails, setLoadDashboardDetails] = useState(false);
   const { data: community } = useMemberCommunity(member);
   const { data: ministries = [] } = useMemberMinistries(member);
   const { data: family } = useMemberFamily(member?.id);
   const { data: church } = useChurchSummary(churchId);
   const { data: ledCommunities = [] } = useLedCommunities();
-  const { data: contributions = [], isLoading: contribLoading } = useMemberContributions(member?.id);
-  const { data: pledges = [] } = useMemberPledges(member?.id);
-  const { data: prayers = [] } = useMemberPrayers(member?.id);
-  const { data: massIntentions = [] } = useMemberMassIntentions(member?.id);
-  const { data: helpRequests = [] } = useMemberHelpRequests(member?.id);
-  const { data: communities = [] } = useCommunities(churchId);
+  const { data: contributions = [], isLoading: contribLoading } = useMemberContributions(member?.id, loadDashboardDetails);
+  const { data: pledges = [] } = useMemberPledges(member?.id, { enabled: loadDashboardDetails });
+  const { data: prayers = [] } = useMemberPrayers(member?.id, loadDashboardDetails);
+  const { data: massIntentions = [] } = useMemberMassIntentions(member?.id, loadDashboardDetails);
+  const { data: helpRequests = [] } = useMemberHelpRequests(member?.id, loadDashboardDetails);
+  const { data: communities = [] } = useCommunities(churchId, loadDashboardDetails);
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const [verseOfDay, setVerseOfDay] = useState<any | null>(null);
@@ -532,20 +525,32 @@ export default function PortalDashboard() {
     churchName: church?.name,
   });
 
+  useEffect(() => {
+    setLoadDashboardDetails(false);
+    if (!member?.id || memberLoading) return;
+
+    const browserWindow = window as Window &
+      typeof globalThis & {
+        requestIdleCallback?: (callback: () => void, options?: { timeout?: number }) => number;
+        cancelIdleCallback?: (handle: number) => void;
+      };
+    const load = () => setLoadDashboardDetails(true);
+
+    if (browserWindow.requestIdleCallback && browserWindow.cancelIdleCallback) {
+      const idleId = browserWindow.requestIdleCallback(load, { timeout: 1200 });
+      return () => browserWindow.cancelIdleCallback?.(idleId);
+    }
+
+    const timeoutId = window.setTimeout(load, 450);
+    return () => window.clearTimeout(timeoutId);
+  }, [member?.id, memberLoading]);
+
   // Announcements & events
   const { data: announcements = [] } = useQuery({
     queryKey: ["dash-announcements", churchId],
     queryFn: async () => {
       if (!churchId) return [];
-      const { data } = await supabase
-        .from("announcements")
-        .select("*")
-        .eq("church_id", churchId)
-        .eq("is_published", true)
-        .is("archived_at", null)
-        .order("created_at", { ascending: false })
-        .limit(3);
-      return data ?? [];
+      return fetchPortalAnnouncements(churchId, 3);
     },
     enabled: !!churchId,
   });
@@ -556,7 +561,7 @@ export default function PortalDashboard() {
       const { data } = await supabase.from("events").select("*").eq("church_id", churchId).eq("status", "upcoming").order("start_date").limit(3);
       return data ?? [];
     },
-    enabled: !!churchId,
+    enabled: !!churchId && loadDashboardDetails,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -581,8 +586,10 @@ export default function PortalDashboard() {
       });
     };
 
-    void fetchVerse();
-  }, [churchId]);
+    if (loadDashboardDetails) {
+      void fetchVerse();
+    }
+  }, [churchId, loadDashboardDetails]);
 
   // ── Contribution Analytics ──
   const now = new Date();
@@ -724,6 +731,7 @@ export default function PortalDashboard() {
 
   const isLoading = memberLoading;
   const limitedPortal = billing.memberPortalAccess === "limited";
+  const detailsLoading = !loadDashboardDetails || contribLoading;
 
   if (isLoading) {
     return (
@@ -807,7 +815,7 @@ export default function PortalDashboard() {
               onChange={handleAvatarSelect}
             />
             {member?.photo_url ? (
-              <img src={member.photo_url} alt="" className="h-16 w-16 rounded-2xl object-cover" />
+              <img src={member.photo_url} alt="" loading="lazy" decoding="async" className="h-16 w-16 rounded-2xl object-cover" />
             ) : (
               <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
                 <User className="h-8 w-8 text-primary-foreground" />
@@ -909,54 +917,27 @@ export default function PortalDashboard() {
           <CardTitle className="text-base flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> Contribution Analytics</CardTitle>
         </CardHeader>
         <CardContent>
-          {contributions.length === 0 ? (
+          {detailsLoading ? (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <Skeleton className="h-56 rounded-xl" />
+              <Skeleton className="h-56 rounded-xl" />
+            </div>
+          ) : contributions.length === 0 ? (
             <EmptyState icon={HandCoins} title="No contributions yet" desc="Your contribution analytics will appear here once you start giving." />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Monthly Trend */}
-              <div>
-                <p className="text-sm font-medium mb-3">Monthly Trend (6 months)</p>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={stats.monthlyTrend}>
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                    <RTooltip formatter={(v: number) => formatTZS(v)} />
-                    <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+            <Suspense fallback={
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <Skeleton className="h-56 rounded-xl" />
+                <Skeleton className="h-56 rounded-xl" />
               </div>
-              {/* Category Breakdown */}
-              <div>
-                <p className="text-sm font-medium mb-3">Category Breakdown</p>
-                {stats.categoryBreakdown.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={200}>
-                    <RPieChart>
-                      <Pie data={stats.categoryBreakdown} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                        {stats.categoryBreakdown.map((_, i) => (
-                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <RTooltip formatter={(v: number) => formatTZS(v)} />
-                    </RPieChart>
-                  </ResponsiveContainer>
-                ) : null}
-              </div>
-              {/* Comparison */}
-              <div className="md:col-span-2 grid grid-cols-2 gap-4">
-                <Card className="bg-muted/30">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-xs text-muted-foreground">This Month</p>
-                    <p className="text-lg font-bold text-primary">{formatTZS(stats.monthTotal)}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-muted/30">
-                  <CardContent className="p-4 text-center">
-                    <p className="text-xs text-muted-foreground">Last Month</p>
-                    <p className="text-lg font-bold">{formatTZS(stats.lastMonthTotal)}</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+            }>
+              <PortalContributionCharts
+                monthlyTrend={stats.monthlyTrend}
+                categoryBreakdown={stats.categoryBreakdown}
+                monthTotal={stats.monthTotal}
+                lastMonthTotal={stats.lastMonthTotal}
+              />
+            </Suspense>
           )}
         </CardContent>
       </Card>
@@ -1033,7 +1014,9 @@ export default function PortalDashboard() {
             <CardTitle className="text-base flex items-center gap-2"><Flame className="h-4 w-4 text-primary" /> My Prayer Requests</CardTitle>
           </CardHeader>
           <CardContent>
-            {prayers.length === 0 ? (
+            {detailsLoading ? (
+              <Skeleton className="h-32 rounded-xl" />
+            ) : prayers.length === 0 ? (
               <EmptyState icon={Flame} title="No prayer requests yet" desc="Submit a prayer request and it will appear here." />
             ) : (
               <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
@@ -1058,7 +1041,9 @@ export default function PortalDashboard() {
             <CardTitle className="text-base flex items-center gap-2"><Heart className="h-4 w-4 text-primary" /> My Mass Intentions</CardTitle>
           </CardHeader>
           <CardContent>
-            {massIntentions.length === 0 ? (
+            {detailsLoading ? (
+              <Skeleton className="h-32 rounded-xl" />
+            ) : massIntentions.length === 0 ? (
               <EmptyState icon={Heart} title="No mass intentions yet" desc="Submit a mass intention and it will appear here." />
             ) : (
               <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
@@ -1087,7 +1072,9 @@ export default function PortalDashboard() {
           <CardTitle className="text-base flex items-center gap-2"><HelpCircle className="h-4 w-4 text-primary" /> My Help Requests</CardTitle>
         </CardHeader>
         <CardContent>
-          {helpRequests.length === 0 ? (
+          {detailsLoading ? (
+            <Skeleton className="h-32 rounded-xl" />
+          ) : helpRequests.length === 0 ? (
             <EmptyState icon={HelpCircle} title="No help requests" desc="Submit a community help request and it will appear here." />
           ) : (
             <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
@@ -1142,7 +1129,9 @@ export default function PortalDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            {events.length === 0 ? (
+            {!loadDashboardDetails ? (
+              <Skeleton className="h-32 rounded-xl" />
+            ) : events.length === 0 ? (
               <EmptyState icon={Calendar} title="No upcoming events" desc="New events will appear here." />
             ) : (
               <div className="space-y-3">
@@ -1230,7 +1219,9 @@ export default function PortalDashboard() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {pledges.length === 0 ? (
+          {detailsLoading ? (
+            <Skeleton className="h-32 rounded-xl" />
+          ) : pledges.length === 0 ? (
             <EmptyState icon={Target} title="No pledges yet" desc="Your pledge commitments will appear here once they are recorded." />
           ) : (
             <>

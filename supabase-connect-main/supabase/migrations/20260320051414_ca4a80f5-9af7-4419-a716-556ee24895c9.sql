@@ -1,4 +1,5 @@
 
+
 -- Add community_id to contributions for community-scoped tracking
 ALTER TABLE public.contributions ADD COLUMN IF NOT EXISTS community_id uuid REFERENCES public.communities(id);
 

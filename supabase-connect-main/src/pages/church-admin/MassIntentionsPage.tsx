@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,31 +12,44 @@ import { useToast } from "@/hooks/use-toast";
 import { MASS_INTENTION_SELECT, mapMassIntentionRecord, type MassIntentionWithMember } from "@/lib/member-linked-requests";
 import { useTranslation } from "react-i18next";
 import { translateMassIntentionType, translateStatus } from "@/lib/translation-helpers";
+import { usePaginatedQuery } from "@/hooks/use-paginated-query";
+import { PaginationFooter } from "@/components/ui/pagination-footer";
 
 export default function MassIntentionsPage() {
   const { churchId } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [totalCount, setTotalCount] = useState(0);
+  const pagination = usePaginatedQuery({ totalCount, resetKey: churchId });
 
-  const { data: intentions = [], isLoading } = useQuery({
-    queryKey: ["mass-intentions", churchId],
+  const { data: intentionsPage = { rows: [] as MassIntentionWithMember[], count: 0 }, isLoading } = useQuery({
+    queryKey: ["mass-intentions", churchId, pagination.page, pagination.pageSize],
     queryFn: async () => {
-      if (!churchId) return [];
-      const { data, error } = await supabase
+      if (!churchId) return { rows: [] as MassIntentionWithMember[], count: 0 };
+      const { data, error, count } = await supabase
         .from("mass_intentions")
-        .select(MASS_INTENTION_SELECT)
+        .select(MASS_INTENTION_SELECT, { count: "exact" })
         .eq("church_id", churchId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(pagination.from, pagination.to);
 
       if (error) {
         throw error;
       }
 
-      return (data ?? []).map((row: any) => mapMassIntentionRecord(row as MassIntentionWithMember));
+      return {
+        rows: (data ?? []).map((row: any) => mapMassIntentionRecord(row as MassIntentionWithMember)),
+        count: count ?? 0,
+      };
     },
     enabled: !!churchId,
   });
+  const intentions = intentionsPage.rows;
+
+  useEffect(() => {
+    setTotalCount(intentionsPage.count);
+  }, [intentionsPage.count]);
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: "approved" | "rejected" }) => {
@@ -136,6 +150,18 @@ export default function MassIntentionsPage() {
           <TabsContent value="pending" className="mt-4">{renderList(pendingIntentions)}</TabsContent>
           <TabsContent value="reviewed" className="mt-4">{renderList(reviewedIntentions)}</TabsContent>
         </Tabs>
+      )}
+      {!isLoading && (
+        <PaginationFooter
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          totalCount={pagination.totalCount}
+          hasPreviousPage={pagination.hasPreviousPage}
+          hasNextPage={pagination.hasNextPage}
+          previousPage={pagination.previousPage}
+          nextPage={pagination.nextPage}
+          isLoading={isLoading}
+        />
       )}
     </div>
   );

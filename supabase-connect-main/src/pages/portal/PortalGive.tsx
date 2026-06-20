@@ -77,22 +77,32 @@ export default function PortalGive() {
   const give = useMutation({
     mutationFn: async () => {
       if (!churchId) throw new Error("No church context");
-      const { error } = await supabase.from("contributions").insert({
-        church_id: churchId,
-        amount: parseFloat(amount),
-        donor_name: member?.full_name || "Member",
-        member_id: member?.id || null,
-        phone: phone || null,
-        payment_reference: paymentRef || null,
-        category_id: categoryId || null,
-        created_by: user?.id || null,
-      });
+      const parsedAmount = Number(amount);
+      if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+        throw new Error("Enter a valid amount");
+      }
+
+      const { data, error } = await supabase.rpc("record_portal_contribution" as never, {
+        _church_id: churchId,
+        _amount: parsedAmount,
+        _member_id: member?.id || null,
+        _donor_name: member?.full_name || user?.email || "Member",
+        _phone: phone || null,
+        _payment_reference: paymentRef || null,
+        _category_id: categoryId || null,
+        _notes: null,
+      } as never);
+
       if (error) throw error;
+      const result = data as { success?: boolean; error?: string } | null;
+      if (!result?.success) {
+        throw new Error(result?.error || "Contribution was not recorded.");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contributions"] });
       queryClient.invalidateQueries({ queryKey: ["my-contributions-all"] });
-      queryClient.invalidateQueries({ queryKey: ["member-dashboard-simple"] });
+      queryClient.invalidateQueries({ queryKey: ["simple-member-home"] });
       queryClient.invalidateQueries({ queryKey: ["my-member-record"] });
       queryClient.invalidateQueries({ queryKey: ["portal-dashboard-church"] });
       setSubmitted(true);

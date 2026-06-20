@@ -5,7 +5,9 @@ import {
   Bot,
   BrainCircuit,
   Download,
+  Edit3,
   Loader2,
+  MessageSquare,
   SendHorizonal,
   Sparkles,
   UserRound,
@@ -17,11 +19,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  exportAnalyticsPdf,
-  fetchAnalyticsAssistant,
-  formatAssistantCurrency,
-  type AnalyticsResponse,
+import type {
+  AnalyticsContext,
+  AnalyticsDashboardSnapshot,
+  AnalyticsInsightSeverity,
+  AnalyticsReportSection,
+  ChartSummary,
+  AnalyticsResponse,
 } from "@/lib/analytics-assistant";
 import { setAnalyticsAssistantPresence } from "@/lib/analytics-assistant-presence";
 
@@ -31,17 +35,92 @@ type ChatMessage =
 
 const SUGGESTED_QUERIES = [
   "Show top contributors",
-  "Generate monthly report",
-  "Show category breakdown for offerings",
+  "Why did giving change this month?",
+  "Show inactive contributors",
+  "Generate monthly treasurer report",
+  "Show offerings vs tithes",
+  "Create WhatsApp follow-up message",
+  "Export PDF report",
 ];
 
+const dashboardCache = new Map<string, AnalyticsDashboardSnapshot>();
+
+function formatAssistantCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "TZS",
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
+}
+
+function getSeverityClasses(severity: AnalyticsInsightSeverity) {
+  const classes: Record<AnalyticsInsightSeverity, string> = {
+    success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-100",
+    info: "border-sky-500/30 bg-sky-500/10 text-sky-100",
+    warning: "border-amber-500/30 bg-amber-500/10 text-amber-100",
+    danger: "border-red-500/30 bg-red-500/10 text-red-100",
+  };
+  return classes[severity];
+}
+
+function getConfidenceClasses(confidence = 0) {
+  if (confidence >= 0.75) return "text-emerald-300";
+  if (confidence >= 0.5) return "text-amber-300";
+  return "text-red-300";
+}
+
+function ChartBars({ chart }: { chart: ChartSummary }) {
+  const points = chart?.data ?? [];
+  const maxValue = Math.max(...points.map((point) => point.value), 1);
+
+  return (
+    <div className="rounded-2xl border border-white/8 bg-background/60 p-4">
+      <p className="text-sm font-medium text-foreground">{chart.title}</p>
+      <div className="mt-3 space-y-2">
+        {points.slice(0, 6).map((point) => (
+          <div key={`${chart.kind}-${point.label}`} className="grid grid-cols-[minmax(82px,0.8fr)_1.4fr_auto] items-center gap-3">
+            <p className="truncate text-xs text-muted-foreground">{point.label}</p>
+            <div className="h-2 overflow-hidden rounded-full bg-white/8">
+              <div
+                className="h-full rounded-full gradient-gold"
+                style={{ width: `${Math.max((point.value / maxValue) * 100, 8)}%` }}
+              />
+            </div>
+            <p className="text-xs font-medium text-primary">{formatAssistantCurrency(point.value)}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function getReportArrays(report: AnalyticsResponse) {
+  return {
+    keyMetrics: report.keyMetrics ?? [],
+    topContributors: report.topContributors ?? [],
+    categoryBreakdown: report.categoryBreakdown ?? [],
+    paymentMethodBreakdown: report.paymentMethodBreakdown ?? [],
+    charts: report.chartData ?? report.charts ?? [],
+    inactiveContributors: report.inactiveContributors ?? [],
+    pledgeFollowUps: report.pledgeFollowUps ?? [],
+    insights: report.insights ?? [],
+  };
+}
+
+function shouldShowSection(report: AnalyticsResponse, section: AnalyticsReportSection) {
+  return (report.reportSections ?? []).includes(section);
+}
+
 export default function AnalyticsAssistantPage() {
-  const { churchId, session } = useAuth();
+  const { churchId, session, user, userRole } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [prefillHandled, setPrefillHandled] = useState("");
+  const [assistantContext, setAssistantContext] = useState<AnalyticsContext | null>(null);
+  const [dashboard, setDashboard] = useState<AnalyticsDashboardSnapshot | null>(null);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
   const [churchBranding, setChurchBranding] = useState({
     churchName: "Church Analytics",
     churchLocation: "",
@@ -51,7 +130,7 @@ export default function AnalyticsAssistantPage() {
     {
       id: "intro",
       role: "assistant",
-      text: "Ask about giving trends, top contributors, or monthly summaries and I'll turn it into a structured church report.",
+      text: "Ask about giving trends, top contributors, monthly summaries, pledges, or announcement drafts. I will read live Supabase records and turn them into a structured church insight.",
     },
   ]);
 
@@ -59,6 +138,10 @@ export default function AnalyticsAssistantPage() {
     () => [...messages].reverse().find((message) => message.role === "assistant" && message.report)?.report ?? null,
     [messages],
   );
+  const exportReport = async (report: AnalyticsResponse) => {
+    const { exportAnalyticsPdf } = await import("@/lib/analytics-assistant");
+    await exportAnalyticsPdf({ ...report, proactiveDashboard: dashboard }, churchBranding);
+  };
 
   useEffect(() => {
     const queuedPrompt = searchParams.get("q")?.trim() || "";
@@ -110,6 +193,36 @@ export default function AnalyticsAssistantPage() {
     };
   }, [churchId]);
 
+  useEffect(() => {
+    if (!churchId || !session?.access_token) return;
+    const cacheKey = `${churchId}:${userRole || "member"}:${user?.id || ""}`;
+    const cached = dashboardCache.get(cacheKey);
+    if (cached) {
+      setDashboard(cached);
+      return;
+    }
+
+    let isActive = true;
+    setIsDashboardLoading(true);
+    import("@/lib/analytics-assistant")
+      .then(({ fetchAnalyticsDashboard }) => fetchAnalyticsDashboard({ churchId, userRole, userId: user?.id }))
+      .then((snapshot) => {
+        if (!isActive) return;
+        dashboardCache.set(cacheKey, snapshot);
+        setDashboard(snapshot);
+      })
+      .catch((dashboardError) => {
+        console.error("Failed to load proactive analytics dashboard:", dashboardError);
+      })
+      .finally(() => {
+        if (isActive) setIsDashboardLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [churchId, session?.access_token, user?.id, userRole]);
+
   const handleSubmit = async (event?: FormEvent, overrideQuery?: string) => {
     event?.preventDefault();
 
@@ -134,28 +247,29 @@ export default function AnalyticsAssistantPage() {
     setAnalyticsAssistantPresence("thinking");
 
     try {
+      const { fetchAnalyticsAssistant } = await import("@/lib/analytics-assistant");
       const report = await fetchAnalyticsAssistant({
         query: trimmedQuery,
         churchId,
         accessToken: session.access_token,
+        userId: user?.id,
+        userRole,
+        previousContext: assistantContext,
       });
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        text: report.warning
-          ? `I prepared a ${report.intent.type.replaceAll("_", " ")} view using mock fallback data because live analytics is currently unavailable.`
-          : `I found a ${report.intent.type.replaceAll("_", " ")} view for ${report.intent.dateRange.replaceAll("_", " ")} with ${report.intent.category} data from ${report.source === "supabase" ? "live Supabase records" : "mock fallback data"}.`,
+        text: report.shortSummary || "I couldn't load the analytics data right now. Please try again.",
         report,
       };
 
       setMessages((current) => [...current, assistantMessage]);
+      if (!report.needsClarification) {
+        setAssistantContext({ intent: report.intent, filters: report.detectedFilters });
+      }
       setAnalyticsAssistantPresence("success");
     } catch (submissionError) {
-      setError(
-        submissionError instanceof Error
-          ? submissionError.message
-          : "The analytics assistant could not complete that request.",
-      );
+      setError("I couldn't load the analytics data right now. Please try again.");
       setAnalyticsAssistantPresence("idle");
     } finally {
       setIsSubmitting(false);
@@ -174,13 +288,13 @@ export default function AnalyticsAssistantPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">AI Analytics</p>
           <h1 className="mt-2 text-3xl font-semibold text-foreground">Analytics Assistant</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-            Explore church giving with natural language prompts, instant summaries, and downloadable PDF reports.
+            Explore church giving with local intent detection, live Supabase records, instant summaries, and downloadable PDF reports.
           </p>
         </div>
 
         {latestReport ? (
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.99 }}>
-            <Button className="rounded-xl" onClick={() => exportAnalyticsPdf(latestReport, churchBranding)}>
+            <Button className="rounded-xl" onClick={() => exportReport(latestReport)}>
               <Download className="h-4 w-4" />
               Download PDF
             </Button>
@@ -189,6 +303,63 @@ export default function AnalyticsAssistantPage() {
       </motion.div>
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="xl:col-span-2 space-y-5">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
+            {[
+              { label: "Church Health Score", value: dashboard ? `${dashboard.healthScore.score}/100` : "...", sub: dashboard?.healthScore.status || "Loading" },
+              { label: "Giving Trend", value: dashboard?.metrics.givingTrend || "...", sub: "vs last month" },
+              { label: "Active Contributors", value: String(dashboard?.metrics.activeContributors ?? "..."), sub: "recent records" },
+              { label: "Inactive Members", value: String(dashboard?.metrics.inactiveMembers ?? "..."), sub: "this month" },
+              { label: "Outstanding Pledges", value: dashboard ? formatAssistantCurrency(dashboard.metrics.outstandingPledges) : "...", sub: "open balance" },
+              { label: "Pledge Completion", value: dashboard ? `${dashboard.metrics.pledgeCompletionRate.toFixed(1)}%` : "...", sub: "collected" },
+              { label: "First-Time Contributors", value: String(dashboard?.metrics.firstTimeContributors ?? "..."), sub: "this month" },
+            ].map((metric) => (
+              <Card key={metric.label} className="rounded-2xl border-white/8 bg-card/90">
+                <CardContent className="p-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{metric.label}</p>
+                  <p className="mt-2 text-lg font-semibold text-foreground">{metric.value}</p>
+                  <p className="text-xs text-muted-foreground">{metric.sub}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <Card className="rounded-[28px] border-white/8 bg-card/90">
+            <CardContent className="p-5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-base font-medium text-foreground">AI Insights Feed</p>
+                  <p className="text-sm text-muted-foreground">
+                    {isDashboardLoading ? "Reading live Supabase data..." : dashboard?.healthScore.mainReason || "Live proactive insights from church activity."}
+                  </p>
+                </div>
+                {dashboard ? (
+                  <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                    {dashboard.healthScore.status}
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                {(dashboard?.insights ?? []).map((insight) => (
+                  <div key={insight.id} className={`rounded-2xl border px-4 py-3 ${getSeverityClasses(insight.severity)}`}>
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 text-base">{insight.severity === "danger" ? "!" : insight.severity === "warning" ? "!" : "+"}</span>
+                      <div>
+                        <p className="text-sm font-semibold">{insight.title}</p>
+                        <p className="mt-1 text-xs opacity-85">{insight.explanation}</p>
+                        <p className="mt-2 text-xs font-medium">{insight.recommendedAction}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {!dashboard && !isDashboardLoading ? (
+                  <p className="text-sm text-muted-foreground">Insights are unavailable right now.</p>
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card className="overflow-hidden rounded-[30px] border-white/8 bg-[radial-gradient(circle_at_top,rgba(245,158,11,0.1),transparent_30%),linear-gradient(180deg,rgba(12,16,24,0.98),rgba(16,22,33,0.94))] shadow-[0_30px_90px_-48px_rgba(0,0,0,0.9)]">
           <CardContent className="p-0">
             <div className="border-b border-white/8 px-6 py-5">
@@ -237,40 +408,122 @@ export default function AnalyticsAssistantPage() {
 
                       <p className="text-sm leading-6 text-foreground">{message.text}</p>
 
-                      {message.report ? (
+                      {message.report ? (() => {
+                        const report = message.report;
+                        const reportArrays = getReportArrays(report);
+                        const comparison = report.comparison;
+                        const showComparison = shouldShowSection(report, "comparison");
+                        const showTopContributors = shouldShowSection(report, "top_contributors");
+                        const showCategories = shouldShowSection(report, "category_breakdown");
+                        const showPaymentMethods = shouldShowSection(report, "payment_methods");
+                        const showCharts = shouldShowSection(report, "charts");
+                        const showInactive = shouldShowSection(report, "inactive_contributors");
+                        const showPledges = shouldShowSection(report, "pledge_follow_ups");
+                        const showAnnouncement = shouldShowSection(report, "announcement_draft");
+                        const amountFilter = report.detectedFilters?.amountFilter;
+                        const amountLabel = amountFilter
+                          ? `${amountFilter.operator} ${formatAssistantCurrency(amountFilter.amount)}`
+                          : "Any amount";
+                        const confidenceClass = getConfidenceClasses(report.confidence);
+
+                        return (
                         <div className="mt-5 space-y-4">
-                          {message.report.warning ? (
+                          {report.warning ? (
                             <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                              {message.report.warning}
+                              {report.warning}
+                            </div>
+                          ) : null}
+
+                          {report.reportTitle ? (
+                            <div className="rounded-2xl border border-white/8 bg-background/60 px-4 py-3">
+                              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Report</p>
+                              <p className="mt-1 text-base font-semibold text-foreground">{report.reportTitle}</p>
+                            </div>
+                          ) : null}
+
+                          <div className="grid gap-2 rounded-2xl border border-white/8 bg-background/50 p-4 text-xs text-muted-foreground sm:grid-cols-2 lg:grid-cols-4">
+                            <div>
+                              <p className="uppercase tracking-[0.18em] text-muted-foreground/80">Intent</p>
+                              <p className="mt-1 text-foreground">{report.intent?.type?.replaceAll("_", " ") || "Unknown"}</p>
+                            </div>
+                            <div>
+                              <p className="uppercase tracking-[0.18em] text-muted-foreground/80">Date Range</p>
+                              <p className="mt-1 text-foreground">{report.detectedFilters?.dateLabel || report.dateRangeLabel || "All time"}</p>
+                            </div>
+                            <div>
+                              <p className="uppercase tracking-[0.18em] text-muted-foreground/80">Category</p>
+                              <p className="mt-1 text-foreground">{report.detectedFilters?.category || report.intent?.category || "all"}</p>
+                            </div>
+                            <div>
+                              <p className="uppercase tracking-[0.18em] text-muted-foreground/80">Confidence</p>
+                              <p className={`mt-1 ${confidenceClass}`}>{Math.round((report.confidence ?? 0) * 100)}% · {amountLabel}</p>
+                            </div>
+                            <div>
+                              <p className="uppercase tracking-[0.18em] text-muted-foreground/80">Member</p>
+                              <p className="mt-1 text-foreground">{report.detectedFilters?.memberName || "All allowed"}</p>
+                            </div>
+                          </div>
+
+                          {report.needsClarification && report.clarificationQuestion ? (
+                            <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">
+                              {report.clarificationQuestion}
                             </div>
                           ) : null}
 
                           <div className="grid gap-3 sm:grid-cols-3">
-                            <div className="rounded-2xl border border-white/8 bg-background/60 p-4">
-                              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Total Giving</p>
-                              <p className="mt-2 text-lg font-semibold text-foreground">
-                                {formatAssistantCurrency(message.report.summary.totalGiving)}
-                              </p>
+                            {reportArrays.keyMetrics.slice(0, 3).map((metric) => (
+                              <div key={`${message.id}-${metric.label}`} className="rounded-2xl border border-white/8 bg-background/60 p-4">
+                                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{metric.label}</p>
+                                <p className="mt-2 text-lg font-semibold text-foreground">{metric.value}</p>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                              <p className="text-xs uppercase tracking-[0.2em] text-primary/80">Insight</p>
+                              <p className="mt-2 text-sm leading-6 text-foreground">{report.insight || "No insight is available yet."}</p>
                             </div>
-                            <div className="rounded-2xl border border-white/8 bg-background/60 p-4">
-                              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Contributors</p>
-                              <p className="mt-2 text-lg font-semibold text-foreground">
-                                {message.report.summary.contributorCount}
-                              </p>
-                            </div>
-                            <div className="rounded-2xl border border-white/8 bg-background/60 p-4">
-                              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Average Gift</p>
-                              <p className="mt-2 text-lg font-semibold text-foreground">
-                                {formatAssistantCurrency(message.report.summary.averageGift)}
-                              </p>
+                            <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                              <p className="text-xs uppercase tracking-[0.2em] text-primary/80">Recommended action</p>
+                              <p className="mt-2 text-sm leading-6 text-foreground">{report.recommendedAction || "Please try again."}</p>
                             </div>
                           </div>
 
+                          {showComparison && comparison ? (
+                            <div className="rounded-2xl border border-white/8 bg-background/60 p-4">
+                              <p className="text-sm font-medium text-foreground">Month comparison</p>
+                              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Previous month</p>
+                                  <p className="text-sm font-medium text-foreground">
+                                    {formatAssistantCurrency(comparison.previousTotal ?? 0)}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Change</p>
+                                  <p className="text-sm font-medium text-primary">
+                                    {formatAssistantCurrency(comparison.changeAmount ?? 0)} (
+                                    {(comparison.changePercent ?? 0).toFixed(1)}%)
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Changed most</p>
+                                  <p className="text-sm font-medium text-foreground">
+                                    {comparison.changedMostCategory || "No category movement"}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {(showTopContributors || showCategories) ? (
                           <div className="grid gap-4 lg:grid-cols-2">
+                            {showTopContributors ? (
                             <div className="rounded-2xl border border-white/8 bg-background/60 p-4">
                               <p className="text-sm font-medium text-foreground">Top contributors</p>
                               <div className="mt-3 space-y-2">
-                                {message.report.topContributors.map((contributor, index) => (
+                                {reportArrays.topContributors.map((contributor, index) => (
                                   <div
                                     key={`${message.id}-contributor-${contributor.name}`}
                                     className="flex items-center justify-between rounded-xl border border-white/6 bg-white/[0.03] px-3 py-2"
@@ -290,11 +543,13 @@ export default function AnalyticsAssistantPage() {
                                 ))}
                               </div>
                             </div>
+                            ) : null}
 
+                            {showCategories ? (
                             <div className="rounded-2xl border border-white/8 bg-background/60 p-4">
                               <p className="text-sm font-medium text-foreground">Category breakdown</p>
                               <div className="mt-3 space-y-2">
-                                {message.report.categoryBreakdown.map((category) => (
+                                {reportArrays.categoryBreakdown.map((category) => (
                                   <div
                                     key={`${message.id}-category-${category.category}`}
                                     className="rounded-xl border border-white/6 bg-white/[0.03] px-3 py-2"
@@ -315,12 +570,171 @@ export default function AnalyticsAssistantPage() {
                                 ))}
                               </div>
                             </div>
+                            ) : null}
                           </div>
+                          ) : null}
+
+                          {showPaymentMethods ? (
+                            <div className="rounded-2xl border border-white/8 bg-background/60 p-4">
+                              <p className="text-sm font-medium text-foreground">Payment method breakdown</p>
+                              <div className="mt-3 space-y-2">
+                                {reportArrays.paymentMethodBreakdown.map((method) => (
+                                  <div
+                                    key={`${message.id}-payment-${method.category}`}
+                                    className="rounded-xl border border-white/6 bg-white/[0.03] px-3 py-2"
+                                  >
+                                    <div className="flex items-center justify-between gap-3">
+                                      <p className="text-sm text-foreground">{method.category}</p>
+                                      <p className="text-sm font-medium text-primary">
+                                        {formatAssistantCurrency(method.total)}
+                                      </p>
+                                    </div>
+                                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/8">
+                                      <div
+                                        className="h-full rounded-full gradient-gold"
+                                        style={{ width: `${Math.max(method.percentage, 6)}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {showCharts && reportArrays.charts.length > 0 ? (
+                            <div className="grid gap-4 lg:grid-cols-2">
+                              {reportArrays.charts.map((chart) => (
+                                <ChartBars key={`${message.id}-${chart.kind}`} chart={chart} />
+                              ))}
+                            </div>
+                          ) : null}
+
+                          {report.forecast ? (
+                            <div className="rounded-2xl border border-white/8 bg-background/60 p-4">
+                              <p className="text-sm font-medium text-foreground">Contribution forecast</p>
+                              <div className="mt-3 grid gap-3 sm:grid-cols-4">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Expected</p>
+                                  <p className="text-sm font-semibold text-primary">{formatAssistantCurrency(report.forecast.expectedAmount)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Best case</p>
+                                  <p className="text-sm font-semibold text-emerald-300">{formatAssistantCurrency(report.forecast.bestCase)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Worst case</p>
+                                  <p className="text-sm font-semibold text-amber-300">{formatAssistantCurrency(report.forecast.worstCase)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Confidence</p>
+                                  <p className="text-sm font-semibold text-foreground">{Math.round(report.forecast.confidence * 100)}%</p>
+                                </div>
+                              </div>
+                              <p className="mt-3 text-xs text-muted-foreground">{report.forecast.basis} Trend direction: {report.forecast.direction}.</p>
+                            </div>
+                          ) : null}
+
+                          {showInactive ? (
+                            <div className="rounded-2xl border border-white/8 bg-background/60 p-4">
+                              <p className="text-sm font-medium text-foreground">Follow-up priorities</p>
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {reportArrays.inactiveContributors.length > 0 ? reportArrays.inactiveContributors.map((contributor) => (
+                                  <span
+                                    key={`${message.id}-inactive-${contributor.name}`}
+                                    className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-muted-foreground"
+                                  >
+                                    {contributor.name} - {formatAssistantCurrency(contributor.total)}
+                                  </span>
+                                )) : (
+                                  <span className="text-sm text-muted-foreground">No inactive contributors were found for this comparison.</span>
+                                )}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {showPledges ? (
+                            <div className="rounded-2xl border border-white/8 bg-background/60 p-4">
+                              <p className="text-sm font-medium text-foreground">Pledge balance priorities</p>
+                              <div className="mt-3 space-y-2">
+                                {reportArrays.pledgeFollowUps.length > 0 ? reportArrays.pledgeFollowUps.map((pledge) => (
+                                  <div key={`${message.id}-pledge-${pledge.name}`} className="flex items-center justify-between rounded-xl border border-white/6 bg-white/[0.03] px-3 py-2">
+                                    <span className="text-sm text-foreground">{pledge.name}</span>
+                                    <span className="text-sm font-medium text-primary">{formatAssistantCurrency(pledge.total)}</span>
+                                  </div>
+                                )) : (
+                                  <p className="text-sm text-muted-foreground">No outstanding pledge balances were found.</p>
+                                )}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {showAnnouncement && report.announcementDraft ? (
+                            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                              <div className="flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4 text-primary" />
+                                <p className="text-sm font-medium text-foreground">Announcement draft preview</p>
+                              </div>
+                              <p className="mt-3 whitespace-pre-line text-sm leading-6 text-muted-foreground">
+                                {report.announcementDraft}
+                              </p>
+                              <div className="mt-4 flex flex-wrap gap-2">
+                                <Button type="button" size="sm" variant="outline" className="rounded-xl border-white/10">
+                                  <Edit3 className="h-4 w-4" />
+                                  Edit
+                                </Button>
+                                <Button type="button" size="sm" className="rounded-xl" disabled>
+                                  <SendHorizonal className="h-4 w-4" />
+                                  Send
+                                </Button>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {report.actionDraft ? (
+                            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                              <div className="flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4 text-primary" />
+                                <p className="text-sm font-medium text-foreground">{report.actionDraft.title}</p>
+                              </div>
+                              <p className="mt-3 whitespace-pre-line text-sm leading-6 text-muted-foreground">
+                                {report.actionDraft.body}
+                              </p>
+                              <div className="mt-4 flex flex-wrap gap-2">
+                                <Button type="button" size="sm" variant="outline" className="rounded-xl border-white/10">
+                                  <Edit3 className="h-4 w-4" />
+                                  Edit
+                                </Button>
+                                <Button type="button" size="sm" className="rounded-xl" disabled>
+                                  <SendHorizonal className="h-4 w-4" />
+                                  Send
+                                </Button>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {(report.followUpPrompts ?? []).length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {(report.followUpPrompts ?? []).map((prompt) => (
+                                <button
+                                  key={`${message.id}-follow-${prompt}`}
+                                  type="button"
+                                  className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/25 hover:text-foreground"
+                                  onClick={() =>
+                                    prompt.toLowerCase().includes("export") && latestReport
+                                      ? exportReport(latestReport)
+                                      : void handleSubmit(undefined, prompt)
+                                  }
+                                >
+                                  {prompt}
+                                </button>
+                              ))}
+                            </div>
+                          ) : null}
 
                           <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4">
-                            <p className="text-sm font-medium text-foreground">Insights</p>
+                            <p className="text-sm font-medium text-foreground">Assistant answer</p>
                             <div className="mt-3 space-y-2">
-                              {message.report.insights.map((insight, index) => (
+                              {reportArrays.insights.map((insight, index) => (
                                 <div
                                   key={`${message.id}-insight-${index}`}
                                   className="flex items-start gap-2 text-sm text-muted-foreground"
@@ -332,7 +746,8 @@ export default function AnalyticsAssistantPage() {
                             </div>
                           </div>
                         </div>
-                      ) : null}
+                        );
+                      })() : null}
                     </div>
                   </motion.div>
                 ))}
@@ -363,8 +778,12 @@ export default function AnalyticsAssistantPage() {
                     whileTap={{ scale: 0.98 }}
                     type="button"
                     className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/25 hover:text-foreground"
-                    onClick={() => void handleSubmit(undefined, suggestion)}
-                    disabled={isSubmitting}
+                    onClick={() =>
+                      suggestion === "Export PDF report" && latestReport
+                        ? exportReport(latestReport)
+                        : void handleSubmit(undefined, suggestion)
+                    }
+                    disabled={isSubmitting || (suggestion === "Export PDF report" && !latestReport)}
                   >
                     {suggestion}
                   </motion.button>
@@ -375,7 +794,7 @@ export default function AnalyticsAssistantPage() {
                 <Input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder='Try "Show top contributors" or "Generate monthly report"'
+                  placeholder='Try "Why did giving change this month?"'
                   className="h-12 rounded-2xl border-white/10 bg-background/70 px-4"
                 />
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.99 }}>
@@ -385,7 +804,7 @@ export default function AnalyticsAssistantPage() {
                     disabled={isSubmitting || !query.trim()}
                   >
                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizonal className="h-4 w-4" />}
-                    Ask AI
+                    Ask
                   </Button>
                 </motion.div>
               </form>
@@ -409,13 +828,14 @@ export default function AnalyticsAssistantPage() {
                 <div>
                   <p className="text-base font-medium text-foreground">What it understands</p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    The backend maps keywords to structured intents, then pulls real contribution rows from Supabase using your signed-in church context.
+                    Local keyword detection maps prompts to structured intents, then reads live Supabase data using your signed-in church context.
                   </p>
                 </div>
               </div>
 
               <div className="rounded-2xl border border-white/8 bg-background/50 p-4 text-sm text-muted-foreground">
                 <p>`type`</p>
+                <p>`privacyMode`</p>
                 <p>`dateRange`</p>
                 <p>`category`</p>
               </div>
@@ -427,12 +847,19 @@ export default function AnalyticsAssistantPage() {
               <p className="text-base font-medium text-foreground">Recommended prompts</p>
               <div className="space-y-2">
                 {SUGGESTED_QUERIES.map((suggestion) => (
-                  <div
+                  <button
                     key={suggestion}
-                    className="rounded-2xl border border-white/8 bg-background/50 px-4 py-3 text-sm text-muted-foreground"
+                    type="button"
+                    onClick={() =>
+                      suggestion === "Export PDF report" && latestReport
+                        ? exportReport(latestReport)
+                        : void handleSubmit(undefined, suggestion)
+                    }
+                    disabled={isSubmitting || (suggestion === "Export PDF report" && !latestReport)}
+                    className="rounded-2xl border border-white/8 bg-background/50 px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:border-primary/25 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {suggestion}
-                  </div>
+                  </button>
                 ))}
               </div>
             </CardContent>

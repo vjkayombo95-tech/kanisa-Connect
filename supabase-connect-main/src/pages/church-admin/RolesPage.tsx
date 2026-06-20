@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, UserPlus, Mail, Loader2, RefreshCw, Trash2, Send, Check, ChevronsUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getEdgeFunctionErrorMessage } from "@/lib/edge-function-error";
 import { v4 as uuidv4 } from "uuid";
 
 const appRoles: { label: string; value: string }[] = [
@@ -189,13 +190,21 @@ export default function RolesPage() {
 
       if (error) {
         console.error("Invitation email failed:", error);
-        return { sent: false, data: null };
+        return {
+          sent: false,
+          data: null,
+          errorMessage: await getEdgeFunctionErrorMessage(error, "The email service rejected this request."),
+        };
       }
 
-      return { sent: true, data };
+      return { sent: true, data, errorMessage: null };
     } catch (error) {
       console.error("Invitation email failed:", error);
-      return { sent: false, data: null };
+      return {
+        sent: false,
+        data: null,
+        errorMessage: await getEdgeFunctionErrorMessage(error, "The email service rejected this request."),
+      };
     }
   };
 
@@ -218,10 +227,11 @@ export default function RolesPage() {
         ? `Invitation created. ${inviteEmail} already has an account — share the invite link with them.`
         : `Invitation email sent to ${inviteEmail}`;
       toast({
-        title: result.sendResult.sent ? "Invitation sent" : "Invitation saved, email pending",
+        title: result.sendResult.sent ? "Invitation sent" : "Invite saved, email not sent",
         description: result.sendResult.sent
           ? msg
-          : `The invitation was created for ${result.inv.email}, but the email could not be sent (test mode).`,
+          : `The invitation was created for ${result.inv.email}, but the email could not be sent: ${result.sendResult.errorMessage}`,
+        variant: result.sendResult.sent ? undefined : "destructive",
       });
       setInviteEmail("");
       setInviteRole("member");

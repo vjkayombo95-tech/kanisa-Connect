@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import {
+  fetchPublicJoinChurch,
   fetchPublicRegistrationChurch,
   fetchPublicRegistrationCommunities,
   fetchPublicRegistrationMinistries,
@@ -26,8 +27,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { assertPhoneIsAvailable, normalizeTanzanianPhone } from "@/lib/phone-auth";
+import { logSupabaseError } from "@/lib/error-logger";
 
-type ChurchRow = Pick<Tables<"churches">, "id" | "name" | "code" | "metadata">;
+type ChurchRow = Pick<Tables<"churches">, "id" | "name" | "code" | "metadata"> & {
+  slug?: string | null;
+  logo_url?: string | null;
+};
 type CommunityRow = Pick<Tables<"communities">, "id" | "name">;
 type MinistryRow = Pick<Tables<"ministries">, "id" | "name">;
 const SIGNUP_RATE_LIMIT_FALLBACK_SECONDS = 60;
@@ -127,9 +132,10 @@ function parseSignupRateLimit(errorMessage: string) {
 }
 
 export default function RegisterPage() {
-  const { churchCode = "" } = useParams<{ churchCode: string }>();
+  const { churchCode = "", slug = "" } = useParams<{ churchCode: string; slug: string }>();
   const [searchParams] = useSearchParams();
   const churchIdParam = searchParams.get("churchId")?.trim() || "";
+  const churchSlugParam = searchParams.get("churchSlug")?.trim() || slug.trim();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, churchId, refreshUserData } = useAuth();
@@ -147,9 +153,9 @@ export default function RegisterPage() {
   const [signupCooldownUntil, setSignupCooldownUntil] = useState<number | null>(null);
   const [hasAttemptedAutoComplete, setHasAttemptedAutoComplete] = useState(false);
   const normalizedEnteredEmail = (user?.email || email).trim().toLowerCase();
-  const hasRegistrationTarget = Boolean(churchCode || churchIdParam);
+  const hasRegistrationTarget = Boolean(churchSlugParam || churchCode || churchIdParam);
   const registrationDraftKey = hasRegistrationTarget
-    ? `offline-draft:register:${churchIdParam || churchCode || "church"}`
+    ? `offline-draft:register:${churchSlugParam || churchIdParam || churchCode || "church"}`
     : null;
 
   useEffect(() => {
@@ -202,8 +208,19 @@ export default function RegisterPage() {
   }, [photoPreview]);
 
   const churchQuery = useQuery({
-    queryKey: ["public-register-church", churchCode, churchIdParam],
+    queryKey: ["public-register-church", churchSlugParam, churchCode, churchIdParam],
     queryFn: async () => {
+      if (churchSlugParam) {
+        const churchBySlug = await fetchPublicJoinChurch(churchSlugParam) as ChurchRow | null;
+        if (churchBySlug) return churchBySlug;
+        if (slug.trim()) {
+          return await fetchPublicRegistrationChurch({
+            churchCode: slug.trim(),
+            churchId: null,
+          }) as ChurchRow | null;
+        }
+        return null;
+      }
       const normalizedCode = churchCode.trim();
       if (!normalizedCode && !churchIdParam) return null;
       return await fetchPublicRegistrationChurch({
@@ -211,7 +228,7 @@ export default function RegisterPage() {
         churchId: churchIdParam || null,
       }) as ChurchRow | null;
     },
-    enabled: Boolean(churchCode || churchIdParam),
+    enabled: hasRegistrationTarget,
   });
 
   const communitiesQuery = useQuery({
@@ -230,7 +247,9 @@ export default function RegisterPage() {
     enabled: Boolean(churchQuery.data?.id),
   });
 
-  const registrationPath = churchQuery.data?.code
+  const registrationPath = churchQuery.data?.slug
+    ? `/register?churchSlug=${encodeURIComponent(churchQuery.data.slug)}`
+    : churchQuery.data?.code
     ? `/register/${churchQuery.data.code}`
     : churchQuery.data?.id
       ? `/register?churchId=${churchQuery.data.id}`
@@ -315,7 +334,17 @@ export default function RegisterPage() {
               },
             });
 
-            if (signUpError) throw signUpError;
+            if (signUpError) {
+              logSupabaseError(signUpError, {
+                page: "Public Registration",
+                component: "RegisterPage",
+                function: "signUp",
+                church_id: church.id,
+                operation: "auth.signUp",
+                metadata: { church_code: church.code },
+              });
+              throw signUpError;
+            }
 
             authUserId = signUpData.user?.id ?? null;
             if (!authUserId) {
@@ -349,18 +378,41 @@ export default function RegisterPage() {
           photoUrl = uploadResult.photoUrl;
         }
 
-        const { data: registrationResult, error: registrationError } = await supabase.rpc("complete_public_registration", {
-          _church_id: church.id,
-          _full_name: fullName.trim(),
-          _email: normalizedEmail,
-          _phone: normalizedPhone.e164,
-          _gender: gender || null,
-          _photo_url: photoUrl,
-          _community_id: selectedCommunityId || null,
-          _ministry_ids: selectedMinistryIds,
-        });
+        const registrationCall = church.slug
+          ? supabase.rpc("join_church_workspace", {
+              _slug: church.slug,
+              _full_name: fullName.trim(),
+              _email: normalizedEmail,
+              _phone: normalizedPhone.e164,
+              _gender: gender || null,
+              _photo_url: photoUrl,
+              _community_id: selectedCommunityId || null,
+              _ministry_ids: selectedMinistryIds,
+            })
+          : supabase.rpc("complete_public_registration" as never, {
+              _church_id: church.id,
+              _full_name: fullName.trim(),
+              _email: normalizedEmail,
+              _phone: normalizedPhone.e164,
+              _gender: gender || null,
+              _photo_url: photoUrl,
+              _community_id: selectedCommunityId || null,
+              _ministry_ids: selectedMinistryIds,
+            } as never);
+        const { data: registrationResult, error: registrationError } = await registrationCall;
 
-        if (registrationError) throw registrationError;
+        if (registrationError) {
+          logSupabaseError(registrationError, {
+            page: "Public Registration",
+            component: "RegisterPage",
+            function: "completeRegistration",
+            church_id: church.id,
+            operation: "rpc",
+            rpc: church.slug ? "join_church_workspace" : "complete_public_registration",
+            metadata: { church_code: church.code, has_photo: !!photoUrl },
+          });
+          throw registrationError;
+        }
 
         const result = registrationResult as { success?: boolean; error?: string; church_name?: string } | null;
         if (!result?.success) {
@@ -545,7 +597,9 @@ export default function RegisterPage() {
                 </p>
                 {churchIdParam ? (
                   <p className="text-xs text-muted-foreground">Requested church ID: {churchIdParam}</p>
-                ) : churchCode ? (
+                 ) : churchSlugParam ? (
+                   <p className="text-xs text-muted-foreground">Requested church link: {churchSlugParam}</p>
+                 ) : churchCode ? (
                   <p className="text-xs text-muted-foreground">Requested church code: {churchCode}</p>
                 ) : null}
               </div>
@@ -600,7 +654,7 @@ export default function RegisterPage() {
                 </p>
               </div>
               <Button asChild variant="outline">
-                <Link to={churchQuery.data.code ? `/join/${churchQuery.data.code}` : registrationPath}>Back to church onboarding</Link>
+                <Link to={churchQuery.data.slug ? `/join/${churchQuery.data.slug}` : registrationPath}>Back to church onboarding</Link>
               </Button>
             </CardContent>
           </Card>
@@ -655,12 +709,19 @@ export default function RegisterPage() {
               </CardHeader>
 
               <CardContent className="p-0">
+                {registerMutation.error ? (
+                  <Alert variant="destructive" className="mb-6">
+                    <ShieldAlert className="h-4 w-4" />
+                    <AlertTitle>Registration could not be completed</AlertTitle>
+                    <AlertDescription>{registerMutation.error.message}</AlertDescription>
+                  </Alert>
+                ) : null}
                 {alreadyInSameChurch && (
                   <Alert className="mb-6 border-primary/30 bg-primary/5">
                     <CheckCircle2 className="h-4 w-4" />
                     <AlertTitle>Already connected</AlertTitle>
                     <AlertDescription>
-                      This account already belongs to {churchQuery.data.name}. You can still update your member details here if needed.
+                      This account already belongs to {churchQuery.data.name}. A second membership will not be created.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -840,6 +901,7 @@ export default function RegisterPage() {
                       size="lg"
                       disabled={
                         registerMutation.isPending ||
+                        alreadyInSameChurch ||
                         signupCooldownSeconds > 0 ||
                         !fullName.trim() ||
                         !(user?.email || email).trim() ||

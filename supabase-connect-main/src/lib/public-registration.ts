@@ -7,6 +7,8 @@ export type PublicChurch = {
   id: string;
   name: string;
   code: string | null;
+  slug?: string | null;
+  logo_url?: string | null;
   metadata?: Record<string, unknown> | null;
 };
 
@@ -41,6 +43,23 @@ export function isPublicRegistrationEnabled(metadata: unknown) {
   }
 
   return (metadata as Record<string, unknown>).public_registration_enabled !== false;
+}
+
+export async function fetchPublicJoinChurch(slug: string) {
+  const normalizedSlug = slug.trim().toLowerCase();
+  if (!normalizedSlug) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc("get_public_join_church", {
+    _slug: normalizedSlug,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return ((data as PublicChurch[] | null)?.[0] ?? null) as PublicChurch | null;
 }
 
 export async function fetchPublicRegistrationChurch(params: {

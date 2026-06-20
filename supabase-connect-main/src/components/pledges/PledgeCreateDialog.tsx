@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RemoteMemberSelect, type RemoteMemberOption } from "@/components/members/RemoteMemberSelect";
 
 type MemberOption = {
   id: string;
@@ -28,6 +29,7 @@ type CommunityOption = {
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  churchId?: string | null;
   title: string;
   description?: string;
   members: MemberOption[];
@@ -42,6 +44,7 @@ interface Props {
 export function PledgeCreateDialog({
   open,
   onOpenChange,
+  churchId,
   title,
   description,
   members,
@@ -53,6 +56,7 @@ export function PledgeCreateDialog({
   onSubmit,
 }: Props) {
   const [memberId, setMemberId] = useState("");
+  const [selectedMember, setSelectedMember] = useState<RemoteMemberOption | null>(null);
   const [communityId, setCommunityId] = useState(defaultCommunityId || "");
   const [amountPledged, setAmountPledged] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
@@ -63,11 +67,6 @@ export function PledgeCreateDialog({
     }
   }, [defaultCommunityId, open]);
 
-  const selectedMember = useMemo(
-    () => members.find((member) => member.id === memberId),
-    [memberId, members],
-  );
-
   useEffect(() => {
     if (!lockCommunity && selectedMember?.community_id) {
       setCommunityId(selectedMember.community_id);
@@ -77,6 +76,7 @@ export function PledgeCreateDialog({
   const handleClose = (nextOpen: boolean) => {
     if (!nextOpen) {
       setMemberId("");
+      setSelectedMember(null);
       setCommunityId(defaultCommunityId || "");
       setAmountPledged("");
       setTargetAmount("");
@@ -99,18 +99,16 @@ export function PledgeCreateDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Member</Label>
-            <Select value={memberId} onValueChange={setMemberId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select member" />
-              </SelectTrigger>
-              <SelectContent>
-                {members.map((member) => (
-                  <SelectItem key={member.id} value={member.id}>
-                    {member.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <RemoteMemberSelect
+              churchId={churchId}
+              communityId={lockCommunity ? defaultCommunityId : null}
+              value={memberId}
+              selectedMember={selectedMember}
+              onValueChange={(member) => {
+                setSelectedMember(member);
+                setMemberId(member?.id ?? "");
+              }}
+            />
           </div>
 
           <div className="space-y-2">

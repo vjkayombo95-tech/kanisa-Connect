@@ -9,6 +9,8 @@ import { Megaphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CommentThread, type CommentReactionSummary } from "@/components/portal/CommentThread";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
+import { ensureBirthdayAnnouncements } from "@/lib/birthday-announcements";
+import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
 
 const ANNOUNCEMENT_REACTION_EMOJIS = ["🎉", "❤️", "🙏", "🥳", "👏", "😊"] as const;
 const ANNOUNCEMENT_COMMENT_EMOJIS = ["🎉", "❤️", "🙏", "👏", "😊"] as const;
@@ -35,17 +37,8 @@ export default function PortalAnnouncements() {
     queryKey: ["portal-announcements-all", user?.id, churchId],
     queryFn: async () => {
       if (!churchId) return [];
-      const { data, error } = await supabase
-        .from("announcements")
-        .select("*")
-        .eq("church_id", churchId)
-        .eq("is_published", true)
-        .is("archived_at", null)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      const announcementRows = (data ?? []) as any[];
+      await ensureBirthdayAnnouncements(churchId);
+      const announcementRows = await fetchPortalAnnouncements(churchId, 50);
       const announcementIds = announcementRows.map((row) => row.id);
 
       if (announcementIds.length === 0) {

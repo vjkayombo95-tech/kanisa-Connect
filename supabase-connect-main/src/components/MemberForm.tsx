@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Loader2, X, User } from "lucide-react";
-import { BillingStatus, getMemberLimit } from "@/lib/billing";
+import { BillingStatus, getMemberLimit, isMissingBillingTableError } from "@/lib/billing";
 import { validateFile, optimizeImage, uploadFile } from "@/lib/file-upload";
 
 type FamilyRole = "father" | "mother" | "child" | "guardian" | "other";
@@ -86,6 +86,8 @@ export function MemberForm({
       .from("members")
       .select("church_id")
       .eq("user_id", user.id)
+      .eq("church_id", churchId)
+      .limit(1)
       .maybeSingle();
 
     if (memberError) {
@@ -196,7 +198,7 @@ export function MemberForm({
 
   const createMember = useMutation({
     mutationFn: async () => {
-      const { userId, churchId: trustedChurchId } = await getAuthenticatedContext();
+      const { churchId: trustedChurchId } = await getAuthenticatedContext();
       setUploading(true);
 
       const normalizedFullName = fullName.trim();
@@ -209,7 +211,8 @@ export function MemberForm({
 
       const { count, error: countError } = await supabase
         .from("members")
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .eq("church_id", trustedChurchId);
 
       if (countError) {
         console.error("Failed to count visible members:", countError);
@@ -225,15 +228,17 @@ export function MemberForm({
         .limit(1)
         .maybeSingle();
 
-      if (subscriptionError) {
+      if (subscriptionError && !isMissingBillingTableError(subscriptionError)) {
         console.error("Failed to fetch subscription for member limit:", subscriptionError);
         throw subscriptionError;
       }
 
-      const memberLimit = getMemberLimit(
-        currentSubscription?.plan ?? "free",
-        (currentSubscription?.status as BillingStatus | undefined) ?? "active",
-      );
+      const memberLimit = subscriptionError
+        ? null
+        : getMemberLimit(
+          currentSubscription?.plan ?? "free",
+          (currentSubscription?.status as BillingStatus | undefined) ?? "active",
+        );
 
       if (memberLimit !== null && (count ?? 0) + pendingMemberCount > memberLimit) {
         throw new Error("You have reached your member limit. Upgrade your plan to add more members.");
@@ -246,7 +251,6 @@ export function MemberForm({
         gender: normalizeOptional(gender),
         date_of_birth: normalizeOptional(dateOfBirth),
         church_id: trustedChurchId,
-        user_id: userId,
         status: "active"
       }).select().single();
 
@@ -268,7 +272,6 @@ export function MemberForm({
           .insert({
             church_id: trustedChurchId,
             name: resolvedFamilyName,
-            wedding_date: isMarried === "yes" ? normalizeOptional(weddingDate) : null,
           })
           .select("id")
           .single();
@@ -282,13 +285,20 @@ export function MemberForm({
         }
         familyId = family.id;
 
-        const familyLinks = [
-          {
+        const { error: familyAssignmentError } = await supabase
+          .from("members")
+          .update({
             family_id: familyId,
-            member_id: newMember.id,
-            role: getPrimaryFamilyRole(),
-          },
-        ];
+            family_role: getPrimaryFamilyRole(),
+            wedding_date: isMarried === "yes" ? normalizeOptional(weddingDate) : null,
+            spouse_name: isMarried === "yes" ? normalizeOptional(spouseName) : null,
+          })
+          .eq("id", newMember.id);
+
+        if (familyAssignmentError) {
+          console.error("Failed to assign member family:", familyAssignmentError);
+          throw familyAssignmentError;
+        }
 
         if (isMarried === "yes" && spouseName.trim()) {
           const { data: spouseMember, error: spouseError } = await supabase
@@ -296,6 +306,10 @@ export function MemberForm({
             .insert({
               full_name: spouseName.trim(),
               church_id: trustedChurchId,
+              family_id: familyId,
+              family_role: getSpouseFamilyRole(),
+              wedding_date: normalizeOptional(weddingDate),
+              spouse_name: normalizedFullName,
               status: "active",
             })
             .select("id")
@@ -309,11 +323,6 @@ export function MemberForm({
             throw new Error("Spouse member could not be created.");
           }
 
-          familyLinks.push({
-            family_id: familyId,
-            member_id: spouseMember.id,
-            role: getSpouseFamilyRole(),
-          });
         }
 
         for (const familyMember of validAdditionalMembers) {
@@ -325,6 +334,8 @@ export function MemberForm({
               status: "active",
               gender: normalizeOptional(familyMember.gender),
               date_of_birth: normalizeOptional(familyMember.date_of_birth),
+              family_id: familyId,
+              family_role: familyMember.role,
             })
             .select("id")
             .single();
@@ -337,20 +348,6 @@ export function MemberForm({
             throw new Error("Family member could not be created.");
           }
 
-          familyLinks.push({
-            family_id: familyId,
-            member_id: createdFamilyMember.id,
-            role: familyMember.role,
-          });
-        }
-
-        const { error: familyLinkError } = await supabase
-          .from("family_members")
-          .insert(familyLinks);
-
-        if (familyLinkError) {
-          console.error("Failed to link family members:", familyLinkError);
-          throw familyLinkError;
         }
       }
 

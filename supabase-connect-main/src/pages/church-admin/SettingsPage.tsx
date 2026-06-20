@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { THEME_PRESETS, checkContrastOnDark, useChurchTheme } from "@/contexts/ChurchThemeContext";
@@ -9,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Palette, Church, Loader2, Image, Check, RotateCcw, Eye } from "lucide-react";
+import { Palette, Church, Loader2, Image, Check, RotateCcw, Eye, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useBillingAccess } from "@/hooks/use-billing-access";
 import OptimizedImageUpload from "@/components/church-admin/OptimizedImageUpload";
 import type { UploadResult } from "@/lib/file-upload";
 
@@ -19,6 +21,7 @@ export default function SettingsPage() {
   const { themeColor: activeThemeColor } = useChurchTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const billing = useBillingAccess();
   const [churchName, setChurchName] = useState("");
   const [churchCode, setChurchCode] = useState("");
   const [email, setEmail] = useState("");
@@ -35,6 +38,19 @@ export default function SettingsPage() {
       if (!churchId) return null;
       const { data } = await supabase.from("churches").select("*").eq("id", churchId).single();
       return data;
+    },
+    enabled: !!churchId,
+  });
+  const { data: memberCount = 0 } = useQuery({
+    queryKey: ["settings-billing-member-count", churchId],
+    queryFn: async () => {
+      if (!churchId) return 0;
+      const { count, error } = await supabase
+        .from("members")
+        .select("id", { count: "exact", head: true })
+        .eq("church_id", churchId);
+      if (error) throw error;
+      return count ?? 0;
     },
     enabled: !!churchId,
   });
@@ -172,6 +188,9 @@ export default function SettingsPage() {
           <TabsTrigger value="theme">
             <Palette className="mr-1.5 h-3.5 w-3.5" /> Theme Center
           </TabsTrigger>
+          <TabsTrigger value="billing">
+            <CreditCard className="mr-1.5 h-3.5 w-3.5" /> Billing / Plan
+          </TabsTrigger>
         </TabsList>
 
         {/* === General Tab === */}
@@ -222,6 +241,52 @@ export default function SettingsPage() {
                   onRemove={() => removeImage("banner")}
                 />
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="billing" className="mt-4 space-y-4">
+          <Card className="glass-card border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base font-sans">
+                <CreditCard className="h-4 w-4 text-primary" /> Current Billing Plan
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-2xl font-bold font-serif">
+                  {billing.isLoading ? "Loading..." : `${billing.currentPlanDefinition.name} Plan`}
+                </p>
+                {!billing.isLoading && (
+                  <Badge variant="outline" className="capitalize text-primary border-primary/30">
+                    {billing.currentStatus}
+                  </Badge>
+                )}
+              </div>
+              {billing.isTrial && billing.subscription.expires_at && (
+                <p className="text-sm text-muted-foreground">
+                  Trial expires on {new Date(billing.subscription.expires_at).toLocaleDateString()} ({billing.trialDaysRemaining} day(s) remaining).
+                </p>
+              )}
+              <div className="rounded-xl border border-border bg-secondary/25 p-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Member usage</span>
+                  <span className="font-medium">
+                    {billing.memberLimit === null ? `${memberCount} / Unlimited` : `${memberCount} / ${billing.memberLimit}`}
+                  </span>
+                </div>
+                {billing.memberLimit !== null && (
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{ width: `${Math.min((memberCount / billing.memberLimit) * 100, 100)}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+              <Button asChild>
+                <Link to="/church-admin/settings/billing">Open Billing & Plan Management</Link>
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

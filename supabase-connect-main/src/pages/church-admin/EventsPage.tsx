@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Calendar, MapPin, Clock, Loader2, Users, Pencil, Archive, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePaginatedQuery } from "@/hooks/use-paginated-query";
+import { PaginationFooter } from "@/components/ui/pagination-footer";
 
 type AttendanceSummaryRow = {
   event_id: string;
@@ -44,41 +46,53 @@ const EMPTY_FORM = {
   location: "",
 };
 
+const isEventList = (value: unknown): value is EventRecord[] => Array.isArray(value);
+
 export default function EventsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const { churchId, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [totalCount, setTotalCount] = useState(0);
+  const pagination = usePaginatedQuery({ totalCount, resetKey: churchId });
 
-  const { data: events = [], isLoading } = useQuery({
-    queryKey: ["events", churchId],
+  const { data: eventsPage = { rows: [] as EventRecord[], count: 0 }, isLoading } = useQuery({
+    queryKey: ["events", churchId, pagination.page, pagination.pageSize],
     queryFn: async () => {
-      if (!churchId) return [];
-      const { data, error } = await supabase
+      if (!churchId) return { rows: [] as EventRecord[], count: 0 };
+      const { data, error, count } = await supabase
         .from("events")
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("church_id", churchId)
-        .order("start_date", { ascending: false });
+        .order("start_date", { ascending: false })
+        .range(pagination.from, pagination.to);
 
       if (error) {
         throw error;
       }
 
-      return (data ?? []) as EventRecord[];
+      return { rows: (data ?? []) as EventRecord[], count: count ?? 0 };
     },
     enabled: !!churchId,
   });
+  const events = eventsPage.rows;
+  const eventIds = events.map((event) => event.id);
+
+  useEffect(() => {
+    setTotalCount(eventsPage.count);
+  }, [eventsPage.count]);
 
   const { data: attendanceSummary = [] } = useQuery({
-    queryKey: ["event-attendance-summary", churchId],
+    queryKey: ["event-attendance-summary", churchId, eventIds],
     queryFn: async () => {
-      if (!churchId) return [];
+      if (!churchId || eventIds.length === 0) return [];
       const { data, error } = await supabase
         .from("event_attendances")
         .select("event_id, response, members(full_name)")
         .eq("church_id", churchId)
-        .eq("response", "yes");
+        .eq("response", "yes")
+        .in("event_id", eventIds);
 
       if (error) {
         throw error;
@@ -86,7 +100,7 @@ export default function EventsPage() {
 
       return (data ?? []) as unknown as AttendanceSummaryRow[];
     },
-    enabled: !!churchId,
+    enabled: !!churchId && eventIds.length > 0,
   });
 
   const activeEvents = useMemo(() => events.filter((event) => !event.archived_at), [events]);
@@ -180,25 +194,54 @@ export default function EventsPage() {
       if (error) throw error;
     },
     onSuccess: (_, event) => {
+      queryClient.setQueriesData({ queryKey: ["events"] }, (current) => {
+        if (!isEventList(current)) return current;
+
+        return current.map((item) =>
+          item.id === event.id
+            ? { ...item, archived_at: event.archived_at ? null : new Date().toISOString() }
+            : item
+        );
+      });
       queryClient.invalidateQueries({ queryKey: ["events"] });
       queryClient.invalidateQueries({ queryKey: ["portal-events"] });
       queryClient.invalidateQueries({ queryKey: ["portal-upcoming-events"] });
       toast({ title: event.archived_at ? "Event restored" : "Event archived" });
     },
-    onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: Error) => {
+      const needsArchiveMigration = err.message.includes("archived_at") && err.message.includes("schema cache");
+
+      toast({
+        title: "Error",
+        description: needsArchiveMigration
+          ? "The events archive column is missing in Supabase. Apply the latest migrations, then try again."
+          : err.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const deleteEvent = useMutation({
     mutationFn: async (event: EventRecord) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("events")
         .delete()
         .eq("id", event.id)
-        .eq("church_id", event.church_id);
+        .eq("church_id", event.church_id)
+        .select("id")
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) {
+        throw new Error("Event was not deleted. Please refresh and try again.");
+      }
     },
-    onSuccess: () => {
+    onSuccess: (_, event) => {
+      queryClient.setQueriesData({ queryKey: ["events"] }, (current) => {
+        if (!isEventList(current)) return current;
+
+        return current.filter((item) => item.id !== event.id);
+      });
       queryClient.invalidateQueries({ queryKey: ["events"] });
       queryClient.invalidateQueries({ queryKey: ["portal-events"] });
       queryClient.invalidateQueries({ queryKey: ["portal-upcoming-events"] });
@@ -430,6 +473,16 @@ export default function EventsPage() {
               </div>
             </section>
           )}
+          <PaginationFooter
+            page={pagination.page}
+            pageSize={pagination.pageSize}
+            totalCount={pagination.totalCount}
+            hasPreviousPage={pagination.hasPreviousPage}
+            hasNextPage={pagination.hasNextPage}
+            previousPage={pagination.previousPage}
+            nextPage={pagination.nextPage}
+            isLoading={isLoading}
+          />
         </div>
       )}
     </div>

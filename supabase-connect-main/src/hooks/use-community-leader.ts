@@ -78,7 +78,7 @@ export function useLedCommunities() {
 
       const { data, error } = await supabase
         .from("communities")
-        .select("id, name, church_id, leader_id, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id")
+        .select("id, name, church_id, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id")
         .in("church_id", churchIds);
 
       if (error) throw error;
@@ -87,7 +87,7 @@ export function useLedCommunities() {
         .map((community) => {
           let leadershipRole: string | null = null;
 
-          if ((community.mwenyekiti_id && memberIds.has(community.mwenyekiti_id)) || (community.leader_id && memberIds.has(community.leader_id))) {
+          if (community.mwenyekiti_id && memberIds.has(community.mwenyekiti_id)) {
             leadershipRole = "Mwenyekiti";
           }
           else if (community.makamu_mwenyekiti_id && memberIds.has(community.makamu_mwenyekiti_id)) leadershipRole = "Makamu Mwenyekiti";

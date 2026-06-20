@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Building2, CreditCard, ToggleRight,
+  LayoutDashboard, Building2, CreditCard, Receipt, ToggleRight,
   TrendingUp, FileText, Activity, Settings, Shield, Church,
 } from "lucide-react";
 import { AppLink } from "@/components/AppLink";
@@ -15,6 +15,7 @@ const items = [
   { title: "Platform Dashboard", url: "/super-admin", icon: LayoutDashboard },
   { title: "Church Management", url: "/super-admin/churches", icon: Building2 },
   { title: "Subscriptions", url: "/super-admin/subscriptions", icon: CreditCard },
+  { title: "Billing Verification", url: "/super-admin/billing-verification", icon: Receipt },
   { title: "Feature Management", url: "/super-admin/features", icon: ToggleRight },
   { title: "Revenue Analytics", url: "/super-admin/revenue", icon: TrendingUp },
   { title: "System Logs", url: "/super-admin/logs", icon: FileText },

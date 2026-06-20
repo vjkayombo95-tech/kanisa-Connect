@@ -15,11 +15,13 @@ import {
   getTrialDaysRemaining,
   hasAddon,
   hasFeature,
+  isMissingBillingTableError,
   isSubscriptionExpired,
 } from "@/lib/billing";
 
-export function useBillingAccess() {
+export function useBillingAccess(options: { enabled?: boolean } = {}) {
   const { churchId } = useAuth();
+  const enabled = options.enabled ?? true;
 
   const subscriptionQuery = useQuery({
     queryKey: ["billing-subscription", churchId],
@@ -37,19 +39,23 @@ export function useBillingAccess() {
         .limit(1)
         .maybeSingle();
 
+      if (error && isMissingBillingTableError(error)) {
+        return { subscription: null, configured: false };
+      }
+
       if (error) {
         throw error;
       }
 
-      return (data ?? null) as SubscriptionRecord | null;
+      return { subscription: (data ?? null) as SubscriptionRecord | null, configured: true };
     },
-    enabled: !!churchId,
+    enabled: enabled && !!churchId,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
-    const subscription = subscriptionQuery.data;
+    const subscription = subscriptionQuery.data?.subscription;
     if (!churchId || !subscription || !subscription.expires_at) {
       return;
     }
@@ -88,21 +94,26 @@ export function useBillingAccess() {
         .select("*")
         .eq("church_id", churchId);
 
+      if (error && isMissingBillingTableError(error)) {
+        return [];
+      }
+
       if (error) {
         throw error;
       }
 
       return (data ?? []) as AddonRecord[];
     },
-    enabled: !!churchId,
+    enabled: enabled && !!churchId,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
   const resolved = useMemo(() => {
-    const rawSubscription = subscriptionQuery.data ?? null;
+    const rawSubscription = subscriptionQuery.data?.subscription ?? null;
     const addons = addonsQuery.data ?? [];
     const expired = isSubscriptionExpired(rawSubscription);
+    const billingConfigured = subscriptionQuery.data?.configured ?? true;
 
     const subscription: SubscriptionRecord = rawSubscription ?? {
       id: "free",
@@ -115,7 +126,7 @@ export function useBillingAccess() {
 
     const currentPlan: BillingPlan = expired ? "free" : subscription.plan;
     const currentStatus = expired ? "expired" : subscription.status;
-    const memberLimit = getMemberLimit(currentPlan, currentStatus);
+    const memberLimit = billingConfigured ? getMemberLimit(currentPlan, currentStatus) : null;
 
     return {
       subscription,
@@ -123,6 +134,7 @@ export function useBillingAccess() {
       currentPlan,
       currentStatus,
       currentPlanDefinition: getPlanDefinition(currentPlan),
+      billingConfigured,
       isExpired: expired,
       isTrial: currentStatus === "trial",
       trialDaysRemaining: currentStatus === "trial" ? getTrialDaysRemaining(subscription.expires_at) : 0,

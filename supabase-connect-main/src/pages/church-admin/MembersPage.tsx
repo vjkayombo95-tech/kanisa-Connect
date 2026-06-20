@@ -24,11 +24,25 @@ import { MemberForm } from "@/components/MemberForm";
 import { v4 as uuidv4 } from "uuid";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
+import { getEdgeFunctionErrorMessage } from "@/lib/edge-function-error";
+import { usePaginatedQuery } from "@/hooks/use-paginated-query";
+import { PaginationFooter } from "@/components/ui/pagination-footer";
 
 type MemberRow = Tables<"members">;
 type InviteInsert = TablesInsert<"invitations">;
 type ChurchScopedRecord = { id: string; name: string };
 type MemberContext = Pick<Tables<"members">, "id" | "church_id" | "user_id">;
+
+function filterMembersBySearch(members: MemberRow[], search: string) {
+  const term = search.trim().toLowerCase();
+  if (!term) return members;
+
+  return members.filter((member) =>
+    member.full_name?.toLowerCase().includes(term) ||
+    member.email?.toLowerCase().includes(term) ||
+    member.phone?.toLowerCase().includes(term)
+  );
+}
 
 export default function MembersPage() {
   const [search, setSearch] = useState("");
@@ -52,14 +66,21 @@ export default function MembersPage() {
     isLoading: memberContextLoading,
     error: memberContextError,
   } = useQuery({
-    queryKey: ["member-context", user?.id],
+    queryKey: ["member-context", user?.id, churchId],
     queryFn: async () => {
       if (!user) return null;
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("members")
         .select("id, church_id, user_id")
-        .eq("user_id", user.id)
+        .eq("user_id", user.id);
+
+      if (churchId) {
+        query = query.eq("church_id", churchId);
+      }
+
+      const { data, error } = await query
+        .limit(1)
         .maybeSingle();
 
       if (error) {
@@ -72,12 +93,17 @@ export default function MembersPage() {
     enabled: !!user,
   });
 
-  const trustedChurchId = memberContext?.church_id ?? churchId ?? null;
+  const trustedChurchId = churchId ?? memberContext?.church_id ?? null;
   const membersCacheKey = trustedChurchId ? `offline-cache:members:${trustedChurchId}` : null;
   const communitiesCacheKey = trustedChurchId ? `offline-cache:members-communities:${trustedChurchId}` : null;
   const ministriesCacheKey = trustedChurchId ? `offline-cache:members-ministries:${trustedChurchId}` : null;
   const familiesCacheKey = trustedChurchId ? `offline-cache:members-families:${trustedChurchId}` : null;
-  const canAccessMemberData = !!user && !!memberContext;
+  const canAccessMemberData = !!user && !!trustedChurchId;
+  const [memberTotalCount, setMemberTotalCount] = useState(0);
+  const memberPagination = usePaginatedQuery({
+    totalCount: memberTotalCount,
+    resetKey: `${trustedChurchId ?? "none"}:${search}`,
+  });
 
   useEffect(() => {
     if (memberContextError) {
@@ -91,45 +117,67 @@ export default function MembersPage() {
 
   // Queries
   const {
-    data: members = [],
+    data: membersPage = { rows: [] as MemberRow[], count: 0 },
     isLoading,
     error: membersError,
   } = useQuery({
-    queryKey: ["members", trustedChurchId],
+    queryKey: ["members", trustedChurchId, search, memberPagination.page, memberPagination.pageSize],
     queryFn: async () => {
-      if (!canAccessMemberData) return [];
+      if (!canAccessMemberData) return { rows: [] as MemberRow[], count: 0 };
+      const cachedMembers = readOfflineCache(membersCacheKey, [] as MemberRow[])
+        .filter((member) => member.church_id === trustedChurchId);
       if (!isOnline) {
-        return readOfflineCache(membersCacheKey, [] as any[]);
+        const filteredMembers = filterMembersBySearch(cachedMembers, search);
+        return {
+          rows: filteredMembers.slice(memberPagination.from, memberPagination.to + 1),
+          count: filteredMembers.length,
+        };
       }
       return withOfflineCache(
-        membersCacheKey,
+        `${membersCacheKey}:${search}:${memberPagination.page}:${memberPagination.pageSize}`,
         async () => {
-          const { data, error } = await supabase
+          const term = search.trim().replace(/[,()]/g, " ");
+          let query = supabase
             .from("members")
-            .select("*")
+            .select("*", { count: "exact" })
+            .eq("church_id", trustedChurchId)
             .order("created_at", { ascending: false });
+
+          if (term) {
+            query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%`);
+          }
+
+          const { data, error, count } = await query.range(memberPagination.from, memberPagination.to);
 
           if (error) {
             console.error("Error fetching members:", error);
             throw error;
           }
-          return data ?? [];
+          return { rows: (data ?? []) as MemberRow[], count: count ?? 0 };
         },
-        readOfflineCache(membersCacheKey, [] as any[]),
+        {
+          rows: filterMembersBySearch(cachedMembers, search).slice(memberPagination.from, memberPagination.to + 1),
+          count: filterMembersBySearch(cachedMembers, search).length,
+        },
       );
     },
     enabled: canAccessMemberData,
   });
+  const members = membersPage.rows;
 
-  const {
-    data: communities = [],
-    error: communitiesError,
-  } = useQuery({
+  useEffect(() => {
+    setMemberTotalCount(membersPage.count);
+  }, [membersPage.count]);
+
+  const pageMemberIds = useMemo(() => members.map((member) => member.id), [members]);
+
+  const { data: communities = [] } = useQuery({
     queryKey: ["communities-list", trustedChurchId],
     queryFn: async () => {
       if (!canAccessMemberData) return [];
+      const cachedCommunities = readOfflineCache(communitiesCacheKey, [] as ChurchScopedRecord[]);
       if (!isOnline) {
-        return readOfflineCache(communitiesCacheKey, [] as any[]);
+        return cachedCommunities;
       }
       return withOfflineCache(
         communitiesCacheKey,
@@ -137,29 +185,28 @@ export default function MembersPage() {
           const { data, error } = await supabase
             .from("communities")
             .select("id, name")
+            .eq("church_id", trustedChurchId)
             .order("name");
 
           if (error) {
-            console.error("Error fetching communities:", error);
-            throw error;
+            console.warn("Community details unavailable on members page.", error);
+            return cachedCommunities;
           }
           return (data ?? []) as ChurchScopedRecord[];
         },
-        readOfflineCache(communitiesCacheKey, [] as any[]),
+        cachedCommunities,
       );
     },
     enabled: canAccessMemberData,
   });
 
-  const {
-    data: ministries = [],
-    error: ministriesError,
-  } = useQuery({
+  const { data: ministries = [] } = useQuery({
     queryKey: ["ministries-list", trustedChurchId],
     queryFn: async () => {
       if (!canAccessMemberData) return [];
+      const cachedMinistries = readOfflineCache(ministriesCacheKey, [] as ChurchScopedRecord[]);
       if (!isOnline) {
-        return readOfflineCache(ministriesCacheKey, [] as any[]);
+        return cachedMinistries;
       }
       return withOfflineCache(
         ministriesCacheKey,
@@ -167,29 +214,28 @@ export default function MembersPage() {
           const { data, error } = await supabase
             .from("ministries")
             .select("id, name")
+            .eq("church_id", trustedChurchId)
             .order("name");
 
           if (error) {
-            console.error("Error fetching ministries:", error);
-            throw error;
+            console.warn("Ministry details unavailable on members page.", error);
+            return cachedMinistries;
           }
           return (data ?? []) as ChurchScopedRecord[];
         },
-        readOfflineCache(ministriesCacheKey, [] as any[]),
+        cachedMinistries,
       );
     },
     enabled: canAccessMemberData,
   });
 
-  const {
-    data: families = [],
-    error: familiesError,
-  } = useQuery({
+  const { data: families = [] } = useQuery({
     queryKey: ["families-list", trustedChurchId],
     queryFn: async () => {
       if (!canAccessMemberData) return [];
+      const cachedFamilies = readOfflineCache(familiesCacheKey, [] as ChurchScopedRecord[]);
       if (!isOnline) {
-        return readOfflineCache(familiesCacheKey, [] as any[]);
+        return cachedFamilies;
       }
       return withOfflineCache(
         familiesCacheKey,
@@ -197,121 +243,111 @@ export default function MembersPage() {
           const { data, error } = await supabase
             .from("families")
             .select("id, name")
+            .eq("church_id", trustedChurchId)
             .order("name");
 
           if (error) {
-            console.error("Error fetching families:", error);
-            throw error;
+            console.warn("Family details unavailable on members page.", error);
+            return cachedFamilies;
           }
 
           return (data ?? []) as ChurchScopedRecord[];
         },
-        readOfflineCache(familiesCacheKey, [] as any[]),
+        cachedFamilies,
       );
     },
     enabled: canAccessMemberData,
   });
 
   const { data: communityMemberships = [] } = useQuery({
-    queryKey: ["community-memberships", trustedChurchId],
+    queryKey: ["community-memberships", trustedChurchId, pageMemberIds],
     queryFn: async () => {
-      if (!canAccessMemberData || communities.length === 0) return [];
+      if (!canAccessMemberData || communities.length === 0 || pageMemberIds.length === 0) return [];
       const { data, error } = await supabase
         .from("member_communities")
         .select("member_id, community_id")
-        .in(
-          "community_id",
-          communities.map((community: any) => community.id),
-        );
+        .in("member_id", pageMemberIds);
       if (error) {
-        console.error("Error fetching community memberships:", error);
-        throw error;
+        console.warn("Community memberships unavailable on members page.", error);
+        return [];
       }
       return data ?? [];
     },
-    enabled: canAccessMemberData && communities.length > 0,
+    enabled: canAccessMemberData && communities.length > 0 && pageMemberIds.length > 0,
   });
 
   const { data: ministryMemberships = [] } = useQuery({
-    queryKey: ["ministry-memberships", trustedChurchId],
+    queryKey: ["ministry-memberships", trustedChurchId, pageMemberIds],
     queryFn: async () => {
-      if (!canAccessMemberData || ministries.length === 0) return [];
+      if (!canAccessMemberData || ministries.length === 0 || pageMemberIds.length === 0) return [];
       const { data, error } = await supabase
         .from("member_ministries")
         .select("member_id, ministry_id")
-        .in(
-          "ministry_id",
-          ministries.map((ministry: any) => ministry.id),
-        );
+        .in("member_id", pageMemberIds);
       if (error) {
-        console.error("Error fetching ministry memberships:", error);
-        throw error;
+        console.warn("Ministry memberships unavailable on members page.", error);
+        return [];
       }
       return data ?? [];
     },
-    enabled: canAccessMemberData && ministries.length > 0,
+    enabled: canAccessMemberData && ministries.length > 0 && pageMemberIds.length > 0,
   });
 
   const { data: familyMemberships = [] } = useQuery({
-    queryKey: ["family-memberships", trustedChurchId],
+    queryKey: ["family-memberships", trustedChurchId, pageMemberIds],
     queryFn: async () => {
-      if (!canAccessMemberData || families.length === 0) return [];
+      if (!canAccessMemberData || families.length === 0 || pageMemberIds.length === 0) return [];
       const { data, error } = await supabase
-        .from("family_members")
-        .select("member_id, family_id, role")
-        .in(
-          "family_id",
-          families.map((family: any) => family.id),
-        );
+        .from("members")
+        .select("id, family_id, family_role")
+        .eq("church_id", trustedChurchId)
+        .not("family_id", "is", null)
+        .in("id", pageMemberIds);
 
       if (error) {
-        console.error("Error fetching family memberships:", error);
-        throw error;
+        console.warn("Family memberships unavailable on members page.", error);
+        return [];
       }
 
-      return data ?? [];
+      return (data ?? []).map((member) => ({
+        member_id: member.id,
+        family_id: member.family_id,
+        role: member.family_role,
+      }));
     },
-    enabled: canAccessMemberData && families.length > 0,
+    enabled: canAccessMemberData && families.length > 0 && pageMemberIds.length > 0,
   });
 
-  const {
-    data: memberContributions = [],
-    error: memberContributionsError,
-  } = useQuery({
-    queryKey: ["member-contributions-all", trustedChurchId],
+  const { data: memberContributions = [] } = useQuery({
+    queryKey: ["member-contributions", trustedChurchId, detailMember?.id],
     queryFn: async () => {
-      if (!canAccessMemberData) return [];
+      if (!canAccessMemberData || !detailMember) return [];
       const { data, error } = await supabase
         .from("contributions")
-        .select("id, member_id, amount, date, donor_name, notes, contribution_categories!contributions_category_id_fkey(name)")
-        .order("date", { ascending: false });
+        .select("id, member_id, amount, created_at, donor_name, notes, contribution_categories!contributions_category_id_fkey(name)")
+        .eq("church_id", trustedChurchId)
+        .eq("member_id", detailMember.id)
+        .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching member contributions:", error);
-        throw error;
+        console.warn("Contribution details unavailable on members page.", error);
+        return [];
       }
 
       return data ?? [];
     },
-    enabled: canAccessMemberData,
+    enabled: canAccessMemberData && !!detailMember,
   });
 
   useEffect(() => {
-    const pageError =
-      membersError ||
-      communitiesError ||
-      ministriesError ||
-      familiesError ||
-      memberContributionsError;
-
-    if (pageError) {
+    if (membersError) {
       toast({
         title: "Unable to load members",
-        description: "Some member data could not be loaded. Please try again.",
+        description: "The member list could not be loaded. Please try again.",
         variant: "destructive",
       });
     }
-  }, [membersError, communitiesError, ministriesError, familiesError, memberContributionsError, toast]);
+  }, [membersError, toast]);
 
   const getMemberCommunity = (memberId: string) => communityMemberships.find((cm: any) => cm.member_id === memberId);
   const getMemberMinistry = (memberId: string) => ministryMemberships.find((mm: any) => mm.member_id === memberId);
@@ -370,6 +406,7 @@ export default function MembersPage() {
       if (inviteError) throw inviteError;
 
       let emailFailed = false;
+      let emailFailureMessage = "";
 
       try {
         const { error: sendError } = await supabase.functions.invoke("send-invitation", {
@@ -381,19 +418,22 @@ export default function MembersPage() {
 
         if (sendError) {
           emailFailed = true;
+          emailFailureMessage = await getEdgeFunctionErrorMessage(sendError, "The email service rejected this request.");
           console.error("Invitation email failed:", sendError);
         }
       } catch (error) {
         emailFailed = true;
+        emailFailureMessage = await getEdgeFunctionErrorMessage(error, "The email service rejected this request.");
         console.error("Invitation email failed:", error);
       }
 
       setInvitedMemberIds((current) => current.includes(member.id) ? current : [...current, member.id]);
       toast({
-        title: emailFailed ? "Invite saved, email pending" : "Invite sent successfully",
+        title: emailFailed ? "Invite saved, email not sent" : "Invite sent successfully",
         description: emailFailed
-          ? "The invitation was created successfully, but the email could not be sent (test mode)."
+          ? `The invitation was created successfully, but the email could not be sent: ${emailFailureMessage}`
           : undefined,
+        variant: emailFailed ? "destructive" : undefined,
       });
     } catch (err: any) {
       console.error("Invite flow failed:", err);
@@ -403,15 +443,9 @@ export default function MembersPage() {
     }
   }, [trustedChurchId, invitedMemberIds, toast]);
 
-  const filtered = useMemo(() => {
-    const lowSearch = search.toLowerCase();
-    return members.filter((m: any) =>
-      m.full_name?.toLowerCase().includes(lowSearch) ||
-      m.email?.toLowerCase().includes(lowSearch)
-    );
-  }, [members, search]);
+  const filtered = members;
 
-  const memberCount = members.length;
+  const memberCount = memberTotalCount;
   const usageRatio = billing.memberLimit ? memberCount / billing.memberLimit : 0;
   const nearLimit = billing.memberLimit !== null && usageRatio >= 0.9;
   const limitReached = billing.memberLimit !== null && memberCount >= billing.memberLimit;
@@ -431,7 +465,7 @@ export default function MembersPage() {
         <TableCell>
           <button onClick={() => setDetailMember(m)} className="flex items-center gap-2 hover:text-primary transition-colors text-left font-medium">
             <Avatar className="h-7 w-7">
-              <AvatarImage src={m.photo_url} />
+              <AvatarImage src={m.photo_url} loading="lazy" />
               <AvatarFallback className="text-xs gradient-gold text-primary-foreground">{m.full_name?.charAt(0)}</AvatarFallback>
             </Avatar>
             {m.full_name}
@@ -441,7 +475,7 @@ export default function MembersPage() {
         <TableCell className="text-muted-foreground">{m.phone || "—"}</TableCell>
         <TableCell className="text-muted-foreground capitalize">{m.gender || "—"}</TableCell>
         <TableCell><Badge variant="outline" className={statusColor(m.status)}>{m.status}</Badge></TableCell>
-        <TableCell className="text-muted-foreground">{m.date_joined ? new Date(m.date_joined).toLocaleDateString() : "—"}</TableCell>
+        <TableCell className="text-muted-foreground">{m.created_at ? new Date(m.created_at).toLocaleDateString() : "—"}</TableCell>
         <TableCell>
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
@@ -480,7 +514,7 @@ export default function MembersPage() {
               {/* Header */}
               <div className="flex items-start gap-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={m.photo_url} />
+                  <AvatarImage src={m.photo_url} loading="lazy" />
                   <AvatarFallback className="text-lg gradient-gold text-primary-foreground">{m.full_name?.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
@@ -503,7 +537,7 @@ export default function MembersPage() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground"><Mail className="h-4 w-4" /> {m.email || "No email"}</div>
                 <div className="flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4" /> {m.phone || "No phone"}</div>
-                <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="h-4 w-4" /> Joined: {m.date_joined ? new Date(m.date_joined).toLocaleDateString() : "—"}</div>
+                <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="h-4 w-4" /> Joined: {m.created_at ? new Date(m.created_at).toLocaleDateString() : "—"}</div>
                 <div className="flex items-center gap-2 text-muted-foreground capitalize"><User className="h-4 w-4" /> {m.gender || "—"}</div>
                 <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="h-4 w-4" /> Birthdate: {m.date_of_birth ? new Date(m.date_of_birth).toLocaleDateString() : "—"}</div>
                 <div className="flex items-center gap-2 text-muted-foreground"><Building2 className="h-4 w-4" /> Jumuiya: {getCommunityName((cm as any)?.community_id)}</div>
@@ -527,7 +561,7 @@ export default function MembersPage() {
                           </div>
                           <div className="text-right">
                             <span className="font-medium text-primary">{formatTZS(c.amount)}</span>
-                            <span className="text-muted-foreground text-xs ml-2">{new Date(c.date).toLocaleDateString()}</span>
+                            <span className="text-muted-foreground text-xs ml-2">{new Date(c.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
                       ))}
@@ -566,7 +600,7 @@ export default function MembersPage() {
     );
   }
 
-  if (!memberContext) {
+  if (!trustedChurchId) {
     return (
       <div className="space-y-6 animate-fade-in">
         <Card className="glass-card">
@@ -583,7 +617,7 @@ export default function MembersPage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold font-serif">Members</h1>
-          <p className="text-sm text-muted-foreground mt-1">{members.length} total members</p>
+          <p className="text-sm text-muted-foreground mt-1">{memberTotalCount} total members</p>
           <p className="text-xs text-muted-foreground mt-1">
             {billing.memberLimit === null ? `${memberCount} members / Unlimited` : `${memberCount} / ${billing.memberLimit} members`}
           </p>
@@ -660,6 +694,16 @@ export default function MembersPage() {
               ) : memberRows}
             </TableBody>
           </Table>
+          <PaginationFooter
+            page={memberPagination.page}
+            pageSize={memberPagination.pageSize}
+            totalCount={memberPagination.totalCount}
+            hasPreviousPage={memberPagination.hasPreviousPage}
+            hasNextPage={memberPagination.hasNextPage}
+            previousPage={memberPagination.previousPage}
+            nextPage={memberPagination.nextPage}
+            isLoading={isLoading}
+          />
         </CardContent>
       </Card>
 
@@ -697,7 +741,7 @@ export default function MembersPage() {
               onClick={async () => {
                 if (!deleteConfirm) return;
                 try {
-                  const { error } = await supabase.from("members").delete().eq("id", deleteConfirm);
+                  const { error } = await supabase.from("members").delete().eq("id", deleteConfirm).eq("church_id", trustedChurchId);
                   if (error) throw error;
                   queryClient.invalidateQueries({ queryKey: ["members"] });
                   toast({ title: "Member removed" });

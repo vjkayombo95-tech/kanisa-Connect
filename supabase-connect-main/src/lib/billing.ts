@@ -38,6 +38,12 @@ export type AddonRecord = {
   purchased_at: string | null;
 };
 
+export function isMissingBillingTableError(error: unknown) {
+  const tableError = error as { code?: string; message?: string } | null;
+  return tableError?.code === "PGRST205"
+    && /public\.(subscriptions|addons)/.test(tableError.message ?? "");
+}
+
 export type PricingPlan = {
   id: BillingPlan;
   name: string;

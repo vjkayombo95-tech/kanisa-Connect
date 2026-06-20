@@ -71,18 +71,6 @@ export default function PortalPledges() {
         if (linkedCommunity) return linkedCommunity;
       }
 
-      const { data: legacyMembership, error: legacyError } = await supabase
-        .from("community_members")
-        .select("community_id, communities(id, name)")
-        .eq("member_id", member.id)
-        .limit(1)
-        .maybeSingle();
-
-      if (!legacyError) {
-        const legacyCommunity = legacyMembership?.communities as { id: string; name: string } | null | undefined;
-        if (legacyCommunity) return legacyCommunity;
-      }
-
       if (churchId) {
         const { data: leaderCommunity, error: leaderCommunityError } = await supabase
           .from("communities")

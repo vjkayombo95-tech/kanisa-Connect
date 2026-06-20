@@ -30,7 +30,7 @@ export default function CommunityMembersPage() {
     queryFn: async () => {
       // Get all member IDs already in any community
       const { data: assigned } = await supabase
-        .from("community_members")
+        .from("member_communities")
         .select("member_id");
       const assignedIds = new Set((assigned || []).map((a) => a.member_id));
 
@@ -55,7 +55,7 @@ export default function CommunityMembersPage() {
   const addMember = useMutation({
     mutationFn: async (memberId: string) => {
       const { error } = await supabase
-        .from("community_members")
+        .from("member_communities")
         .insert({ community_id: communityId, member_id: memberId });
       if (error) throw error;
     },
@@ -70,7 +70,7 @@ export default function CommunityMembersPage() {
   const removeMember = useMutation({
     mutationFn: async (cmId: string) => {
       const { error } = await supabase
-        .from("community_members")
+        .from("member_communities")
         .delete()
         .eq("id", cmId);
       if (error) throw error;

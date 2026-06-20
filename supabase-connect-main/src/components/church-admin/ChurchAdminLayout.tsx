@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ChurchAdminSidebar } from "./ChurchAdminSidebar";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -16,7 +17,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { getChurchAdminFeatureForPath } from "@/lib/church-admin-features";
 import { Card, CardContent } from "@/components/ui/card";
-import { FloatingAIAssistant } from "./FloatingAIAssistant";
+
+const FloatingAIAssistant = lazy(() =>
+  import("./FloatingAIAssistant").then((module) => ({ default: module.FloatingAIAssistant })),
+);
 
 export function ChurchAdminLayout() {
   const { signOut, profile } = useAuth();
@@ -93,7 +97,9 @@ export function ChurchAdminLayout() {
                 <Outlet />
               )}
             </main>
-            <FloatingAIAssistant />
+            <Suspense fallback={null}>
+              <FloatingAIAssistant />
+            </Suspense>
           </div>
         </div>
       </SidebarProvider>
