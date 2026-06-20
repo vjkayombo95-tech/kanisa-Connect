@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { logSupabaseError } from "@/lib/error-logger";
 
@@ -40,7 +39,6 @@ const levelStyles = {
 };
 
 export default function SystemLogsPage() {
-  const { churchId } = useAuth();
   const queryClient = useQueryClient();
   const [level, setLevel] = useState("all");
   const [status, setStatus] = useState("unresolved");
@@ -48,17 +46,13 @@ export default function SystemLogsPage() {
   const [selectedLog, setSelectedLog] = useState<AppErrorLog | null>(null);
 
   const { data: logs = [], isLoading } = useQuery({
-    queryKey: ["app-error-logs", churchId, level, status],
+    queryKey: ["app-error-logs", level, status],
     queryFn: async () => {
       let query = supabase
         .from("app_error_logs" as never)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(100);
-
-      if (churchId) {
-        query = query.or(`church_id.eq.${churchId},church_id.is.null`);
-      }
 
       if (level !== "all") {
         query = query.eq("level", level);
@@ -79,7 +73,6 @@ export default function SystemLogsPage() {
           page: "System Logs",
           component: "SystemLogsPage",
           function: "loadSystemLogs",
-          church_id: churchId,
           table: "app_error_logs",
           operation: "select",
         });
@@ -101,7 +94,6 @@ export default function SystemLogsPage() {
           page: "System Logs",
           component: "SystemLogsPage",
           function: "resolveLog",
-          church_id: churchId,
           rpc: "resolve_app_error_log",
           operation: "rpc",
           metadata: { log_id: logId },
@@ -114,7 +106,6 @@ export default function SystemLogsPage() {
     onSuccess: async (updatedLog) => {
       setSelectedLog(updatedLog);
       await queryClient.invalidateQueries({ queryKey: ["app-error-logs"] });
-      await queryClient.invalidateQueries({ queryKey: ["system-log-alert-count"] });
     },
   });
 

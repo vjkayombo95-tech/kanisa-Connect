@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Building2, CreditCard, Receipt, ToggleRight,
-  TrendingUp, FileText, Activity, Settings, Shield, Church,
+  TrendingUp, FileText, Activity, Settings, Shield, Archive,
 } from "lucide-react";
 import { AppLink } from "@/components/AppLink";
 import {
@@ -16,9 +16,11 @@ const items = [
   { title: "Church Management", url: "/super-admin/churches", icon: Building2 },
   { title: "Subscriptions", url: "/super-admin/subscriptions", icon: CreditCard },
   { title: "Billing Verification", url: "/super-admin/billing-verification", icon: Receipt },
+  { title: "Record Preservation", url: "/super-admin/record-preservation", icon: Archive },
   { title: "Feature Management", url: "/super-admin/features", icon: ToggleRight },
   { title: "Revenue Analytics", url: "/super-admin/revenue", icon: TrendingUp },
-  { title: "System Logs", url: "/super-admin/logs", icon: FileText },
+  { title: "Platform Activity", url: "/super-admin/logs", icon: Activity },
+  { title: "System Logs", url: "/super-admin/system-logs", icon: FileText },
   { title: "User Activity", url: "/super-admin/activity", icon: Activity },
   { title: "Platform Settings", url: "/super-admin/settings", icon: Settings },
 ];
@@ -43,7 +45,7 @@ export function SuperAdminSidebar() {
       </div>
       <SidebarContent className="py-2">
         <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/60">Platform</SidebarGroupLabel>}
+          {!collapsed && <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/60">Platform Monitoring</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {

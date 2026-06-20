@@ -1,6 +1,6 @@
 # Error Monitoring
 
-Kanisani Connect records production diagnostics in Supabase so admins can investigate crashes, failed RPC calls, auth problems, payment issues, and unexpected application errors.
+Kanisani Connect records production diagnostics in Supabase so platform owners can investigate crashes, failed RPC calls, auth problems, payment issues, and unexpected application errors.
 
 ## Log Storage
 
@@ -53,12 +53,12 @@ Context can include:
 - `user_id`
 - `metadata`
 
-## Admin Access
+## Platform Owner Access
 
-Church admins can open:
+System Logs are platform-owner tools. Only Super Admin users can open:
 
 ```text
-Church Admin -> System Logs
+Super Admin -> Platform Monitoring -> System Logs
 ```
 
 The page supports:
@@ -71,17 +71,19 @@ The page supports:
 - Occurrence count
 - Timestamp review
 
-Members cannot read logs. RLS allows only platform/super admins or church workspace managers to read relevant records.
+Members, church admins, pastors, staff, and church workspace managers cannot read `app_error_logs`. RLS allows only platform Super Admin users to read application error logs. Frontend logging inserts must go through the `log_app_error` RPC; direct table inserts are blocked.
 
 ## Debugging Workflow
 
-1. Open **Church Admin -> System Logs**.
+1. Open **Super Admin -> Platform Monitoring -> System Logs**.
 2. Filter by `Error`.
 3. Search for the affected page, component, member, or payment action.
 4. Open the log details.
 5. Check the stack trace and metadata JSON.
 6. Match `church_id`, `user_id`, and timestamp with the support report.
 7. If an RPC failed, check the `rpc` or `operation` metadata field.
+
+Church Admin billing screens are limited to each church's own subscription status and payment submission. Platform payment verification and SaaS subscription approvals live under **Super Admin -> Billing Verification**.
 
 ## Development Logging
 

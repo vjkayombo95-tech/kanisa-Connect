@@ -9,9 +9,11 @@ const PlatformDashboard = lazy(() => import("@/pages/super-admin/PlatformDashboa
 const ChurchManagement = lazy(() => import("@/pages/super-admin/ChurchManagement"));
 const SASubscriptionsPage = lazy(() => import("@/pages/super-admin/SubscriptionsPage"));
 const BillingVerificationPage = lazy(() => import("@/pages/super-admin/BillingVerificationPage"));
+const MemberRecordSubscriptionsPage = lazy(() => import("@/pages/super-admin/MemberRecordSubscriptionsPage"));
 const FeatureManagement = lazy(() => import("@/pages/super-admin/FeatureManagement"));
 const RevenueAnalytics = lazy(() => import("@/pages/super-admin/RevenueAnalytics"));
 const SystemLogs = lazy(() => import("@/pages/super-admin/SystemLogs"));
+const SuperAdminSystemLogsPage = lazy(() => import("@/pages/super-admin/SuperAdminSystemLogsPage"));
 const UserActivity = lazy(() => import("@/pages/super-admin/UserActivity"));
 const PlatformSettingsPage = lazy(() => import("@/pages/super-admin/PlatformSettingsPage"));
 
@@ -32,9 +34,11 @@ export default function SuperAdminRoutes() {
           <Route path="churches" element={<ChurchManagement />} />
           <Route path="subscriptions" element={<SASubscriptionsPage />} />
           <Route path="billing-verification" element={<BillingVerificationPage />} />
+          <Route path="record-preservation" element={<MemberRecordSubscriptionsPage />} />
           <Route path="features" element={<FeatureManagement />} />
           <Route path="revenue" element={<RevenueAnalytics />} />
           <Route path="logs" element={<SystemLogs />} />
+          <Route path="system-logs" element={<SuperAdminSystemLogsPage />} />
           <Route path="activity" element={<UserActivity />} />
           <Route path="settings" element={<PlatformSettingsPage />} />
         </Route>

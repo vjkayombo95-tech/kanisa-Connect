@@ -15,9 +15,11 @@ const pageTitles: Array<{ match: string; title: string; description: string }> =
   { match: "/super-admin/settings", title: "Platform Settings", description: "Control platform-wide behavior" },
   { match: "/super-admin/churches", title: "Church Management", description: "Review and manage church workspaces" },
   { match: "/super-admin/subscriptions", title: "Subscriptions", description: "Monitor plans, billing, and renewals" },
+  { match: "/super-admin/record-preservation", title: "Record Preservation", description: "Review platform record preservation payments" },
   { match: "/super-admin/features", title: "Feature Management", description: "Enable and control platform features" },
   { match: "/super-admin/revenue", title: "Revenue Analytics", description: "Track growth and platform revenue" },
-  { match: "/super-admin/logs", title: "System Logs", description: "Inspect system activity and issues" },
+  { match: "/super-admin/system-logs", title: "System Logs", description: "Inspect platform error monitoring and app issues" },
+  { match: "/super-admin/logs", title: "Platform Activity", description: "Inspect platform activity and audit events" },
   { match: "/super-admin/activity", title: "User Activity", description: "Review admin and user actions" },
   { match: "/super-admin", title: "Platform Dashboard", description: "Overview of the Kanisa Connect platform" },
 ];

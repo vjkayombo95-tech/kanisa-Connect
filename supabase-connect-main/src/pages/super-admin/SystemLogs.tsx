@@ -117,7 +117,7 @@ export default function SystemLogs() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold font-serif">System Logs</h1>
+        <h1 className="text-2xl font-bold font-serif">Platform Activity</h1>
         <p className="text-sm text-muted-foreground mt-1">Searchable audit trail of platform activity</p>
       </div>
 

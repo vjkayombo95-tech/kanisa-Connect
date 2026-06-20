@@ -156,11 +156,9 @@ const groupedSections: AccordionGroup[] = [
       { titleKey: "analytics", url: "/church-admin/analytics", icon: AnalyticsIcon, featureKey: "reports" },
       { titleKey: "data_import", url: "/church-admin/data-import", icon: ImportIcon, featureKey: null },
       { titleKey: "audit_logs", url: "/church-admin/audit-logs", icon: AuditIcon, featureKey: null },
-      { titleKey: "System Logs", url: "/church-admin/system-logs", icon: AuditIcon, featureKey: null },
-      { titleKey: "Record Preservation", url: "/church-admin/record-preservation", icon: ReportsIcon, featureKey: null },
       { titleKey: "roles", url: "/church-admin/roles", icon: RolesIcon, featureKey: "roles" },
       { titleKey: "settings", url: "/church-admin/settings", icon: SettingsIcon, featureKey: null },
-      { titleKey: "billing", url: "/church-admin/settings/billing", icon: BillingIcon, featureKey: null },
+      { titleKey: "Church Billing Status", url: "/church-admin/settings/billing", icon: BillingIcon, featureKey: null },
     ],
   },
 ];
@@ -291,29 +289,6 @@ export function ChurchAdminSidebar() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: recentErrorCount = 0 } = useQuery({
-    queryKey: ["system-log-alert-count", churchId],
-    queryFn: async () => {
-      const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-      let query = supabase
-        .from("app_error_logs" as never)
-        .select("id", { count: "exact", head: true })
-        .eq("level", "error")
-        .eq("resolved", false)
-        .gte("created_at", since);
-
-      if (churchId) {
-        query = query.or(`church_id.eq.${churchId},church_id.is.null`);
-      }
-
-      const { count, error } = await query;
-      if (error) return 0;
-      return count ?? 0;
-    },
-    enabled: !!churchId,
-    refetchInterval: 60 * 1000,
-  });
-
   const visibleCoreItems = useMemo(
     () => coreItems.filter((item) => !item.featureKey || getFeatureState(item.featureKey).visible),
     [getFeatureState],
@@ -397,13 +372,7 @@ export function ChurchAdminSidebar() {
         active={active}
         collapsed={collapsed}
         locked={!!featureState?.locked}
-        badge={
-          item.url === "/church-admin/system-logs" && recentErrorCount >= 5 ? (
-            <span className="rounded-full border border-destructive/25 bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-destructive">
-              {recentErrorCount}
-            </span>
-          ) : null
-        }
+        badge={null}
         delay={delay}
       />
     );

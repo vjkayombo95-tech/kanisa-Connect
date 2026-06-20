@@ -7,6 +7,9 @@
 - Test RLS for member, staff, admin, and super admin accounts.
 - Test RPC permissions for `generate_church_analytics_snapshot`, `submit_subscription_payment`, and announcement management.
 - Confirm only church admins can generate analytics snapshots.
+- Confirm `app_error_logs` can be read only by Super Admin users.
+- Confirm Church Admin users cannot open `/church-admin/system-logs` and cannot query platform error logs.
+- Confirm Super Admin users can open `/super-admin/system-logs` for platform monitoring.
 - Configure Supabase Auth login protection: email/password rate limits, captcha where available, and secure redirect URLs.
 
 ## Scale Testing
@@ -25,6 +28,9 @@
 - Test prayer request submission limits.
 - Test mass intention submission limits.
 - Test admin payment review and notification flow.
+- Confirm platform billing verification and SaaS subscription approvals are Super Admin only.
+- Confirm Church Admin billing can only view its own church subscription/payment status and submit proof/transaction IDs.
+- Confirm Record Preservation payment approvals are Super Admin only and not visible in Church Admin.
 - Test storage access for private billing receipts.
 
 ## Media And Storage

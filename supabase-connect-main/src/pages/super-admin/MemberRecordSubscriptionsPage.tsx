@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatTZS } from "@/lib/currency";
 import { RECORD_PRESERVATION_AMOUNT } from "@/lib/member-record-preservation";
@@ -26,6 +25,7 @@ type PreservationSubscription = {
   reviewed_at: string | null;
   reviewed_by: string | null;
   created_at: string;
+  churches?: { name: string | null } | null;
   members?: {
     full_name: string | null;
     email: string | null;
@@ -41,24 +41,20 @@ const statusVariant: Record<PreservationSubscription["status"], "default" | "sec
 };
 
 export default function MemberRecordSubscriptionsPage() {
-  const { churchId } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: subscriptions = [], isLoading } = useQuery({
-    queryKey: ["member-record-subscriptions", churchId],
+    queryKey: ["platform-member-record-subscriptions"],
     queryFn: async () => {
-      if (!churchId) return [];
       const { data, error } = await supabase
         .from("member_record_subscriptions" as never)
-        .select("*, members(full_name, email, phone)")
-        .eq("church_id", churchId)
+        .select("*, churches(name), members(full_name, email, phone)")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(200);
 
       if (error) throw error;
       return (data ?? []) as unknown as PreservationSubscription[];
     },
-    enabled: !!churchId,
   });
 
   const metrics = useMemo(() => {
@@ -96,7 +92,7 @@ export default function MemberRecordSubscriptionsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["member-record-subscriptions", churchId] });
+      void queryClient.invalidateQueries({ queryKey: ["platform-member-record-subscriptions"] });
     },
   });
 
@@ -114,14 +110,14 @@ export default function MemberRecordSubscriptionsPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold font-serif">Member Preservation Subscriptions</h1>
-        <p className="text-sm text-muted-foreground mt-1">Review Digital Record Preservation requests and archive status.</p>
+        <h1 className="text-2xl font-bold font-serif">Record Preservation Payments</h1>
+        <p className="text-sm text-muted-foreground mt-1">Platform review for Digital Record Preservation requests and archive status.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <StatCard title="Active Subscribers" value={metrics.active} icon={Archive} />
         <StatCard title="Expired Subscribers" value={metrics.expired} icon={Archive} />
-        <StatCard title="Monthly Preservation Revenue" value={formatTZS(metrics.monthlyRevenue)} icon={Archive} />
+        <StatCard title="Monthly Platform Revenue" value={formatTZS(metrics.monthlyRevenue)} icon={Archive} />
         <StatCard title="Pending Approvals" value={metrics.pending} icon={Archive} />
       </div>
 
@@ -131,6 +127,7 @@ export default function MemberRecordSubscriptionsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Member</TableHead>
+                <TableHead>Church</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Plan</TableHead>
@@ -142,13 +139,13 @@ export default function MemberRecordSubscriptionsPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                     Loading preservation subscriptions...
                   </TableCell>
                 </TableRow>
               ) : subscriptions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                     No preservation subscriptions yet.
                   </TableCell>
                 </TableRow>
@@ -163,6 +160,7 @@ export default function MemberRecordSubscriptionsPage() {
                         </p>
                       </div>
                     </TableCell>
+                    <TableCell>{subscription.churches?.name ?? subscription.church_id}</TableCell>
                     <TableCell>
                       <Badge variant={statusVariant[subscription.status]}>{subscription.status}</Badge>
                     </TableCell>

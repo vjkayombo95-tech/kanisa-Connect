@@ -15,16 +15,16 @@ Retention rules:
 - `info` logs older than 14 days are deleted.
 - `warning` logs older than 30 days are deleted.
 - resolved `error` logs older than 90 days are deleted.
-- unresolved errors are kept until an admin resolves them.
+- unresolved errors are kept until a platform Super Admin resolves them.
 
-Only super admins can run cleanup.
+Only platform Super Admin users or service-role scheduled jobs can run cleanup.
 
 ## Resolving Logs
 
-Admins can resolve a log from:
+Platform Super Admin users can resolve a log from:
 
 ```text
-Church Admin -> System Logs
+Super Admin -> Platform Monitoring -> System Logs
 ```
 
 Resolving a log sets:
@@ -33,11 +33,9 @@ Resolving a log sets:
 - `resolved_at = now()`
 - `resolved_by = auth.uid()`
 
-## Alert Badge
+## Platform Monitoring
 
-The Church Admin sidebar checks for recent unresolved errors.
-
-If 5 or more unresolved errors occur within 10 minutes, the **System Logs** menu item shows a warning count badge.
+System Logs are platform-owner tools and are not exposed in Church Admin. Church admins, pastors, staff, and members cannot read `public.app_error_logs`.
 
 ## Scheduling Cleanup
 

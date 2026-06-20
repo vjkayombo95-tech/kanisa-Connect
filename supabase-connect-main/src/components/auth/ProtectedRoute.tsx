@@ -10,6 +10,12 @@ interface ProtectedRouteProps {
   requireAdmin?: boolean;
 }
 
+export function requireSuperAdminAccess(isSuperAdmin: boolean) {
+  return isSuperAdmin;
+}
+
+export const requireSuperAdmin = requireSuperAdminAccess;
+
 export function ProtectedRoute({ children, requireSuperAdmin, requireChurch, requireAdmin }: ProtectedRouteProps) {
   const { user, isSuperAdmin, churchId, userRole, isLoading } = useAuth();
   const location = useLocation();
@@ -31,7 +37,7 @@ export function ProtectedRoute({ children, requireSuperAdmin, requireChurch, req
     return <Navigate to={`/login?${params.toString()}`} replace />;
   }
 
-  if (requireSuperAdmin && !isSuperAdmin) return <Navigate to="/" replace />;
+  if (requireSuperAdmin && !requireSuperAdminAccess(isSuperAdmin)) return <Navigate to="/" replace />;
 
   if (requireAdmin && !isSuperAdmin && !isAdminRole(userRole as AppRole | null)) {
     return <Navigate to="/portal/dashboard" replace />;

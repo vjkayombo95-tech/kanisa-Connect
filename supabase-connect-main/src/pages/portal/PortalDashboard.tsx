@@ -860,7 +860,7 @@ export default function PortalDashboard() {
       void queryClient.invalidateQueries({ queryKey: ["member-record-preservation", member?.id, churchId] });
       toast({
         title: "Preservation request submitted",
-        description: "Your Digital Record Preservation request is pending admin review.",
+        description: "Your Digital Record Preservation request is pending platform review.",
       });
     },
     onError: (err: any) => toast({ title: "Unable to submit request", description: err.message, variant: "destructive" }),
@@ -1063,12 +1063,12 @@ export default function PortalDashboard() {
                 {activeRecordPreservation && recordPreservation?.active?.end_date
                   ? `Your records are preserved until ${new Date(recordPreservation.active.end_date).toLocaleDateString()}.`
                   : latestRecordPreservation?.status === "pending"
-                    ? "Your Secure Church Record Archive request is awaiting admin review."
-                    : "Your historical records are no longer being actively preserved. Renew your preservation plan for TSh 3,000/month or TSh 30,000/year."}
+                    ? "Your Secure Church Record Archive request is awaiting platform review."
+                    : "Your records are safely preserved. Renew to view your full historical archive."}
               </p>
               {!activeRecordPreservation ? (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Current month activity remains visible. Historical Records, yearly summaries, and downloadable archive records are included with preservation.
+                  Current month activity remains visible. Historical Records, yearly summaries, and downloadable archive records unlock again when preservation is active.
                 </p>
               ) : null}
             </div>
@@ -1205,7 +1205,7 @@ export default function PortalDashboard() {
         <CardContent>
           {!activeRecordPreservation ? (
             <div className="mb-4 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
-              Current month activity is shown here. Historical Records and statement downloads are part of the Secure Church Record Archive.
+              Current month activity is shown here. Your records are safely preserved. Renew to view your full historical archive.
             </div>
           ) : null}
           {filteredContribs.length === 0 ? (

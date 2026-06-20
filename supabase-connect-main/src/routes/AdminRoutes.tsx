@@ -30,9 +30,7 @@ const ReportsPage = lazy(() => import("@/pages/church-admin/ReportsPage"));
 const AnalyticsPage = lazy(() => import("@/pages/church-admin/AnalyticsPage"));
 const DataImportPage = lazy(() => import("@/pages/church-admin/DataImportPage"));
 const AuditLogsPage = lazy(() => import("@/pages/church-admin/AuditLogsPage"));
-const SystemLogsPage = lazy(() => import("@/pages/church-admin/SystemLogsPage"));
 const BillingPage = lazy(() => import("@/pages/church-admin/BillingPage"));
-const MemberRecordSubscriptionsPage = lazy(() => import("@/pages/church-admin/MemberRecordSubscriptionsPage"));
 
 function SectionFallback() {
   return (
@@ -73,8 +71,6 @@ export default function AdminRoutes() {
           <Route path="analytics-assistant" element={<AnalyticsAssistantPage />} />
           <Route path="data-import" element={<DataImportPage />} />
           <Route path="audit-logs" element={<AuditLogsPage />} />
-          <Route path="system-logs" element={<SystemLogsPage />} />
-          <Route path="record-preservation" element={<MemberRecordSubscriptionsPage />} />
           <Route path="billing" element={<BillingPage />} />
         </Route>
       </Routes>
