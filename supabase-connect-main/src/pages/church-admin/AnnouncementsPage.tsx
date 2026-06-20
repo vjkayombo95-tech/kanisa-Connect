@@ -16,6 +16,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Archive,
   Loader2,
+  MessageCircle,
   Megaphone,
   Pencil,
   Plus,
@@ -29,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ensureBirthdayAnnouncements } from "@/lib/birthday-announcements";
 import { assertClientRateLimit } from "@/lib/client-rate-limit";
 import { logSupabaseError } from "@/lib/error-logger";
+import { buildAnnouncementShareMessage, openWhatsAppShare } from "@/lib/whatsapp-share";
 
 type AnnouncementRecord = {
   id: string;
@@ -234,6 +236,21 @@ export default function AnnouncementsPage() {
   const { churchId, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const { data: church } = useQuery({
+    queryKey: ["announcement-share-church", churchId],
+    queryFn: async () => {
+      if (!churchId) return null;
+      const { data, error } = await supabase
+        .from("churches")
+        .select("name")
+        .eq("id", churchId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!churchId,
+  });
 
   const syncAnnouncementsQuery = (updater: (items: AnnouncementRecord[]) => AnnouncementRecord[]) => {
     if (!churchId) return;
@@ -619,6 +636,22 @@ export default function AnnouncementsPage() {
           </div>
 
           <div className="flex shrink-0 flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                openWhatsAppShare(
+                  buildAnnouncementShareMessage({
+                    churchName: church?.name,
+                    title: announcement.title,
+                    body: announcement.content,
+                  }),
+                )
+              }
+            >
+              <MessageCircle className="mr-2 h-3.5 w-3.5" />
+              Share to WhatsApp
+            </Button>
             <Button variant="outline" size="sm" onClick={() => openEditDialog(announcement)}>
               <Pencil className="mr-2 h-3.5 w-3.5" />
               Edit

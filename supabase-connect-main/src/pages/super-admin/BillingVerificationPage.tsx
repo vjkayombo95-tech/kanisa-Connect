@@ -48,7 +48,8 @@ export default function BillingVerificationPage() {
       const { data, error } = await supabase
         .from("subscription_payments")
         .select("*, churches(name)")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(200);
 
       if (error) {
         logSupabaseError(error, {

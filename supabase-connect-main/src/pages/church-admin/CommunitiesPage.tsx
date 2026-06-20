@@ -15,10 +15,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Building2, Users, Loader2, Crown, UserPlus, Trash2 } from "lucide-react";
+import { Plus, Building2, Users, Loader2, Crown, UserPlus, Trash2, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { PaginationFooter } from "@/components/ui/pagination-footer";
+import { buildCommunityInviteMessage, openWhatsAppShare } from "@/lib/whatsapp-share";
 
 const LEADERSHIP_ROLES = [
   { key: "mwenyekiti_id", label: "Mwenyekiti" },
@@ -58,6 +59,31 @@ export default function CommunitiesPage() {
   const queryClient = useQueryClient();
   const [totalCount, setTotalCount] = useState(0);
   const pagination = usePaginatedQuery({ totalCount, resetKey: churchId });
+
+  const { data: church } = useQuery({
+    queryKey: ["community-share-church", churchId],
+    queryFn: async () => {
+      if (!churchId) return null;
+      const { data, error } = await supabase
+        .from("churches")
+        .select("name")
+        .eq("id", churchId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!churchId,
+  });
+
+  const shareCommunity = (community: any) => {
+    openWhatsAppShare(
+      buildCommunityInviteMessage({
+        communityName: community.name,
+        churchName: church?.name,
+        message: community.description,
+      }),
+    );
+  };
 
   const { data: communitiesPage = { rows: [] as any[], count: 0 }, isLoading } = useQuery({
     queryKey: ["communities", churchId, pagination.page, pagination.pageSize],
@@ -349,6 +375,18 @@ export default function CommunitiesPage() {
                         ))}
                       </div>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4 w-full"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        shareCommunity(c);
+                      }}
+                    >
+                      <MessageCircle className="mr-2 h-3.5 w-3.5" />
+                      Share to WhatsApp
+                    </Button>
                   </CardContent>
                 </Card>
               );
@@ -374,6 +412,10 @@ export default function CommunitiesPage() {
           {detailCommunity && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">{detailCommunity.description || "No description"}</p>
+              <Button variant="outline" size="sm" onClick={() => shareCommunity(detailCommunity)}>
+                <MessageCircle className="mr-2 h-3.5 w-3.5" />
+                Share to WhatsApp
+              </Button>
 
               {/* Leadership */}
               <div>

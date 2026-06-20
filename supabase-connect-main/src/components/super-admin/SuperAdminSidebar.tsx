@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useUnresolvedSystemLogCount } from "@/hooks/use-system-log-alert";
 
 const items = [
   { title: "Platform Dashboard", url: "/super-admin", icon: LayoutDashboard },
@@ -28,6 +29,7 @@ const items = [
 export function SuperAdminSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+  const { data: unresolvedSystemLogCount = 0 } = useUnresolvedSystemLogCount();
   const collapsed = state === "collapsed";
 
   return (
@@ -53,6 +55,7 @@ export function SuperAdminSidebar() {
                   item.url === "/super-admin"
                     ? location.pathname === item.url
                     : location.pathname === item.url || location.pathname.startsWith(`${item.url}/`);
+                const showSystemLogDot = item.url === "/super-admin/system-logs" && unresolvedSystemLogCount > 0;
 
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -63,8 +66,20 @@ export function SuperAdminSidebar() {
                         isActive && "bg-sidebar-accent font-medium text-primary",
                       )}
                     >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span>{item.title}</span>}
+                      <span className="relative flex h-4 w-4 shrink-0 items-center justify-center">
+                        <item.icon className="h-4 w-4" />
+                        {showSystemLogDot && (
+                          <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-sidebar" />
+                        )}
+                      </span>
+                      {!collapsed && (
+                        <span className="flex min-w-0 flex-1 items-center gap-2">
+                          <span className="truncate">{item.title}</span>
+                          {showSystemLogDot && (
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-destructive" aria-label="Unresolved system logs" />
+                          )}
+                        </span>
+                      )}
                     </AppLink>
                   </SidebarMenuItem>
                 );

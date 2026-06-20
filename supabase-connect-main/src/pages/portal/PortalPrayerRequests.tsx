@@ -454,6 +454,10 @@ export default function PortalPrayerRequests() {
       if (!churchId) throw new Error("No church context");
       if (!member?.id) throw new Error("No member profile found");
       assertClientRateLimit(`prayer-request:${churchId}:${member.id}`, 5, 60 * 60 * 1000, "prayer request submissions");
+      const requestedOffering = offeringAmount ? parseFloat(offeringAmount) : null;
+      if (requestedOffering !== null && (Number.isNaN(requestedOffering) || requestedOffering < 0)) {
+        throw new Error("Offering amount cannot be negative.");
+      }
 
       if (!isOnline) {
         enqueueOfflineSyncAction({
@@ -463,13 +467,13 @@ export default function PortalPrayerRequests() {
             memberId: member.id,
             memberName: member.full_name,
             requestText,
-            offeringAmount: offeringAmount ? parseFloat(offeringAmount) : null,
+            offeringAmount: requestedOffering,
           },
         });
         return { queuedOffline: true };
       }
 
-      const churchAmount = offeringAmount ? parseFloat(offeringAmount) : null;
+      const churchAmount = requestedOffering;
       const offering = churchAmount && churchAmount > 0
         ? Number((churchAmount / (1 - PLATFORM_FEE_PERCENT / 100)).toFixed(2))
         : null;

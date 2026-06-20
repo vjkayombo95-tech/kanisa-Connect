@@ -1,15 +1,33 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, QrCode } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import { ChurchQRCode } from "@/components/payments/ChurchQRCode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { buildChurchGivingUrl } from "@/lib/qr-payments";
 
 export default function ChurchQRPage() {
   const { churchId } = useAuth();
   const safeChurchId = churchId ?? "abc123";
+  const { data: church } = useQuery({
+    queryKey: ["church-giving-qr", churchId],
+    queryFn: async () => {
+      if (!churchId) return null;
+      const { data, error } = await supabase
+        .from("churches")
+        .select("id, name, slug, logo_url")
+        .eq("id", churchId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!churchId,
+  });
+  const givingLink = buildChurchGivingUrl(safeChurchId, church?.slug);
 
   return (
     <div className="space-y-6">
@@ -53,13 +71,18 @@ export default function ChurchQRPage() {
             </div>
 
             <div className="rounded-2xl border border-white/8 bg-background/50 p-4">
-              <p className="text-sm font-medium text-foreground">QR payload</p>
-              <pre className="mt-3 overflow-x-auto rounded-xl bg-black/30 p-3 text-xs text-primary/90">{`{\n  "churchId": "${safeChurchId}"\n}`}</pre>
+              <p className="text-sm font-medium text-foreground">QR giving link</p>
+              <pre className="mt-3 overflow-x-auto rounded-xl bg-black/30 p-3 text-xs text-primary/90">{givingLink}</pre>
             </div>
           </CardContent>
         </Card>
 
-        <ChurchQRCode churchId={safeChurchId} />
+        <ChurchQRCode
+          churchId={safeChurchId}
+          churchName={church?.name ?? undefined}
+          churchSlug={church?.slug}
+          churchLogo={church?.logo_url}
+        />
       </div>
     </div>
   );

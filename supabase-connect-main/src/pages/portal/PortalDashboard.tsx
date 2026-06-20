@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { optimizeImage, uploadFile, validateFile } from "@/lib/file-upload";
 import { useTranslation } from "react-i18next";
 import { translateContributionCategory } from "@/lib/translation-helpers";
+import { logSupabaseError } from "@/lib/error-logger";
 
 const PortalContributionCharts = lazy(() => import("./PortalContributionCharts"));
 
@@ -828,29 +829,55 @@ export default function PortalDashboard() {
       if (!churchId || !member?.id) throw new Error("Member profile not found.");
       const transactionId = preservationTransactionId.trim();
       if (!transactionId) throw new Error("Transaction ID is required.");
+      if (!/^[A-Za-z0-9._-]{4,80}$/.test(transactionId)) {
+        throw new Error("Use a valid transaction ID with letters, numbers, dots, dashes, or underscores.");
+      }
 
       let proofPath: string | null = null;
       if (preservationProofFile) {
+        if (preservationProofFile.size > 5 * 1024 * 1024) {
+          throw new Error("Payment proof must be 5MB or smaller.");
+        }
         const safeName = preservationProofFile.name.replace(/[^a-zA-Z0-9._-]/g, "-");
         proofPath = `${churchId}/${member.id}/${crypto.randomUUID()}-${safeName}`;
         const { error: uploadError } = await supabase.storage
           .from("record-preservation-proofs")
           .upload(proofPath, preservationProofFile, { upsert: false });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          logSupabaseError(uploadError, {
+            page: "Portal Dashboard",
+            component: "PortalDashboard",
+            function: "submitRecordPreservation",
+            church_id: churchId,
+            operation: "storage.upload",
+            bucket: "record-preservation-proofs",
+            metadata: { member_id: member.id, proof_size: preservationProofFile.size },
+          });
+          throw uploadError;
+        }
       }
 
-      const { error } = await supabase.from("member_record_subscriptions" as never).insert({
-        church_id: churchId,
-        member_id: member.id,
-        amount: preservationPlan === "yearly" ? RECORD_PRESERVATION_YEARLY_AMOUNT : RECORD_PRESERVATION_AMOUNT,
-        plan_interval: preservationPlan,
-        status: "pending",
-        transaction_id: transactionId,
-        proof_url: proofPath,
+      const { error } = await supabase.rpc("submit_member_record_subscription" as never, {
+        p_church_id: churchId,
+        p_member_id: member.id,
+        p_plan_interval: preservationPlan,
+        p_transaction_id: transactionId,
+        p_proof_url: proofPath,
       } as never);
 
-      if (error) throw error;
+      if (error) {
+        logSupabaseError(error, {
+          page: "Portal Dashboard",
+          component: "PortalDashboard",
+          function: "submitRecordPreservation",
+          church_id: churchId,
+          operation: "rpc",
+          rpc: "submit_member_record_subscription",
+          metadata: { member_id: member.id, plan_interval: preservationPlan, has_proof: Boolean(proofPath) },
+        });
+        throw error;
+      }
     },
     onSuccess: () => {
       setPreservationOpen(false);
@@ -863,7 +890,18 @@ export default function PortalDashboard() {
         description: "Your Digital Record Preservation request is pending platform review.",
       });
     },
-    onError: (err: any) => toast({ title: "Unable to submit request", description: err.message, variant: "destructive" }),
+    onError: (err: any) => {
+      logSupabaseError(err, {
+        page: "Portal Dashboard",
+        component: "PortalDashboard",
+        function: "submitRecordPreservation",
+        church_id: churchId,
+        operation: "rpc",
+        rpc: "submit_member_record_subscription",
+        metadata: { member_id: member?.id, plan_interval: preservationPlan },
+      });
+      toast({ title: "Unable to submit request", description: err.message, variant: "destructive" });
+    },
   });
 
   const handleAvatarSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {

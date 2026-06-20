@@ -6,6 +6,8 @@ export type ChurchPaymentProfile = {
   id: string;
   name: string;
   tagline: string;
+  slug?: string | null;
+  logo_url?: string | null;
 };
 
 const MOCK_CHURCHES: Record<string, ChurchPaymentProfile> = {
@@ -26,15 +28,37 @@ const MOCK_CHURCHES: Record<string, ChurchPaymentProfile> = {
   },
 };
 
-export function buildChurchQRPayload(churchId: string) {
-  return JSON.stringify({ churchId });
+export function buildChurchGivingUrl(churchId: string, churchSlug?: string | null, origin?: string) {
+  const baseOrigin =
+    origin ||
+    (typeof window !== "undefined" ? window.location.origin : "https://kanisaniconnect.netlify.app");
+  const target = (churchSlug || churchId).trim();
+
+  return `${baseOrigin.replace(/\/$/, "")}/give/${encodeURIComponent(target)}`;
+}
+
+export function buildChurchQRPayload(churchId: string, churchSlug?: string | null) {
+  return buildChurchGivingUrl(churchId, churchSlug);
 }
 
 export function parseChurchQRPayload(rawValue: string): ChurchPaymentPayload {
+  const trimmedValue = rawValue.trim();
+
+  try {
+    const url = new URL(trimmedValue);
+    const giveMatch = url.pathname.match(/^\/give\/([^/]+)\/?$/);
+
+    if (giveMatch?.[1]) {
+      return { churchId: decodeURIComponent(giveMatch[1]) };
+    }
+  } catch {
+    // Not a URL; continue with legacy JSON parsing below.
+  }
+
   let parsed: unknown;
 
   try {
-    parsed = JSON.parse(rawValue);
+    parsed = JSON.parse(trimmedValue);
   } catch {
     throw new Error("This QR code is not recognized.");
   }

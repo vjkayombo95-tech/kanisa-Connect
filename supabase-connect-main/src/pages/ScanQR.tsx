@@ -83,7 +83,7 @@ export default function ScanQR() {
                           setHasScanned(true);
                           setStatus("success");
                           setErrorMessage("");
-                          navigate(`/pay?churchId=${encodeURIComponent(payload.churchId)}`);
+                          navigate(`/give/${encodeURIComponent(payload.churchId)}`);
                         } catch (parseError) {
                           setErrorMessage(
                             parseError instanceof Error ? parseError.message : "Invalid QR code. Please scan a church payment QR.",

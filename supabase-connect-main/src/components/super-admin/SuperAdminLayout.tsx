@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useUnresolvedSystemLogCount } from "@/hooks/use-system-log-alert";
 
 const pageTitles: Array<{ match: string; title: string; description: string }> = [
   { match: "/super-admin/settings", title: "Platform Settings", description: "Control platform-wide behavior" },
@@ -28,6 +29,8 @@ export function SuperAdminLayout() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { data: unresolvedSystemLogCount = 0 } = useUnresolvedSystemLogCount();
+  const hasUnresolvedSystemLogs = unresolvedSystemLogCount > 0;
 
   const currentPage =
     pageTitles.find((page) => location.pathname === page.match || location.pathname.startsWith(`${page.match}/`)) ??
@@ -69,8 +72,16 @@ export function SuperAdminLayout() {
                   </div>
 
                   <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="relative h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground"
+                      onClick={() => navigate("/super-admin/system-logs")}
+                    >
                       <Bell className="h-4 w-4" />
+                      {hasUnresolvedSystemLogs && (
+                        <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-card" />
+                      )}
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -106,8 +117,16 @@ export function SuperAdminLayout() {
                     <p className="text-xs text-muted-foreground">{currentPage.description}</p>
                   </div>
                   <div className="ml-auto flex items-center gap-2">
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="relative text-muted-foreground hover:text-foreground"
+                      onClick={() => navigate("/super-admin/system-logs")}
+                    >
                       <Bell className="h-4 w-4" />
+                      {hasUnresolvedSystemLogs && (
+                        <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-card" />
+                      )}
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

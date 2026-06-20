@@ -9,10 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Calendar, MapPin, Clock, Loader2, Users, Pencil, Archive, Trash2 } from "lucide-react";
+import { Plus, Calendar, MapPin, Clock, Loader2, Users, Pencil, Archive, Trash2, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { PaginationFooter } from "@/components/ui/pagination-footer";
+import { buildEventShareMessage, openWhatsAppShare } from "@/lib/whatsapp-share";
 
 type AttendanceSummaryRow = {
   event_id: string;
@@ -56,6 +57,21 @@ export default function EventsPage() {
   const queryClient = useQueryClient();
   const [totalCount, setTotalCount] = useState(0);
   const pagination = usePaginatedQuery({ totalCount, resetKey: churchId });
+
+  const { data: church } = useQuery({
+    queryKey: ["event-share-church", churchId],
+    queryFn: async () => {
+      if (!churchId) return null;
+      const { data, error } = await supabase
+        .from("churches")
+        .select("name")
+        .eq("id", churchId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!churchId,
+  });
 
   const { data: eventsPage = { rows: [] as EventRecord[], count: 0 }, isLoading } = useQuery({
     queryKey: ["events", churchId, pagination.page, pagination.pageSize],
@@ -310,6 +326,23 @@ export default function EventsPage() {
           </div>
 
           <div className="flex flex-wrap gap-2 pt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                openWhatsAppShare(
+                  buildEventShareMessage({
+                    churchName: church?.name,
+                    title: event.title,
+                    dateTime: new Date(event.start_date).toLocaleString(),
+                    location: event.location,
+                  }),
+                )
+              }
+            >
+              <MessageCircle className="mr-2 h-3.5 w-3.5" />
+              Share to WhatsApp
+            </Button>
             <Button variant="outline" size="sm" onClick={() => openEditDialog(event)}>
               <Pencil className="mr-2 h-3.5 w-3.5" />
               Edit

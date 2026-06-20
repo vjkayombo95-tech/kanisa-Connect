@@ -59,6 +59,7 @@ function AppRoutes() {
         <Route path="/join-church" element={<JoinChurchPage />} />
         <Route path="/join/:slug" element={<RegisterPage />} />
         <Route path="/scan-qr" element={<ScanQR />} />
+        <Route path="/give/:churchSlugOrId" element={<PayPage />} />
         <Route path="/pay" element={<PayPage />} />
 
         <Route

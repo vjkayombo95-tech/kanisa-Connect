@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { formatTZS } from "@/lib/currency";
 import { RECORD_PRESERVATION_AMOUNT } from "@/lib/member-record-preservation";
+import { logSupabaseError } from "@/lib/error-logger";
 
 type PreservationSubscription = {
   id: string;
@@ -52,7 +53,16 @@ export default function MemberRecordSubscriptionsPage() {
         .order("created_at", { ascending: false })
         .limit(200);
 
-      if (error) throw error;
+      if (error) {
+        logSupabaseError(error, {
+          page: "Record Preservation Payments",
+          component: "MemberRecordSubscriptionsPage",
+          function: "loadSubscriptions",
+          operation: "select",
+          table: "member_record_subscriptions",
+        });
+        throw error;
+      }
       return (data ?? []) as unknown as PreservationSubscription[];
     },
   });
@@ -89,7 +99,17 @@ export default function MemberRecordSubscriptionsPage() {
         p_approved: approved,
       } as never);
 
-      if (error) throw error;
+      if (error) {
+        logSupabaseError(error, {
+          page: "Record Preservation Payments",
+          component: "MemberRecordSubscriptionsPage",
+          function: "reviewSubscription",
+          operation: "rpc",
+          rpc: "review_member_record_subscription",
+          metadata: { subscription_id: id, approved },
+        });
+        throw error;
+      }
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["platform-member-record-subscriptions"] });
@@ -102,7 +122,19 @@ export default function MemberRecordSubscriptionsPage() {
       .from("record-preservation-proofs")
       .createSignedUrl(proofPath, 60);
 
-    if (!error && data?.signedUrl) {
+    if (error) {
+      logSupabaseError(error, {
+        page: "Record Preservation Payments",
+        component: "MemberRecordSubscriptionsPage",
+        function: "openProof",
+        operation: "storage.createSignedUrl",
+        bucket: "record-preservation-proofs",
+        metadata: { proofPath },
+      });
+      return;
+    }
+
+    if (data?.signedUrl) {
       window.open(data.signedUrl, "_blank", "noopener,noreferrer");
     }
   };
