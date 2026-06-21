@@ -41,6 +41,8 @@ type MakePaymentArgs = {
   pledgeId: string;
   amount: number;
   paymentMethod: string;
+  transactionId?: string;
+  proofUrl?: string;
 };
 
 export function getPledgeProgress(record: Pick<PledgeRecord, "amount_pledged" | "amount_paid">) {
@@ -118,11 +120,13 @@ export function useCreatePledge() {
 
 export function useMakePledgePayment() {
   return useMutation({
-    mutationFn: async ({ pledgeId, amount, paymentMethod }: MakePaymentArgs) => {
+    mutationFn: async ({ pledgeId, amount, paymentMethod, transactionId, proofUrl }: MakePaymentArgs) => {
       const { data, error } = await supabase.rpc("make_pledge_payment" as never, {
         _pledge_id: pledgeId,
         _amount: amount,
         _payment_method: paymentMethod,
+        _transaction_id: transactionId || null,
+        _proof_url: proofUrl || null,
       } as never);
       if (error) throw error;
       const result = data as { success?: boolean; error?: string } | null;

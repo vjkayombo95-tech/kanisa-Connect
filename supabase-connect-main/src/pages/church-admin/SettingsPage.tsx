@@ -22,13 +22,14 @@ import {
   getDefaultTemplate,
   renderChurchMessageTemplate,
   saveChurchMessageTemplate,
+  weddingAnniversaryBibleVerseOptions,
   type ChurchMessageTemplate,
   type ChurchMessageTemplateType,
 } from "@/lib/church-message-templates";
 
 const templateTypeOptions: Array<{ value: ChurchMessageTemplateType; label: string }> = [
   { value: "birthday_wish", label: "Birthday wishes" },
-  { value: "wedding_anniversary_wish", label: "Wedding anniversary wishes" },
+  { value: "wedding_anniversary", label: "Wedding anniversary wishes" },
   { value: "service_recognition", label: "Service / volunteer recognition" },
   { value: "contribution_appreciation", label: "Contribution appreciation" },
 ];
@@ -216,9 +217,12 @@ export default function SettingsPage() {
 
   const isChanged = themeColor !== activeThemeColor;
   const selectedPreset = THEME_PRESETS.find(p => p.hex.toLowerCase() === themeColor.toLowerCase());
+  const bibleVerseOptions =
+    templateType === "wedding_anniversary" ? weddingAnniversaryBibleVerseOptions : birthdayBibleVerseOptions;
   const renderedTemplatePreview = renderChurchMessageTemplate(messageTemplate, {
     church_name: churchName || church?.name,
     member_name: "Tino Chrisostom",
+    spouse_name: "mwenza wako",
     date: new Date().toLocaleDateString("en-TZ"),
     community_name: "Mt. Rita",
   });
@@ -374,7 +378,7 @@ export default function SettingsPage() {
                     className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                   >
                     <option value="">No verse</option>
-                    {birthdayBibleVerseOptions.map((option) => (
+                    {bibleVerseOptions.map((option) => (
                       <option key={option.reference} value={option.reference}>{option.reference}</option>
                     ))}
                   </select>

@@ -1,7 +1,6 @@
 import { lazy, Suspense, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { LockedFeatureNotice } from "@/components/billing/LockedFeatureNotice";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,8 +12,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AnalyticsChartProps } from "./AnalyticsCharts";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
-import { assertClientRateLimit } from "@/lib/client-rate-limit";
 import { logSupabaseError } from "@/lib/error-logger";
+import {
+  generateAnalyticsSnapshot,
+  getLatestAnalyticsSnapshot,
+  type AnalyticsSnapshotRow,
+} from "@/lib/analytics-snapshots";
 
 const AnalyticsCharts = lazy(() => import("./AnalyticsCharts"));
 
@@ -38,15 +41,6 @@ type AnalyticsSnapshotPayload = AnalyticsChartProps & {
   generatedAt: string;
 };
 
-type AnalyticsSnapshotRow = {
-  id: string;
-  snapshot_type: string;
-  period_start: string;
-  period_end: string;
-  payload: AnalyticsSnapshotPayload;
-  generated_at: string;
-};
-
 export default function AnalyticsPage() {
   const billing = useBillingAccess();
   const { churchId } = useAuth();
@@ -60,24 +54,8 @@ export default function AnalyticsPage() {
       if (!churchId) return null;
       return withOfflineCache(
         snapshotCacheKey,
-        async () => {
-          const { data, error } = await supabase
-            .from("analytics_snapshots" as never)
-            .select("id, snapshot_type, period_start, period_end, payload, generated_at")
-            .eq("church_id", churchId)
-            .eq("snapshot_type", "monthly_overview")
-            .order("generated_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          if (error) {
-            if (error.message?.includes("analytics_snapshots")) return null;
-            throw error;
-          }
-
-          return data as unknown as AnalyticsSnapshotRow | null;
-        },
-        readOfflineCache(snapshotCacheKey, null as AnalyticsSnapshotRow | null),
+        () => getLatestAnalyticsSnapshot<AnalyticsSnapshotPayload>(churchId),
+        readOfflineCache(snapshotCacheKey, null as AnalyticsSnapshotRow<AnalyticsSnapshotPayload> | null),
       );
     },
     enabled: !!churchId && billing.hasFeature("analytics"),
@@ -86,26 +64,21 @@ export default function AnalyticsPage() {
   const generateSnapshot = useMutation({
     mutationFn: async () => {
       if (!churchId) throw new Error("No church context");
-      assertClientRateLimit(`analytics-snapshot:${churchId}`, 3, 60 * 60 * 1000, "analytics generations");
-      const { data, error } = await supabase.rpc("generate_church_analytics_snapshot" as never, {
-        p_church_id: churchId,
-      } as never);
-      if (error) {
-        logSupabaseError(error, {
-          page: "Analytics",
-          component: "AnalyticsPage",
-          function: "generateSnapshot",
-          church_id: churchId,
-          operation: "rpc",
-          rpc: "generate_church_analytics_snapshot",
-        });
-        throw error;
-      }
-      return data as unknown as AnalyticsSnapshotRow;
+      return generateAnalyticsSnapshot<AnalyticsSnapshotPayload>(churchId);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["analytics-snapshot", churchId] });
       setShowCharts(true);
+    },
+    onError: (error) => {
+      logSupabaseError(error, {
+        page: "Analytics",
+        component: "AnalyticsPage",
+        function: "generateSnapshot",
+        church_id: churchId,
+        operation: "rpc",
+        rpc: "generate_church_analytics_snapshot",
+      });
     },
   });
 

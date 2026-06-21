@@ -69,7 +69,7 @@ export default function PortalMassIntentions() {
   const [message, setMessage] = useState("");
   const [offeringAmount, setOfferingAmount] = useState(String(DEFAULT_OFFERING));
   const [massDate, setMassDate] = useState("");
-  const [tab, setTab] = useState("all");
+  const [tab, setTab] = useState("mine");
   const { churchId } = useAuth();
   const { isOnline } = useNetworkStatus();
   const { toast } = useToast();
@@ -316,7 +316,7 @@ export default function PortalMassIntentions() {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="font-serif text-2xl font-bold md:text-3xl">Nia za Misa</h1>
-            <p className="mt-1 text-muted-foreground">Wasilisha nia ya Misa, chagua tarehe, na toa sadaka ya Misa kwa urahisi.</p>
+            <p className="mt-1 text-muted-foreground">Wasilisha nia ya Misa kwa faragha; unaona nia zako pekee.</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
@@ -508,23 +508,8 @@ export default function PortalMassIntentions() {
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-4 bg-secondary">
-            <TabsTrigger value="all">{t("mass_intentions_form.all_intentions")}</TabsTrigger>
             <TabsTrigger value="mine">{t("mass_intentions_form.my_intentions", { count: myIntentions.length })}</TabsTrigger>
           </TabsList>
-          <TabsContent value="all">
-            {isLoading ? (
-              <p className="text-muted-foreground">{t("common.loading")}</p>
-            ) : intentions.length === 0 ? (
-              <Card className="glass-card">
-                <CardContent className="py-16 text-center text-muted-foreground">
-                  <Flame className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
-                  {t("mass_intentions_form.empty_all")}
-                </CardContent>
-              </Card>
-            ) : (
-              <IntentionList items={intentions} />
-            )}
-          </TabsContent>
           <TabsContent value="mine">
             {myIntentions.length === 0 ? (
               <Card className="glass-card">

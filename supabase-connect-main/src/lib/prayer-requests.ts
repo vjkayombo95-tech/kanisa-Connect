@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type PrayerRequestStatus = "pending" | "approved" | "rejected";
+export type PrayerRequestPrivacy = "public_to_church" | "private_to_pastor_admin" | "anonymous_public";
 
 export type PrayerRequest = {
   id: string;
@@ -10,6 +11,7 @@ export type PrayerRequest = {
   created_at: string;
   church_id: string | null;
   offering_amount: number | null;
+  privacy: PrayerRequestPrivacy;
 };
 
 export type PrayerRequestInsert = {
@@ -18,6 +20,7 @@ export type PrayerRequestInsert = {
   church_id: string;
   offering_amount?: number | null;
   status?: PrayerRequestStatus;
+  privacy?: PrayerRequestPrivacy;
 };
 
 export type PrayerRequestWithMember = PrayerRequest & {
@@ -36,6 +39,7 @@ export const PRAYER_REQUEST_SELECT = `
   offering_amount,
   member_id,
   church_id,
+  privacy,
   members(full_name, email)
 `;
 
@@ -71,6 +75,7 @@ export async function submitPrayerRequest(payload: PrayerRequestInsert) {
       church_id,
       offering_amount: payload.offering_amount ?? null,
       status: payload.status ?? "pending",
+      privacy: payload.privacy ?? "public_to_church",
     })
     .select(PRAYER_REQUEST_SELECT)
     .single();

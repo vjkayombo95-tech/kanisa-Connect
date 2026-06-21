@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Heart, Loader2, MessageCircle, Plus, Star, User } from "lucide-react";
 import { formatTZS } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
-import { PRAYER_REQUEST_SELECT, mapPrayerRequestRecord, submitPrayerRequest, type PrayerRequestWithMember } from "@/lib/prayer-requests";
+import { PRAYER_REQUEST_SELECT, mapPrayerRequestRecord, submitPrayerRequest, type PrayerRequestPrivacy, type PrayerRequestWithMember } from "@/lib/prayer-requests";
 import { clearOfflineDraft, readOfflineDraft, writeOfflineDraft } from "@/lib/offline-drafts";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { enqueueOfflineSyncAction, processOfflineSyncQueue, removeOfflineSyncAction } from "@/lib/offline-sync";
@@ -240,7 +240,7 @@ function PrayerRequestCard({
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="mb-1 flex items-center gap-2">
-              <p className="text-sm font-medium">{request.member_name}</p>
+              <p className="text-sm font-medium">{request.privacy === "anonymous_public" ? "Anonymous" : request.member_name}</p>
               <Badge variant="outline" className={statusColor(request.status)}>
                 {request.status}
               </Badge>
@@ -310,6 +310,7 @@ export default function PortalPrayerRequests() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [requestText, setRequestText] = useState("");
   const [offeringAmount, setOfferingAmount] = useState("");
+  const [privacy, setPrivacy] = useState<PrayerRequestPrivacy>("public_to_church");
   const [tab, setTab] = useState("community");
   const { churchId } = useAuth();
   const { isOnline } = useNetworkStatus();
@@ -337,15 +338,17 @@ export default function PortalPrayerRequests() {
     const draft = readOfflineDraft(prayerDraftKey, {
       requestText: "",
       offeringAmount: "",
+      privacy: "public_to_church" as PrayerRequestPrivacy,
     });
     setRequestText(draft.requestText || "");
     setOfferingAmount(draft.offeringAmount || "");
+    setPrivacy(draft.privacy === "private_to_pastor_admin" || draft.privacy === "anonymous_public" ? draft.privacy : "public_to_church");
   }, [prayerDraftKey]);
 
   useEffect(() => {
     if (!prayerDraftKey) return;
-    writeOfflineDraft(prayerDraftKey, { requestText, offeringAmount });
-  }, [prayerDraftKey, requestText, offeringAmount]);
+    writeOfflineDraft(prayerDraftKey, { requestText, offeringAmount, privacy });
+  }, [prayerDraftKey, requestText, offeringAmount, privacy]);
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ["portal-prayer-requests", churchId],
@@ -468,6 +471,7 @@ export default function PortalPrayerRequests() {
             memberName: member.full_name,
             requestText,
             offeringAmount: requestedOffering,
+            privacy,
           },
         });
         return { queuedOffline: true };
@@ -485,6 +489,7 @@ export default function PortalPrayerRequests() {
         member_id: member.id,
         church_id: churchId,
         offering_amount: net || null,
+        privacy,
       });
 
       if (offering && offering > 0) {
@@ -532,6 +537,7 @@ export default function PortalPrayerRequests() {
       setDialogOpen(false);
       setRequestText("");
       setOfferingAmount("");
+      setPrivacy("public_to_church");
     },
     onError: (error: Error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -583,6 +589,21 @@ export default function PortalPrayerRequests() {
                     onChange={(event) => setRequestText(event.target.value)}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="prayer_privacy">Who can see this request?</Label>
+                  <select
+                    id="prayer_privacy"
+                    value={privacy}
+                    onChange={(event) => setPrivacy(event.target.value as PrayerRequestPrivacy)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="public_to_church">Share with church after pastor/admin approval</option>
+                    <option value="private_to_pastor_admin">Private to pastor and church admin</option>
+                    <option value="anonymous_public">Share anonymously after pastor/admin approval</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">All new requests are private while pending review.</p>
                 </div>
 
                 <div className="space-y-2">

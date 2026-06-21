@@ -20,7 +20,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   title: string;
   maxAmount: number;
-  onSubmit: (amount: number, paymentMethod: string) => Promise<void> | void;
+  onSubmit: (amount: number, paymentMethod: string, transactionId: string, proofUrl: string) => Promise<void> | void;
   isSubmitting?: boolean;
   feePercentage?: number;
 }
@@ -44,11 +44,15 @@ export function PledgePaymentDialog({
 }: Props) {
   const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("mobile_money");
+  const [transactionId, setTransactionId] = useState("");
+  const [proofUrl, setProofUrl] = useState("");
 
   const handleClose = (nextOpen: boolean) => {
     if (!nextOpen) {
       setAmount("");
       setPaymentMethod("mobile_money");
+      setTransactionId("");
+      setProofUrl("");
     }
     onOpenChange(nextOpen);
   };
@@ -57,6 +61,7 @@ export function PledgePaymentDialog({
   const grossAmount = numericAmount > 0 ? Number((numericAmount / (1 - feePercentage / 100)).toFixed(2)) : 0;
   const feeAmount = grossAmount > 0 ? Number((grossAmount - numericAmount).toFixed(2)) : 0;
   const invalidAmount = !numericAmount || numericAmount <= 0 || numericAmount > maxAmount;
+  const missingEvidence = !transactionId.trim() && !proofUrl.trim();
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -79,6 +84,16 @@ export function PledgePaymentDialog({
               onChange={(event) => setAmount(event.target.value)}
               placeholder="Enter amount church should receive"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Transaction ID</Label>
+            <Input value={transactionId} onChange={(event) => setTransactionId(event.target.value)} placeholder="e.g. mobile-money reference" />
+          </div>
+          <div className="space-y-2">
+            <Label>Proof image path (if no transaction ID)</Label>
+            <Input value={proofUrl} onChange={(event) => setProofUrl(event.target.value)} placeholder="Uploaded receipt path or URL" />
+            <p className="text-xs text-muted-foreground">A church admin or pastor must approve this payment before the pledge balance changes.</p>
           </div>
 
           <div className="space-y-2">
@@ -120,14 +135,14 @@ export function PledgePaymentDialog({
             Cancel
           </Button>
           <Button
-            disabled={!!isSubmitting || invalidAmount}
+            disabled={!!isSubmitting || invalidAmount || missingEvidence}
             onClick={async () => {
-              await onSubmit(grossAmount, paymentMethod);
+              await onSubmit(grossAmount, paymentMethod, transactionId.trim(), proofUrl.trim());
               handleClose(false);
             }}
           >
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Pay Now
+            Submit for Approval
           </Button>
         </DialogFooter>
       </DialogContent>

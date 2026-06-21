@@ -83,8 +83,8 @@ export default function MembersPage() {
   });
 
   const { data: anniversaryTemplate } = useQuery({
-    queryKey: ["church-message-template", churchId, "wedding_anniversary_wish"],
-    queryFn: () => fetchChurchMessageTemplate(churchId, "wedding_anniversary_wish"),
+    queryKey: ["church-message-template", churchId, "wedding_anniversary"],
+    queryFn: () => fetchChurchMessageTemplate(churchId, "wedding_anniversary"),
     enabled: !!churchId,
     staleTime: 5 * 60 * 1000,
   });
@@ -97,6 +97,7 @@ export default function MembersPage() {
       renderChurchMessageTemplate(template, {
         church_name: church?.name,
         member_name: member.full_name,
+        spouse_name: member.spouse_name,
         date: new Date().toLocaleDateString("en-TZ"),
       }),
     );

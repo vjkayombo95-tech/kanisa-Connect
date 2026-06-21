@@ -35,6 +35,7 @@ type OfflineSyncAction =
         memberName: string;
         requestText: string;
         offeringAmount: number | null;
+        privacy: "public_to_church" | "private_to_pastor_admin" | "anonymous_public";
       };
     }
   | {
@@ -144,6 +145,7 @@ async function processAction(action: OfflineSyncAction) {
       member_id: action.payload.memberId,
       church_id: action.payload.churchId,
       offering_amount: net || null,
+      privacy: action.payload.privacy,
     });
 
     if (gross > 0) {

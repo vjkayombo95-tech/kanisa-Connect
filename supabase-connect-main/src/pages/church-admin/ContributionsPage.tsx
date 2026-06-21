@@ -286,13 +286,30 @@ export default function ContributionsPage() {
 
       const { data: existingContribution, error: existingContributionError } = await supabase
         .from("contributions")
-        .select("amount")
+        .select("amount, category_id, donor_name, member_id, phone, payment_reference, notes")
         .eq("id", contributionId)
         .maybeSingle();
 
       if (existingContributionError) throw existingContributionError;
 
-      const oldAmount = Number(existingContribution?.amount ?? 0);
+      const oldValues = {
+        amount: Number(existingContribution?.amount ?? 0),
+        category_id: existingContribution?.category_id ?? null,
+        donor_name: existingContribution?.donor_name ?? null,
+        member_id: existingContribution?.member_id ?? null,
+        phone: existingContribution?.phone ?? null,
+        payment_reference: existingContribution?.payment_reference ?? null,
+        notes: existingContribution?.notes ?? null,
+      };
+      const newValues = {
+        amount: newAmount,
+        category_id: values.category_id || null,
+        donor_name: values.donor_name || null,
+        member_id: values.member_id || null,
+        phone: values.phone || null,
+        payment_reference: values.payment_reference || null,
+        notes: values.notes || null,
+      };
 
       const { error } = await supabase
         .from("contributions")
@@ -309,20 +326,21 @@ export default function ContributionsPage() {
 
       if (error) throw error;
 
-      const auditPayload = {
-        user_id: profile?.id ?? null,
-        action: "UPDATE",
-        details: `Changed amount from ${existingContribution?.amount || 0} to ${newAmount}`,
-        entity: "contributions",
-        entity_id: safeEntityId,
-      };
-
       const { error: auditError } = await supabase
-        .from("audit_logs")
-        .insert(auditPayload);
+        .from("contribution_audit_logs")
+        .insert({
+          church_id: churchId,
+          contribution_id: safeEntityId,
+          action: "EDIT",
+          reason: values.reason.trim(),
+          old_values: oldValues,
+          new_values: newValues,
+          performed_by: user?.id ?? null,
+          performer_name: profile?.full_name || user?.user_metadata?.full_name || null,
+        });
 
       if (auditError) {
-        console.error("Audit log insert failed:", auditError);
+        throw auditError;
       }
     },
     onSuccess: (_, values) => {
@@ -362,16 +380,26 @@ export default function ContributionsPage() {
       if (!contribution) throw new Error("Contribution not selected");
       if (!reason.trim()) throw new Error("Add a reason for deletion before continuing.");
 
-      const { error: auditError } = await supabase.from("audit_logs").insert({
-        user_id: profile?.id ?? null,
+      const { error: auditError } = await supabase.from("contribution_audit_logs").insert({
+        church_id: churchId,
+        contribution_id: contribution.id,
         action: "DELETE",
-        details: `Deleted contribution of ${contribution.amount}`,
-        entity: "contributions",
-        entity_id: contribution.id,
+        reason: reason.trim(),
+        old_values: {
+          amount: Number(contribution.amount ?? 0),
+          category_id: contribution.category_id ?? null,
+          donor_name: contribution.donor_name ?? null,
+          member_id: contribution.member_id ?? null,
+          phone: contribution.phone ?? null,
+          payment_reference: contribution.payment_reference ?? null,
+          notes: contribution.notes ?? null,
+        },
+        performed_by: user?.id ?? null,
+        performer_name: profile?.full_name || user?.user_metadata?.full_name || null,
       });
 
       if (auditError) {
-        console.error("Audit log insert failed:", auditError);
+        throw auditError;
       }
 
       const { data: deletedRows, error } = await supabase

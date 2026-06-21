@@ -20,6 +20,25 @@ export function writeOfflineCache<T>(key: string | null, value: T) {
   }
 }
 
+/** Remove application data that must not survive a user change on a shared device. */
+export function clearSensitiveOfflineData() {
+  if (typeof window === "undefined") return;
+
+  const sensitivePrefixes = ["offline-cache:", "offline-draft:"];
+  const sensitiveKeys = new Set(["offline-sync-queue"]);
+
+  try {
+    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.localStorage.key(index);
+      if (key && (sensitiveKeys.has(key) || sensitivePrefixes.some((prefix) => key.startsWith(prefix)))) {
+        window.localStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // A storage failure must not prevent logout.
+  }
+}
+
 export async function withOfflineCache<T>(
   key: string | null,
   fetcher: () => Promise<T>,

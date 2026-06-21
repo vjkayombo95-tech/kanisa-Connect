@@ -210,10 +210,21 @@ export default function LoginPage() {
     } catch (err: any) {
       const message = String(err?.message || "");
       const normalizedMessage = message.toLowerCase();
+      const phoneLoginAttempt = !isSignUp && !looksLikeEmail(rawIdentity);
+
+      logSupabaseError(err, {
+        page: "Login",
+        component: "LoginPage",
+        function: "handleEmailAuth",
+        operation: "authentication_attempt",
+        metadata: { mode: isSignUp ? "signup" : "signin", identity_type: phoneLoginAttempt ? "phone" : "email" },
+      });
 
       toast({
         title: "Authentication error",
-        description: normalizedMessage.includes("email not confirmed")
+        description: phoneLoginAttempt
+          ? "Invalid phone number or PIN. Please try again."
+          : normalizedMessage.includes("email not confirmed")
           ? "Your account exists, but your email is not confirmed yet. Check your inbox and then sign in again."
           : normalizedMessage.includes("invalid login credentials")
             ? "The email/phone number or password is incorrect."

@@ -54,6 +54,8 @@ type BirthdayMemberRow = {
   id: string;
   full_name: string;
   date_of_birth: string | null;
+  wedding_date?: string | null;
+  spouse_name?: string | null;
 };
 
 type DashboardData = {
@@ -69,6 +71,7 @@ type DeferredDashboardData = {
   attendanceConfirmed: number;
   upcomingEvents: EventRow[];
   birthdayMembers: BirthdayMemberRow[];
+  anniversaryMembers: BirthdayMemberRow[];
 };
 
 const emptyDeferredDashboardData: DeferredDashboardData = {
@@ -76,6 +79,7 @@ const emptyDeferredDashboardData: DeferredDashboardData = {
   attendanceConfirmed: 0,
   upcomingEvents: [],
   birthdayMembers: [],
+  anniversaryMembers: [],
 };
 
 function startOfMonth(date: Date) {
@@ -189,10 +193,10 @@ export default function ChurchDashboard() {
         }),
         supabase
           .from("members")
-          .select("id, full_name, date_of_birth")
+          .select("id, full_name, date_of_birth, wedding_date, spouse_name")
           .eq("church_id", churchId)
           .eq("status", "active")
-          .not("date_of_birth", "is", null)
+          .or("date_of_birth.not.is.null,wedding_date.not.is.null")
           .limit(200),
         supabase
           .from("contributions")
@@ -227,12 +231,18 @@ export default function ChurchDashboard() {
         const birthDate = new Date(member.date_of_birth);
         return birthDate.getMonth() === todayDate.getMonth() && birthDate.getDate() === todayDate.getDate();
       });
+      const anniversaryMembers = ((birthdayCandidates.data ?? []) as BirthdayMemberRow[]).filter((member) => {
+        if (!member.wedding_date) return false;
+        const weddingDate = new Date(member.wedding_date);
+        return weddingDate.getMonth() === todayDate.getMonth() && weddingDate.getDate() === todayDate.getDate();
+      });
 
       return {
         contributions: (contributions.data ?? []) as ContributionRow[],
         attendanceConfirmed: attendances.count ?? 0,
         upcomingEvents: (events.data ?? []) as EventRow[],
         birthdayMembers,
+        anniversaryMembers,
       };
     },
     enabled: !!churchId && loadDeferredDashboardData,
@@ -242,6 +252,12 @@ export default function ChurchDashboard() {
   const { data: birthdayTemplate } = useQuery({
     queryKey: ["church-message-template", churchId, "birthday_wish"],
     queryFn: () => fetchChurchMessageTemplate(churchId, "birthday_wish"),
+    enabled: !!churchId && loadDeferredDashboardData,
+    staleTime: 5 * 60 * 1000,
+  });
+  const { data: anniversaryTemplate } = useQuery({
+    queryKey: ["church-message-template", churchId, "wedding_anniversary"],
+    queryFn: () => fetchChurchMessageTemplate(churchId, "wedding_anniversary"),
     enabled: !!churchId && loadDeferredDashboardData,
     staleTime: 5 * 60 * 1000,
   });
@@ -314,11 +330,22 @@ export default function ChurchDashboard() {
       detail: "Birthday reminder",
       date: now.toISOString(),
       memberName: member.full_name,
+      spouseName: null,
+      messageType: "birthday" as const,
     }));
-    return [...birthdays, ...payments, ...notices, ...events]
+    const anniversaries = deferredData.anniversaryMembers.map((member) => ({
+      id: `anniversary-${member.id}`,
+      title: `${member.full_name} has a wedding anniversary today`,
+      detail: "Wedding anniversary reminder",
+      date: now.toISOString(),
+      memberName: member.full_name,
+      spouseName: member.spouse_name ?? null,
+      messageType: "anniversary" as const,
+    }));
+    return [...birthdays, ...anniversaries, ...payments, ...notices, ...events]
       .sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())
       .slice(0, 4);
-  }, [contributions, data?.announcements, deferredData.birthdayMembers, deferredData.upcomingEvents, now]);
+  }, [contributions, data?.announcements, deferredData.anniversaryMembers, deferredData.birthdayMembers, deferredData.upcomingEvents, now]);
 
   const stats = [
     { title: "Active Members", value: String(data?.activeMembers ?? 0), label: "Registered active members", icon: Users },
@@ -354,6 +381,18 @@ export default function ChurchDashboard() {
       renderChurchMessageTemplate(birthdayTemplate, {
         church_name: data?.churchName,
         member_name: memberName,
+        date: now.toLocaleDateString("en-TZ"),
+      }),
+    );
+  };
+
+  const shareAnniversaryWishOnWhatsApp = (memberName: string, spouseName: string | null) => {
+    if (!anniversaryTemplate) return;
+    openWhatsAppShare(
+      renderChurchMessageTemplate(anniversaryTemplate, {
+        church_name: data?.churchName,
+        member_name: memberName,
+        spouse_name: spouseName,
         date: now.toLocaleDateString("en-TZ"),
       }),
     );
@@ -597,10 +636,14 @@ export default function ChurchDashboard() {
                       size="sm"
                       variant="outline"
                       className="mt-3 border-white/15 bg-transparent"
-                      onClick={() => shareBirthdayWishOnWhatsApp(item.memberName)}
+                      onClick={() =>
+                        item.messageType === "anniversary"
+                          ? shareAnniversaryWishOnWhatsApp(item.memberName, item.spouseName)
+                          : shareBirthdayWishOnWhatsApp(item.memberName)
+                      }
                     >
                       <MessageCircle className="mr-2 h-3.5 w-3.5" />
-                      Share Birthday Wish to WhatsApp
+                      {item.messageType === "anniversary" ? "Share Anniversary Wish to WhatsApp" : "Share Birthday Wish to WhatsApp"}
                     </Button>
                   ) : null}
                 </div>

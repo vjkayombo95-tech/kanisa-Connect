@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
+import { clearSensitiveOfflineData, readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { captureException, logSupabaseError } from "@/lib/error-logger";
 
 type AppRole = "super_admin" | "church_admin" | "pastor" | "secretary" | "treasurer" | "member";
@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const resetUserData = () => {
+    clearSensitiveOfflineData();
     setSession(null);
     setUser(null);
     setProfile(null);

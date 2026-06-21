@@ -80,12 +80,12 @@ export async function findMemberByTanzanianPhone(phone: string, churchId?: strin
 export async function resolveMemberEmailForPhoneLogin(phone: string) {
   const member = await findMemberByTanzanianPhone(phone);
   if (!member) {
-    throw new Error("No member account was found with that phone number.");
+    throw new Error("Invalid phone number or PIN.");
   }
 
   const email = member.email?.trim().toLowerCase();
   if (!email) {
-    throw new Error("This phone number is registered, but it is not linked to an email login yet. Please contact your church office.");
+    throw new Error("Invalid phone number or PIN.");
   }
 
   return { email, member };

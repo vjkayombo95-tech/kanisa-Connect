@@ -131,16 +131,16 @@ export default function CommunityPledgesPage() {
         maxAmount={activePledge?.balance ?? 0}
         feePercentage={PLEDGE_PLATFORM_FEE_PERCENT}
         isSubmitting={makePayment.isPending}
-        onSubmit={async (amount, paymentMethod) => {
+        onSubmit={async (amount, paymentMethod, transactionId, proofUrl) => {
           if (!activePledge) return;
-          const result = await makePayment.mutateAsync({ pledgeId: activePledge.id, amount, paymentMethod });
+          const result = await makePayment.mutateAsync({ pledgeId: activePledge.id, amount, paymentMethod, transactionId, proofUrl });
           queryClient.invalidateQueries({ queryKey: ["community-pledges", communityId] });
           const fee = Number((result as any)?.fee_amount ?? 0);
           const net = Number((result as any)?.net_amount ?? 0);
           const gross = Number((result as any)?.gross_amount ?? amount);
           toast({
-            title: "Payment recorded",
-            description: `${formatTZS(net)} will go to the church. Total paid was ${formatTZS(gross)}, including a ${formatTZS(fee)} platform fee.`,
+            title: "Payment submitted for approval",
+            description: "The pledge balance will update after a church admin or pastor verifies the payment.",
           });
         }}
       />

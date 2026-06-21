@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ContributionCategorySelector } from "@/components/ui/ContributionCategorySelector";
 import { Input } from "@/components/ui/input";
@@ -73,14 +73,26 @@ export function ContributionForm({
 }: ContributionFormProps) {
   const [values, setValues] = useState<ContributionFormValues>(EMPTY_VALUES);
   const [selectedMember, setSelectedMember] = useState<RemoteMemberOption | null>(null);
+  const initialValuesRef = useRef(initialValues);
+  const membersRef = useRef(members);
   const { t } = useTranslation();
 
+  // The page creates these props inline. Keep the latest values available, but only
+  // reset this form when the record/draft content itself changes, not on every page render.
+  initialValuesRef.current = initialValues;
+  membersRef.current = members;
+  const initialValuesKey = JSON.stringify(initialValues ?? {});
+  const membersKey = members.map((member) => `${member.id}:${member.full_name}`).join("|");
+
   useEffect(() => {
+    const nextInitialValues = initialValuesRef.current;
+    const nextMembers = membersRef.current;
+
     if (!isEdit && draftStorageKey) {
-      const nextValues = readOfflineDraft(draftStorageKey, { ...EMPTY_VALUES, ...initialValues });
+      const nextValues = readOfflineDraft(draftStorageKey, { ...EMPTY_VALUES, ...nextInitialValues });
       setValues(nextValues);
       setSelectedMember(
-        members.find((member) => member.id === nextValues.member_id) ??
+        nextMembers.find((member) => member.id === nextValues.member_id) ??
           (nextValues.member_id && nextValues.donor_name
             ? { id: nextValues.member_id, full_name: nextValues.donor_name }
             : null),
@@ -88,15 +100,15 @@ export function ContributionForm({
       return;
     }
 
-    const nextValues = { ...EMPTY_VALUES, ...initialValues };
+    const nextValues = { ...EMPTY_VALUES, ...nextInitialValues };
     setValues(nextValues);
     setSelectedMember(
-      members.find((member) => member.id === nextValues.member_id) ??
+      nextMembers.find((member) => member.id === nextValues.member_id) ??
         (nextValues.member_id && nextValues.donor_name
           ? { id: nextValues.member_id, full_name: nextValues.donor_name }
           : null),
     );
-  }, [draftStorageKey, initialValues, isEdit, members]);
+  }, [draftStorageKey, initialValuesKey, isEdit, membersKey]);
 
   useEffect(() => {
     if (!draftStorageKey || isEdit) return;

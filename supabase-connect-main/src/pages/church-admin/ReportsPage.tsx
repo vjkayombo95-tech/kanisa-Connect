@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { PaginationFooter } from "@/components/ui/pagination-footer";
+import { logError } from "@/lib/error-logger";
+import { generateAnalyticsSnapshot, getLatestAnalyticsSnapshot, type AnalyticsSnapshotRow } from "@/lib/analytics-snapshots";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type SnapshotPayload = {
   thisTotal?: number;
@@ -24,9 +29,13 @@ type SnapshotPayload = {
   pledgeTotals?: { pledged: number; paid: number; balance: number };
 };
 
-type SnapshotRow = {
-  payload: SnapshotPayload;
-  generated_at: string;
+type MemberContributionSummary = {
+  member_id: string | null;
+  member_name: string;
+  phone: string | null;
+  total_amount: number | string;
+  contribution_count: number | string;
+  last_contribution_date: string | null;
 };
 
 function getDateRange(startDate: string, endDate: string) {
@@ -42,6 +51,8 @@ function getDateRange(startDate: string, endDate: string) {
 
 export default function ReportsPage() {
   const { churchId } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [dateFrom, setDateFrom] = useState(() => {
     const date = new Date();
     date.setMonth(date.getMonth() - 1);
@@ -63,27 +74,39 @@ export default function ReportsPage() {
       if (!churchId) return null;
       return withOfflineCache(
         snapshotCacheKey,
-        async () => {
-          const { data, error } = await supabase
-            .from("analytics_snapshots" as never)
-            .select("payload, generated_at")
-            .eq("church_id", churchId)
-            .eq("snapshot_type", "monthly_overview")
-            .order("generated_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          if (error) {
-            if (error.message?.includes("analytics_snapshots")) return null;
-            throw error;
-          }
-
-          return data as unknown as SnapshotRow | null;
-        },
-        readOfflineCache(snapshotCacheKey, null as SnapshotRow | null),
+        () => getLatestAnalyticsSnapshot<SnapshotPayload>(churchId),
+        readOfflineCache(snapshotCacheKey, null as AnalyticsSnapshotRow<SnapshotPayload> | null),
       );
     },
     enabled: !!churchId,
+  });
+
+  const refreshReportData = useMutation({
+    mutationFn: async () => {
+      if (!churchId) throw new Error("No church context");
+      return generateAnalyticsSnapshot<SnapshotPayload>(churchId);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["reports-analytics-snapshot", churchId] });
+      void queryClient.invalidateQueries({ queryKey: ["analytics-snapshot", churchId] });
+      toast({ title: "Report data refreshed successfully." });
+    },
+    onError: (error) => {
+      logError(error, {
+        page: "Reports",
+        component: "ReportsPage",
+        function: "refreshReportData",
+        church_id: churchId,
+        metadata: {
+          rpc: "generate_church_analytics_snapshot",
+        },
+      });
+      toast({
+        title: "Unable to refresh report data",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    },
   });
 
   const { data: detailsPage = { rows: [] as any[], count: 0 }, isLoading } = useQuery({
@@ -104,6 +127,47 @@ export default function ReportsPage() {
       return { rows: data ?? [], count: count ?? 0 };
     },
     enabled: !!churchId && activeTab === "detail",
+  });
+
+  const {
+    data: memberSummaries = [],
+    isLoading: isMemberSummaryLoading,
+    isError: isMemberSummaryError,
+    error: memberSummaryError,
+  } = useQuery({
+    queryKey: ["report-contributions-by-member", churchId, dateFrom, dateTo],
+    queryFn: async () => {
+      if (!churchId) return [];
+      const { data, error } = await supabase.rpc("get_contributions_by_member" as never, {
+        p_church_id: churchId,
+        p_start_date: range.startIso,
+        p_end_date: range.endExclusiveIso,
+        p_limit: 100,
+      } as never);
+
+      if (error) {
+        const message = error.message || "Unable to load member contribution summaries.";
+        logError(new Error(message), {
+          page: "Reports",
+          component: "ReportsPage",
+          function: "getContributionsByMember",
+          church_id: churchId,
+          metadata: {
+            rpc: "get_contributions_by_member",
+            dateFrom,
+            dateTo,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+          },
+        });
+        throw new Error(message);
+      }
+
+      return (data ?? []) as unknown as MemberContributionSummary[];
+    },
+    enabled: !!churchId && activeTab === "member",
   });
 
   useEffect(() => {
@@ -137,6 +201,9 @@ export default function ReportsPage() {
           <span className="text-muted-foreground">to</span>
           <Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} className="w-auto" />
         </div>
+        <Button onClick={() => refreshReportData.mutate()} disabled={!churchId || refreshReportData.isPending}>
+          {refreshReportData.isPending ? "Refreshing report data..." : "Refresh Report Data"}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -181,8 +248,58 @@ export default function ReportsPage() {
 
         <TabsContent value="member" className="mt-4">
           <Card className="glass-card">
-            <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              Member-level drilldowns are loaded from detailed transactions only when you open All Transactions.
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Member</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead className="text-right">Total Given</TableHead>
+                    <TableHead className="text-right">Contributions</TableHead>
+                    <TableHead>Last Contribution</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isMemberSummaryLoading && (
+                    [0, 1, 2].map((item) => (
+                      <TableRow key={item}>
+                        <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="ml-auto h-4 w-12" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="ml-auto h-4 w-24" /></TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                  {isMemberSummaryError && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-destructive">
+                        {memberSummaryError instanceof Error
+                          ? memberSummaryError.message
+                          : "Unable to load member contribution summaries."}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {!isMemberSummaryLoading && !isMemberSummaryError && memberSummaries.map((member) => (
+                    <TableRow key={`${member.member_id ?? "anonymous"}-${member.member_name}`}>
+                      <TableCell className="font-medium">{member.member_name || "Anonymous"}</TableCell>
+                      <TableCell className="text-muted-foreground">{member.phone || "-"}</TableCell>
+                      <TableCell className="text-right text-primary font-medium">{formatTZS(Number(member.total_amount || 0))}</TableCell>
+                      <TableCell className="text-right">{Number(member.contribution_count || 0).toLocaleString()}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {member.last_contribution_date ? new Date(member.last_contribution_date).toLocaleDateString() : "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!isMemberSummaryLoading && !isMemberSummaryError && memberSummaries.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        No member contributions found for this date range.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>

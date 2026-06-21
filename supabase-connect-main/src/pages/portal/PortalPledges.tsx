@@ -310,12 +310,14 @@ export default function PortalPledges() {
         maxAmount={activePledge?.balance ?? 0}
         feePercentage={PLEDGE_PLATFORM_FEE_PERCENT}
         isSubmitting={paymentMutation.isPending}
-        onSubmit={async (amount, paymentMethod) => {
+        onSubmit={async (amount, paymentMethod, transactionId, proofUrl) => {
           if (!activePledge) return;
           const result = await paymentMutation.mutateAsync({
             pledgeId: activePledge.id,
             amount,
             paymentMethod,
+            transactionId,
+            proofUrl,
           });
           queryClient.invalidateQueries({ queryKey: ["member-pledges", member?.id] });
           queryClient.invalidateQueries({ queryKey: ["church-pledges-summary", churchId] });
@@ -324,8 +326,8 @@ export default function PortalPledges() {
           const net = Number((result as any)?.net_amount ?? 0);
           const gross = Number((result as any)?.gross_amount ?? amount);
           toast({
-            title: "Pledge payment recorded",
-            description: `${formatTZS(net)} will go to the church. You paid ${formatTZS(gross)}, including a ${formatTZS(fee)} platform fee.`,
+            title: "Payment submitted for approval",
+            description: "Your pledge balance will update after a church admin or pastor verifies the payment.",
           });
         }}
       />
