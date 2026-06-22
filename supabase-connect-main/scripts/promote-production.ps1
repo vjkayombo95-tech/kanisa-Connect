@@ -88,8 +88,9 @@ if ($confirmation -cne 'PROMOTE PRODUCTION') {
 
 Write-Host "Using psql: $($psql.Path)"
 foreach ($promotionFile in $promotionFiles) {
+  $sqlFilePath = $promotionFile.FullName
   Write-Host "Applying $($promotionFile.Name)"
-  & $psql.Path --set=ON_ERROR_STOP=1 --single-transaction --dbname=$env:SUPABASE_PRODUCTION_DB_URL --file=$promotionFile.FullName
+  & $psql.Path --set=ON_ERROR_STOP=1 --single-transaction --dbname=$env:SUPABASE_PRODUCTION_DB_URL --file=$sqlFilePath
   if ($LASTEXITCODE -ne 0) {
     throw "Production promotion stopped: $($promotionFile.Name) failed with exit code $LASTEXITCODE."
   }
