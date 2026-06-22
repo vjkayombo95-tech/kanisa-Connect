@@ -69,6 +69,12 @@ web_modules/
 .env
 .env.*
 !.env.example
+!.env.staging.example
+
+# Generated only by the explicitly-confirmed production baseline script.
+supabase-connect-main/supabase/baseline/production_schema_baseline.sql
+supabase-connect-main/supabase/baseline/pg_dump_stdout.log
+supabase-connect-main/supabase/baseline/pg_dump_stderr.log
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

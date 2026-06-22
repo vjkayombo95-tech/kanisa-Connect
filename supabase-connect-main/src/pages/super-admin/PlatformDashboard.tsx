@@ -6,72 +6,35 @@ import { Building2, Users, HandCoins, CreditCard, TrendingUp, Activity, Clock } 
 import { formatTZS } from "@/lib/currency";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
+type PlatformDashboardMetrics = {
+  church_count: number;
+  member_count: number;
+  contribution_total: number;
+  subscription_count: number;
+  monthly_revenue: Array<{ month: string; revenue: number }>;
+  recent_churches: Array<{ id: string; name: string; code: string | null; email: string | null; created_at: string }>;
+  recent_activity: Array<{ id: string; action: string; detail: string | null; entity_type: string | null; created_at: string }>;
+};
+
 export default function PlatformDashboard() {
-  const { data: churchCount } = useQuery({
-    queryKey: ["sa-churches-count"],
+  const { data: metrics } = useQuery({
+    queryKey: ["sa-dashboard-metrics"],
     queryFn: async () => {
-      const { count } = await supabase.from("churches").select("*", { count: "exact", head: true });
-      return count ?? 0;
+      const { data, error } = await supabase.rpc("get_platform_dashboard_metrics" as never);
+      if (error) throw error;
+      return data as unknown as PlatformDashboardMetrics;
     },
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
-  const { data: memberCount } = useQuery({
-    queryKey: ["sa-members-count"],
-    queryFn: async () => {
-      const { count } = await supabase.from("members").select("*", { count: "exact", head: true });
-      return count ?? 0;
-    },
-  });
-
-  const { data: contributionsTotal } = useQuery({
-    queryKey: ["sa-contributions-total"],
-    queryFn: async () => {
-      const { data } = await supabase.from("contributions").select("amount");
-      return data?.reduce((s: number, c: any) => s + (c.amount || 0), 0) ?? 0;
-    },
-  });
-
-  const { data: subCount } = useQuery({
-    queryKey: ["sa-subscriptions-count"],
-    queryFn: async () => {
-      const { count } = await supabase.from("church_subscriptions").select("*", { count: "exact", head: true });
-      return count ?? 0;
-    },
-  });
-
-  const { data: recentChurches = [] } = useQuery({
-    queryKey: ["sa-recent-churches"],
-    queryFn: async () => {
-      const { data } = await supabase.from("churches").select("*").order("created_at", { ascending: false }).limit(5);
-      return data ?? [];
-    },
-  });
-
-  const { data: recentLogs = [] } = useQuery({
-    queryKey: ["sa-recent-logs"],
-    queryFn: async () => {
-      const { data } = await supabase.from("activity_logs").select("*").order("created_at", { ascending: false }).limit(6);
-      return data ?? [];
-    },
-  });
-
-  // Real revenue chart from contributions
-  const { data: revenueData = [] } = useQuery({
-    queryKey: ["sa-revenue-chart"],
-    queryFn: async () => {
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-      const { data } = await supabase.from("contributions").select("amount, created_at").gte("created_at", sixMonthsAgo.toISOString());
-      if (!data || data.length === 0) return [];
-      const months: Record<string, number> = {};
-      data.forEach((c: any) => {
-        const d = new Date(c.created_at);
-        const key = d.toLocaleDateString("en-US", { month: "short" });
-        months[key] = (months[key] || 0) + (c.amount || 0);
-      });
-      return Object.entries(months).map(([month, revenue]) => ({ month, revenue }));
-    },
-  });
+  const churchCount = metrics?.church_count ?? 0;
+  const memberCount = metrics?.member_count ?? 0;
+  const contributionsTotal = Number(metrics?.contribution_total ?? 0);
+  const subCount = metrics?.subscription_count ?? 0;
+  const revenueData = metrics?.monthly_revenue ?? [];
+  const recentChurches = metrics?.recent_churches ?? [];
+  const recentLogs = metrics?.recent_activity ?? [];
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -81,10 +44,10 @@ export default function PlatformDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Churches" value={churchCount ?? 0} icon={Building2} />
-        <StatCard title="Total Members" value={memberCount ?? 0} icon={Users} />
-        <StatCard title="Total Contributions" value={formatTZS(contributionsTotal ?? 0)} icon={HandCoins} />
-        <StatCard title="Subscriptions" value={subCount ?? 0} icon={CreditCard} />
+        <StatCard title="Total Churches" value={churchCount} icon={Building2} />
+        <StatCard title="Total Members" value={memberCount} icon={Users} />
+        <StatCard title="Total Contributions" value={formatTZS(contributionsTotal)} icon={HandCoins} />
+        <StatCard title="Subscriptions" value={subCount} icon={CreditCard} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

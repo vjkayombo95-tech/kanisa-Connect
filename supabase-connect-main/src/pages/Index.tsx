@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Church, ArrowRight, Users, HandCoins, Calendar, BookOpen, Shield, Building2, Sparkles, TrendingUp, HeartHandshake, Activity, CreditCard, BarChart3, CheckCircle2, Smartphone, Check, Crown, Gem, Quote, Star, LockKeyhole, EyeOff } from "lucide-react";
+import { Church, ArrowRight, Users, HandCoins, Calendar, BookOpen, Shield, Building2, Sparkles, TrendingUp, HeartHandshake, Activity, CreditCard, BarChart3, CheckCircle2, Smartphone, Check, Crown, Gem, LockKeyhole, EyeOff } from "lucide-react";
 
 const features = [
   { icon: CreditCard, title: "Digital Giving", desc: "Accept offerings, tithes, and donations seamlessly" },
@@ -83,43 +83,6 @@ const experiences = [
   { title: "Church Admin", desc: "Full workspace for managing your church operations", url: "/church-admin", icon: Building2 },
   { title: "Member Portal", desc: "Public-facing church experience for members", url: "/portal", icon: Users },
   { title: "Super Admin", desc: "Platform-level management and analytics", url: "/super-admin", icon: Shield },
-];
-
-const trustedMediaPartners = [
-  "Dar Business Daily",
-  "Swahili Digital News",
-  "Bongo Culture",
-  "Arusha Travel Guide",
-  "Mwanza Sports Hub",
-  "Dodoma Tech Review",
-  "Zanzibar Lifestyle",
-];
-
-const testimonials = [
-  {
-    quote:
-      "Kanisa Connect gave our leadership team one place to manage giving, attendance, and follow-up. It feels premium and deeply practical.",
-    name: "Pastor Daniel M.",
-    role: "Lead Pastor",
-    church: "Grace Covenant Church",
-    impact: "42% faster weekly reporting",
-  },
-  {
-    quote:
-      "The member experience feels polished from the first tap. Our admins spend less time chasing updates and more time serving people.",
-    name: "Rev. Miriam K.",
-    role: "Operations Director",
-    church: "Hope Chapel Network",
-    impact: "3 campuses aligned on one workflow",
-  },
-  {
-    quote:
-      "We needed software that matched the dignity of our ministry. Kanisa Connect helped us modernize without losing warmth or clarity.",
-    name: "Fr. Joseph A.",
-    role: "Parish Administrator",
-    church: "New Life Cathedral",
-    impact: "Giving visibility improved across every ministry",
-  },
 ];
 
 const pricingPlans = [
@@ -797,92 +760,39 @@ export default function Index() {
               className="mx-auto max-w-6xl"
             >
               <div className="premium-panel rounded-[2rem] border border-white/10 p-6 sm:p-8 lg:p-10">
-                <div className="grid gap-10 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:items-end">
+                <div className="grid gap-10 lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:items-center">
                   <div className="max-w-2xl">
                     <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-4 py-2 text-xs font-medium uppercase tracking-[0.26em] text-primary sm:text-sm">
                       <Sparkles className="h-3.5 w-3.5" />
-                      Social Proof
+                      Built for ministry
                     </div>
                     <h2 className="mt-6 text-balance text-4xl font-bold font-serif text-white sm:text-5xl">
-                      Trusted by churches building a more connected ministry
+                      One connected workspace for your church
                     </h2>
                     <p className="mt-4 max-w-xl text-base leading-8 text-white/68 sm:text-lg sm:leading-9">
-                      From parish teams to multi-campus ministries, Kanisa Connect helps leaders move with confidence, clarity, and a premium member experience.
+                      Bring member records, giving, communications, events, and ministry care into one clear place for your team.
                     </p>
                   </div>
 
-                  <div className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#25231f]/90 shadow-[0_24px_80px_-50px_rgba(0,0,0,0.9)]">
-                    <div className="flex min-h-20 items-center gap-8 px-5 sm:px-7">
-                      <div className="shrink-0 text-[11px] font-semibold uppercase leading-5 tracking-[0.28em] text-white/58">
-                        Trusted media
-                        <br />
-                        access across
-                        <br />
-                        Tanzania
-                      </div>
-                      <div className="trusted-media-marquee min-w-0 flex-1 overflow-hidden">
-                        <div className="trusted-media-track">
-                          {[...trustedMediaPartners, ...trustedMediaPartners].map((partner, index) => (
-                            <span
-                              key={`${partner}-${index}`}
-                              className="trusted-media-item"
-                              aria-hidden={index >= trustedMediaPartners.length}
-                            >
-                              {partner}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                  <div className="rounded-[1.35rem] border border-white/10 bg-[#25231f]/90 p-6 shadow-[0_24px_80px_-50px_rgba(0,0,0,0.9)] sm:p-7">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/58">Designed around church work</p>
+                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                      {[
+                        { icon: Users, title: "People", detail: "Members and care" },
+                        { icon: HandCoins, title: "Stewardship", detail: "Giving and reports" },
+                        { icon: Calendar, title: "Ministry", detail: "Events and updates" },
+                      ].map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <div key={item.title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                            <Icon className="h-5 w-5 text-primary" />
+                            <p className="mt-4 font-semibold text-white">{item.title}</p>
+                            <p className="mt-1 text-sm text-white/58">{item.detail}</p>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                </div>
-
-                <div className="mt-10 grid gap-5 xl:grid-cols-3">
-                  {testimonials.map((testimonial, index) => (
-                    <motion.div
-                      key={`${testimonial.name}-${testimonial.church}`}
-                      initial={prefersReducedMotion ? false : { opacity: 0, y: 26 }}
-                      whileInView={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
-                      viewport={{ once: true, amount: 0.25 }}
-                      transition={{
-                        duration: prefersReducedMotion ? 0 : 0.8,
-                        delay: prefersReducedMotion ? 0 : 0.08 * index,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                      whileHover={prefersReducedMotion ? undefined : { y: -8 }}
-                      className="h-full"
-                    >
-                      <div className="premium-card premium-layered-card relative flex h-full flex-col rounded-[1.6rem] border border-white/10 p-6 hover:border-primary/25 hover:shadow-[0_28px_80px_-36px_rgba(245,158,11,0.22)]">
-                        <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1 text-primary">
-                            {Array.from({ length: 5 }).map((_, starIndex) => (
-                              <Star key={starIndex} className="h-4 w-4 fill-current" />
-                            ))}
-                          </div>
-                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
-                            <Quote className="h-5 w-5" />
-                          </div>
-                        </div>
-
-                        <p className="mt-6 text-base leading-8 text-white/78 sm:text-[17px]">
-                          "{testimonial.quote}"
-                        </p>
-
-                        <div className="mt-8 flex items-center justify-between gap-4 border-t border-white/10 pt-5">
-                          <div>
-                            <p className="text-base font-semibold text-white">{testimonial.name}</p>
-                            <p className="mt-1 text-sm text-white/58">{testimonial.role}</p>
-                            <p className="mt-1 text-sm text-primary/85">{testimonial.church}</p>
-                          </div>
-                          <div className="rounded-2xl border border-primary/20 bg-primary/10 px-3 py-2 text-right">
-                            <p className="text-[11px] uppercase tracking-[0.18em] text-primary/70">Impact</p>
-                            <p className="mt-1 text-sm font-medium text-white/82">{testimonial.impact}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
                 </div>
               </div>
             </motion.div>

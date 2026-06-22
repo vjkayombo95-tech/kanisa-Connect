@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Building2, FileText, Loader2, MessageSquare, Paperclip, Plus, Send, Shield, SmilePlus, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +47,8 @@ const ADMIN_ROLE_OPTIONS = [
 ];
 
 const CHAT_REACTION_EMOJIS = ["👍", "❤️", "🙏", "🎉", "🔥", "😊"] as const;
+
+const MESSAGE_PAGE_SIZE = 50;
 
 export function ChannelWorkspace({
   scope,
@@ -107,7 +109,10 @@ export function ChannelWorkspace({
     enabled: scope !== "member",
   });
 
-  const { data: memberships = [] } = useQuery({
+  const {
+    data: memberships = [],
+    isSuccess: membershipsLoaded,
+  } = useQuery({
     queryKey: ["chat-memberships", userId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -118,7 +123,7 @@ export function ChannelWorkspace({
       return (data as any[]) ?? [];
     },
     enabled: !!userId,
-    refetchInterval: 5000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const {
@@ -150,8 +155,8 @@ export function ChannelWorkspace({
 
       return rows;
     },
-    enabled: !!churchId && !!userId,
-    refetchInterval: 5000,
+    enabled: !!churchId && !!userId && membershipsLoaded,
+    staleTime: 5 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -167,19 +172,34 @@ export function ChannelWorkspace({
 
   const selectedChannel = channels.find((channel) => channel.id === selectedChannelId) || null;
 
-  const { data: messages = [], isLoading: loadingMessages } = useQuery({
-    queryKey: ["chat-messages", selectedChannelId],
-    queryFn: async () => {
-      if (!selectedChannelId) return [];
+  const messageQueryKey = ["chat-messages", selectedChannelId] as const;
+  const {
+    data: messagePages,
+    isLoading: loadingMessages,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: messageQueryKey,
+    initialPageParam: null as string | null,
+    queryFn: async ({ pageParam }) => {
+      if (!selectedChannelId) return { messages: [], nextCursor: undefined };
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("chat_messages" as never)
-        .select("*")
+        .select("id, channel_id, sender_user_id, sender_member_id, body, created_at, attachment_name, attachment_url, attachment_type, attachment_size")
         .eq("channel_id", selectedChannelId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false })
+        .limit(MESSAGE_PAGE_SIZE);
 
+      if (pageParam) {
+        query = query.lt("created_at", pageParam);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
 
+      // Reactions and profile records are requested only for this visible page.
       const rows = (data as any[]) ?? [];
       const senderIds = [...new Set(rows.map((message) => message.sender_user_id).filter(Boolean))];
       const messageIds = rows.map((message) => message.id);
@@ -225,15 +245,58 @@ export function ChannelWorkspace({
         );
       });
 
-      return rows.map((message) => ({
-        ...message,
-        sender_name: profileMap.get(message.sender_user_id) || "User",
-        reactions: reactionMap.get(message.id) ?? [],
-      }));
+      return {
+        messages: rows.map((message) => ({
+          ...message,
+          sender_name: profileMap.get(message.sender_user_id) || "User",
+          reactions: reactionMap.get(message.id) ?? [],
+        })),
+        nextCursor: rows.length === MESSAGE_PAGE_SIZE ? rows[rows.length - 1]?.created_at : undefined,
+      };
     },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!selectedChannelId,
-    refetchInterval: 4000,
+    staleTime: 60 * 1000,
   });
+
+  // Pages are fetched newest-first for cursor efficiency, then rendered chronologically.
+  const messages = useMemo(
+    () => (messagePages?.pages ?? []).slice().reverse().flatMap((page) => page.messages.slice().reverse()),
+    [messagePages],
+  );
+
+  useEffect(() => {
+    if (!churchId || !userId) return;
+
+    const realtimeChannel = supabase
+      .channel(`channel-workspace:${churchId}:${userId}:${selectedChannelId || "none"}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_channels", filter: `church_id=eq.${churchId}` },
+        () => queryClient.invalidateQueries({ queryKey: ["chat-channels"] }),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_channel_members", filter: `user_id=eq.${userId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["chat-memberships", userId] });
+          queryClient.invalidateQueries({ queryKey: ["chat-channels"] });
+        },
+      );
+
+    if (selectedChannelId) {
+      realtimeChannel.on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_messages", filter: `channel_id=eq.${selectedChannelId}` },
+        () => queryClient.invalidateQueries({ queryKey: ["chat-messages", selectedChannelId] }),
+      );
+    }
+
+    realtimeChannel.subscribe();
+    return () => {
+      supabase.removeChannel(realtimeChannel);
+    };
+  }, [churchId, queryClient, selectedChannelId, userId]);
 
   const createChannel = useMutation({
     mutationFn: async () => {
@@ -364,7 +427,7 @@ export function ChannelWorkspace({
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["chat-messages", selectedChannelId] });
+      queryClient.invalidateQueries({ queryKey: messageQueryKey });
       setNewMessage("");
       setAttachmentFile(null);
     },
@@ -397,7 +460,7 @@ export function ChannelWorkspace({
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["chat-messages", selectedChannelId] });
+      queryClient.invalidateQueries({ queryKey: messageQueryKey });
     },
     onError: (error: any) => {
       toast({ title: "Unable to save reaction", description: error.message, variant: "destructive" });
@@ -647,7 +710,22 @@ export function ChannelWorkspace({
                       <p>No messages yet. Start this channel with a message.</p>
                     </div>
                   ) : (
-                    messages.map((message: any) => {
+                    <>
+                      {hasNextPage && (
+                        <div className="flex justify-center pb-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fetchNextPage()}
+                            disabled={isFetchingNextPage}
+                          >
+                            {isFetchingNextPage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Load earlier messages
+                          </Button>
+                        </div>
+                      )}
+                      {messages.map((message: any) => {
                       const mine = message.sender_user_id === userId;
                       return (
                         <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
@@ -736,7 +814,8 @@ export function ChannelWorkspace({
                           </div>
                         </div>
                       );
-                    })
+                      })}
+                    </>
                   )}
                 </div>
                 <div className="border-t border-border/50 p-4">

@@ -37,6 +37,23 @@ type ContributionRow = {
   donor_name: string | null;
 };
 
+type MonthlyGivingRow = {
+  key: string;
+  month: string;
+  amount: number;
+};
+
+type ChurchDashboardMetrics = {
+  total_members: number;
+  active_members: number;
+  this_month_giving: number;
+  last_month_giving: number;
+  monthly_giving: MonthlyGivingRow[];
+  recent_contributions: ContributionRow[];
+  attendance_confirmed: number;
+  upcoming_events: EventRow[];
+};
+
 type EventRow = {
   id: string;
   title: string;
@@ -67,7 +84,10 @@ type DashboardData = {
 };
 
 type DeferredDashboardData = {
-  contributions: ContributionRow[];
+  thisMonthGiving: number;
+  lastMonthGiving: number;
+  monthlyGiving: MonthlyGivingRow[];
+  recentContributions: ContributionRow[];
   attendanceConfirmed: number;
   upcomingEvents: EventRow[];
   birthdayMembers: BirthdayMemberRow[];
@@ -75,7 +95,10 @@ type DeferredDashboardData = {
 };
 
 const emptyDeferredDashboardData: DeferredDashboardData = {
-  contributions: [],
+  thisMonthGiving: 0,
+  lastMonthGiving: 0,
+  monthlyGiving: [],
+  recentContributions: [],
   attendanceConfirmed: 0,
   upcomingEvents: [],
   birthdayMembers: [],
@@ -182,11 +205,7 @@ export default function ChurchDashboard() {
     queryFn: async (): Promise<DeferredDashboardData> => {
       if (!churchId) return emptyDeferredDashboardData;
 
-      const sixMonthsAgo = startOfMonth(new Date());
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-      const today = new Date().toISOString();
-
-      const [birthdayAutomation, birthdayCandidates, contributions, attendances, events] = await Promise.all([
+      const [birthdayAutomation, birthdayCandidates, metrics] = await Promise.all([
         ensureBirthdayAnnouncements(churchId).catch((error) => {
           console.warn("Birthday announcement automation was deferred but failed:", error);
           return null;
@@ -198,29 +217,12 @@ export default function ChurchDashboard() {
           .eq("status", "active")
           .or("date_of_birth.not.is.null,wedding_date.not.is.null")
           .limit(200),
-        supabase
-          .from("contributions")
-          .select("id, amount, created_at, donor_name")
-          .eq("church_id", churchId)
-          .gte("created_at", sixMonthsAgo.toISOString())
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("event_attendances")
-          .select("id", { count: "exact", head: true })
-          .eq("church_id", churchId)
-          .eq("response", "yes"),
-        supabase
-          .from("events")
-          .select("id, title, start_date, created_at")
-          .eq("church_id", churchId)
-          .gte("start_date", today)
-          .order("start_date", { ascending: true })
-          .limit(20),
+        supabase.rpc("get_church_dashboard_metrics" as never, { p_church_id: churchId } as never),
       ]);
 
       void birthdayAutomation;
 
-      const failures = [birthdayCandidates.error, contributions.error, attendances.error, events.error].filter(Boolean);
+      const failures = [birthdayCandidates.error, metrics.error].filter(Boolean);
       if (failures.length) {
         console.warn("Some deferred church dashboard records could not be loaded:", failures);
       }
@@ -237,10 +239,15 @@ export default function ChurchDashboard() {
         return weddingDate.getMonth() === todayDate.getMonth() && weddingDate.getDate() === todayDate.getDate();
       });
 
+      const dashboardMetrics = (metrics.data ?? {}) as ChurchDashboardMetrics;
+
       return {
-        contributions: (contributions.data ?? []) as ContributionRow[],
-        attendanceConfirmed: attendances.count ?? 0,
-        upcomingEvents: (events.data ?? []) as EventRow[],
+        thisMonthGiving: Number(dashboardMetrics.this_month_giving ?? 0),
+        lastMonthGiving: Number(dashboardMetrics.last_month_giving ?? 0),
+        monthlyGiving: (dashboardMetrics.monthly_giving ?? []).map((row) => ({ ...row, amount: Number(row.amount ?? 0) })),
+        recentContributions: (dashboardMetrics.recent_contributions ?? []).map((row) => ({ ...row, amount: Number(row.amount ?? 0) })),
+        attendanceConfirmed: Number(dashboardMetrics.attendance_confirmed ?? 0),
+        upcomingEvents: dashboardMetrics.upcoming_events ?? [],
         birthdayMembers,
         anniversaryMembers,
       };
@@ -264,19 +271,12 @@ export default function ChurchDashboard() {
 
   const now = new Date();
   const isDeferredPending = !loadDeferredDashboardData || isDeferredLoading;
-  const currentMonthStart = startOfMonth(now);
-  const previousMonthStart = startOfMonth(new Date(now.getFullYear(), now.getMonth() - 1, 1));
-  const contributions = deferredData.contributions;
+  const thisMonthGiving = deferredData.thisMonthGiving;
+  const lastMonthGiving = deferredData.lastMonthGiving;
+  const monthlyGiving = deferredData.monthlyGiving;
+  const recentContributions = deferredData.recentContributions;
+  const hasGiving = monthlyGiving.some((item) => Number(item.amount) > 0);
   const billingLoading = !loadDeferredDashboardData || billing.isLoading;
-  const thisMonthGiving = contributions
-    .filter((item) => new Date(item.created_at) >= currentMonthStart)
-    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const lastMonthGiving = contributions
-    .filter((item) => {
-      const date = new Date(item.created_at);
-      return date >= previousMonthStart && date < currentMonthStart;
-    })
-    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const givingDifference = thisMonthGiving - lastMonthGiving;
   const memberUsage = data?.totalMembers ?? 0;
   const memberLimit = billingLoading ? null : billing.memberLimit;
@@ -284,29 +284,16 @@ export default function ChurchDashboard() {
   const approachingMemberLimit = memberLimit !== null && memberUsageRatio >= 0.8;
 
   const givingBars = useMemo(() => {
-    const maximumMonths = Array.from({ length: 6 }, (_, index) => {
-      const monthDate = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
-      const amount = contributions
-        .filter((item) => {
-          const date = new Date(item.created_at);
-          return date.getFullYear() === monthDate.getFullYear() && date.getMonth() === monthDate.getMonth();
-        })
-        .reduce((sum, item) => sum + Number(item.amount || 0), 0);
-      return {
-        key: `${monthDate.getFullYear()}-${monthDate.getMonth()}`,
-        month: monthDate.toLocaleDateString("en-TZ", { month: "short" }),
-        amount,
-      };
-    });
-    const highestAmount = Math.max(...maximumMonths.map((item) => item.amount), 1);
-    return maximumMonths.map((item) => ({
+    const highestAmount = Math.max(...monthlyGiving.map((item) => Number(item.amount || 0)), 1);
+    return monthlyGiving.map((item) => ({
       ...item,
-      height: item.amount ? Math.max((item.amount / highestAmount) * 100, 6) : 0,
+      amount: Number(item.amount || 0),
+      height: item.amount ? Math.max((Number(item.amount) / highestAmount) * 100, 6) : 0,
     }));
-  }, [contributions, now.getFullYear(), now.getMonth()]);
+  }, [monthlyGiving]);
 
   const recentActivity = useMemo(() => {
-    const payments = contributions.slice(0, 5).map((item) => ({
+    const payments = recentContributions.map((item) => ({
       id: `payment-${item.id}`,
       title: `${item.donor_name || "Member"} recorded a contribution`,
       detail: formatTZS(Number(item.amount || 0)),
@@ -345,7 +332,7 @@ export default function ChurchDashboard() {
     return [...birthdays, ...anniversaries, ...payments, ...notices, ...events]
       .sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())
       .slice(0, 4);
-  }, [contributions, data?.announcements, deferredData.anniversaryMembers, deferredData.birthdayMembers, deferredData.upcomingEvents, now]);
+  }, [data?.announcements, deferredData.anniversaryMembers, deferredData.birthdayMembers, deferredData.upcomingEvents, now, recentContributions]);
 
   const stats = [
     { title: "Active Members", value: String(data?.activeMembers ?? 0), label: "Registered active members", icon: Users },
@@ -423,7 +410,7 @@ export default function ChurchDashboard() {
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
                   <p className="text-sm text-white/58">This Month Giving</p>
-                  {isDeferredPending && !contributions.length ? (
+                  {isDeferredPending && !monthlyGiving.length ? (
                     <Skeleton className="mt-3 h-14 rounded-2xl bg-white/10" />
                   ) : (
                     <>
@@ -596,7 +583,7 @@ export default function ChurchDashboard() {
               <BarChart3 className="h-5 w-5 text-primary" />
             </div>
             <div className="mt-8 grid grid-cols-6 items-end gap-3">
-              {isDeferredPending && !contributions.length ? (
+              {isDeferredPending && !monthlyGiving.length ? (
                 Array.from({ length: 6 }).map((_, index) => (
                   <div key={index} className="flex flex-col items-center gap-3">
                     <Skeleton className="h-52 w-full rounded-2xl bg-white/10" />
@@ -612,7 +599,7 @@ export default function ChurchDashboard() {
                 </div>
               ))}
             </div>
-            {!contributions.length ? <p className="mt-5 text-sm text-white/55">No contributions recorded yet.</p> : null}
+            {!hasGiving ? <p className="mt-5 text-sm text-white/55">No contributions recorded yet.</p> : null}
           </div>
 
           <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 sm:p-7">

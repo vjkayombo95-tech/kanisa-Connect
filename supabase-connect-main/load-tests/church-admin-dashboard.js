@@ -1,0 +1,4 @@
+import http from 'k6/http'; import { check, sleep } from 'k6'; import { supabaseUrl, headers, requireEnvironment } from './lib/config.js';
+export const options = { vus: 20, duration: '3m' };
+export function setup() { requireEnvironment({ auth: true }); if (!__ENV.TEST_CHURCH_ID) throw new Error('TEST_CHURCH_ID is required.'); }
+export default function () { const h = { headers: headers(true) }; const results = http.batch([['GET', `${supabaseUrl}/rest/v1/members?church_id=eq.${__ENV.TEST_CHURCH_ID}&select=id`, h], ['GET', `${supabaseUrl}/rest/v1/contributions?church_id=eq.${__ENV.TEST_CHURCH_ID}&select=amount,created_at&limit=200`, h], ['GET', `${supabaseUrl}/rest/v1/announcements?church_id=eq.${__ENV.TEST_CHURCH_ID}&order=published_at.desc&limit=5`, h]]); check(results, { 'dashboard queries return': (rows) => rows.every((r) => r.status === 200) }); sleep(1); }

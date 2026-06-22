@@ -9,6 +9,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { isSupabaseConfigured } from "@/integrations/supabase/client";
+import { environmentValidationErrors, environmentValidationWarnings } from "@/lib/environment";
+import { StagingBanner } from "@/components/StagingBanner";
 import { Loader2 } from "lucide-react";
 import Index from "./pages/Index";
 
@@ -27,7 +29,20 @@ const StaffRoutes = lazy(() => import("./routes/StaffRoutes"));
 const AdminRoutes = lazy(() => import("./routes/AdminRoutes"));
 const SuperAdminRoutes = lazy(() => import("./routes/SuperAdminRoutes"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 300_000,
+      retry: 2,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 function RouteLoadingFallback() {
   return (
@@ -106,6 +121,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AppErrorBoundary>
+          <StagingBanner />
           {!isSupabaseConfigured ? (
             <div className="min-h-screen bg-background px-4 py-16">
               <div className="mx-auto max-w-2xl rounded-2xl border border-destructive/20 bg-card p-8 shadow-xl">
@@ -116,7 +132,8 @@ const App = () => {
                   Supabase connection is missing.
                 </h1>
                 <p className="mt-3 text-sm text-muted-foreground">
-                  Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+                  {environmentValidationErrors.map((error) => <span key={error} className="block">{error}</span>)}
+                  {environmentValidationWarnings.map((warning) => <span key={warning} className="block text-amber-600">{warning}</span>)}
                 </p>
                 <Button onClick={() => window.location.reload()}>
                   Reload App
