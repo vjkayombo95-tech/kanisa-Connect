@@ -34,10 +34,9 @@ VITE_APP_ENV=staging
 VITE_SUPABASE_URL=https://<staging-project-ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<staging-anon-key>
 VITE_EXPECTED_SUPABASE_PROJECT_REF=<staging-project-ref>
-VITE_PRODUCTION_SUPABASE_PROJECT_REF=<production-project-ref>
 ```
 
-Production should use the same variable names with `VITE_APP_ENV=production`, its production URL/key, and both project-ref variables set. Do not copy or change the existing production values as part of staging setup.
+Production should use the same variable names with `VITE_APP_ENV=production` and its production URL, key, and expected project ref. Do not copy or change the existing production values as part of staging setup.
 
 The app rejects missing or mismatched deployment values, logs its environment and project ref in the browser console, and displays a red `STAGING — TEST DATA ONLY` banner on staging.
 

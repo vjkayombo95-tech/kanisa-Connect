@@ -38,26 +38,13 @@ if (supabaseUrl && !supabaseProjectRef) {
 }
 
 const expectedProjectRef = import.meta.env.VITE_EXPECTED_SUPABASE_PROJECT_REF?.trim();
-const productionProjectRef = import.meta.env.VITE_PRODUCTION_SUPABASE_PROJECT_REF?.trim();
 
 if ((appEnvironment === "staging" || appEnvironment === "production") && !expectedProjectRef) {
-  environmentValidationErrors.push("VITE_EXPECTED_SUPABASE_PROJECT_REF is required for staging and production builds.");
+  environmentValidationErrors.push("Expected Supabase project ref is required.");
 }
 
 if (expectedProjectRef && supabaseProjectRef && expectedProjectRef !== supabaseProjectRef) {
   environmentValidationErrors.push("The configured Supabase URL does not match VITE_EXPECTED_SUPABASE_PROJECT_REF.");
-}
-
-if (appEnvironment === "staging" && productionProjectRef && supabaseProjectRef === productionProjectRef) {
-  environmentValidationErrors.push("STAGING is configured to use the production Supabase project.");
-}
-
-if (appEnvironment === "production" && productionProjectRef && supabaseProjectRef !== productionProjectRef) {
-  environmentValidationErrors.push("PRODUCTION is configured to use a non-production Supabase project.");
-}
-
-if ((appEnvironment === "staging" || appEnvironment === "production") && !productionProjectRef) {
-  environmentValidationWarnings.push("VITE_PRODUCTION_SUPABASE_PROJECT_REF is not set; cross-environment protection is incomplete.");
 }
 
 export const isEnvironmentValid = environmentValidationErrors.length === 0;
