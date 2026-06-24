@@ -31,7 +31,6 @@ const AnalyticsPage = lazy(() => import("@/pages/church-admin/AnalyticsPage"));
 const DataImportPage = lazy(() => import("@/pages/church-admin/DataImportPage"));
 const AuditLogsPage = lazy(() => import("@/pages/church-admin/AuditLogsPage"));
 const BillingPage = lazy(() => import("@/pages/church-admin/BillingPage"));
-const SystemHealthPage = lazy(() => import("@/pages/church-admin/SystemHealthPage"));
 
 function SectionFallback() {
   return (
@@ -72,7 +71,6 @@ export default function AdminRoutes() {
           <Route path="analytics-assistant" element={<AnalyticsAssistantPage />} />
           <Route path="data-import" element={<DataImportPage />} />
           <Route path="audit-logs" element={<AuditLogsPage />} />
-          <Route path="system-health" element={<SystemHealthPage />} />
           <Route path="billing" element={<BillingPage />} />
         </Route>
       </Routes>

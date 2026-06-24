@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Building2, CreditCard, Receipt, ToggleRight,
-  TrendingUp, FileText, Activity, Settings, Shield, Archive,
+  TrendingUp, FileText, Activity, Settings, Shield, Archive, MonitorCheck,
 } from "lucide-react";
 import { AppLink } from "@/components/AppLink";
 import {
@@ -20,10 +20,11 @@ const items = [
   { title: "Record Preservation", url: "/super-admin/record-preservation", icon: Archive },
   { title: "Feature Management", url: "/super-admin/features", icon: ToggleRight },
   { title: "Revenue Analytics", url: "/super-admin/revenue", icon: TrendingUp },
+  { title: "System Health", url: "/super-admin/system-health", icon: MonitorCheck },
+  { title: "Platform Settings", url: "/super-admin/settings", icon: Settings },
   { title: "Platform Activity", url: "/super-admin/logs", icon: Activity },
   { title: "System Logs", url: "/super-admin/system-logs", icon: FileText },
   { title: "User Activity", url: "/super-admin/activity", icon: Activity },
-  { title: "Platform Settings", url: "/super-admin/settings", icon: Settings },
 ];
 
 export function SuperAdminSidebar() {
