@@ -24,6 +24,17 @@ type AutomationLog = {
   message: string | null;
 };
 
+type SystemAlert = {
+  id: string;
+  alert_type: string;
+  severity: "info" | "warning" | "critical";
+  title: string;
+  message: string | null;
+  source: string | null;
+  resolved: boolean;
+  created_at: string;
+};
+
 const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
   timeStyle: "short",
@@ -43,6 +54,26 @@ function StatusBadge({ status }: { status: AutomationRun["status"] }) {
   return (
     <Badge variant="outline" className={`capitalize ${styles[status]}`}>
       {status}
+    </Badge>
+  );
+}
+
+function SeverityBadge({ severity }: { severity: SystemAlert["severity"] }) {
+  const styles = {
+    critical: "border-destructive/30 bg-destructive/10 text-destructive",
+    warning: "border-amber-500/30 bg-amber-500/10 text-amber-600",
+    info: "border-primary/30 bg-primary/10 text-primary",
+  };
+
+  const labels = {
+    critical: "Critical",
+    warning: "Warning",
+    info: "Info",
+  };
+
+  return (
+    <Badge variant="outline" className={styles[severity]}>
+      {labels[severity]}
     </Badge>
   );
 }
@@ -88,7 +119,7 @@ export default function SystemHealthPage() {
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["system-health"],
     queryFn: async () => {
-      const [runsResult, logsResult] = await Promise.all([
+      const [runsResult, logsResult, alertsResult] = await Promise.all([
         supabase
           .from("automation_runs" as never)
           .select("id, run_date, status, started_at, completed_at, error_message, processed_count")
@@ -98,20 +129,29 @@ export default function SystemHealthPage() {
           .select("id, automation_type, sent_at, message")
           .order("sent_at", { ascending: false })
           .limit(50),
+        supabase
+          .from("system_alerts" as never)
+          .select("id, alert_type, severity, title, message, source, resolved, created_at")
+          .order("created_at", { ascending: false })
+          .limit(10),
       ]);
 
       if (runsResult.error) throw runsResult.error;
       if (logsResult.error) throw logsResult.error;
+      if (alertsResult.error) throw alertsResult.error;
 
       return {
         runs: (runsResult.data ?? []) as unknown as AutomationRun[],
         logs: (logsResult.data ?? []) as unknown as AutomationLog[],
+        alerts: (alertsResult.data ?? []) as unknown as SystemAlert[],
       };
     },
   });
 
   const runs = data?.runs ?? [];
   const logs = data?.logs ?? [];
+  const alerts = data?.alerts ?? [];
+  const activeAlerts = alerts.filter((alert) => !alert.resolved);
   const latestRun = runs[0];
   const lastSuccessfulRun = runs.find((run) => run.status === "completed");
   const totalProcessed = runs.reduce((total, run) => total + run.processed_count, 0);
@@ -175,7 +215,60 @@ export default function SystemHealthPage() {
               icon={ShieldAlert}
               tone={failedRuns ? "destructive" : "success"}
             />
+            <MetricCard
+              title="Active Alerts"
+              value={activeAlerts.length}
+              description={activeAlerts.length ? "Unresolved system alerts need review" : "No active system alerts"}
+              icon={AlertCircle}
+              tone={activeAlerts.some((alert) => alert.severity === "critical") ? "destructive" : activeAlerts.length ? "primary" : "success"}
+            />
           </div>
+
+          <Card className="glass-card overflow-hidden">
+            <CardHeader className="border-b border-border/70">
+              <CardTitle className="font-serif text-lg">System Alerts</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Severity</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Message</TableHead>
+                      <TableHead>Source</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {alerts.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
+                          No active system alerts
+                        </TableCell>
+                      </TableRow>
+                    ) : alerts.map((alert) => (
+                      <TableRow key={alert.id}>
+                        <TableCell><SeverityBadge severity={alert.severity} /></TableCell>
+                        <TableCell className="font-medium">{alert.title}</TableCell>
+                        <TableCell className="max-w-xl truncate text-sm text-muted-foreground" title={alert.message ?? undefined}>
+                          {alert.message || "â€”"}
+                        </TableCell>
+                        <TableCell className="capitalize text-sm text-muted-foreground">{alert.source || "system"}</TableCell>
+                        <TableCell className="whitespace-nowrap text-sm text-muted-foreground">{formatDateTime(alert.created_at)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={alert.resolved ? "border-success/30 bg-success/10 text-success" : "border-primary/30 bg-primary/10 text-primary"}>
+                            {alert.resolved ? "Resolved" : "Active"}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="glass-card overflow-hidden">
             <CardHeader className="border-b border-border/70">
