@@ -152,19 +152,21 @@ const groupedSections: AccordionGroup[] = [
     label: "Admin",
     icon: <ShieldCheck className="h-4 w-4" />,
     items: [
-      { titleKey: "reports", url: "/church-admin/reports", icon: ReportsIcon, featureKey: "reports" },
       { titleKey: "analytics", url: "/church-admin/analytics", icon: AnalyticsIcon, featureKey: "reports" },
       { titleKey: "data_import", url: "/church-admin/data-import", icon: ImportIcon, featureKey: null },
       { titleKey: "audit_logs", url: "/church-admin/audit-logs", icon: AuditIcon, featureKey: null },
-      { titleKey: "System Health", url: "/church-admin/system-health", icon: AnalyticsIcon, featureKey: null },
       { titleKey: "roles", url: "/church-admin/roles", icon: RolesIcon, featureKey: "roles" },
-      { titleKey: "settings", url: "/church-admin/settings", icon: SettingsIcon, featureKey: null },
       { titleKey: "Church Billing Status", url: "/church-admin/settings/billing", icon: BillingIcon, featureKey: null },
     ],
   },
 ];
 
 const workspaceItems: NavItem[] = [
+];
+
+const operationsItems: NavItem[] = [
+  { titleKey: "reports", url: "/church-admin/reports", icon: ReportsIcon, featureKey: "reports" },
+  { titleKey: "settings", url: "/church-admin/settings", icon: SettingsIcon, featureKey: null },
 ];
 
 const panelTransition = {
@@ -308,6 +310,11 @@ export function ChurchAdminSidebar() {
 
   const visibleWorkspaceItems = useMemo(
     () => workspaceItems.filter((item) => !item.featureKey || getFeatureState(item.featureKey).visible),
+    [getFeatureState],
+  );
+
+  const visibleOperationsItems = useMemo(
+    () => operationsItems.filter((item) => !item.featureKey || getFeatureState(item.featureKey).visible),
     [getFeatureState],
   );
 
@@ -488,6 +495,15 @@ export function ChurchAdminSidebar() {
                 {visibleWorkspaceItems.map((item, index) => renderNavItem(item, 0.12 + index * 0.03))}
               </div>
             </section>
+
+            {visibleOperationsItems.length > 0 && (
+              <section className="space-y-2">
+                <SidebarSectionLabel label="Operations" collapsed={collapsed} />
+                <div className="space-y-1.5">
+                  {visibleOperationsItems.map((item, index) => renderNavItem(item, 0.16 + index * 0.03))}
+                </div>
+              </section>
+            )}
           </div>
 
           <div className="relative mt-5 border-t border-white/8 px-0 pb-3 pt-3">

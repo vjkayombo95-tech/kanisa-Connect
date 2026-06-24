@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Suspense, lazy } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ChurchThemeProvider } from "@/contexts/ChurchThemeContext";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { PreviewViewport } from "@/components/PreviewViewport";
@@ -52,6 +53,12 @@ function RouteLoadingFallback() {
   );
 }
 
+function LegacyChurchAdminSystemHealthRedirect() {
+  const { isSuperAdmin } = useAuth();
+
+  return <Navigate to={isSuperAdmin ? "/super-admin/system-health" : "/church-admin"} replace />;
+}
+
 function AppRoutes() {
   return (
     <Suspense fallback={<RouteLoadingFallback />}>
@@ -92,6 +99,10 @@ function AppRoutes() {
               <StaffRoutes />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/church-admin/system-health"
+          element={<LegacyChurchAdminSystemHealthRedirect />}
         />
         <Route
           path="/church-admin/*"

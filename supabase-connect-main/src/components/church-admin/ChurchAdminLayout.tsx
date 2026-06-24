@@ -23,10 +23,11 @@ const FloatingAIAssistant = lazy(() =>
 );
 
 export function ChurchAdminLayout() {
-  const { signOut, profile } = useAuth();
+  const { signOut, profile, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { getFeatureState, isLoading: featuresLoading } = useFeatureAccess();
+  const isLegacySystemHealthPath = location.pathname === "/church-admin/system-health";
   const activeFeatureKey = getChurchAdminFeatureForPath(location.pathname);
   const activeFeatureState = activeFeatureKey ? getFeatureState(activeFeatureKey) : null;
   const routeHidden = !featuresLoading && activeFeatureKey && !activeFeatureState?.visible;
@@ -39,7 +40,9 @@ export function ChurchAdminLayout() {
 
   return (
     <ProtectedRoute requireChurch requireAdmin>
-      {routeHidden ? (
+      {isLegacySystemHealthPath ? (
+        <Navigate to={isSuperAdmin ? "/super-admin/system-health" : "/church-admin"} replace />
+      ) : routeHidden ? (
         <Navigate to="/church-admin" replace />
       ) : (
       <SidebarProvider>
