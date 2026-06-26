@@ -16,6 +16,7 @@ const SystemLogs = lazy(() => import("@/pages/super-admin/SystemLogs"));
 const AuditLogsPage = lazy(() => import("@/pages/super-admin/AuditLogsPage"));
 const SuperAdminSystemLogsPage = lazy(() => import("@/pages/super-admin/SuperAdminSystemLogsPage"));
 const SystemHealthPage = lazy(() => import("@/pages/super-admin/SystemHealthPage"));
+const SystemJobsPage = lazy(() => import("@/pages/super-admin/SystemJobsPage"));
 const UserActivity = lazy(() => import("@/pages/super-admin/UserActivity"));
 const PlatformSettingsPage = lazy(() => import("@/pages/super-admin/PlatformSettingsPage"));
 
@@ -43,6 +44,7 @@ export default function SuperAdminRoutes() {
           <Route path="audit-logs" element={<AuditLogsPage />} />
           <Route path="system-logs" element={<SuperAdminSystemLogsPage />} />
           <Route path="system-health" element={<SystemHealthPage />} />
+          <Route path="system-jobs" element={<SystemJobsPage />} />
           <Route path="activity" element={<UserActivity />} />
           <Route path="settings" element={<PlatformSettingsPage />} />
         </Route>

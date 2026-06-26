@@ -20,6 +20,7 @@ const pageTitles: Array<{ match: string; title: string; description: string }> =
   { match: "/super-admin/features", title: "Feature Management", description: "Enable and control platform features" },
   { match: "/super-admin/revenue", title: "Revenue Analytics", description: "Track growth and platform revenue" },
   { match: "/super-admin/system-health", title: "System Health", description: "Monitor platform automation health and delivery activity" },
+  { match: "/super-admin/system-jobs", title: "Scheduled Jobs", description: "Manage and monitor scheduled platform jobs" },
   { match: "/super-admin/system-logs", title: "System Logs", description: "Inspect platform error monitoring and app issues" },
   { match: "/super-admin/audit-logs", title: "Audit Logs", description: "Track system and administrator activity" },
   { match: "/super-admin/logs", title: "Platform Activity", description: "Inspect platform activity and audit events" },
