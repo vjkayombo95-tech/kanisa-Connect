@@ -23,6 +23,7 @@ const items = [
   { title: "System Health", url: "/super-admin/system-health", icon: MonitorCheck },
   { title: "Platform Settings", url: "/super-admin/settings", icon: Settings },
   { title: "Platform Activity", url: "/super-admin/logs", icon: Activity },
+  { title: "Audit Logs", url: "/super-admin/audit-logs", icon: FileText },
   { title: "System Logs", url: "/super-admin/system-logs", icon: FileText },
   { title: "User Activity", url: "/super-admin/activity", icon: Activity },
 ];

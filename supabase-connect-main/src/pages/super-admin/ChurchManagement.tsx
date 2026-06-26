@@ -1,22 +1,80 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Search, MoreHorizontal, Building2, ExternalLink } from "lucide-react";
+
+type ChurchStatus = "active" | "inactive" | "suspended";
+type AuditAction = "approve_church" | "reject_church" | "update_church_status";
+
+type ChurchStatusUpdate = {
+  churchId: string;
+  churchName?: string | null;
+  status: ChurchStatus;
+  action: AuditAction;
+};
+
+async function createChurchAuditLog({ churchId, churchName, status, action }: ChurchStatusUpdate) {
+  const actionDescriptions: Record<AuditAction, string> = {
+    approve_church: `Approved church ${churchName || churchId}.`,
+    reject_church: `Rejected church ${churchName || churchId}.`,
+    update_church_status: `Changed church ${churchName || churchId} status to ${status}.`,
+  };
+
+  const { error } = await supabase.rpc("create_audit_log" as never, {
+    p_action: action,
+    p_entity_type: "church",
+    p_entity_id: churchId,
+    p_description: actionDescriptions[action],
+    p_metadata: {},
+  } as never);
+
+  if (error) {
+    throw error;
+  }
+}
 
 export default function ChurchManagement() {
   const [search, setSearch] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: churches = [], isLoading } = useQuery({
     queryKey: ["sa-churches"],
     queryFn: async () => {
       const { data } = await supabase.from("churches").select("*").order("created_at", { ascending: false });
       return data ?? [];
+    },
+  });
+
+  const updateChurchStatus = useMutation({
+    mutationFn: async (variables: ChurchStatusUpdate) => {
+      const { error } = await supabase
+        .from("churches")
+        .update({ status: variables.status })
+        .eq("id", variables.churchId);
+
+      if (error) {
+        throw error;
+      }
+
+      try {
+        await createChurchAuditLog(variables);
+      } catch (auditError) {
+        console.warn("Failed to create church audit log", auditError);
+      }
+    },
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ["sa-churches"] });
+      toast.success(`Church status updated to ${variables.status}.`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Unable to update church status.");
     },
   });
 
@@ -74,10 +132,66 @@ export default function ChurchManagement() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="max-h-[min(20rem,calc(100vh-8rem))] w-56 overflow-y-auto overscroll-contain">
                         <DropdownMenuItem>View Details</DropdownMenuItem>
                         <DropdownMenuItem><ExternalLink className="mr-2 h-3 w-3" />Open Workspace</DropdownMenuItem>
-                        <DropdownMenuItem>Change Status</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          disabled={updateChurchStatus.isPending || c.status === "active"}
+                          onClick={() => updateChurchStatus.mutate({
+                            churchId: c.id,
+                            churchName: c.name,
+                            status: "active",
+                            action: "approve_church",
+                          })}
+                        >
+                          Approve Church
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={updateChurchStatus.isPending || c.status === "inactive"}
+                          onClick={() => updateChurchStatus.mutate({
+                            churchId: c.id,
+                            churchName: c.name,
+                            status: "inactive",
+                            action: "reject_church",
+                          })}
+                        >
+                          Reject Church
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          disabled={updateChurchStatus.isPending || c.status === "active"}
+                          onClick={() => updateChurchStatus.mutate({
+                            churchId: c.id,
+                            churchName: c.name,
+                            status: "active",
+                            action: "update_church_status",
+                          })}
+                        >
+                          Change Status: Active
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={updateChurchStatus.isPending || c.status === "inactive"}
+                          onClick={() => updateChurchStatus.mutate({
+                            churchId: c.id,
+                            churchName: c.name,
+                            status: "inactive",
+                            action: "update_church_status",
+                          })}
+                        >
+                          Change Status: Inactive
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={updateChurchStatus.isPending || c.status === "suspended"}
+                          onClick={() => updateChurchStatus.mutate({
+                            churchId: c.id,
+                            churchName: c.name,
+                            status: "suspended",
+                            action: "update_church_status",
+                          })}
+                        >
+                          Change Status: Suspended
+                        </DropdownMenuItem>
                         <DropdownMenuItem>View Metrics</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
