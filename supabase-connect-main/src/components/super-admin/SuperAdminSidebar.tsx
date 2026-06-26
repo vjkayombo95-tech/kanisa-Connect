@@ -22,6 +22,7 @@ const items = [
   { title: "Revenue Analytics", url: "/super-admin/revenue", icon: TrendingUp },
   { title: "System Health", url: "/super-admin/system-health", icon: MonitorCheck },
   { title: "Scheduled Jobs", url: "/super-admin/system-jobs", icon: CalendarClock },
+  { title: "Job History", url: "/super-admin/job-history", icon: Activity },
   { title: "Audit Logs", url: "/super-admin/audit-logs", icon: FileText },
   { title: "Platform Settings", url: "/super-admin/settings", icon: Settings },
   { title: "Platform Activity", url: "/super-admin/logs", icon: Activity },

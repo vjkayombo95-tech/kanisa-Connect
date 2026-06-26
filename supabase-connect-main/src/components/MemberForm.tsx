@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Loader2, X, User } from "lucide-react";
-import { BillingStatus, getMemberLimit, isMissingBillingTableError } from "@/lib/billing";
 import { validateFile, optimizeImage, uploadFile } from "@/lib/file-upload";
 
 type FamilyRole = "father" | "mother" | "child" | "guardian" | "other";
@@ -207,158 +206,49 @@ export function MemberForm({
       }
 
       const validAdditionalMembers = familyMembers.filter((familyMember) => familyMember.full_name.trim().length > 0);
-      const pendingMemberCount = 1 + (isMarried === "yes" && spouseName.trim() ? 1 : 0) + validAdditionalMembers.length;
 
-      const { count, error: countError } = await supabase
-        .from("members")
-        .select("*", { count: "exact", head: true })
-        .eq("church_id", trustedChurchId);
-
-      if (countError) {
-        console.error("Failed to count visible members:", countError);
-        throw countError;
-      }
-
-      const { data: currentSubscription, error: subscriptionError } = await supabase
-        .from("subscriptions")
-        .select("plan, status")
-        .eq("church_id", trustedChurchId)
-        .in("status", ["active", "trial"])
-        .order("started_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (subscriptionError && !isMissingBillingTableError(subscriptionError)) {
-        console.error("Failed to fetch subscription for member limit:", subscriptionError);
-        throw subscriptionError;
-      }
-
-      const memberLimit = subscriptionError
-        ? null
-        : getMemberLimit(
-          currentSubscription?.plan ?? "free",
-          (currentSubscription?.status as BillingStatus | undefined) ?? "active",
-        );
-
-      if (memberLimit !== null && (count ?? 0) + pendingMemberCount > memberLimit) {
-        throw new Error("You have reached your member limit. Upgrade your plan to add more members.");
-      }
-
-      const { data: newMember, error } = await supabase.from("members").insert({
-        full_name: normalizedFullName,
-        email: normalizeOptional(email),
-        phone: normalizeOptional(phone),
-        gender: normalizeOptional(gender),
-        date_of_birth: normalizeOptional(dateOfBirth),
-        church_id: trustedChurchId,
-        status: "active"
-      }).select().single();
+      const { data: createResult, error } = await supabase.rpc("create_member_with_relations" as never, {
+        p_church_id: trustedChurchId,
+        p_full_name: normalizedFullName,
+        p_email: normalizeOptional(email),
+        p_phone: normalizeOptional(phone),
+        p_gender: normalizeOptional(gender),
+        p_date_of_birth: normalizeOptional(dateOfBirth),
+        p_is_married: isMarried === "yes",
+        p_family_name: normalizeOptional(familyName),
+        p_spouse_name: normalizeOptional(spouseName),
+        p_wedding_date: normalizeOptional(weddingDate),
+        p_primary_family_role: getPrimaryFamilyRole(),
+        p_spouse_family_role: getSpouseFamilyRole(),
+        p_family_members: validAdditionalMembers.map((familyMember) => ({
+          full_name: familyMember.full_name.trim(),
+          gender: normalizeOptional(familyMember.gender),
+          date_of_birth: normalizeOptional(familyMember.date_of_birth),
+          role: familyMember.role,
+        })),
+        p_community_ids: communityIds,
+        p_ministry_ids: ministryIds,
+      } as never);
 
       if (error) {
         console.error("Failed to create member:", error);
         throw error;
       }
 
-      if (!newMember) {
+      const newMemberId = (createResult as { member_id?: string } | null)?.member_id;
+
+      if (!newMemberId) {
         throw new Error("Member could not be created.");
-      }
-
-      let familyId: string | null = null;
-
-      if (isMarried === "yes" || validAdditionalMembers.length > 0) {
-        const resolvedFamilyName = familyName.trim() || `${normalizedFullName} Family`;
-        const { data: family, error: familyError } = await supabase
-          .from("families")
-          .insert({
-            church_id: trustedChurchId,
-            name: resolvedFamilyName,
-          })
-          .select("id")
-          .single();
-
-        if (familyError) {
-          console.error("Failed to create family:", familyError);
-          throw familyError;
-        }
-        if (!family?.id) {
-          throw new Error("Family could not be created.");
-        }
-        familyId = family.id;
-
-        const { error: familyAssignmentError } = await supabase
-          .from("members")
-          .update({
-            family_id: familyId,
-            family_role: getPrimaryFamilyRole(),
-            wedding_date: isMarried === "yes" ? normalizeOptional(weddingDate) : null,
-            spouse_name: isMarried === "yes" ? normalizeOptional(spouseName) : null,
-          })
-          .eq("id", newMember.id);
-
-        if (familyAssignmentError) {
-          console.error("Failed to assign member family:", familyAssignmentError);
-          throw familyAssignmentError;
-        }
-
-        if (isMarried === "yes" && spouseName.trim()) {
-          const { data: spouseMember, error: spouseError } = await supabase
-            .from("members")
-            .insert({
-              full_name: spouseName.trim(),
-              church_id: trustedChurchId,
-              family_id: familyId,
-              family_role: getSpouseFamilyRole(),
-              wedding_date: normalizeOptional(weddingDate),
-              spouse_name: normalizedFullName,
-              status: "active",
-            })
-            .select("id")
-            .single();
-
-          if (spouseError) {
-            console.error("Failed to create spouse member:", spouseError);
-            throw spouseError;
-          }
-          if (!spouseMember?.id) {
-            throw new Error("Spouse member could not be created.");
-          }
-
-        }
-
-        for (const familyMember of validAdditionalMembers) {
-          const { data: createdFamilyMember, error: familyMemberError } = await supabase
-            .from("members")
-            .insert({
-              full_name: familyMember.full_name.trim(),
-              church_id: trustedChurchId,
-              status: "active",
-              gender: normalizeOptional(familyMember.gender),
-              date_of_birth: normalizeOptional(familyMember.date_of_birth),
-              family_id: familyId,
-              family_role: familyMember.role,
-            })
-            .select("id")
-            .single();
-
-          if (familyMemberError) {
-            console.error("Failed to create family member:", familyMemberError);
-            throw familyMemberError;
-          }
-          if (!createdFamilyMember?.id) {
-            throw new Error("Family member could not be created.");
-          }
-
-        }
       }
 
       // Upload photo if provided
       if (photoFile) {
-        const photoUrl = await uploadPhoto(newMember.id);
+        const photoUrl = await uploadPhoto(newMemberId);
         if (photoUrl) {
           const { error: photoUpdateError } = await supabase
             .from("members")
             .update({ photo_url: photoUrl })
-            .eq("id", newMember.id);
+            .eq("id", newMemberId);
 
           if (photoUpdateError) {
             console.error("Failed to update member photo:", photoUpdateError);
@@ -367,35 +257,7 @@ export function MemberForm({
         }
       }
 
-      // Add community membership
-      if (communityIds.length > 0) {
-        const { error: communityInsertError } = await supabase.from("member_communities").insert(
-          communityIds.map((communityId) => ({
-            community_id: communityId,
-            member_id: newMember.id,
-          })),
-        );
-        if (communityInsertError) {
-          console.error("Failed to create community memberships:", communityInsertError);
-          throw communityInsertError;
-        }
-      }
-
-      // Add ministry membership
-      if (ministryIds.length > 0) {
-        const { error: ministryInsertError } = await supabase.from("member_ministries").insert(
-          ministryIds.map((ministryId) => ({
-            ministry_id: ministryId,
-            member_id: newMember.id,
-          })),
-        );
-        if (ministryInsertError) {
-          console.error("Failed to create ministry memberships:", ministryInsertError);
-          throw ministryInsertError;
-        }
-      }
-
-      return newMember;
+      return { id: newMemberId };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["members"] });

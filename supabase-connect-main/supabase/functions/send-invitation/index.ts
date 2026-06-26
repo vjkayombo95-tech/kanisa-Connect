@@ -1,3 +1,5 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -13,6 +15,13 @@ const jsonHeaders = {
   ...corsHeaders,
   "Content-Type": "application/json",
 };
+
+function jsonResponse(status: number, body: Record<string, unknown>) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: jsonHeaders,
+  });
+}
 
 const getOrigin = (req: Request) => {
   const originHeader = req.headers.get("origin");
@@ -30,37 +39,117 @@ const getOrigin = (req: Request) => {
   throw new Error("Missing origin");
 };
 
+async function authorizeInvitationSender(req: Request, token: string, email: string) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const authorization = req.headers.get("Authorization") ?? "";
+
+  if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+    throw new Error("Invitation authorization is not configured.");
+  }
+
+  if (!authorization.trim()) {
+    return { authorized: false, status: 403, error: "Forbidden" };
+  }
+
+  const callerSupabase = createClient(supabaseUrl, anonKey, {
+    global: {
+      headers: {
+        Authorization: authorization,
+      },
+    },
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  const { data: authData, error: authError } = await callerSupabase.auth.getUser();
+  if (authError || !authData.user) {
+    return { authorized: false, status: 403, error: "Forbidden" };
+  }
+
+  const serviceSupabase = createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  const { data: invitation, error: invitationError } = await serviceSupabase
+    .from("invitations")
+    .select("church_id, email")
+    .eq("token", token)
+    .maybeSingle();
+
+  if (invitationError) {
+    throw new Error(invitationError.message);
+  }
+
+  if (!invitation?.church_id) {
+    return { authorized: false, status: 403, error: "Forbidden" };
+  }
+
+  if (invitation.email?.trim().toLowerCase() !== email.trim().toLowerCase()) {
+    return { authorized: false, status: 403, error: "Forbidden" };
+  }
+
+  const { data: isSuperAdmin, error: superAdminError } = await callerSupabase.rpc("is_super_admin");
+  if (superAdminError) {
+    throw new Error(superAdminError.message);
+  }
+
+  if (isSuperAdmin === true) {
+    return { authorized: true, status: 200, error: null };
+  }
+
+  const { data: canManageChurch, error: canManageError } = await callerSupabase.rpc(
+    "can_manage_church_workspace",
+    {
+      _user_id: authData.user.id,
+      _church_id: invitation.church_id,
+    },
+  );
+
+  if (canManageError) {
+    throw new Error(canManageError.message);
+  }
+
+  return {
+    authorized: canManageChurch === true,
+    status: canManageChurch === true ? 200 : 403,
+    error: canManageChurch === true ? null : "Forbidden",
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 400,
-      headers: jsonHeaders,
-    });
+    return jsonResponse(400, { error: "Method not allowed" });
   }
 
   try {
     const { email, token } = await req.json() as SendInvitationPayload;
 
     if (!email?.trim() || !token?.trim()) {
-      return new Response(JSON.stringify({ error: "email and token are required" }), {
-        status: 400,
-        headers: jsonHeaders,
-      });
+      return jsonResponse(400, { error: "email and token are required" });
+    }
+
+    const authorization = await authorizeInvitationSender(req, token, email);
+    if (!authorization.authorized) {
+      return jsonResponse(authorization.status, { error: authorization.error });
     }
 
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     const resendFromEmail = Deno.env.get("RESEND_FROM_EMAIL");
 
     if (!resendApiKey || !resendFromEmail) {
-      return new Response(JSON.stringify({
+      return jsonResponse(500, {
         error: "Invitation email is not configured. Set RESEND_API_KEY and RESEND_FROM_EMAIL in Supabase function secrets.",
-      }), {
-        status: 500,
-        headers: jsonHeaders,
       });
     }
 
@@ -92,26 +181,17 @@ Deno.serve(async (req) => {
         // Leave the provider response text intact when it is not JSON.
       }
 
-      return new Response(JSON.stringify({
+      return jsonResponse(502, {
         error: `Email provider rejected invitation: ${providerMessage}`,
-      }), {
-        status: 502,
-        headers: jsonHeaders,
       });
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: jsonHeaders,
-    });
+    return jsonResponse(200, { success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to send invitation";
 
     console.error("send-invitation error:", message);
 
-    return new Response(JSON.stringify({ error: message }), {
-      status: 400,
-      headers: jsonHeaders,
-    });
+    return jsonResponse(400, { error: message });
   }
 });

@@ -398,10 +398,12 @@ export default function Index() {
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
+            poster="/church-hero-poster.jpg"
             aria-hidden="true"
           >
             <source src="/church-video.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
           </video>
 
           <div className="absolute inset-0 bg-black/60" />

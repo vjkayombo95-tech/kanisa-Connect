@@ -1,13 +1,11 @@
 import { QueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
-import { submitPrayerRequest } from "@/lib/prayer-requests";
-import { submitCommunityHelpRequest, submitMassIntention } from "@/lib/member-linked-requests";
+import { submitPortalPrayerRequest } from "@/lib/prayer-requests";
+import { submitCommunityHelpRequest, submitPortalMassIntention } from "@/lib/member-linked-requests";
 
 const OFFLINE_SYNC_QUEUE_KEY = "offline-sync-queue";
 const OFFLINE_SYNC_EVENT = "offline-sync-queue-changed";
-const PLATFORM_FEE_PERCENT = 1;
-
 type OfflineSyncAction =
   | {
       id: string;
@@ -84,10 +82,6 @@ function writeQueue(queue: OfflineSyncAction[]) {
   window.dispatchEvent(new CustomEvent(OFFLINE_SYNC_EVENT));
 }
 
-function roundCurrency(amount: number) {
-  return Number(amount.toFixed(2));
-}
-
 export function enqueueOfflineSyncAction(action: Omit<OfflineSyncAction, "id" | "createdAt">) {
   const queue = readQueue();
   const createdAction = {
@@ -119,98 +113,52 @@ export function removeOfflineSyncAction(actionId: string) {
 
 async function processAction(action: OfflineSyncAction) {
   if (action.type === "church_contribution_create") {
-    const { error } = await supabase.from("contributions").insert({
-      church_id: action.payload.churchId,
-      amount: action.payload.amount,
-      member_id: action.payload.memberId,
-      donor_name: action.payload.donorName,
-      phone: action.payload.phone,
-      payment_reference: action.payload.paymentReference,
-      category_id: action.payload.categoryId,
-      created_by: action.payload.createdBy,
-      notes: action.payload.notes,
-    });
+    const { data, error } = await supabase.rpc("record_contribution_with_key" as never, {
+      p_church_id: action.payload.churchId,
+      p_amount: action.payload.amount,
+      p_idempotency_key: action.id,
+      p_member_id: action.payload.memberId,
+      p_donor_name: action.payload.donorName,
+      p_phone: action.payload.phone,
+      p_payment_reference: action.payload.paymentReference,
+      p_category_id: action.payload.categoryId,
+      p_notes: action.payload.notes,
+    } as never);
 
     if (error) throw error;
+    const result = data as { success?: boolean; error?: string } | null;
+    if (!result?.success) {
+      throw new Error(result?.error || "Contribution was not recorded.");
+    }
+
     return ["contributions", "my-contributions-all", "simple-member-home"] as string[];
   }
 
   if (action.type === "prayer_request_create") {
     const net = action.payload.offeringAmount ?? 0;
-    const gross = net > 0 ? roundCurrency(net / (1 - PLATFORM_FEE_PERCENT / 100)) : 0;
-    const fee = gross > 0 ? roundCurrency(gross - net) : 0;
 
-    const prayerRequest = await submitPrayerRequest({
+    await submitPortalPrayerRequest({
       request_text: action.payload.requestText,
       member_id: action.payload.memberId,
       church_id: action.payload.churchId,
       offering_amount: net || null,
       privacy: action.payload.privacy,
+      idempotency_key: action.id,
     });
-
-    if (gross > 0) {
-      const { error: feeError } = await supabase.from("platform_fees").insert({
-        church_id: action.payload.churchId,
-        source_type: "prayer_request",
-        source_id: prayerRequest.id,
-        gross_amount: gross,
-        fee_percentage: PLATFORM_FEE_PERCENT,
-        fee_amount: fee,
-        net_amount: net,
-        member_id: action.payload.memberId,
-      });
-      if (feeError) throw feeError;
-
-      const { error: contributionError } = await supabase.from("contributions").insert({
-        church_id: action.payload.churchId,
-        amount: net,
-        donor_name: action.payload.memberName,
-        member_id: action.payload.memberId,
-        notes: `Prayer Request Offering - ${action.payload.requestText.trim().slice(0, 80)} (TZS ${fee.toLocaleString()} platform fee)`,
-      });
-      if (contributionError) throw contributionError;
-    }
 
     return ["portal-prayer-requests", "my-prayer-requests", "my-prayers", "my-contributions-all", "simple-member-home", "contributions"] as string[];
   }
 
   if (action.type === "mass_intention_create") {
-    const net = action.payload.offeringAmount;
-    const gross = roundCurrency(net / (1 - PLATFORM_FEE_PERCENT / 100));
-    const fee = roundCurrency(gross - net);
-    const message = action.payload.requestedMassDate
-      ? `Tarehe ya Misa: ${action.payload.requestedMassDate}\n\n${action.payload.message.trim()}`
-      : action.payload.message;
-
-    const intention = await submitMassIntention({
+    await submitPortalMassIntention({
       intention_type: action.payload.intentionType,
-      message,
-      offering_amount: net,
+      message: action.payload.message,
+      offering_amount: action.payload.offeringAmount,
       member_id: action.payload.memberId,
       church_id: action.payload.churchId,
-      requested_mass_date: action.payload.requestedMassDate ?? null,
+      requested_mass_date: action.payload.requestedMassDate ?? "",
+      idempotency_key: action.id,
     });
-
-    const { error: feeError } = await supabase.from("platform_fees").insert({
-      church_id: action.payload.churchId,
-      source_type: "mass_intention",
-      source_id: intention.id,
-      gross_amount: gross,
-      fee_percentage: PLATFORM_FEE_PERCENT,
-      fee_amount: fee,
-      net_amount: net,
-      member_id: action.payload.memberId,
-    });
-    if (feeError) throw feeError;
-
-    const { error: contributionError } = await supabase.from("contributions").insert({
-      church_id: action.payload.churchId,
-      amount: net,
-      donor_name: action.payload.memberName,
-      member_id: action.payload.memberId,
-      notes: `Nia ya Misa: ${action.payload.intentionType}${action.payload.requestedMassDate ? ` - ${action.payload.requestedMassDate}` : ""} - ${action.payload.message.trim().slice(0, 80)} (TZS ${fee.toLocaleString()} platform fee)`,
-    });
-    if (contributionError) throw contributionError;
 
     return ["portal-mass-intentions", "my-mass-intentions", "my-mass-intentions-dashboard", "my-contributions-all", "simple-member-home", "contributions"] as string[];
   }

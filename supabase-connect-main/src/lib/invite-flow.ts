@@ -84,9 +84,6 @@ export async function acceptInviteForUser(invite: InviteRecord, userId: string) 
     || user.email?.split("@")[0]
     || "Member";
 
-  console.log("USER:", user);
-  console.log("CHURCH:", invite.church_id);
-
   const { data: existingLinkedMember, error: existingLinkedMemberError } = await supabase
     .from("members")
     .select("id, email, user_id, church_id, status")
@@ -145,8 +142,6 @@ export async function acceptInviteForUser(invite: InviteRecord, userId: string) 
     if (createMemberError) throw createMemberError;
     member = createdMember as MemberRow;
   }
-
-  console.log("MEMBER:", member);
 
   const { error: updateInviteError } = await supabase
     .from(invite.sourceTable as never)

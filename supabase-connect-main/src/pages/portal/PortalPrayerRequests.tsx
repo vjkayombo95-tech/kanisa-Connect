@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Heart, Loader2, MessageCircle, Plus, Star, User } from "lucide-react";
 import { formatTZS } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
-import { PRAYER_REQUEST_SELECT, mapPrayerRequestRecord, submitPrayerRequest, type PrayerRequestPrivacy, type PrayerRequestWithMember } from "@/lib/prayer-requests";
+import { PRAYER_REQUEST_SELECT, mapPrayerRequestRecord, submitPortalPrayerRequest, type PrayerRequestPrivacy, type PrayerRequestWithMember } from "@/lib/prayer-requests";
 import { clearOfflineDraft, readOfflineDraft, writeOfflineDraft } from "@/lib/offline-drafts";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { enqueueOfflineSyncAction, processOfflineSyncQueue, removeOfflineSyncAction } from "@/lib/offline-sync";
@@ -477,41 +477,14 @@ export default function PortalPrayerRequests() {
         return { queuedOffline: true };
       }
 
-      const churchAmount = requestedOffering;
-      const offering = churchAmount && churchAmount > 0
-        ? Number((churchAmount / (1 - PLATFORM_FEE_PERCENT / 100)).toFixed(2))
-        : null;
-      const fee = offering && offering > 0 ? Number((offering - churchAmount!).toFixed(2)) : 0;
-      const net = churchAmount ?? 0;
-
-      const prayerRequest = await submitPrayerRequest({
+      await submitPortalPrayerRequest({
         request_text: requestText,
         member_id: member.id,
         church_id: churchId,
-        offering_amount: net || null,
+        offering_amount: requestedOffering || null,
         privacy,
+        idempotency_key: crypto.randomUUID(),
       });
-
-      if (offering && offering > 0) {
-        await supabase.from("platform_fees").insert({
-          church_id: churchId,
-          source_type: "prayer_request",
-          source_id: prayerRequest.id,
-          gross_amount: offering,
-          fee_percentage: PLATFORM_FEE_PERCENT,
-          fee_amount: fee,
-          net_amount: net,
-          member_id: member.id,
-        });
-
-        await supabase.from("contributions").insert({
-          church_id: churchId,
-          amount: net,
-          donor_name: member.full_name,
-          member_id: member.id,
-          notes: `Prayer Request Offering - ${requestText.trim().slice(0, 80)} (${formatTZS(fee)} platform fee)`,
-        });
-      }
       return { queuedOffline: false };
     },
     onSuccess: (result) => {

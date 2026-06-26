@@ -1,23 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Activity, AlertCircle, CheckCircle2, Clock3, Loader2, PauseCircle, PlayCircle, RefreshCw } from "lucide-react";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { SystemJobActions } from "./SystemJobActions";
 
 type SystemJob = {
   id: string;
@@ -90,9 +81,7 @@ function MetricCard({
 }
 
 export default function SystemJobsPage() {
-  const { toast } = useToast();
-  const [pendingToggleJob, setPendingToggleJob] = useState<SystemJob | null>(null);
-  const [isToggling, setIsToggling] = useState(false);
+  const navigate = useNavigate();
   const { data: jobs = [], isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["super-admin-system-jobs"],
     queryFn: async () => {
@@ -125,185 +114,110 @@ export default function SystemJobsPage() {
     );
   }, [jobs]);
 
-  const handleToggleJob = async () => {
-    if (!pendingToggleJob) return;
-
-    const nextEnabled = !pendingToggleJob.enabled;
-    setIsToggling(true);
-
-    try {
-      const { error } = await supabase.rpc("toggle_system_job" as never, {
-        p_job_id: pendingToggleJob.id,
-        p_enabled: nextEnabled,
-      } as never);
-
-      if (error) {
-        throw error;
-      }
-
-      await refetch();
-      toast({
-        title: nextEnabled ? "Job enabled" : "Job disabled",
-        description: `${pendingToggleJob.job_name} is now ${nextEnabled ? "enabled" : "disabled"}.`,
-      });
-      setPendingToggleJob(null);
-    } catch (err) {
-      toast({
-        title: "Unable to update job",
-        description: err instanceof Error ? err.message : "The scheduled job could not be updated.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsToggling(false);
-    }
-  };
-
   return (
-    <>
-      <div className="space-y-6 animate-fade-in">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold font-serif">Scheduled Jobs</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Manage and monitor scheduled platform jobs</p>
-          </div>
-          <Button variant="outline" className="w-full sm:w-auto" onClick={() => refetch()} disabled={isFetching}>
-            {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-            Refresh
-          </Button>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold font-serif">Scheduled Jobs</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Manage and monitor scheduled platform jobs</p>
         </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard title="Total Jobs" value={metrics.total} icon={Clock3} />
-          <MetricCard title="Enabled Jobs" value={metrics.enabled} icon={PlayCircle} />
-          <MetricCard title="Disabled Jobs" value={metrics.disabled} icon={PauseCircle} />
-          <MetricCard title="Jobs with Success Status" value={metrics.success} icon={CheckCircle2} />
-        </div>
-
-        <Card className="glass-card overflow-hidden">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border hover:bg-transparent">
-                    <TableHead>Job Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Schedule</TableHead>
-                    <TableHead>Enabled</TableHead>
-                    <TableHead>Last Run</TableHead>
-                    <TableHead>Last Status</TableHead>
-                    <TableHead>Last Duration</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
-                        <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-primary" />
-                        Loading scheduled jobs...
-                      </TableCell>
-                    </TableRow>
-                  ) : isError ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="py-12 text-center text-destructive">
-                        <AlertCircle className="mx-auto mb-3 h-8 w-8" />
-                        Unable to load scheduled jobs: {(error as Error)?.message || "Unknown error"}
-                      </TableCell>
-                    </TableRow>
-                  ) : jobs.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
-                        <Clock3 className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
-                        No scheduled jobs found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    jobs.map((job) => (
-                      <TableRow key={job.id} className="border-border">
-                        <TableCell className="whitespace-nowrap font-medium">{job.job_name}</TableCell>
-                        <TableCell className="max-w-[320px] truncate text-sm text-muted-foreground">
-                          {job.description || "-"}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                          {job.schedule || "-"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={
-                              job.enabled
-                                ? "border-success/30 bg-success/10 text-success"
-                                : "border-muted-foreground/30 bg-muted text-muted-foreground"
-                            }
-                          >
-                            {job.enabled ? "Enabled" : "Disabled"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                          {formatDateTime(job.last_run_at)}
-                        </TableCell>
-                        <TableCell>
-                          <LastStatusBadge status={job.last_status} />
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-                          {formatDuration(job.last_duration_ms)}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant={job.enabled ? "outline" : "default"}
-                            size="sm"
-                            className="gap-2"
-                            onClick={() => setPendingToggleJob(job)}
-                          >
-                            {job.enabled ? (
-                              <>
-                                <PauseCircle className="h-4 w-4" />
-                                Disable
-                              </>
-                            ) : (
-                              <>
-                                <PlayCircle className="h-4 w-4" />
-                                Enable
-                              </>
-                            )}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+        <Button variant="outline" className="w-full sm:w-auto" onClick={() => refetch()} disabled={isFetching}>
+          {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+          Refresh
+        </Button>
       </div>
 
-      <AlertDialog
-        open={!!pendingToggleJob}
-        onOpenChange={(open) => {
-          if (!open && !isToggling) setPendingToggleJob(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {pendingToggleJob?.enabled ? "Disable scheduled job?" : "Enable scheduled job?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {pendingToggleJob
-                ? `${pendingToggleJob.job_name} will be ${pendingToggleJob.enabled ? "disabled" : "enabled"}.`
-                : "This scheduled job will be updated."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isToggling}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleToggleJob} disabled={isToggling}>
-              {isToggling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {pendingToggleJob?.enabled ? "Disable" : "Enable"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard title="Total Jobs" value={metrics.total} icon={Clock3} />
+        <MetricCard title="Enabled Jobs" value={metrics.enabled} icon={PlayCircle} />
+        <MetricCard title="Disabled Jobs" value={metrics.disabled} icon={PauseCircle} />
+        <MetricCard title="Jobs with Success Status" value={metrics.success} icon={CheckCircle2} />
+      </div>
+
+      <Card className="glass-card overflow-hidden">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead>Job Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Schedule</TableHead>
+                  <TableHead>Enabled</TableHead>
+                  <TableHead>Last Run</TableHead>
+                  <TableHead>Last Status</TableHead>
+                  <TableHead>Last Duration</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
+                      <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-primary" />
+                      Loading scheduled jobs...
+                    </TableCell>
+                  </TableRow>
+                ) : isError ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="py-12 text-center text-destructive">
+                      <AlertCircle className="mx-auto mb-3 h-8 w-8" />
+                      Unable to load scheduled jobs: {(error as Error)?.message || "Unknown error"}
+                    </TableCell>
+                  </TableRow>
+                ) : jobs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
+                      <Clock3 className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
+                      No scheduled jobs found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  jobs.map((job) => (
+                    <TableRow key={job.id} className="border-border">
+                      <TableCell className="whitespace-nowrap font-medium">{job.job_name}</TableCell>
+                      <TableCell className="max-w-[320px] truncate text-sm text-muted-foreground">
+                        {job.description || "-"}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                        {job.schedule || "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={
+                            job.enabled
+                              ? "border-success/30 bg-success/10 text-success"
+                              : "border-muted-foreground/30 bg-muted text-muted-foreground"
+                          }
+                        >
+                          {job.enabled ? "Enabled" : "Disabled"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                        {formatDateTime(job.last_run_at)}
+                      </TableCell>
+                      <TableCell>
+                        <LastStatusBadge status={job.last_status} />
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                        {formatDuration(job.last_duration_ms)}
+                      </TableCell>
+                      <TableCell>
+                        <SystemJobActions
+                          job={job}
+                          onCompleted={refetch}
+                          onViewDetails={() => navigate(`/super-admin/system-jobs/${job.id}`)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
