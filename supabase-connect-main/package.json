@@ -14,6 +14,7 @@
     "bible:extract": "node scripts/bible/extract-bible-from-pdf.ts",
     "bible:validate": "node scripts/bible/validate-bible-json.ts",
     "bible:import": "node scripts/bible/import-bible.ts",
+    "import:liturgy": "node scripts/liturgy/index.ts",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
