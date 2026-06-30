@@ -495,6 +495,7 @@ export default function PortalPrayerRequests() {
         queryClient.invalidateQueries({ queryKey: ["my-prayers"] });
         queryClient.invalidateQueries({ queryKey: ["my-contributions-all"] });
         queryClient.invalidateQueries({ queryKey: ["contributions"] });
+        queryClient.invalidateQueries({ queryKey: ["simple-member-home"] });
       }
       const offering = offeringAmount ? parseFloat(offeringAmount) : 0;
       const gross = offering > 0 ? Number((offering / (1 - PLATFORM_FEE_PERCENT / 100)).toFixed(2)) : 0;

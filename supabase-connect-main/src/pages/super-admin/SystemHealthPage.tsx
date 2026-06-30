@@ -159,10 +159,10 @@ export default function SystemHealthPage() {
     },
   });
 
-  const runs = data?.runs ?? [];
-  const logs = data?.logs ?? [];
-  const alerts = data?.alerts ?? [];
-  const activeAlerts = alerts.filter((alert) => !alert.resolved);
+  const runs = useMemo(() => data?.runs ?? [], [data?.runs]);
+  const logs = useMemo(() => data?.logs ?? [], [data?.logs]);
+  const alerts = useMemo(() => data?.alerts ?? [], [data?.alerts]);
+  const activeAlerts = useMemo(() => alerts.filter((alert) => !alert.resolved), [alerts]);
   const alertSources = useMemo(
     () => Array.from(new Set(alerts.map((alert) => alert.source || "system"))).sort(),
     [alerts],

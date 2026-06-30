@@ -54,7 +54,7 @@ type Church = {
   name: string | null;
   code: string | null;
   email: string | null;
-  status: string | null;
+  status?: string | null;
   created_at: string;
 };
 
@@ -144,6 +144,57 @@ export default function PlatformDashboard() {
   } = useQuery({
     queryKey: ["sa-executive-dashboard"],
     queryFn: async (): Promise<DashboardData> => {
+      const fetchPendingChurches = async () => {
+        const result = await supabase
+          .from("churches")
+          .select("id, name, code, email, status, created_at", { count: "exact" })
+          .eq("status", "pending")
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        if (!result.error) return result;
+
+        const statusColumnMissing =
+          result.error.code === "42703" ||
+          result.error.message?.toLowerCase().includes("churches.status") ||
+          result.error.message?.toLowerCase().includes("status does not exist");
+
+        if (!statusColumnMissing) return result;
+
+        console.warn("Church status column is unavailable; pending approval metrics are disabled for this schema.", result.error);
+
+        return {
+          data: [] as Church[],
+          count: 0,
+          error: null,
+        };
+      };
+
+      const fetchAutomationRuns = async () => {
+        const result = await supabase
+          .from("automation_runs" as never)
+          .select("id, started_at, completed_at, status, processed_count, error_message, created_at")
+          .order("started_at", { ascending: false })
+          .limit(30);
+
+        if (!result.error) return result;
+
+        const createdAtColumnMissing =
+          result.error.code === "42703" ||
+          result.error.message?.toLowerCase().includes("automation_runs.created_at") ||
+          result.error.message?.toLowerCase().includes("created_at does not exist");
+
+        if (!createdAtColumnMissing) return result;
+
+        console.warn("Automation runs created_at column is unavailable; run history will use started_at only.", result.error);
+
+        return supabase
+          .from("automation_runs" as never)
+          .select("id, started_at, completed_at, status, processed_count, error_message")
+          .order("started_at", { ascending: false })
+          .limit(30);
+      };
+
       const [
         churchCountResult,
         pendingChurchesResult,
@@ -153,12 +204,7 @@ export default function PlatformDashboard() {
         dailyJobResult,
       ] = await Promise.all([
         supabase.from("churches").select("id", { count: "exact", head: true }),
-        supabase
-          .from("churches")
-          .select("id, name, code, email, status, created_at", { count: "exact" })
-          .eq("status", "pending")
-          .order("created_at", { ascending: false })
-          .limit(5),
+        fetchPendingChurches(),
         supabase
           .from("system_alerts" as never)
           .select("id, severity, title, created_at", { count: "exact" })
@@ -170,11 +216,7 @@ export default function PlatformDashboard() {
           .select("id, actor_id, actor_role, action, created_at")
           .order("created_at", { ascending: false })
           .limit(5),
-        supabase
-          .from("automation_runs" as never)
-          .select("id, started_at, completed_at, status, processed_count, error_message, created_at")
-          .order("started_at", { ascending: false })
-          .limit(30),
+        fetchAutomationRuns(),
         supabase
           .from("system_jobs" as never)
           .select("id, job_name, enabled, last_run_at, last_status, last_duration_ms")

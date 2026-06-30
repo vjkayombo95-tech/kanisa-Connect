@@ -219,6 +219,7 @@ export default function PortalMassIntentions() {
         queryClient.invalidateQueries({ queryKey: ["my-mass-intentions-dashboard"] });
         queryClient.invalidateQueries({ queryKey: ["my-contributions-all"] });
         queryClient.invalidateQueries({ queryKey: ["contributions"] });
+        queryClient.invalidateQueries({ queryKey: ["simple-member-home"] });
       }
       const amount = parseFloat(offeringAmount) || DEFAULT_OFFERING;
       const gross = Number((amount / (1 - PLATFORM_FEE_PERCENT / 100)).toFixed(2));

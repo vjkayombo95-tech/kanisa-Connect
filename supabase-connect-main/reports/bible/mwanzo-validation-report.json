@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-06-30T10:12:25.487Z",
+  "input": "supabase/seed/bible/generated/mwanzo.json",
+  "valid": true,
+  "books_processed": 1,
+  "chapters_processed": 50,
+  "verses_processed": 1475,
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 9
+}

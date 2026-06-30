@@ -1,0 +1,23 @@
+{
+  "slug": "st-example",
+  "name": "St. Example",
+  "title": "Example Saint",
+  "feast_month": 1,
+  "feast_day": 1,
+  "patron_of": "Example patronage",
+  "birth_year": null,
+  "death_year": null,
+  "country": "Example Country",
+  "biography_short": "A concise biography used on dashboard cards.",
+  "biography_long": "A longer biography used in details and future content pages.",
+  "quote": "An optional quote from or about the saint.",
+  "reflection": "A pastoral reflection connected to the saint's witness.",
+  "prayer": "A short prayer asking for the saint's intercession.",
+  "image_url": null,
+  "color_theme": "gold",
+  "liturgical_rank": "Memorial",
+  "is_featured": false,
+  "scripture_reference": "John 15:1-11",
+  "tags": ["example", "template"],
+  "is_active": true
+}

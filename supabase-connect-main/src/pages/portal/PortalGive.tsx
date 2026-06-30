@@ -68,7 +68,7 @@ export default function PortalGive() {
   // Auto-fill phone from member record
   useEffect(() => {
     if (member?.phone && !phone) setPhone(member.phone);
-  }, [member]);
+  }, [member?.phone, phone]);
 
   useEffect(() => {
     setIdempotencyKey(createSubmissionKey());

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearSensitiveOfflineData, readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
@@ -55,18 +55,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userRole, setUserRole] = useState<AppRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const shouldAutoNavigate = () => {
+  const shouldAutoNavigate = useCallback(() => {
     const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
     return pathname === "/" || pathname === "/login" || pathname === "/onboarding";
-  };
+  }, []);
 
-  const redirectTo = (path: string) => {
+  const redirectTo = useCallback((path: string) => {
     if (typeof window === "undefined") return;
     if (window.location.pathname === path) return;
     window.location.replace(path);
-  };
+  }, []);
 
-  const resetUserData = () => {
+  const resetUserData = useCallback(() => {
     clearSensitiveOfflineData();
     setSession(null);
     setUser(null);
@@ -75,20 +75,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setChurchId(null);
     setUserRole(null);
     setIsLoading(false);
-  };
+  }, []);
 
-  const isInvalidRefreshTokenError = (error: unknown) => {
+  const isInvalidRefreshTokenError = useCallback((error: unknown) => {
     const message = String((error as { message?: string } | null)?.message || "").toLowerCase();
     return message.includes("invalid refresh token") || message.includes("refresh token not found");
-  };
+  }, []);
 
-  const returnToLoginAfterExpiredSession = () => {
+  const returnToLoginAfterExpiredSession = useCallback(() => {
     if (typeof window === "undefined" || window.location.pathname === "/login") return;
     const redirect = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
     window.location.replace(`/login?reason=session_expired&redirect=${redirect}`);
-  };
+  }, []);
 
-  const loadUserData = async (currentUser: User | null) => {
+  const loadUserData = useCallback(async (currentUser: User | null) => {
     if (!currentUser) {
       resetUserData();
       return;
@@ -181,7 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [redirectTo, resetUserData, shouldAutoNavigate]);
 
   useEffect(() => {
     const {
@@ -229,7 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isInvalidRefreshTokenError, loadUserData, resetUserData, returnToLoginAfterExpiredSession]);
 
   const signOut = async () => {
     await supabase.auth.signOut();

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logInfo, logWarning } from "@/lib/error-logger";
 
 type BirthdayAnnouncementResult = {
   success?: boolean;
@@ -108,7 +109,7 @@ export async function ensureBirthdayAnnouncements(churchId: string | null | unde
     return { createdCount: 0, skippedCount: 0 };
   }
 
-  console.log("Birthday announcement automation running");
+  logInfo("Birthday announcement automation running", { function: "ensureBirthdayAnnouncements", church_id: churchId });
 
   const { data, error } = await supabase.rpc("ensure_birthday_announcements" as never, {
     _church_id: churchId,
@@ -117,18 +118,25 @@ export async function ensureBirthdayAnnouncements(churchId: string | null | unde
 
   if (error) {
     if (isMissingRpc(error)) {
-      console.warn("Birthday announcement RPC unavailable; using direct Supabase fallback:", error);
+      logWarning("Birthday announcement RPC unavailable; using direct Supabase fallback.", {
+        function: "ensureBirthdayAnnouncements",
+        church_id: churchId,
+        metadata: { error },
+      });
       const fallback = await ensureBirthdayAnnouncementsFromClient(churchId);
-      console.log("Birthday members found:", fallback.birthdayMembersCount);
-      console.log("Birthday announcements created:", fallback.createdCount);
-      console.log("Birthday announcements skipped:", fallback.skippedCount);
+      logInfo("Birthday announcement fallback completed.", {
+        function: "ensureBirthdayAnnouncements",
+        church_id: churchId,
+        metadata: fallback,
+      });
       return { createdCount: fallback.createdCount, skippedCount: fallback.skippedCount };
     }
 
-    console.warn("Birthday announcement automation failed:", error);
-    console.log("Birthday members found:", 0);
-    console.log("Birthday announcements created:", 0);
-    console.log("Birthday announcements skipped:", 0);
+    logWarning("Birthday announcement automation failed.", {
+      function: "ensureBirthdayAnnouncements",
+      church_id: churchId,
+      metadata: { error },
+    });
     return { createdCount: 0, skippedCount: 0 };
   }
 
@@ -138,12 +146,18 @@ export async function ensureBirthdayAnnouncements(churchId: string | null | unde
   const skippedCount = Number(result?.skipped_count ?? 0);
 
   if (result && result.success === false) {
-    console.warn("Birthday announcement automation skipped:", result.error);
+    logWarning("Birthday announcement automation skipped.", {
+      function: "ensureBirthdayAnnouncements",
+      church_id: churchId,
+      metadata: { error: result.error },
+    });
   }
 
-  console.log("Birthday members found:", birthdayMembersCount);
-  console.log("Birthday announcements created:", createdCount);
-  console.log("Birthday announcements skipped:", skippedCount);
+  logInfo("Birthday announcement automation completed.", {
+    function: "ensureBirthdayAnnouncements",
+    church_id: churchId,
+    metadata: { birthdayMembersCount, createdCount, skippedCount },
+  });
 
   return { createdCount, skippedCount };
 }

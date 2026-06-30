@@ -111,6 +111,7 @@ const groupedSections: AccordionGroup[] = [
     icon: <CalendarDays className="h-4 w-4" />,
     items: [
       { titleKey: "events", url: "/church-admin/events", icon: EventsIcon, featureKey: "events" },
+      { titleKey: "Mass Schedule", url: "/church-admin/mass-schedule", icon: MassIntentionsIcon, featureKey: "events" },
       {
         titleKey: "event_requests",
         url: "/church-admin/event-requests",

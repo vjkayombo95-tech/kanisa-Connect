@@ -696,7 +696,7 @@ export default function AnnouncementsPage() {
     generateMessages.mutate({ type, selectedLanguage: language, regenerate });
   };
 
-  const useTemplate = (template: MessageTemplateRecord) => {
+  const applyTemplate = (template: MessageTemplateRecord) => {
     setAiDraft({
       title: template.title || getFallbackTitle(selectedType, language),
       content: template.content,
@@ -1053,7 +1053,7 @@ export default function AnnouncementsPage() {
                                   <div className="mt-auto">
                                     <Button
                                       type="button"
-                                      onClick={() => useTemplate(template)}
+                                      onClick={() => applyTemplate(template)}
                                       className="w-full rounded-xl bg-amber-400 text-black hover:bg-amber-300"
                                     >
                                       Use this

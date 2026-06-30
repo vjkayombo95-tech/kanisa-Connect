@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-06-30T07:45:50.145Z",
+  "input": "supabase/seed/bible/generated/mathayo.json",
+  "valid": true,
+  "books_processed": 1,
+  "chapters_processed": 28,
+  "verses_processed": 1071,
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 6
+}

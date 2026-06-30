@@ -25,6 +25,7 @@ export const CHURCH_ADMIN_FEATURE_ROUTE_MAP: Array<{ prefix: string; featureKey:
   { prefix: "/church-admin/communities", featureKey: "communities" },
   { prefix: "/church-admin/ministries", featureKey: "ministries" },
   { prefix: "/church-admin/families", featureKey: "families" },
+  { prefix: "/church-admin/mass-schedule", featureKey: "events" },
   { prefix: "/church-admin/events", featureKey: "events" },
   { prefix: "/church-admin/event-requests", featureKey: "event_requests" },
   { prefix: "/church-admin/announcements", featureKey: "announcements" },

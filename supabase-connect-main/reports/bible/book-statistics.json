@@ -1,0 +1,475 @@
+{
+  "timestamp": "2026-06-29T12:46:33.132Z",
+  "source": "supabase/seed/bible/generated/biblica-sw.json",
+  "totals": {
+    "total_books": 66,
+    "total_chapters": 1189,
+    "total_verses": 29746
+  },
+  "books": [
+    {
+      "book_name": "Mwanzo",
+      "chapters_parsed": 50,
+      "verses_parsed": 1475,
+      "expected_chapter_count": 50,
+      "anomalies": []
+    },
+    {
+      "book_name": "Kutoka",
+      "chapters_parsed": 40,
+      "verses_parsed": 1193,
+      "expected_chapter_count": 40,
+      "anomalies": []
+    },
+    {
+      "book_name": "Walawi",
+      "chapters_parsed": 27,
+      "verses_parsed": 737,
+      "expected_chapter_count": 27,
+      "anomalies": []
+    },
+    {
+      "book_name": "Hesabu",
+      "chapters_parsed": 36,
+      "verses_parsed": 997,
+      "expected_chapter_count": 36,
+      "anomalies": []
+    },
+    {
+      "book_name": "Kumbukumbu la Torati",
+      "chapters_parsed": 34,
+      "verses_parsed": 933,
+      "expected_chapter_count": 34,
+      "anomalies": []
+    },
+    {
+      "book_name": "Yoshua",
+      "chapters_parsed": 24,
+      "verses_parsed": 545,
+      "expected_chapter_count": 24,
+      "anomalies": []
+    },
+    {
+      "book_name": "Waamuzi",
+      "chapters_parsed": 21,
+      "verses_parsed": 542,
+      "expected_chapter_count": 21,
+      "anomalies": []
+    },
+    {
+      "book_name": "Ruthu",
+      "chapters_parsed": 4,
+      "verses_parsed": 85,
+      "expected_chapter_count": 4,
+      "anomalies": []
+    },
+    {
+      "book_name": "1 Samweli",
+      "chapters_parsed": 31,
+      "verses_parsed": 783,
+      "expected_chapter_count": 31,
+      "anomalies": []
+    },
+    {
+      "book_name": "2 Samweli",
+      "chapters_parsed": 24,
+      "verses_parsed": 692,
+      "expected_chapter_count": 24,
+      "anomalies": []
+    },
+    {
+      "book_name": "1 Wafalme",
+      "chapters_parsed": 22,
+      "verses_parsed": 727,
+      "expected_chapter_count": 22,
+      "anomalies": []
+    },
+    {
+      "book_name": "2 Wafalme",
+      "chapters_parsed": 25,
+      "verses_parsed": 719,
+      "expected_chapter_count": 25,
+      "anomalies": []
+    },
+    {
+      "book_name": "1 Nyakati",
+      "chapters_parsed": 29,
+      "verses_parsed": 849,
+      "expected_chapter_count": 29,
+      "anomalies": []
+    },
+    {
+      "book_name": "2 Nyakati",
+      "chapters_parsed": 36,
+      "verses_parsed": 792,
+      "expected_chapter_count": 36,
+      "anomalies": []
+    },
+    {
+      "book_name": "Ezra",
+      "chapters_parsed": 10,
+      "verses_parsed": 197,
+      "expected_chapter_count": 10,
+      "anomalies": []
+    },
+    {
+      "book_name": "Nehemia",
+      "chapters_parsed": 13,
+      "verses_parsed": 341,
+      "expected_chapter_count": 13,
+      "anomalies": []
+    },
+    {
+      "book_name": "Esta",
+      "chapters_parsed": 10,
+      "verses_parsed": 143,
+      "expected_chapter_count": 10,
+      "anomalies": []
+    },
+    {
+      "book_name": "Ayubu",
+      "chapters_parsed": 42,
+      "verses_parsed": 1064,
+      "expected_chapter_count": 42,
+      "anomalies": []
+    },
+    {
+      "book_name": "Zaburi",
+      "chapters_parsed": 150,
+      "verses_parsed": 2461,
+      "expected_chapter_count": 150,
+      "anomalies": []
+    },
+    {
+      "book_name": "Mithali",
+      "chapters_parsed": 31,
+      "verses_parsed": 915,
+      "expected_chapter_count": 31,
+      "anomalies": []
+    },
+    {
+      "book_name": "Mhubiri",
+      "chapters_parsed": 12,
+      "verses_parsed": 222,
+      "expected_chapter_count": 12,
+      "anomalies": []
+    },
+    {
+      "book_name": "Wimbo Ulio Bora",
+      "chapters_parsed": 8,
+      "verses_parsed": 117,
+      "expected_chapter_count": 8,
+      "anomalies": []
+    },
+    {
+      "book_name": "Isaya",
+      "chapters_parsed": 66,
+      "verses_parsed": 1285,
+      "expected_chapter_count": 66,
+      "anomalies": []
+    },
+    {
+      "book_name": "Yeremia",
+      "chapters_parsed": 52,
+      "verses_parsed": 1345,
+      "expected_chapter_count": 52,
+      "anomalies": []
+    },
+    {
+      "book_name": "Maombolezo",
+      "chapters_parsed": 5,
+      "verses_parsed": 154,
+      "expected_chapter_count": 5,
+      "anomalies": []
+    },
+    {
+      "book_name": "Ezekieli",
+      "chapters_parsed": 48,
+      "verses_parsed": 1273,
+      "expected_chapter_count": 48,
+      "anomalies": []
+    },
+    {
+      "book_name": "Danieli",
+      "chapters_parsed": 12,
+      "verses_parsed": 319,
+      "expected_chapter_count": 12,
+      "anomalies": []
+    },
+    {
+      "book_name": "Hosea",
+      "chapters_parsed": 14,
+      "verses_parsed": 197,
+      "expected_chapter_count": 14,
+      "anomalies": []
+    },
+    {
+      "book_name": "Yoeli",
+      "chapters_parsed": 3,
+      "verses_parsed": 73,
+      "expected_chapter_count": 3,
+      "anomalies": []
+    },
+    {
+      "book_name": "Amosi",
+      "chapters_parsed": 9,
+      "verses_parsed": 146,
+      "expected_chapter_count": 9,
+      "anomalies": []
+    },
+    {
+      "book_name": "Obadia",
+      "chapters_parsed": 1,
+      "verses_parsed": 21,
+      "expected_chapter_count": 1,
+      "anomalies": []
+    },
+    {
+      "book_name": "Yona",
+      "chapters_parsed": 4,
+      "verses_parsed": 48,
+      "expected_chapter_count": 4,
+      "anomalies": []
+    },
+    {
+      "book_name": "Mika",
+      "chapters_parsed": 7,
+      "verses_parsed": 105,
+      "expected_chapter_count": 7,
+      "anomalies": []
+    },
+    {
+      "book_name": "Nahumu",
+      "chapters_parsed": 3,
+      "verses_parsed": 47,
+      "expected_chapter_count": 3,
+      "anomalies": []
+    },
+    {
+      "book_name": "Habakuki",
+      "chapters_parsed": 3,
+      "verses_parsed": 56,
+      "expected_chapter_count": 3,
+      "anomalies": []
+    },
+    {
+      "book_name": "Sefania",
+      "chapters_parsed": 3,
+      "verses_parsed": 53,
+      "expected_chapter_count": 3,
+      "anomalies": []
+    },
+    {
+      "book_name": "Hagai",
+      "chapters_parsed": 2,
+      "verses_parsed": 38,
+      "expected_chapter_count": 2,
+      "anomalies": []
+    },
+    {
+      "book_name": "Zekaria",
+      "chapters_parsed": 14,
+      "verses_parsed": 211,
+      "expected_chapter_count": 14,
+      "anomalies": []
+    },
+    {
+      "book_name": "Malaki",
+      "chapters_parsed": 4,
+      "verses_parsed": 55,
+      "expected_chapter_count": 4,
+      "anomalies": []
+    },
+    {
+      "book_name": "Mathayo",
+      "chapters_parsed": 28,
+      "verses_parsed": 1071,
+      "expected_chapter_count": 28,
+      "anomalies": []
+    },
+    {
+      "book_name": "Marko",
+      "chapters_parsed": 16,
+      "verses_parsed": 678,
+      "expected_chapter_count": 16,
+      "anomalies": []
+    },
+    {
+      "book_name": "Luka",
+      "chapters_parsed": 24,
+      "verses_parsed": 1025,
+      "expected_chapter_count": 24,
+      "anomalies": []
+    },
+    {
+      "book_name": "Yohana",
+      "chapters_parsed": 21,
+      "verses_parsed": 875,
+      "expected_chapter_count": 21,
+      "anomalies": []
+    },
+    {
+      "book_name": "Matendo",
+      "chapters_parsed": 28,
+      "verses_parsed": 1007,
+      "expected_chapter_count": 28,
+      "anomalies": []
+    },
+    {
+      "book_name": "Warumi",
+      "chapters_parsed": 16,
+      "verses_parsed": 433,
+      "expected_chapter_count": 16,
+      "anomalies": []
+    },
+    {
+      "book_name": "1 Wakorintho",
+      "chapters_parsed": 16,
+      "verses_parsed": 437,
+      "expected_chapter_count": 16,
+      "anomalies": []
+    },
+    {
+      "book_name": "2 Wakorintho",
+      "chapters_parsed": 13,
+      "verses_parsed": 257,
+      "expected_chapter_count": 13,
+      "anomalies": []
+    },
+    {
+      "book_name": "Wagalatia",
+      "chapters_parsed": 6,
+      "verses_parsed": 149,
+      "expected_chapter_count": 6,
+      "anomalies": []
+    },
+    {
+      "book_name": "Waefeso",
+      "chapters_parsed": 6,
+      "verses_parsed": 155,
+      "expected_chapter_count": 6,
+      "anomalies": []
+    },
+    {
+      "book_name": "Wafilipi",
+      "chapters_parsed": 4,
+      "verses_parsed": 104,
+      "expected_chapter_count": 4,
+      "anomalies": []
+    },
+    {
+      "book_name": "Wakolosai",
+      "chapters_parsed": 4,
+      "verses_parsed": 95,
+      "expected_chapter_count": 4,
+      "anomalies": []
+    },
+    {
+      "book_name": "1 Wathesalonike",
+      "chapters_parsed": 5,
+      "verses_parsed": 77,
+      "expected_chapter_count": 5,
+      "anomalies": []
+    },
+    {
+      "book_name": "2 Wathesalonike",
+      "chapters_parsed": 3,
+      "verses_parsed": 47,
+      "expected_chapter_count": 3,
+      "anomalies": []
+    },
+    {
+      "book_name": "1 Timotheo",
+      "chapters_parsed": 6,
+      "verses_parsed": 113,
+      "expected_chapter_count": 6,
+      "anomalies": []
+    },
+    {
+      "book_name": "2 Timotheo",
+      "chapters_parsed": 4,
+      "verses_parsed": 70,
+      "expected_chapter_count": 4,
+      "anomalies": []
+    },
+    {
+      "book_name": "Tito",
+      "chapters_parsed": 3,
+      "verses_parsed": 46,
+      "expected_chapter_count": 3,
+      "anomalies": []
+    },
+    {
+      "book_name": "Filemoni",
+      "chapters_parsed": 1,
+      "verses_parsed": 25,
+      "expected_chapter_count": 1,
+      "anomalies": []
+    },
+    {
+      "book_name": "Waebrania",
+      "chapters_parsed": 13,
+      "verses_parsed": 303,
+      "expected_chapter_count": 13,
+      "anomalies": []
+    },
+    {
+      "book_name": "Yakobo",
+      "chapters_parsed": 5,
+      "verses_parsed": 96,
+      "expected_chapter_count": 5,
+      "anomalies": []
+    },
+    {
+      "book_name": "1 Petro",
+      "chapters_parsed": 5,
+      "verses_parsed": 105,
+      "expected_chapter_count": 5,
+      "anomalies": []
+    },
+    {
+      "book_name": "2 Petro",
+      "chapters_parsed": 3,
+      "verses_parsed": 61,
+      "expected_chapter_count": 3,
+      "anomalies": []
+    },
+    {
+      "book_name": "1 Yohana",
+      "chapters_parsed": 5,
+      "verses_parsed": 105,
+      "expected_chapter_count": 5,
+      "anomalies": []
+    },
+    {
+      "book_name": "2 Yohana",
+      "chapters_parsed": 1,
+      "verses_parsed": 13,
+      "expected_chapter_count": 1,
+      "anomalies": []
+    },
+    {
+      "book_name": "3 Yohana",
+      "chapters_parsed": 1,
+      "verses_parsed": 15,
+      "expected_chapter_count": 1,
+      "anomalies": []
+    },
+    {
+      "book_name": "Yuda",
+      "chapters_parsed": 1,
+      "verses_parsed": 25,
+      "expected_chapter_count": 1,
+      "anomalies": []
+    },
+    {
+      "book_name": "Ufunuo",
+      "chapters_parsed": 22,
+      "verses_parsed": 404,
+      "expected_chapter_count": 22,
+      "anomalies": []
+    }
+  ],
+  "anomalies": [],
+  "recommendation": "PASS"
+}

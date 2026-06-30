@@ -188,9 +188,9 @@ export default function JobDetailsPage() {
   });
 
   const job = data?.job ?? null;
-  const runs = data?.runs ?? [];
-  const recentRuns = runs.slice(0, 20);
-  const alerts = data?.alerts ?? [];
+  const runs = useMemo(() => data?.runs ?? [], [data?.runs]);
+  const recentRuns = useMemo(() => runs.slice(0, 20), [runs]);
+  const alerts = useMemo(() => data?.alerts ?? [], [data?.alerts]);
 
   const metrics = useMemo(() => {
     const durations = runs

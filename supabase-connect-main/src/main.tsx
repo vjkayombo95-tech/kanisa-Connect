@@ -3,13 +3,17 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { logEnvironmentStatus } from "./lib/environment";
+import { logWarning } from "./lib/error-logger";
 
 logEnvironmentStatus();
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/service-worker.js").catch((error) => {
-      console.warn("Service worker registration failed:", error);
+      logWarning("Service worker registration failed.", {
+        function: "serviceWorker.register",
+        metadata: { error },
+      });
     });
   });
 } else if (!import.meta.env.PROD && "serviceWorker" in navigator) {
@@ -18,7 +22,10 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
       .getRegistrations()
       .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
       .catch((error) => {
-        console.warn("Service worker cleanup failed:", error);
+        logWarning("Service worker cleanup failed.", {
+          function: "serviceWorker.unregister",
+          metadata: { error },
+        });
       });
   });
 }

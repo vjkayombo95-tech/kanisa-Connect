@@ -11,6 +11,7 @@ import {
   User,
   X,
   ChevronDown,
+  CalendarDays,
 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -53,6 +54,8 @@ import {
 
 type PortalIconComponent = (props: { active?: boolean; className?: string }) => ReactNode;
 
+const LiturgicalCalendarIcon: PortalIconComponent = ({ className }) => <CalendarDays className={className} />;
+
 type NavItem = {
   titleKey: string;
   url: string;
@@ -68,6 +71,10 @@ type NavGroup = {
 
 const FULL_MAIN_ITEMS: NavItem[] = [
   { titleKey: "home", url: "/portal", icon: DashboardIcon, featureKey: null },
+  { titleKey: "Catholic Library", url: "/member/library", icon: BibleIcon, featureKey: null },
+  { titleKey: "Liturgical Calendar", url: "/portal/liturgical-calendar", icon: LiturgicalCalendarIcon, featureKey: null },
+  { titleKey: "Daily Readings", url: "/portal/daily-readings", icon: BibleIcon, featureKey: null },
+  { titleKey: "Bible", url: "/portal/bible", icon: BibleIcon, featureKey: null },
   { titleKey: "events", url: "/portal/events", icon: EventsIcon, featureKey: "events" },
   { titleKey: "announcements", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
   { titleKey: "give", url: "/portal/give", icon: ContributionsIcon, featureKey: "give" },
@@ -107,6 +114,10 @@ const FULL_GROUPS: NavGroup[] = [
 
 const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
   { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
+  { titleKey: "Catholic Library", url: "/member/library", icon: BibleIcon, featureKey: null },
+  { titleKey: "Liturgical Calendar", url: "/portal/liturgical-calendar", icon: LiturgicalCalendarIcon, featureKey: null },
+  { titleKey: "Daily Readings", url: "/portal/daily-readings", icon: BibleIcon, featureKey: null },
+  { titleKey: "Biblia", url: "/portal/bible", icon: BibleIcon, featureKey: null },
   { titleKey: "Lipa", url: "/portal/give", icon: ContributionsIcon, featureKey: "give" },
   { titleKey: "Nia za Misa", url: "/portal/mass-intentions", icon: MassIntentionsIcon, featureKey: "mass_intentions" },
   { titleKey: "Matangazo", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
@@ -115,6 +126,11 @@ const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
 
 const SIMPLE_MEMBER_ALLOWED_PATHS = [
   "/portal",
+  "/member/library",
+  "/portal/library",
+  "/portal/liturgical-calendar",
+  "/portal/daily-readings",
+  "/portal/bible",
   "/portal/dashboard",
   "/portal/give",
   "/portal/mass-intentions",
@@ -123,6 +139,7 @@ const SIMPLE_MEMBER_ALLOWED_PATHS = [
 
 const LIMITED_MAIN_ITEMS: NavItem[] = [
   { titleKey: "home", url: "/portal", icon: DashboardIcon, featureKey: null },
+  { titleKey: "Bible", url: "/portal/bible", icon: BibleIcon, featureKey: null },
   { titleKey: "events", url: "/portal/events", icon: EventsIcon, featureKey: "events" },
   { titleKey: "announcements", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
 ];
@@ -309,8 +326,14 @@ export function PortalLayout() {
   const memberPortalLocked = memberPortalAccess === "none";
   const memberPortalLimited = memberPortalAccess === "limited";
   const useSimpleMemberNav = !isAdmin;
-  const mainItems = useSimpleMemberNav ? SIMPLE_MEMBER_MAIN_ITEMS : memberPortalLimited ? LIMITED_MAIN_ITEMS : FULL_MAIN_ITEMS;
-  const dropdownGroups = useSimpleMemberNav ? [] : memberPortalLimited ? LIMITED_GROUPS : FULL_GROUPS;
+  const mainItems = useMemo(
+    () => (useSimpleMemberNav ? SIMPLE_MEMBER_MAIN_ITEMS : memberPortalLimited ? LIMITED_MAIN_ITEMS : FULL_MAIN_ITEMS),
+    [memberPortalLimited, useSimpleMemberNav],
+  );
+  const dropdownGroups = useMemo(
+    () => (useSimpleMemberNav ? [] : memberPortalLimited ? LIMITED_GROUPS : FULL_GROUPS),
+    [memberPortalLimited, useSimpleMemberNav],
+  );
 
   const visibleMainItems = useMemo(
     () => mainItems.filter((item) => !item.featureKey || getFeatureState(item.featureKey).visible),
@@ -672,7 +695,10 @@ export function PortalLayout() {
 
           {!isAdmin && (
             <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 px-2 py-2 shadow-[0_-18px_48px_-32px_rgba(0,0,0,0.75)] backdrop-blur-xl lg:hidden">
-              <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+              <div
+                className="mx-auto grid max-w-md gap-1"
+                style={{ gridTemplateColumns: `repeat(${visibleMainItems.length}, minmax(0, 1fr))` }}
+              >
                 {visibleMainItems.map((item) => {
                   const active = isActive(location.pathname, item.url);
                   const Icon = item.icon;

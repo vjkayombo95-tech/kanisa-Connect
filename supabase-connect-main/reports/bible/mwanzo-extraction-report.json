@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-06-30T10:12:13.118Z",
+  "input": "supabase\\seed\\bible\\source\\Biblia-Takatifu.pdf",
+  "output": "supabase/seed/bible/generated/mwanzo.json",
+  "book_name": "Mwanzo",
+  "books_processed": 1,
+  "chapters_processed": 50,
+  "verses_processed": 1475,
+  "chapters_found": 50,
+  "verses_found": 1475,
+  "missing_chapters": [],
+  "missing_verses": [],
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 17215
+}

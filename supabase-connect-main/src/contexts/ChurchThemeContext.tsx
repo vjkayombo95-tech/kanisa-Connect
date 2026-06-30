@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useMemo } fr
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { logWarning } from "@/lib/error-logger";
 
 // Preset theme definitions: hex -> HSL values for primary, accent, ring, sidebar-primary, chart-1
 export interface ThemePreset {
@@ -25,11 +26,12 @@ export const THEME_PRESETS: ThemePreset[] = [
 function hexToHsl(hex: string): string | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) return null;
-  let r = parseInt(result[1], 16) / 255;
-  let g = parseInt(result[2], 16) / 255;
-  let b = parseInt(result[3], 16) / 255;
+  const r = parseInt(result[1], 16) / 255;
+  const g = parseInt(result[2], 16) / 255;
+  const b = parseInt(result[3], 16) / 255;
   const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h = 0, s = 0, l = (max + min) / 2;
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
   if (max !== min) {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
@@ -90,7 +92,11 @@ export function ChurchThemeProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (error) {
-        console.warn("Church theme lookup failed, using default theme.", error);
+        logWarning("Church theme lookup failed, using default theme.", {
+          component: "ChurchThemeProvider",
+          church_id: churchId,
+          metadata: { error },
+        });
         return null;
       }
 

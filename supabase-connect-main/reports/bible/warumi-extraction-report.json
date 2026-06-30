@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-06-29T12:23:10.746Z",
+  "input": "supabase\\seed\\bible\\source\\Biblia-Takatifu.pdf",
+  "output": "supabase/seed/bible/generated/warumi.json",
+  "book_name": "Warumi",
+  "books_processed": 1,
+  "chapters_processed": 16,
+  "verses_processed": 433,
+  "chapters_found": 16,
+  "verses_found": 433,
+  "missing_chapters": [],
+  "missing_verses": [],
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 19783
+}

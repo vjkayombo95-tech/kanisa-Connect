@@ -1,0 +1,23 @@
+{
+  "slug": "st-peter",
+  "name": "St. Peter",
+  "title": "Apostle and First Pope",
+  "feast_month": 6,
+  "feast_day": 29,
+  "patron_of": "The universal Church, fishermen, and popes",
+  "birth_year": null,
+  "death_year": 64,
+  "country": "Israel",
+  "biography_short": "St. Peter was one of the Twelve Apostles and became the visible leader of the early Church.",
+  "biography_long": "St. Peter, originally named Simon, was called by Jesus from his work as a fisherman. He confessed Jesus as the Christ, witnessed the Transfiguration, denied the Lord during the Passion, and was restored by the risen Christ. After Pentecost, Peter preached boldly and strengthened the early Christian community. Tradition holds that he was martyred in Rome.",
+  "quote": "Lord, to whom shall we go? You have the words of eternal life.",
+  "reflection": "Peter's life shows that holiness is not the absence of weakness, but the grace to return to Christ with trust and love.",
+  "prayer": "St. Peter, strengthen our faith and help us follow Christ with courage. Pray for us.",
+  "image_url": null,
+  "color_theme": "gold",
+  "liturgical_rank": "Solemnity",
+  "is_featured": true,
+  "scripture_reference": "Matthew 16:13-19",
+  "tags": ["apostle", "martyr", "pope"],
+  "is_active": true
+}

@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3,
@@ -144,23 +144,6 @@ export default function AnalyticsAssistantPage() {
   };
 
   useEffect(() => {
-    const queuedPrompt = searchParams.get("q")?.trim() || "";
-    if (!queuedPrompt || queuedPrompt === prefillHandled || isSubmitting) return;
-
-    setPrefillHandled(queuedPrompt);
-    setQuery(queuedPrompt);
-    void handleSubmit(undefined, queuedPrompt);
-    setSearchParams(
-      (current) => {
-        const next = new URLSearchParams(current);
-        next.delete("q");
-        return next;
-      },
-      { replace: true },
-    );
-  }, [isSubmitting, prefillHandled, searchParams, setSearchParams]);
-
-  useEffect(() => {
     if (!churchId) return;
 
     let isActive = true;
@@ -223,7 +206,7 @@ export default function AnalyticsAssistantPage() {
     };
   }, [churchId, session?.access_token, user?.id, userRole]);
 
-  const handleSubmit = async (event?: FormEvent, overrideQuery?: string) => {
+  const handleSubmit = useCallback(async (event?: FormEvent, overrideQuery?: string) => {
     event?.preventDefault();
 
     const trimmedQuery = (overrideQuery ?? query).trim();
@@ -274,7 +257,24 @@ export default function AnalyticsAssistantPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [assistantContext, churchId, query, session?.access_token, user?.id, userRole]);
+
+  useEffect(() => {
+    const queuedPrompt = searchParams.get("q")?.trim() || "";
+    if (!queuedPrompt || queuedPrompt === prefillHandled || isSubmitting) return;
+
+    setPrefillHandled(queuedPrompt);
+    setQuery(queuedPrompt);
+    void handleSubmit(undefined, queuedPrompt);
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.delete("q");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [handleSubmit, isSubmitting, prefillHandled, searchParams, setSearchParams]);
 
   return (
     <div className="space-y-6">

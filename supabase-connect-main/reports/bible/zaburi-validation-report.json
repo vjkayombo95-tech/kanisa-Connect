@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-06-29T12:21:52.085Z",
+  "input": "supabase/seed/bible/generated/zaburi.json",
+  "valid": true,
+  "books_processed": 1,
+  "chapters_processed": 150,
+  "verses_processed": 2461,
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 10
+}

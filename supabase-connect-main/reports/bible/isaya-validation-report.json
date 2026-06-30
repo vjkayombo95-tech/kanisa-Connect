@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-06-29T12:22:38.392Z",
+  "input": "supabase/seed/bible/generated/isaya.json",
+  "valid": true,
+  "books_processed": 1,
+  "chapters_processed": 66,
+  "verses_processed": 1285,
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 9
+}

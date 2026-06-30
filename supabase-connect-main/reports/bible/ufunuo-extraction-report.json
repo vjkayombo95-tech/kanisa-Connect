@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-06-29T12:23:52.548Z",
+  "input": "supabase\\seed\\bible\\source\\Biblia-Takatifu.pdf",
+  "output": "supabase/seed/bible/generated/ufunuo.json",
+  "book_name": "Ufunuo",
+  "books_processed": 1,
+  "chapters_processed": 22,
+  "verses_processed": 404,
+  "chapters_found": 22,
+  "verses_found": 404,
+  "missing_chapters": [],
+  "missing_verses": [],
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 19700
+}

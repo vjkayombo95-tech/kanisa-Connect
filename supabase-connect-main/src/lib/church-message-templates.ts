@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logWarning } from "@/lib/error-logger";
 
 export type ChurchMessageTemplateType =
   | "birthday_wish"
@@ -156,7 +157,11 @@ export async function fetchChurchMessageTemplate(
     .maybeSingle();
 
   if (error) {
-    console.warn("Message template lookup failed; using default template.", error);
+    logWarning("Message template lookup failed; using default template.", {
+      function: "fetchChurchMessageTemplate",
+      church_id: churchId,
+      metadata: { templateType, error },
+    });
     return fallback;
   }
 

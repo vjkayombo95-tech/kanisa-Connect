@@ -15,6 +15,7 @@ const CommunitiesPage = lazy(() => import("@/pages/church-admin/CommunitiesPage"
 const MinistriesPage = lazy(() => import("@/pages/church-admin/MinistriesPage"));
 const FamiliesPage = lazy(() => import("@/pages/church-admin/FamiliesPage"));
 const EventsPage = lazy(() => import("@/pages/church-admin/EventsPage"));
+const MassSchedulePage = lazy(() => import("@/pages/church-admin/MassSchedulePage"));
 const EventRequestsPage = lazy(() => import("@/pages/church-admin/EventRequestsPage"));
 const AnnouncementsPage = lazy(() => import("@/pages/church-admin/AnnouncementsPage"));
 const SermonsPage = lazy(() => import("@/pages/church-admin/SermonsPage"));
@@ -54,6 +55,7 @@ export default function AdminRoutes() {
           <Route path="ministries" element={<MinistriesPage />} />
           <Route path="families" element={<FamiliesPage />} />
           <Route path="events" element={<EventsPage />} />
+          <Route path="mass-schedule" element={<MassSchedulePage />} />
           <Route path="event-requests" element={<EventRequestsPage />} />
           <Route path="announcements" element={<AnnouncementsPage />} />
           <Route path="sermons" element={<SermonsPage />} />

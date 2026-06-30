@@ -178,7 +178,7 @@ export default function ContributionsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [churchId, contributionsCacheKey, isOnline, pagination.from, pagination.pageSize, pagination.to, pledgePaymentsCacheKey]);
+  }, [churchId, contributionsCacheKey, isOnline, pagination.to, pledgePaymentsCacheKey]);
 
   useEffect(() => {
     fetchContributions();
@@ -437,7 +437,10 @@ export default function ContributionsPage() {
   }, [contributions, pendingOfflineContributions, pledgePayments, t]);
 
   const pendingContributionCount = pendingOfflineContributions.length;
-  const visibleTransactions = transactions.slice(pagination.from, pagination.to + 1);
+  const visibleTransactions = useMemo(
+    () => transactions.slice(pagination.from, pagination.to + 1),
+    [pagination.from, pagination.to, transactions],
+  );
 
   const { total, thisMonth } = useMemo(() => {
     const now = new Date();

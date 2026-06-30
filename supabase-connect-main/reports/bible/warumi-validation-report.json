@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-06-29T12:23:23.040Z",
+  "input": "supabase/seed/bible/generated/warumi.json",
+  "valid": true,
+  "books_processed": 1,
+  "chapters_processed": 16,
+  "verses_processed": 433,
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 4
+}

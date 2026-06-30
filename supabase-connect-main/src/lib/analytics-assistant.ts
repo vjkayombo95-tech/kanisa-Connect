@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logInfo } from "@/lib/error-logger";
 
 export type AnalyticsReportBranding = {
   churchName: string;
@@ -1449,11 +1450,20 @@ export async function fetchAnalyticsAssistant(input: {
 }): Promise<AnalyticsResponse> {
   const parsed = parseAnalyticsIntent(input.query, input.previousContext);
   const { intent, filters, confidence, needsClarification, clarificationQuestion } = parsed;
-  console.log("Analytics Intent:", intent.type);
-  console.log("Analytics Confidence:", confidence);
+  logInfo("Analytics intent parsed.", {
+    function: "fetchAnalyticsAssistant",
+    church_id: input.churchId,
+    user_id: input.userId,
+    metadata: { intent: intent.type, confidence },
+  });
   const privacyMode = isAuthorizedRole(input.userRole) ? "admin" : "member";
   if (needsClarification) {
-    console.log("Analytics Forecast Generated:", false);
+    logInfo("Analytics forecast skipped while awaiting clarification.", {
+      function: "fetchAnalyticsAssistant",
+      church_id: input.churchId,
+      user_id: input.userId,
+      metadata: { intent: intent.type },
+    });
     return buildSafeAnalyticsResponse({
       query: input.query,
       intent,
@@ -1490,7 +1500,12 @@ export async function fetchAnalyticsAssistant(input: {
     });
     const announcementDraft = intent.type === "announcement_draft" ? buildAnnouncementDraft(intent, summary, comparison) : null;
     const forecast = intent.type === "contribution_forecast" ? buildForecast(allRows) : null;
-    console.log("Analytics Forecast Generated:", !!forecast);
+    logInfo("Analytics forecast evaluated.", {
+      function: "fetchAnalyticsAssistant",
+      church_id: input.churchId,
+      user_id: input.userId,
+      metadata: { generated: Boolean(forecast) },
+    });
     const actionDraft = buildActionDraft(intent, {
       topContributors,
       inactiveContributors,

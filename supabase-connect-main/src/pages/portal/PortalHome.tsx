@@ -348,6 +348,7 @@ export default function PortalHome() {
   const [verseIndex, setVerseIndex] = useState(0);
   const [isVerseVisible, setIsVerseVisible] = useState(false);
   const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
+  const showAdvancedVerseUpsell = false;
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const charsSinceSoundRef = useRef(0);
@@ -568,7 +569,7 @@ export default function PortalHome() {
                   </div>
                 </div>
 
-                {false && (
+                {showAdvancedVerseUpsell && (
                   <div className="rounded-xl border border-primary/15 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
                     <span className="font-medium text-foreground">Advanced verse tools are LOCKED 🔒</span>
                     {" "}Upgrade to Intermediate or higher to unlock Focus Mode, typewriter sound, and premium verse interactions.
