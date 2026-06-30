@@ -1,0 +1,479 @@
+{
+  "timestamp": "2026-06-29T12:44:24.805Z",
+  "input": "supabase\\seed\\bible\\source\\Biblia-Takatifu.pdf",
+  "output": "supabase/seed/bible/generated/biblica-sw.json",
+  "validation_report": "reports/bible/full-bible-validation-report.json",
+  "total_books_parsed": 66,
+  "total_chapters_parsed": 1189,
+  "total_verses_parsed": 29746,
+  "books_failed": [],
+  "missing_verses": [],
+  "duplicate_verses": [],
+  "validation_status": "PASS",
+  "extraction_duration_ms": 20201,
+  "books": [
+    {
+      "book": "Mwanzo",
+      "expected_chapter_count": 50,
+      "parsed_chapter_count": 50,
+      "parsed_verse_count": 1475,
+      "status": "PASS"
+    },
+    {
+      "book": "Kutoka",
+      "expected_chapter_count": 40,
+      "parsed_chapter_count": 40,
+      "parsed_verse_count": 1193,
+      "status": "PASS"
+    },
+    {
+      "book": "Walawi",
+      "expected_chapter_count": 27,
+      "parsed_chapter_count": 27,
+      "parsed_verse_count": 737,
+      "status": "PASS"
+    },
+    {
+      "book": "Hesabu",
+      "expected_chapter_count": 36,
+      "parsed_chapter_count": 36,
+      "parsed_verse_count": 997,
+      "status": "PASS"
+    },
+    {
+      "book": "Kumbukumbu la Torati",
+      "expected_chapter_count": 34,
+      "parsed_chapter_count": 34,
+      "parsed_verse_count": 933,
+      "status": "PASS"
+    },
+    {
+      "book": "Yoshua",
+      "expected_chapter_count": 24,
+      "parsed_chapter_count": 24,
+      "parsed_verse_count": 545,
+      "status": "PASS"
+    },
+    {
+      "book": "Waamuzi",
+      "expected_chapter_count": 21,
+      "parsed_chapter_count": 21,
+      "parsed_verse_count": 542,
+      "status": "PASS"
+    },
+    {
+      "book": "Ruthu",
+      "expected_chapter_count": 4,
+      "parsed_chapter_count": 4,
+      "parsed_verse_count": 85,
+      "status": "PASS"
+    },
+    {
+      "book": "1 Samweli",
+      "expected_chapter_count": 31,
+      "parsed_chapter_count": 31,
+      "parsed_verse_count": 783,
+      "status": "PASS"
+    },
+    {
+      "book": "2 Samweli",
+      "expected_chapter_count": 24,
+      "parsed_chapter_count": 24,
+      "parsed_verse_count": 692,
+      "status": "PASS"
+    },
+    {
+      "book": "1 Wafalme",
+      "expected_chapter_count": 22,
+      "parsed_chapter_count": 22,
+      "parsed_verse_count": 727,
+      "status": "PASS"
+    },
+    {
+      "book": "2 Wafalme",
+      "expected_chapter_count": 25,
+      "parsed_chapter_count": 25,
+      "parsed_verse_count": 719,
+      "status": "PASS"
+    },
+    {
+      "book": "1 Nyakati",
+      "expected_chapter_count": 29,
+      "parsed_chapter_count": 29,
+      "parsed_verse_count": 849,
+      "status": "PASS"
+    },
+    {
+      "book": "2 Nyakati",
+      "expected_chapter_count": 36,
+      "parsed_chapter_count": 36,
+      "parsed_verse_count": 792,
+      "status": "PASS"
+    },
+    {
+      "book": "Ezra",
+      "expected_chapter_count": 10,
+      "parsed_chapter_count": 10,
+      "parsed_verse_count": 197,
+      "status": "PASS"
+    },
+    {
+      "book": "Nehemia",
+      "expected_chapter_count": 13,
+      "parsed_chapter_count": 13,
+      "parsed_verse_count": 341,
+      "status": "PASS"
+    },
+    {
+      "book": "Esta",
+      "expected_chapter_count": 10,
+      "parsed_chapter_count": 10,
+      "parsed_verse_count": 143,
+      "status": "PASS"
+    },
+    {
+      "book": "Ayubu",
+      "expected_chapter_count": 42,
+      "parsed_chapter_count": 42,
+      "parsed_verse_count": 1064,
+      "status": "PASS"
+    },
+    {
+      "book": "Zaburi",
+      "expected_chapter_count": 150,
+      "parsed_chapter_count": 150,
+      "parsed_verse_count": 2461,
+      "status": "PASS"
+    },
+    {
+      "book": "Mithali",
+      "expected_chapter_count": 31,
+      "parsed_chapter_count": 31,
+      "parsed_verse_count": 915,
+      "status": "PASS"
+    },
+    {
+      "book": "Mhubiri",
+      "expected_chapter_count": 12,
+      "parsed_chapter_count": 12,
+      "parsed_verse_count": 222,
+      "status": "PASS"
+    },
+    {
+      "book": "Wimbo Ulio Bora",
+      "expected_chapter_count": 8,
+      "parsed_chapter_count": 8,
+      "parsed_verse_count": 117,
+      "status": "PASS"
+    },
+    {
+      "book": "Isaya",
+      "expected_chapter_count": 66,
+      "parsed_chapter_count": 66,
+      "parsed_verse_count": 1285,
+      "status": "PASS"
+    },
+    {
+      "book": "Yeremia",
+      "expected_chapter_count": 52,
+      "parsed_chapter_count": 52,
+      "parsed_verse_count": 1345,
+      "status": "PASS"
+    },
+    {
+      "book": "Maombolezo",
+      "expected_chapter_count": 5,
+      "parsed_chapter_count": 5,
+      "parsed_verse_count": 154,
+      "status": "PASS"
+    },
+    {
+      "book": "Ezekieli",
+      "expected_chapter_count": 48,
+      "parsed_chapter_count": 48,
+      "parsed_verse_count": 1273,
+      "status": "PASS"
+    },
+    {
+      "book": "Danieli",
+      "expected_chapter_count": 12,
+      "parsed_chapter_count": 12,
+      "parsed_verse_count": 319,
+      "status": "PASS"
+    },
+    {
+      "book": "Hosea",
+      "expected_chapter_count": 14,
+      "parsed_chapter_count": 14,
+      "parsed_verse_count": 197,
+      "status": "PASS"
+    },
+    {
+      "book": "Yoeli",
+      "expected_chapter_count": 3,
+      "parsed_chapter_count": 3,
+      "parsed_verse_count": 73,
+      "status": "PASS"
+    },
+    {
+      "book": "Amosi",
+      "expected_chapter_count": 9,
+      "parsed_chapter_count": 9,
+      "parsed_verse_count": 146,
+      "status": "PASS"
+    },
+    {
+      "book": "Obadia",
+      "expected_chapter_count": 1,
+      "parsed_chapter_count": 1,
+      "parsed_verse_count": 21,
+      "status": "PASS"
+    },
+    {
+      "book": "Yona",
+      "expected_chapter_count": 4,
+      "parsed_chapter_count": 4,
+      "parsed_verse_count": 48,
+      "status": "PASS"
+    },
+    {
+      "book": "Mika",
+      "expected_chapter_count": 7,
+      "parsed_chapter_count": 7,
+      "parsed_verse_count": 105,
+      "status": "PASS"
+    },
+    {
+      "book": "Nahumu",
+      "expected_chapter_count": 3,
+      "parsed_chapter_count": 3,
+      "parsed_verse_count": 47,
+      "status": "PASS"
+    },
+    {
+      "book": "Habakuki",
+      "expected_chapter_count": 3,
+      "parsed_chapter_count": 3,
+      "parsed_verse_count": 56,
+      "status": "PASS"
+    },
+    {
+      "book": "Sefania",
+      "expected_chapter_count": 3,
+      "parsed_chapter_count": 3,
+      "parsed_verse_count": 53,
+      "status": "PASS"
+    },
+    {
+      "book": "Hagai",
+      "expected_chapter_count": 2,
+      "parsed_chapter_count": 2,
+      "parsed_verse_count": 38,
+      "status": "PASS"
+    },
+    {
+      "book": "Zekaria",
+      "expected_chapter_count": 14,
+      "parsed_chapter_count": 14,
+      "parsed_verse_count": 211,
+      "status": "PASS"
+    },
+    {
+      "book": "Malaki",
+      "expected_chapter_count": 4,
+      "parsed_chapter_count": 4,
+      "parsed_verse_count": 55,
+      "status": "PASS"
+    },
+    {
+      "book": "Mathayo",
+      "expected_chapter_count": 28,
+      "parsed_chapter_count": 28,
+      "parsed_verse_count": 1071,
+      "status": "PASS"
+    },
+    {
+      "book": "Marko",
+      "expected_chapter_count": 16,
+      "parsed_chapter_count": 16,
+      "parsed_verse_count": 678,
+      "status": "PASS"
+    },
+    {
+      "book": "Luka",
+      "expected_chapter_count": 24,
+      "parsed_chapter_count": 24,
+      "parsed_verse_count": 1025,
+      "status": "PASS"
+    },
+    {
+      "book": "Yohana",
+      "expected_chapter_count": 21,
+      "parsed_chapter_count": 21,
+      "parsed_verse_count": 875,
+      "status": "PASS"
+    },
+    {
+      "book": "Matendo",
+      "expected_chapter_count": 28,
+      "parsed_chapter_count": 28,
+      "parsed_verse_count": 1007,
+      "status": "PASS"
+    },
+    {
+      "book": "Warumi",
+      "expected_chapter_count": 16,
+      "parsed_chapter_count": 16,
+      "parsed_verse_count": 433,
+      "status": "PASS"
+    },
+    {
+      "book": "1 Wakorintho",
+      "expected_chapter_count": 16,
+      "parsed_chapter_count": 16,
+      "parsed_verse_count": 437,
+      "status": "PASS"
+    },
+    {
+      "book": "2 Wakorintho",
+      "expected_chapter_count": 13,
+      "parsed_chapter_count": 13,
+      "parsed_verse_count": 257,
+      "status": "PASS"
+    },
+    {
+      "book": "Wagalatia",
+      "expected_chapter_count": 6,
+      "parsed_chapter_count": 6,
+      "parsed_verse_count": 149,
+      "status": "PASS"
+    },
+    {
+      "book": "Waefeso",
+      "expected_chapter_count": 6,
+      "parsed_chapter_count": 6,
+      "parsed_verse_count": 155,
+      "status": "PASS"
+    },
+    {
+      "book": "Wafilipi",
+      "expected_chapter_count": 4,
+      "parsed_chapter_count": 4,
+      "parsed_verse_count": 104,
+      "status": "PASS"
+    },
+    {
+      "book": "Wakolosai",
+      "expected_chapter_count": 4,
+      "parsed_chapter_count": 4,
+      "parsed_verse_count": 95,
+      "status": "PASS"
+    },
+    {
+      "book": "1 Wathesalonike",
+      "expected_chapter_count": 5,
+      "parsed_chapter_count": 5,
+      "parsed_verse_count": 77,
+      "status": "PASS"
+    },
+    {
+      "book": "2 Wathesalonike",
+      "expected_chapter_count": 3,
+      "parsed_chapter_count": 3,
+      "parsed_verse_count": 47,
+      "status": "PASS"
+    },
+    {
+      "book": "1 Timotheo",
+      "expected_chapter_count": 6,
+      "parsed_chapter_count": 6,
+      "parsed_verse_count": 113,
+      "status": "PASS"
+    },
+    {
+      "book": "2 Timotheo",
+      "expected_chapter_count": 4,
+      "parsed_chapter_count": 4,
+      "parsed_verse_count": 70,
+      "status": "PASS"
+    },
+    {
+      "book": "Tito",
+      "expected_chapter_count": 3,
+      "parsed_chapter_count": 3,
+      "parsed_verse_count": 46,
+      "status": "PASS"
+    },
+    {
+      "book": "Filemoni",
+      "expected_chapter_count": 1,
+      "parsed_chapter_count": 1,
+      "parsed_verse_count": 25,
+      "status": "PASS"
+    },
+    {
+      "book": "Waebrania",
+      "expected_chapter_count": 13,
+      "parsed_chapter_count": 13,
+      "parsed_verse_count": 303,
+      "status": "PASS"
+    },
+    {
+      "book": "Yakobo",
+      "expected_chapter_count": 5,
+      "parsed_chapter_count": 5,
+      "parsed_verse_count": 96,
+      "status": "PASS"
+    },
+    {
+      "book": "1 Petro",
+      "expected_chapter_count": 5,
+      "parsed_chapter_count": 5,
+      "parsed_verse_count": 105,
+      "status": "PASS"
+    },
+    {
+      "book": "2 Petro",
+      "expected_chapter_count": 3,
+      "parsed_chapter_count": 3,
+      "parsed_verse_count": 61,
+      "status": "PASS"
+    },
+    {
+      "book": "1 Yohana",
+      "expected_chapter_count": 5,
+      "parsed_chapter_count": 5,
+      "parsed_verse_count": 105,
+      "status": "PASS"
+    },
+    {
+      "book": "2 Yohana",
+      "expected_chapter_count": 1,
+      "parsed_chapter_count": 1,
+      "parsed_verse_count": 13,
+      "status": "PASS"
+    },
+    {
+      "book": "3 Yohana",
+      "expected_chapter_count": 1,
+      "parsed_chapter_count": 1,
+      "parsed_verse_count": 15,
+      "status": "PASS"
+    },
+    {
+      "book": "Yuda",
+      "expected_chapter_count": 1,
+      "parsed_chapter_count": 1,
+      "parsed_verse_count": 25,
+      "status": "PASS"
+    },
+    {
+      "book": "Ufunuo",
+      "expected_chapter_count": 22,
+      "parsed_chapter_count": 22,
+      "parsed_verse_count": 404,
+      "status": "PASS"
+    }
+  ],
+  "ready_for_import": true
+}

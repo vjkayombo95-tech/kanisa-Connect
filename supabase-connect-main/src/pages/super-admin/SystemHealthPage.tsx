@@ -1,10 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Activity, AlertCircle, CheckCircle2, Clock3, Database, Loader2, ShieldAlert, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ExportButton } from "@/components/super-admin/ExportButton";
+import { FilterToolbar } from "@/components/super-admin/FilterToolbar";
 import { supabase } from "@/integrations/supabase/client";
 
 type AutomationRun = {
@@ -116,6 +122,11 @@ function MetricCard({
 }
 
 export default function SystemHealthPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const severityFilter = searchParams.get("severity") ?? "all";
+  const resolvedFilter = searchParams.get("resolved") ?? "all";
+  const sourceFilter = searchParams.get("source") ?? "all";
+
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["system-health"],
     queryFn: async () => {
@@ -148,14 +159,42 @@ export default function SystemHealthPage() {
     },
   });
 
-  const runs = data?.runs ?? [];
-  const logs = data?.logs ?? [];
-  const alerts = data?.alerts ?? [];
-  const activeAlerts = alerts.filter((alert) => !alert.resolved);
+  const runs = useMemo(() => data?.runs ?? [], [data?.runs]);
+  const logs = useMemo(() => data?.logs ?? [], [data?.logs]);
+  const alerts = useMemo(() => data?.alerts ?? [], [data?.alerts]);
+  const activeAlerts = useMemo(() => alerts.filter((alert) => !alert.resolved), [alerts]);
+  const alertSources = useMemo(
+    () => Array.from(new Set(alerts.map((alert) => alert.source || "system"))).sort(),
+    [alerts],
+  );
+  const filteredAlerts = useMemo(
+    () =>
+      alerts.filter((alert) => {
+        const source = alert.source || "system";
+        return (
+          (severityFilter === "all" || alert.severity === severityFilter) &&
+          (resolvedFilter === "all" || String(alert.resolved) === resolvedFilter) &&
+          (sourceFilter === "all" || source === sourceFilter)
+        );
+      }),
+    [alerts, resolvedFilter, severityFilter, sourceFilter],
+  );
   const latestRun = runs[0];
   const lastSuccessfulRun = runs.find((run) => run.status === "completed");
   const totalProcessed = runs.reduce((total, run) => total + run.processed_count, 0);
   const failedRuns = runs.filter((run) => run.status === "failed").length;
+
+  const updateFilter = (key: string, value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (!value || value === "all") {
+      next.delete(key);
+    } else {
+      next.set(key, value);
+    }
+    setSearchParams(next);
+  };
+
+  const clearFilters = () => setSearchParams(new URLSearchParams());
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -228,7 +267,60 @@ export default function SystemHealthPage() {
             <CardHeader className="border-b border-border/70">
               <CardTitle className="font-serif text-lg">System Alerts</CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent className="space-y-4 p-4">
+              <FilterToolbar
+                resultCount={filteredAlerts.length}
+                totalCount={alerts.length}
+                onClear={clearFilters}
+                actions={
+                  <ExportButton
+                    rows={filteredAlerts}
+                    filename="system-alerts.csv"
+                    columns={[
+                      { header: "Severity", value: (alert) => alert.severity },
+                      { header: "Title", value: (alert) => alert.title },
+                      { header: "Message", value: (alert) => alert.message || "" },
+                      { header: "Source", value: (alert) => alert.source || "system" },
+                      { header: "Created", value: (alert) => formatDateTime(alert.created_at) },
+                      { header: "Resolved", value: (alert) => alert.resolved ? "Resolved" : "Active" },
+                    ]}
+                  />
+                }
+              >
+                <div>
+                  <Label>Severity</Label>
+                  <Select value={severityFilter} onValueChange={(value) => updateFilter("severity", value)}>
+                    <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All severities</SelectItem>
+                      <SelectItem value="critical">Critical</SelectItem>
+                      <SelectItem value="warning">Warning</SelectItem>
+                      <SelectItem value="info">Info</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Resolved</Label>
+                  <Select value={resolvedFilter} onValueChange={(value) => updateFilter("resolved", value)}>
+                    <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All statuses</SelectItem>
+                      <SelectItem value="false">Active</SelectItem>
+                      <SelectItem value="true">Resolved</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Source</Label>
+                  <Select value={sourceFilter} onValueChange={(value) => updateFilter("source", value)}>
+                    <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All sources</SelectItem>
+                      {alertSources.map((source) => <SelectItem key={source} value={source}>{source}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </FilterToolbar>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -248,7 +340,13 @@ export default function SystemHealthPage() {
                           No active system alerts
                         </TableCell>
                       </TableRow>
-                    ) : alerts.map((alert) => (
+                    ) : filteredAlerts.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
+                          No results match the current filters
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredAlerts.map((alert) => (
                       <TableRow key={alert.id}>
                         <TableCell><SeverityBadge severity={alert.severity} /></TableCell>
                         <TableCell className="font-medium">{alert.title}</TableCell>

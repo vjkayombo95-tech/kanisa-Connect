@@ -1,6 +1,7 @@
 import {
   LayoutDashboard, Building2, CreditCard, Receipt, ToggleRight,
-  TrendingUp, FileText, Activity, Settings, Shield, Archive, MonitorCheck,
+  TrendingUp, FileText, Activity, Settings, Shield, Archive, MonitorCheck, CalendarClock, BookOpen,
+  Library, Cross, Upload,
 } from "lucide-react";
 import { AppLink } from "@/components/AppLink";
 import {
@@ -21,10 +22,22 @@ const items = [
   { title: "Feature Management", url: "/super-admin/features", icon: ToggleRight },
   { title: "Revenue Analytics", url: "/super-admin/revenue", icon: TrendingUp },
   { title: "System Health", url: "/super-admin/system-health", icon: MonitorCheck },
+  { title: "Scheduled Jobs", url: "/super-admin/system-jobs", icon: CalendarClock },
+  { title: "Job History", url: "/super-admin/job-history", icon: Activity },
+  { title: "Audit Logs", url: "/super-admin/audit-logs", icon: FileText },
   { title: "Platform Settings", url: "/super-admin/settings", icon: Settings },
   { title: "Platform Activity", url: "/super-admin/logs", icon: Activity },
   { title: "System Logs", url: "/super-admin/system-logs", icon: FileText },
   { title: "User Activity", url: "/super-admin/activity", icon: Activity },
+];
+
+const catholicContentItems = [
+  { title: "Dashboard", url: "/super-admin/catholic-content", icon: LayoutDashboard },
+  { title: "Saints", url: "/super-admin/catholic-content/saints", icon: BookOpen },
+  { title: "Daily Readings", url: "/super-admin/catholic-content/daily-readings", icon: FileText },
+  { title: "Prayer Library", url: "/super-admin/catholic-content/prayer-library", icon: Library },
+  { title: "Liturgical Calendar", url: "/super-admin/catholic-content/liturgical-calendar", icon: CalendarClock },
+  { title: "Import Center", url: "/super-admin/catholic-content/import-center", icon: Upload },
 ];
 
 export function SuperAdminSidebar() {
@@ -81,6 +94,43 @@ export function SuperAdminSidebar() {
                           )}
                         </span>
                       )}
+                    </AppLink>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          {!collapsed && (
+            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/60">
+              <span className="inline-flex items-center gap-1.5">
+                <Cross className="h-3 w-3" />
+                Catholic Content
+              </span>
+            </SidebarGroupLabel>
+          )}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {catholicContentItems.map((item) => {
+                const isActive =
+                  item.url === "/super-admin/catholic-content"
+                    ? location.pathname === item.url
+                    : location.pathname === item.url || location.pathname.startsWith(`${item.url}/`);
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <AppLink
+                      to={item.url}
+                      className={cn(
+                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        isActive && "bg-sidebar-accent font-medium text-primary",
+                      )}
+                    >
+                      <span className="relative flex h-4 w-4 shrink-0 items-center justify-center">
+                        <item.icon className="h-4 w-4" />
+                      </span>
+                      {!collapsed && <span className="truncate">{item.title}</span>}
                     </AppLink>
                   </SidebarMenuItem>
                 );

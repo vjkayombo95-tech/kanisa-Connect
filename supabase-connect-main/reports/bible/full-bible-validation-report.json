@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-06-30T10:13:05.847Z",
+  "input": "supabase/seed/bible/generated/biblica-sw.json",
+  "valid": true,
+  "books_processed": 66,
+  "chapters_processed": 1189,
+  "verses_processed": 29746,
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 64
+}

@@ -18,6 +18,13 @@ const PortalChannels = lazy(() => import("@/pages/portal/PortalChannels"));
 const EventRequests = lazy(() => import("@/pages/portal/EventRequests"));
 const MemberDashboard = lazy(() => import("@/components/portal/MemberDashboard"));
 const PortalDashboard = lazy(() => import("@/pages/portal/PortalDashboard"));
+const MemberLibraryPage = lazy(() => import("@/pages/portal/MemberLibraryPage"));
+const MemberSaintDetailsPage = lazy(() => import("@/pages/portal/MemberSaintDetailsPage"));
+const LiturgicalCalendarPage = lazy(() => import("@/pages/portal/LiturgicalCalendarPage"));
+const DailyReadingsPage = lazy(() => import("@/pages/portal/DailyReadingsPage"));
+const MemberBibleHomePage = lazy(() => import("@/pages/portal/MemberBibleHomePage"));
+const MemberBibleBookPage = lazy(() => import("@/pages/portal/MemberBibleBookPage"));
+const MemberBibleChapterPage = lazy(() => import("@/pages/portal/MemberBibleChapterPage"));
 
 function SectionFallback() {
   return (
@@ -45,6 +52,13 @@ export default function MemberRoutes() {
           <Route path="mass-intentions" element={<PortalMassIntentions />} />
           <Route path="community-help" element={<PortalCommunityHelp />} />
           <Route path="channels" element={<PortalChannels />} />
+          <Route path="library" element={<MemberLibraryPage />} />
+          <Route path="library/:slug" element={<MemberSaintDetailsPage />} />
+          <Route path="liturgical-calendar" element={<LiturgicalCalendarPage />} />
+          <Route path="daily-readings" element={<DailyReadingsPage />} />
+          <Route path="bible" element={<MemberBibleHomePage />} />
+          <Route path="bible/:bookId" element={<MemberBibleBookPage />} />
+          <Route path="bible/:bookId/chapter/:chapterNumber" element={<MemberBibleChapterPage />} />
         </Route>
       </Routes>
     </Suspense>

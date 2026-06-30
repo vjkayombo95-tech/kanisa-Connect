@@ -1,0 +1,23 @@
+{
+  "slug": "st-augustine",
+  "name": "St. Augustine",
+  "title": "Bishop and Doctor of the Church",
+  "feast_month": 8,
+  "feast_day": 28,
+  "patron_of": "Theologians, printers, and those seeking conversion",
+  "birth_year": 354,
+  "death_year": 430,
+  "country": "Algeria",
+  "biography_short": "St. Augustine was a bishop, theologian, and convert whose writings continue to guide the Church.",
+  "biography_long": "St. Augustine was born in North Africa and searched restlessly for truth before his conversion to Christianity. Through the prayers of his mother, St. Monica, and the preaching of St. Ambrose, he came to faith and was baptized. As Bishop of Hippo, Augustine defended the faith and wrote works such as Confessions and The City of God.",
+  "quote": "You have made us for yourself, O Lord, and our heart is restless until it rests in you.",
+  "reflection": "Augustine's story gives hope to every restless heart: God patiently calls us home.",
+  "prayer": "St. Augustine, guide our minds toward truth and our hearts toward God. Pray for us.",
+  "image_url": null,
+  "color_theme": "purple",
+  "liturgical_rank": "Memorial",
+  "is_featured": false,
+  "scripture_reference": "Romans 13:11-14",
+  "tags": ["doctor-of-the-church", "bishop", "conversion"],
+  "is_active": true
+}

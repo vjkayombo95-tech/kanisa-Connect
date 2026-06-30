@@ -115,9 +115,6 @@ export default function AcceptInvitePage() {
     setSigningUp(true);
 
     try {
-      console.log("EMAIL:", normalizedEmail);
-      console.log("PASSWORD:", password);
-
       const { data: signupData, error: signupError } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,

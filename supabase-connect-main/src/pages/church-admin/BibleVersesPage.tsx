@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export default function BibleVersesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const fetchVerses = async () => {
+  const fetchVerses = useCallback(async () => {
     if (!churchId) {
       setVerses([]);
       setIsLoading(false);
@@ -53,11 +53,11 @@ export default function BibleVersesPage() {
     }
 
     setIsLoading(false);
-  };
+  }, [churchId, toast]);
 
   useEffect(() => {
     void fetchVerses();
-  }, [churchId]);
+  }, [fetchVerses]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

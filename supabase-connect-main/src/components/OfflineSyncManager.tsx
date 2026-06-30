@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { getOfflineSyncEventName, processOfflineSyncQueue } from "@/lib/offline-sync";
 import { useToast } from "@/hooks/use-toast";
+import { logWarning } from "@/lib/error-logger";
 
 export function OfflineSyncManager() {
   const { user } = useAuth();
@@ -40,7 +41,11 @@ export function OfflineSyncManager() {
         }
       })
       .catch((error: Error) => {
-        console.warn("Offline sync failed:", error.message);
+        logWarning("Offline sync failed.", {
+          component: "OfflineSyncManager",
+          user_id: user.id,
+          metadata: { message: error.message },
+        });
       })
       .finally(() => {
         processingRef.current = false;

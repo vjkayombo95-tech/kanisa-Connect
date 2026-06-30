@@ -54,6 +54,20 @@ type ChurchDashboardMetrics = {
   upcoming_events: EventRow[];
 };
 
+type NextMassSummary = {
+  success?: boolean;
+  mass?: {
+    id: string;
+    title: string;
+    mass_date: string;
+    start_time: string;
+  } | null;
+  yes_count?: number;
+  maybe_count?: number;
+  no_count?: number;
+  response_rate?: number;
+};
+
 type EventRow = {
   id: string;
   title: string;
@@ -89,6 +103,13 @@ type DeferredDashboardData = {
   monthlyGiving: MonthlyGivingRow[];
   recentContributions: ContributionRow[];
   attendanceConfirmed: number;
+  expectedAttendance: {
+    title: string | null;
+    yes: number;
+    maybe: number;
+    no: number;
+    responseRate: number;
+  };
   upcomingEvents: EventRow[];
   birthdayMembers: BirthdayMemberRow[];
   anniversaryMembers: BirthdayMemberRow[];
@@ -100,6 +121,13 @@ const emptyDeferredDashboardData: DeferredDashboardData = {
   monthlyGiving: [],
   recentContributions: [],
   attendanceConfirmed: 0,
+  expectedAttendance: {
+    title: null,
+    yes: 0,
+    maybe: 0,
+    no: 0,
+    responseRate: 0,
+  },
   upcomingEvents: [],
   birthdayMembers: [],
   anniversaryMembers: [],
@@ -205,7 +233,7 @@ export default function ChurchDashboard() {
     queryFn: async (): Promise<DeferredDashboardData> => {
       if (!churchId) return emptyDeferredDashboardData;
 
-      const [birthdayAutomation, birthdayCandidates, metrics] = await Promise.all([
+      const [birthdayAutomation, birthdayCandidates, metrics, nextMassSummary] = await Promise.all([
         ensureBirthdayAnnouncements(churchId).catch((error) => {
           console.warn("Birthday announcement automation was deferred but failed:", error);
           return null;
@@ -218,11 +246,12 @@ export default function ChurchDashboard() {
           .or("date_of_birth.not.is.null,wedding_date.not.is.null")
           .limit(200),
         supabase.rpc("get_church_dashboard_metrics" as never, { p_church_id: churchId } as never),
+        supabase.rpc("get_next_mass_summary" as never, { p_church_id: churchId } as never),
       ]);
 
       void birthdayAutomation;
 
-      const failures = [birthdayCandidates.error, metrics.error].filter(Boolean);
+      const failures = [birthdayCandidates.error, metrics.error, nextMassSummary.error].filter(Boolean);
       if (failures.length) {
         console.warn("Some deferred church dashboard records could not be loaded:", failures);
       }
@@ -240,6 +269,7 @@ export default function ChurchDashboard() {
       });
 
       const dashboardMetrics = (metrics.data ?? {}) as ChurchDashboardMetrics;
+      const massSummary = (nextMassSummary.data ?? {}) as NextMassSummary;
 
       return {
         thisMonthGiving: Number(dashboardMetrics.this_month_giving ?? 0),
@@ -247,6 +277,13 @@ export default function ChurchDashboard() {
         monthlyGiving: (dashboardMetrics.monthly_giving ?? []).map((row) => ({ ...row, amount: Number(row.amount ?? 0) })),
         recentContributions: (dashboardMetrics.recent_contributions ?? []).map((row) => ({ ...row, amount: Number(row.amount ?? 0) })),
         attendanceConfirmed: Number(dashboardMetrics.attendance_confirmed ?? 0),
+        expectedAttendance: {
+          title: massSummary.mass?.title ?? null,
+          yes: Number(massSummary.yes_count ?? 0),
+          maybe: Number(massSummary.maybe_count ?? 0),
+          no: Number(massSummary.no_count ?? 0),
+          responseRate: Number(massSummary.response_rate ?? 0),
+        },
         upcomingEvents: dashboardMetrics.upcoming_events ?? [],
         birthdayMembers,
         anniversaryMembers,
@@ -269,7 +306,7 @@ export default function ChurchDashboard() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const isDeferredPending = !loadDeferredDashboardData || isDeferredLoading;
   const thisMonthGiving = deferredData.thisMonthGiving;
   const lastMonthGiving = deferredData.lastMonthGiving;
@@ -337,7 +374,7 @@ export default function ChurchDashboard() {
   const stats = [
     { title: "Active Members", value: String(data?.activeMembers ?? 0), label: "Registered active members", icon: Users },
     { title: "Giving This Month", value: formatTZS(thisMonthGiving), label: "Recorded contributions", icon: CreditCard },
-    { title: "Confirmed Attendance", value: String(deferredData.attendanceConfirmed ?? 0), label: "Yes responses recorded", icon: Activity },
+    { title: "Expected Attendance", value: String(deferredData.expectedAttendance.yes), label: deferredData.expectedAttendance.title ? `${deferredData.expectedAttendance.maybe} maybe · ${deferredData.expectedAttendance.responseRate.toFixed(0)}% response` : "No upcoming Mass scheduled", icon: Activity },
     { title: "Upcoming Events", value: String(deferredData.upcomingEvents.length ?? 0), label: "Future programs scheduled", icon: Calendar },
   ];
 
@@ -424,13 +461,20 @@ export default function ChurchDashboard() {
                   )}
                 </div>
                 <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
-                  <p className="text-sm text-white/58">Confirmed Attendance</p>
+                  <p className="text-sm text-white/58">Expected Attendance</p>
                   {isDeferredPending ? (
                     <Skeleton className="mt-3 h-14 rounded-2xl bg-white/10" />
+                  ) : deferredData.expectedAttendance.title ? (
+                    <>
+                      <p className="mt-2 text-2xl font-semibold text-white">{deferredData.expectedAttendance.yes}</p>
+                      <p className="mt-2 text-sm text-white/60">
+                        {deferredData.expectedAttendance.maybe} maybe · {deferredData.expectedAttendance.no} no · {deferredData.expectedAttendance.responseRate.toFixed(0)}% response
+                      </p>
+                    </>
                   ) : (
-                    <p className="mt-2 text-2xl font-semibold text-white">{deferredData.attendanceConfirmed ?? 0}</p>
+                    <p className="mt-2 text-sm text-white/60">No upcoming Mass scheduled.</p>
                   )}
-                  <p className="mt-2 text-sm text-white/60">Recorded event attendance responses</p>
+                  {deferredData.expectedAttendance.title ? <p className="mt-2 text-sm text-white/60">{deferredData.expectedAttendance.title}</p> : null}
                 </div>
               </div>
             </div>

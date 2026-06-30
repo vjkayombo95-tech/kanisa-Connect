@@ -11,11 +11,57 @@ type AutomationResponse = {
   error: string | null;
 };
 
+type AuthorizationResult = {
+  authorized: boolean;
+  scheduler: boolean;
+};
+
 function jsonResponse(status: number, body: AutomationResponse) {
   return new Response(JSON.stringify(body), {
     status,
     headers: jsonHeaders,
   });
+}
+
+async function authorizeRequest(
+  request: Request,
+  supabaseUrl: string,
+  anonKey: string,
+  serviceRoleKey: string,
+): Promise<AuthorizationResult> {
+  const authorization = request.headers.get("Authorization") ?? "";
+  const bearerToken = authorization.replace(/^Bearer\s+/i, "").trim();
+
+  if (!bearerToken) {
+    return { authorized: false, scheduler: false };
+  }
+
+  if (bearerToken === serviceRoleKey) {
+    return { authorized: true, scheduler: true };
+  }
+
+  const callerSupabase = createClient(supabaseUrl, anonKey, {
+    global: {
+      headers: {
+        Authorization: authorization,
+      },
+    },
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  const { data, error } = await callerSupabase.rpc("is_super_admin");
+
+  if (error) {
+    console.warn("daily-automations authorization check failed", {
+      error: error.message,
+    });
+    return { authorized: false, scheduler: false };
+  }
+
+  return { authorized: data === true, scheduler: false };
 }
 
 Deno.serve(async (request) => {
@@ -33,10 +79,22 @@ Deno.serve(async (request) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!supabaseUrl || !serviceRoleKey) {
+    if (!supabaseUrl || !anonKey || !serviceRoleKey) {
       throw new Error("Automation backend is not configured.");
+    }
+
+    const authorization = await authorizeRequest(request, supabaseUrl, anonKey, serviceRoleKey);
+
+    if (!authorization.authorized) {
+      return jsonResponse(403, {
+        success: false,
+        timestamp,
+        execution_time_ms: Date.now() - startedAt,
+        error: "Forbidden. Super admin access is required.",
+      });
     }
 
     // Do not inherit or forward the request Authorization header. This RPC must
@@ -48,7 +106,10 @@ Deno.serve(async (request) => {
       },
     });
 
-    console.log("daily-automations started", { timestamp });
+    console.log("daily-automations started", {
+      timestamp,
+      invoked_by: authorization.scheduler ? "scheduler" : "super_admin",
+    });
 
     const { error } = await supabase.rpc("run_daily_automations");
 

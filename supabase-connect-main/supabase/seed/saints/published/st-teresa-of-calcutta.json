@@ -1,0 +1,23 @@
+{
+  "slug": "st-teresa-of-calcutta",
+  "name": "St. Teresa of Calcutta",
+  "title": "Foundress of the Missionaries of Charity",
+  "feast_month": 9,
+  "feast_day": 5,
+  "patron_of": "Missionaries of Charity, the poor, and works of mercy",
+  "birth_year": 1910,
+  "death_year": 1997,
+  "country": "India",
+  "biography_short": "St. Teresa of Calcutta served Christ in the poorest of the poor with humble love.",
+  "biography_long": "St. Teresa of Calcutta, born Anjeze Gonxhe Bojaxhiu, became a religious sister and later founded the Missionaries of Charity. She served the sick, dying, and abandoned in Kolkata, seeing Christ in every person. Her witness of charity drew the attention of the world while remaining rooted in prayer and sacrificial love.",
+  "quote": "Not all of us can do great things. But we can do small things with great love.",
+  "reflection": "Teresa reminds us that holiness begins in concrete love for the person in front of us.",
+  "prayer": "St. Teresa of Calcutta, teach us to love Jesus in the poor and forgotten. Pray for us.",
+  "image_url": null,
+  "color_theme": "white",
+  "liturgical_rank": "Optional Memorial",
+  "is_featured": false,
+  "scripture_reference": "Matthew 25:31-46",
+  "tags": ["charity", "modern-saint", "missionary"],
+  "is_active": true
+}

@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-06-30T10:12:54.289Z",
+  "input": "supabase\\seed\\bible\\source\\Biblia-Takatifu.pdf",
+  "output": "supabase/seed/bible/generated/biblica-sw.json",
+  "book_name": null,
+  "books_processed": 66,
+  "chapters_processed": 1189,
+  "verses_processed": 29746,
+  "chapters_found": 1189,
+  "verses_found": 29746,
+  "missing_chapters": [],
+  "missing_verses": [],
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 18716
+}

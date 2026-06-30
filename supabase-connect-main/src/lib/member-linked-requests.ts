@@ -154,6 +154,53 @@ export async function submitMassIntention(payload: {
   return data;
 }
 
+export async function submitPortalMassIntention(payload: {
+  intention_type: string;
+  message: string;
+  offering_amount: number;
+  member_id: string;
+  church_id: string;
+  requested_mass_date: string;
+  idempotency_key: string;
+}) {
+  const message = payload.message.trim();
+  const member_id = payload.member_id?.trim();
+  const church_id = payload.church_id?.trim();
+  const idempotency_key = payload.idempotency_key?.trim();
+
+  if (!message) {
+    throw new Error("Message is required.");
+  }
+
+  if (!member_id || !church_id) {
+    throw new Error("Member and church context are required.");
+  }
+
+  if (!payload.requested_mass_date) {
+    throw new Error("Please select the Mass date.");
+  }
+
+  if (!idempotency_key) {
+    throw new Error("Submission key is required.");
+  }
+
+  const { data, error } = await supabase.rpc("submit_portal_mass_intention" as never, {
+    p_church_id: church_id,
+    p_member_id: member_id,
+    p_intention_type: payload.intention_type,
+    p_message: message,
+    p_offering_amount: payload.offering_amount,
+    p_requested_mass_date: payload.requested_mass_date,
+    p_idempotency_key: idempotency_key,
+  } as never);
+
+  if (error) {
+    throw error;
+  }
+
+  return data as { success: boolean; id: string; created: boolean };
+}
+
 export async function submitCommunityHelpRequest(payload: {
   category: string;
   description: string;

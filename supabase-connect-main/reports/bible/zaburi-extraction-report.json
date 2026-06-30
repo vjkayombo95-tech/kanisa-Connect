@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-06-29T12:21:36.837Z",
+  "input": "supabase\\seed\\bible\\source\\Biblia-Takatifu.pdf",
+  "output": "supabase/seed/bible/generated/zaburi.json",
+  "book_name": "Zaburi",
+  "books_processed": 1,
+  "chapters_processed": 150,
+  "verses_processed": 2461,
+  "chapters_found": 150,
+  "verses_found": 2461,
+  "missing_chapters": [],
+  "missing_verses": [],
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 21309
+}

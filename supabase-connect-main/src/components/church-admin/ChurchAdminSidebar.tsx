@@ -85,6 +85,12 @@ const coreItems: NavItem[] = [
     featureKey: "reports",
     ai: true,
   },
+  {
+    titleKey: "mass_intentions",
+    url: "/church-admin/mass-intentions",
+    icon: MassIntentionsIcon,
+    featureKey: "mass_intentions",
+  },
 ];
 
 const groupedSections: AccordionGroup[] = [
@@ -105,17 +111,12 @@ const groupedSections: AccordionGroup[] = [
     icon: <CalendarDays className="h-4 w-4" />,
     items: [
       { titleKey: "events", url: "/church-admin/events", icon: EventsIcon, featureKey: "events" },
+      { titleKey: "Mass Schedule", url: "/church-admin/mass-schedule", icon: MassIntentionsIcon, featureKey: "events" },
       {
         titleKey: "event_requests",
         url: "/church-admin/event-requests",
         icon: EventRequestIcon,
         featureKey: "event_requests",
-      },
-      {
-        titleKey: "mass_intentions",
-        url: "/church-admin/mass-intentions",
-        icon: MassIntentionsIcon,
-        featureKey: "mass_intentions",
       },
       {
         titleKey: "prayer_requests",

@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-06-28T17:27:43.397Z",
+  "environment": "staging",
+  "mode": "seed",
+  "duration_ms": 9243,
+  "created": 5,
+  "updated": 4,
+  "skipped": 0,
+  "failed": 1,
+  "warnings": [
+    "church: Skipping optional churches.status; column does not exist in this staging schema",
+    "church: Skipping optional churches.metadata; column does not exist in this staging schema",
+    "church: Skipping optional churches.updated_at; column does not exist in this staging schema"
+  ],
+  "errors": [
+    "bootstrap: Code: PGRST204 | Message: Could not find the 'user_id' column of 'super_admins' in the schema cache"
+  ],
+  "users": [
+    {
+      "label": "Super Admin",
+      "email": "uat.superadmin@kanisaconnect.test",
+      "role": "super_admin",
+      "id": "03362f48-74f5-45d4-ac6f-bacecfa44b35",
+      "action": "updated"
+    },
+    {
+      "label": "Church Admin",
+      "email": "uat.churchadmin@kanisaconnect.test",
+      "role": "church_admin",
+      "id": "f68e57b4-a7d2-477e-959b-98a216033e11",
+      "action": "updated"
+    },
+    {
+      "label": "Member",
+      "email": "uat.member@kanisaconnect.test",
+      "role": "member",
+      "id": "721d65fa-0282-49be-8bf3-5a43c16574a3",
+      "action": "updated"
+    }
+  ],
+  "church": {
+    "name": "Demo Catholic Parish",
+    "code": "DEMO-PARISH",
+    "id": "dcbf9ea0-7acf-4766-9c76-79ac4894ecd7",
+    "action": "updated"
+  },
+  "saint_count": 0,
+  "contribution_count": 0,
+  "attendance_count": 0,
+  "notification_count": 0,
+  "import_summary": {},
+  "health_checks": []
+}

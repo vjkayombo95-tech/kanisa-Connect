@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logWarning } from "@/lib/error-logger";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 const INVITE_TABLES = ["invites", "invitations"] as const;
@@ -84,9 +85,6 @@ export async function acceptInviteForUser(invite: InviteRecord, userId: string) 
     || user.email?.split("@")[0]
     || "Member";
 
-  console.log("USER:", user);
-  console.log("CHURCH:", invite.church_id);
-
   const { data: existingLinkedMember, error: existingLinkedMemberError } = await supabase
     .from("members")
     .select("id, email, user_id, church_id, status")
@@ -146,8 +144,6 @@ export async function acceptInviteForUser(invite: InviteRecord, userId: string) 
     member = createdMember as MemberRow;
   }
 
-  console.log("MEMBER:", member);
-
   const { error: updateInviteError } = await supabase
     .from(invite.sourceTable as never)
     .update({ status: "accepted" })
@@ -168,12 +164,22 @@ export async function acceptInviteForUser(invite: InviteRecord, userId: string) 
   });
 
   if (updateAuthError) {
-    console.warn("Unable to store church_id in auth metadata:", updateAuthError.message);
+    logWarning("Unable to store church_id in auth metadata.", {
+      function: "acceptInviteForUser",
+      church_id: invite.church_id,
+      user_id: userId,
+      metadata: { message: updateAuthError.message },
+    });
   }
 
   const { error: refreshSessionError } = await supabase.auth.refreshSession();
   if (refreshSessionError) {
-    console.warn("Unable to refresh session after invite acceptance:", refreshSessionError.message);
+    logWarning("Unable to refresh session after invite acceptance.", {
+      function: "acceptInviteForUser",
+      church_id: invite.church_id,
+      user_id: userId,
+      metadata: { message: refreshSessionError.message },
+    });
   }
 
   return member.id;

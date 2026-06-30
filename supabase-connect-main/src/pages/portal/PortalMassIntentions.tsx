@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CalendarDays, Flame, Heart, Loader2, Plus, User } from "lucide-react";
 import { formatTZS } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
-import { MASS_INTENTION_SELECT, mapMassIntentionRecord, submitMassIntention, type MassIntentionWithMember } from "@/lib/member-linked-requests";
+import { MASS_INTENTION_SELECT, mapMassIntentionRecord, submitPortalMassIntention, type MassIntentionWithMember } from "@/lib/member-linked-requests";
 import { clearOfflineDraft, readOfflineDraft, writeOfflineDraft } from "@/lib/offline-drafts";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { enqueueOfflineSyncAction, processOfflineSyncQueue, removeOfflineSyncAction } from "@/lib/offline-sync";
@@ -200,38 +200,14 @@ export default function PortalMassIntentions() {
         return { queuedOffline: true };
       }
 
-      const amount = Number((netAmount / (1 - PLATFORM_FEE_PERCENT / 100)).toFixed(2));
-
-      const fee = Number((amount - netAmount).toFixed(2));
-      const net = netAmount;
-      const savedMessage = `Tarehe ya Misa: ${massDate}\n\n${message.trim()}`;
-
-      const intentionData = await submitMassIntention({
+      await submitPortalMassIntention({
         intention_type: intentionType,
-        message: savedMessage,
-        offering_amount: net,
+        message,
+        offering_amount: netAmount,
         member_id: member.id,
         church_id: churchId,
-        requested_mass_date: massDate || null,
-      });
-
-      await supabase.from("platform_fees").insert({
-        church_id: churchId,
-        source_type: "mass_intention",
-        source_id: intentionData.id,
-        gross_amount: amount,
-        fee_percentage: PLATFORM_FEE_PERCENT,
-        fee_amount: fee,
-        net_amount: net,
-        member_id: member.id,
-      });
-
-      await supabase.from("contributions").insert({
-        church_id: churchId,
-        amount: net,
-        donor_name: member.full_name,
-        member_id: member.id,
-        notes: `Nia ya Misa: ${getIntentionTypeLabel(intentionType)}${massDate ? ` - ${massDate}` : ""} - ${message.trim().slice(0, 80)} (${formatTZS(fee)} platform fee)`,
+        requested_mass_date: massDate,
+        idempotency_key: crypto.randomUUID(),
       });
       return { queuedOffline: false };
     },
@@ -243,6 +219,7 @@ export default function PortalMassIntentions() {
         queryClient.invalidateQueries({ queryKey: ["my-mass-intentions-dashboard"] });
         queryClient.invalidateQueries({ queryKey: ["my-contributions-all"] });
         queryClient.invalidateQueries({ queryKey: ["contributions"] });
+        queryClient.invalidateQueries({ queryKey: ["simple-member-home"] });
       }
       const amount = parseFloat(offeringAmount) || DEFAULT_OFFERING;
       const gross = Number((amount / (1 - PLATFORM_FEE_PERCENT / 100)).toFixed(2));

@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-06-30T07:45:36.783Z",
+  "input": "supabase\\seed\\bible\\source\\Biblia-Takatifu.pdf",
+  "output": "supabase/seed/bible/generated/mathayo.json",
+  "book_name": "Mathayo",
+  "books_processed": 1,
+  "chapters_processed": 28,
+  "verses_processed": 1071,
+  "chapters_found": 28,
+  "verses_found": 1071,
+  "missing_chapters": [],
+  "missing_verses": [],
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 16585
+}

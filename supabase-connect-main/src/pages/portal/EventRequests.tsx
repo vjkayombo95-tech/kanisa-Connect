@@ -91,8 +91,6 @@ export default function EventRequests() {
         throw new Error("Member profile not found");
       }
 
-      console.log(values);
-
       const { error } = await supabase.from("event_requests").insert({
         church_id: churchId,
         member_id: member.id,

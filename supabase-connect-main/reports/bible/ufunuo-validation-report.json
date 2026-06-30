@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-06-29T12:24:13.909Z",
+  "input": "supabase/seed/bible/generated/ufunuo.json",
+  "valid": true,
+  "books_processed": 1,
+  "chapters_processed": 22,
+  "verses_processed": 404,
+  "warnings": [],
+  "errors": [],
+  "duration_ms": 4
+}

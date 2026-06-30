@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-06-29T12:24:54.929Z",
+  "purpose": "Phase 10.2.5 parser validation across Bible genres",
+  "parser_engine": "generic single-book extraction engine",
+  "books": [
+    {
+      "book": "Zaburi",
+      "expected_chapter_count": 150,
+      "parsed_chapter_count": 150,
+      "parsed_verse_count": 2461,
+      "missing_verses": [],
+      "duplicate_verses": [],
+      "validation_status": "PASS",
+      "validator_status": "PASS",
+      "validation_report": "reports/bible/zaburi-validation-report.json",
+      "json_output": "supabase/seed/bible/generated/zaburi.json"
+    },
+    {
+      "book": "Isaya",
+      "expected_chapter_count": 66,
+      "parsed_chapter_count": 66,
+      "parsed_verse_count": 1285,
+      "missing_verses": [],
+      "duplicate_verses": [],
+      "validation_status": "PASS",
+      "validator_status": "PASS",
+      "validation_report": "reports/bible/isaya-validation-report.json",
+      "json_output": "supabase/seed/bible/generated/isaya.json"
+    },
+    {
+      "book": "Warumi",
+      "expected_chapter_count": 16,
+      "parsed_chapter_count": 16,
+      "parsed_verse_count": 433,
+      "missing_verses": [],
+      "duplicate_verses": [],
+      "validation_status": "PASS",
+      "validator_status": "PASS",
+      "validation_report": "reports/bible/warumi-validation-report.json",
+      "json_output": "supabase/seed/bible/generated/warumi.json"
+    },
+    {
+      "book": "Ufunuo",
+      "expected_chapter_count": 22,
+      "parsed_chapter_count": 22,
+      "parsed_verse_count": 404,
+      "missing_verses": [],
+      "duplicate_verses": [],
+      "validation_status": "PASS",
+      "validator_status": "PASS",
+      "validation_report": "reports/bible/ufunuo-validation-report.json",
+      "json_output": "supabase/seed/bible/generated/ufunuo.json"
+    }
+  ],
+  "overall_status": "PASS"
+}

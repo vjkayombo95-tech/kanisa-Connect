@@ -1,10 +1,24 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearSensitiveOfflineData, readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { captureException, logSupabaseError } from "@/lib/error-logger";
 
 type AppRole = "super_admin" | "church_admin" | "pastor" | "secretary" | "treasurer" | "member";
+
+type CurrentUserContext = {
+  profile: any | null;
+  role: AppRole | null;
+  church_id: string | null;
+  church: any | null;
+  member: any | null;
+  is_super_admin: boolean;
+  permissions: {
+    is_super_admin: boolean;
+    can_view_church_workspace: boolean;
+    can_manage_church_workspace: boolean;
+  };
+};
 
 interface AuthContextType {
   session: Session | null;
@@ -41,18 +55,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userRole, setUserRole] = useState<AppRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const shouldAutoNavigate = () => {
+  const shouldAutoNavigate = useCallback(() => {
     const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
     return pathname === "/" || pathname === "/login" || pathname === "/onboarding";
-  };
+  }, []);
 
-  const redirectTo = (path: string) => {
+  const redirectTo = useCallback((path: string) => {
     if (typeof window === "undefined") return;
     if (window.location.pathname === path) return;
     window.location.replace(path);
-  };
+  }, []);
 
-  const resetUserData = () => {
+  const resetUserData = useCallback(() => {
     clearSensitiveOfflineData();
     setSession(null);
     setUser(null);
@@ -61,87 +75,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setChurchId(null);
     setUserRole(null);
     setIsLoading(false);
-  };
+  }, []);
 
-  const isInvalidRefreshTokenError = (error: unknown) => {
+  const isInvalidRefreshTokenError = useCallback((error: unknown) => {
     const message = String((error as { message?: string } | null)?.message || "").toLowerCase();
     return message.includes("invalid refresh token") || message.includes("refresh token not found");
-  };
+  }, []);
 
-  const returnToLoginAfterExpiredSession = () => {
+  const returnToLoginAfterExpiredSession = useCallback(() => {
     if (typeof window === "undefined" || window.location.pathname === "/login") return;
     const redirect = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
     window.location.replace(`/login?reason=session_expired&redirect=${redirect}`);
-  };
+  }, []);
 
-  const resolveChurchContext = async (
-    currentUser: User,
-    profileData: any,
-    isUserSuperAdmin: boolean,
-  ) => {
-    let resolvedChurchId = profileData?.church_id ?? null;
-    let resolvedRole: AppRole | null = isUserSuperAdmin ? "super_admin" : null;
-
-    if (isUserSuperAdmin) {
-      return { churchId: resolvedChurchId, role: resolvedRole };
-    }
-
-    const { data: roleData, error: roleError } = await supabase
-      .from("user_roles")
-      .select("church_id, role")
-      .eq("user_id", currentUser.id)
-      .limit(1)
-      .maybeSingle();
-
-    if (roleError) throw roleError;
-
-    if (roleData?.church_id) {
-      resolvedChurchId = roleData.church_id;
-    }
-
-    if (roleData?.role) {
-      resolvedRole = roleData.role as AppRole;
-    }
-
-    if (!resolvedChurchId) {
-      const { data: memberData, error: memberError } = await supabase
-        .from("members")
-        .select("church_id")
-        .eq("user_id", currentUser.id)
-        .not("church_id", "is", null)
-        .limit(1)
-        .maybeSingle();
-
-      if (memberError) throw memberError;
-
-      if (memberData?.church_id) {
-        resolvedChurchId = memberData.church_id;
-      }
-    }
-
-    if (!resolvedChurchId) {
-      const { data: createdChurch, error: createdChurchError } = await supabase
-        .from("churches")
-        .select("id")
-        .eq("created_by", currentUser.id)
-        .limit(1)
-        .maybeSingle();
-
-      if (createdChurchError) throw createdChurchError;
-
-      if (createdChurch?.id) {
-        resolvedChurchId = createdChurch.id;
-      }
-    }
-
-    if (!resolvedRole) {
-      resolvedRole = resolvedChurchId ? "member" : null;
-    }
-
-    return { churchId: resolvedChurchId, role: resolvedRole };
-  };
-
-  const loadUserData = async (currentUser: User | null) => {
+  const loadUserData = useCallback(async (currentUser: User | null) => {
     if (!currentUser) {
       resetUserData();
       return;
@@ -163,52 +110,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserRole(cachedContext.userRole);
       }
 
-      const { data: superAdmin, error: superAdminError } = await supabase
-        .from("super_admins")
-        .select("id")
-        .eq("id", currentUser.id)
-        .maybeSingle();
-
-      if (superAdminError) throw superAdminError;
-
-      const profileData = await withOfflineCache(
-        `offline-cache:profile:${currentUser.id}`,
+      const contextData = await withOfflineCache<CurrentUserContext | null>(
+        `offline-cache:current-user-context:${currentUser.id}`,
         async () => {
-          const { data, error: profileError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", currentUser.id)
-            .maybeSingle();
+          const { data, error: contextError } = await supabase.rpc("get_current_user_context" as never);
 
-          if (profileError) throw profileError;
-          return data;
+          if (contextError) throw contextError;
+          return data as unknown as CurrentUserContext;
         },
-        cachedContext?.profile ?? null,
+        cachedContext
+          ? {
+              profile: cachedContext.profile,
+              role: cachedContext.userRole,
+              church_id: cachedContext.churchId,
+              church: null,
+              member: null,
+              is_super_admin: cachedContext.isSuperAdmin,
+              permissions: {
+                is_super_admin: cachedContext.isSuperAdmin,
+                can_view_church_workspace: !!cachedContext.churchId,
+                can_manage_church_workspace: cachedContext.userRole
+                  ? ["super_admin", "church_admin", "pastor", "secretary", "treasurer"].includes(cachedContext.userRole)
+                  : false,
+              },
+            }
+          : null,
       );
 
+      if (!contextData) {
+        throw new Error("Unable to load user context.");
+      }
+
+      const profileData = contextData.profile;
+      const isUserSuperAdmin = !!contextData.is_super_admin || profileData?.role === "super_admin";
+      const resolvedChurchId = contextData.church_id ?? null;
+      const resolvedRole = (isUserSuperAdmin ? "super_admin" : contextData.role) as AppRole | null;
+
       setProfile(profileData);
-
-      const isUserSuperAdmin = !!superAdmin || profileData?.role === "super_admin";
       setIsSuperAdmin(isUserSuperAdmin);
-
-      const resolvedContext = await resolveChurchContext(currentUser, profileData, isUserSuperAdmin);
-
-      setChurchId(resolvedContext.churchId);
-      setUserRole(resolvedContext.role);
+      setChurchId(resolvedChurchId);
+      setUserRole(resolvedRole);
 
       window.localStorage.setItem(authCacheKey, JSON.stringify({
         profile: profileData,
         isSuperAdmin: isUserSuperAdmin,
-        churchId: resolvedContext.churchId,
-        userRole: resolvedContext.role,
+        churchId: resolvedChurchId,
+        userRole: resolvedRole,
       }));
 
       if (shouldAutoNavigate()) {
         if (isUserSuperAdmin) {
           redirectTo("/super-admin");
-        } else if (resolvedContext.role === "church_admin") {
+        } else if (resolvedRole === "church_admin") {
           redirectTo("/church-admin");
-        } else if (resolvedContext.churchId) {
+        } else if (resolvedChurchId) {
           redirectTo("/portal");
         }
       }
@@ -226,7 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [redirectTo, resetUserData, shouldAutoNavigate]);
 
   useEffect(() => {
     const {
@@ -274,7 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isInvalidRefreshTokenError, loadUserData, resetUserData, returnToLoginAfterExpiredSession]);
 
   const signOut = async () => {
     await supabase.auth.signOut();

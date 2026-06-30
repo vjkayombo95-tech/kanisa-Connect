@@ -12,6 +12,10 @@ import { formatTZS } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 
+function createSubmissionKey() {
+  return crypto.randomUUID();
+}
+
 function useMemberRecord() {
   const { user, churchId } = useAuth();
   return useQuery({
@@ -51,6 +55,7 @@ export default function PortalGive() {
   const [phone, setPhone] = useState("");
   const [paymentRef, setPaymentRef] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [idempotencyKey, setIdempotencyKey] = useState(createSubmissionKey);
   const [submitted, setSubmitted] = useState(false);
   const { churchId, user } = useAuth();
   const { toast } = useToast();
@@ -63,7 +68,11 @@ export default function PortalGive() {
   // Auto-fill phone from member record
   useEffect(() => {
     if (member?.phone && !phone) setPhone(member.phone);
-  }, [member]);
+  }, [member?.phone, phone]);
+
+  useEffect(() => {
+    setIdempotencyKey(createSubmissionKey());
+  }, [amount, phone, paymentRef, categoryId]);
 
   const { data: categories = [] } = useQuery({
     queryKey: ["portal-categories", churchId],
@@ -82,15 +91,16 @@ export default function PortalGive() {
         throw new Error("Enter a valid amount");
       }
 
-      const { data, error } = await supabase.rpc("record_portal_contribution" as never, {
-        _church_id: churchId,
-        _amount: parsedAmount,
-        _member_id: member?.id || null,
-        _donor_name: member?.full_name || user?.email || "Member",
-        _phone: phone || null,
-        _payment_reference: paymentRef || null,
-        _category_id: categoryId || null,
-        _notes: null,
+      const { data, error } = await supabase.rpc("record_contribution_with_key" as never, {
+        p_church_id: churchId,
+        p_amount: parsedAmount,
+        p_idempotency_key: idempotencyKey,
+        p_member_id: member?.id || null,
+        p_donor_name: member?.full_name || user?.email || "Member",
+        p_phone: phone || null,
+        p_payment_reference: paymentRef || null,
+        p_category_id: categoryId || null,
+        p_notes: null,
       } as never);
 
       if (error) throw error;
@@ -118,7 +128,7 @@ export default function PortalGive() {
           <CheckCircle2 className="h-16 w-16 text-success mx-auto mb-4" />
           <h2 className="text-2xl font-bold font-serif mb-2">Thank You for Your Gift!</h2>
           <p className="text-muted-foreground mb-6">Your contribution of {formatTZS(parseFloat(amount || "0"))} has been recorded successfully.</p>
-          <Button onClick={() => { setSubmitted(false); setAmount(""); setPhone(member?.phone || ""); setPaymentRef(""); setCategoryId(""); }}>
+          <Button onClick={() => { setSubmitted(false); setAmount(""); setPhone(member?.phone || ""); setPaymentRef(""); setCategoryId(""); setIdempotencyKey(createSubmissionKey()); }}>
             Give Again
           </Button>
         </div>

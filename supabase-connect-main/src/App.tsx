@@ -93,6 +93,14 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/member/*"
+          element={
+            <ProtectedRoute requireChurch>
+              <MemberRoutes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/community/:communityId/*"
           element={
             <ProtectedRoute requireChurch>

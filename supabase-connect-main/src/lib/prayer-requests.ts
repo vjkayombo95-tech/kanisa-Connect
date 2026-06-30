@@ -86,3 +86,43 @@ export async function submitPrayerRequest(payload: PrayerRequestInsert) {
 
   return mapPrayerRequestRecord(data as PrayerRequestWithMember);
 }
+
+export async function submitPortalPrayerRequest(payload: PrayerRequestInsert & {
+  idempotency_key: string;
+}) {
+  const request_text = payload.request_text.trim();
+  const member_id = payload.member_id?.trim();
+  const church_id = payload.church_id?.trim();
+  const idempotency_key = payload.idempotency_key?.trim();
+
+  if (!request_text) {
+    throw new Error("Prayer request text is required.");
+  }
+
+  if (!member_id) {
+    throw new Error("Member context is required.");
+  }
+
+  if (!church_id) {
+    throw new Error("Church context is required.");
+  }
+
+  if (!idempotency_key) {
+    throw new Error("Submission key is required.");
+  }
+
+  const { data, error } = await supabase.rpc("submit_portal_prayer_request" as never, {
+    p_church_id: church_id,
+    p_member_id: member_id,
+    p_request_text: request_text,
+    p_offering_amount: payload.offering_amount ?? null,
+    p_privacy: payload.privacy ?? "public_to_church",
+    p_idempotency_key: idempotency_key,
+  } as never);
+
+  if (error) {
+    throw error;
+  }
+
+  return data as { success: boolean; id: string; created: boolean };
+}

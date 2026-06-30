@@ -54,8 +54,11 @@ export function useBillingAccess(options: { enabled?: boolean } = {}) {
     refetchOnWindowFocus: false,
   });
 
+  const subscriptionData = subscriptionQuery.data;
+  const refetchSubscription = subscriptionQuery.refetch;
+
   useEffect(() => {
-    const subscription = subscriptionQuery.data?.subscription;
+    const subscription = subscriptionData?.subscription;
     if (!churchId || !subscription || !subscription.expires_at) {
       return;
     }
@@ -77,10 +80,10 @@ export function useBillingAccess(options: { enabled?: boolean } = {}) {
       .eq("id", subscription.id)
       .then(async ({ error }) => {
         if (!error) {
-          await subscriptionQuery.refetch();
+          await refetchSubscription();
         }
       });
-  }, [churchId, subscriptionQuery.data, subscriptionQuery.refetch]);
+  }, [churchId, refetchSubscription, subscriptionData]);
 
   const addonsQuery = useQuery({
     queryKey: ["billing-addons", churchId],

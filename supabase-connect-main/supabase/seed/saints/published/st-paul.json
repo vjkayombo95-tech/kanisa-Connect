@@ -1,0 +1,23 @@
+{
+  "slug": "st-paul",
+  "name": "St. Paul",
+  "title": "Apostle to the Gentiles",
+  "feast_month": 6,
+  "feast_day": 29,
+  "patron_of": "Missionaries, writers, and theologians",
+  "birth_year": 5,
+  "death_year": 67,
+  "country": "Turkey",
+  "biography_short": "St. Paul was converted from persecutor to apostle and carried the Gospel across the ancient world.",
+  "biography_long": "St. Paul, born Saul of Tarsus, encountered the risen Christ on the road to Damascus. His conversion transformed him into one of the Church's greatest missionaries. Through preaching, suffering, and letters to the early Christian communities, Paul helped shape Christian teaching and witness. Tradition holds that he was martyred in Rome.",
+  "quote": "I can do all things in him who strengthens me.",
+  "reflection": "Paul reminds us that no past is beyond the mercy of Christ and no mission is too great when grace leads the way.",
+  "prayer": "St. Paul, help us proclaim the Gospel with zeal and humility. Pray for us.",
+  "image_url": null,
+  "color_theme": "red",
+  "liturgical_rank": "Solemnity",
+  "is_featured": true,
+  "scripture_reference": "Acts 9:1-19",
+  "tags": ["apostle", "missionary", "martyr"],
+  "is_active": true
+}

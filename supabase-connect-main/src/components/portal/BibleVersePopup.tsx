@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { logWarning } from "@/lib/error-logger";
 
 type PopupRole = "admin" | "pastor" | "member";
 
@@ -148,7 +149,11 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
       ]);
 
       if (churchError) {
-        console.warn("Bible verse popup church lookup failed", churchError);
+        logWarning("Bible verse popup church lookup failed.", {
+          component: "BibleVersePopup",
+          church_id: resolvedChurchId,
+          metadata: { error: churchError },
+        });
       }
 
       if (primaryVersesError) throw primaryVersesError;
@@ -217,7 +222,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen]);
+  }, [data?.verseReference, isOpen, resolvedChurchId]);
 
   const handleClose = () => {
     if (typeof window !== "undefined") {

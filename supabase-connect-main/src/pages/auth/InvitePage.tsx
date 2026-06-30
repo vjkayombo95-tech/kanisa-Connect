@@ -38,11 +38,7 @@ export default function InvitePage() {
   const inviteQuery = useQuery({
     queryKey: ["invite-token", token],
     queryFn: async () => {
-      console.log("TOKEN:", token);
-
       if (!token) {
-        console.log("PRIMARY INVITE:", null);
-        console.log("FALLBACK INVITE:", null);
         return null;
       }
 
@@ -52,8 +48,6 @@ export default function InvitePage() {
         .eq("token", token)
         .maybeSingle();
 
-      console.log("PRIMARY INVITE:", data);
-
       if (data) {
         return {
           ...(data as Omit<InviteRecord, "sourceTable">),
@@ -62,14 +56,14 @@ export default function InvitePage() {
       }
 
       if (error) {
-        console.log("PRIMARY INVITE ERROR:", error);
+        if (import.meta.env.DEV) {
+          console.warn("Primary invite lookup failed", { message: error.message });
+        }
       }
 
       const { data: fallbackRows, error: fallbackError } = await supabase
         .rpc("get_public_invitation", { _token: token });
       const fallbackData = fallbackRows?.[0] ?? null;
-
-      console.log("FALLBACK INVITE:", fallbackData);
 
       if (fallbackData) {
         return {
@@ -79,7 +73,9 @@ export default function InvitePage() {
       }
 
       if (fallbackError) {
-        console.log("FALLBACK INVITE ERROR:", fallbackError);
+        if (import.meta.env.DEV) {
+          console.warn("Fallback invite lookup failed", { message: fallbackError.message });
+        }
       }
 
       return null;
@@ -141,15 +137,6 @@ export default function InvitePage() {
   const inviteAlreadyUsed = status === "accepted";
   const inviteRevoked = status === "revoked";
   const inviteExpired = status === "expired" || hasExpired;
-
-  console.log("TOKEN:", token);
-  console.log("FULL INVITE OBJECT:", invite);
-  console.log("STATUS:", invite?.status);
-  console.log("EXPIRES_AT:", invite?.expires_at);
-  console.log("EMAIL:", invite?.email);
-  console.log("IS NULL:", !invite);
-  console.log("STATUS CHECK:", status === "pending");
-  console.log("HAS EXPIRED:", hasExpired);
 
   if (isInitialLoading) {
     return (

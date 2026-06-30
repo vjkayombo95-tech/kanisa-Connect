@@ -1,9 +1,8 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { SuperAdminSidebar } from "./SuperAdminSidebar";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Bell, Shield } from "lucide-react";
+import { Bell, Shield } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -11,6 +10,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useUnresolvedSystemLogCount } from "@/hooks/use-system-log-alert";
+import { SuperAdminSearch } from "./SuperAdminSearch";
 
 const pageTitles: Array<{ match: string; title: string; description: string }> = [
   { match: "/super-admin/settings", title: "Platform Settings", description: "Control platform-wide behavior" },
@@ -20,7 +20,11 @@ const pageTitles: Array<{ match: string; title: string; description: string }> =
   { match: "/super-admin/features", title: "Feature Management", description: "Enable and control platform features" },
   { match: "/super-admin/revenue", title: "Revenue Analytics", description: "Track growth and platform revenue" },
   { match: "/super-admin/system-health", title: "System Health", description: "Monitor platform automation health and delivery activity" },
+  { match: "/super-admin/system-jobs/", title: "Job Details", description: "Inspect scheduled job status, runs, and alerts" },
+  { match: "/super-admin/system-jobs", title: "Scheduled Jobs", description: "Manage and monitor scheduled platform jobs" },
+  { match: "/super-admin/job-history", title: "Job History", description: "View execution history for scheduled platform jobs" },
   { match: "/super-admin/system-logs", title: "System Logs", description: "Inspect platform error monitoring and app issues" },
+  { match: "/super-admin/audit-logs", title: "Audit Logs", description: "Track system and administrator activity" },
   { match: "/super-admin/logs", title: "Platform Activity", description: "Inspect platform activity and audit events" },
   { match: "/super-admin/activity", title: "User Activity", description: "Review admin and user actions" },
   { match: "/super-admin", title: "Platform Dashboard", description: "Overview of the Kanisa Connect platform" },
@@ -34,7 +38,10 @@ export function SuperAdminLayout() {
   const hasUnresolvedSystemLogs = unresolvedSystemLogCount > 0;
 
   const currentPage =
-    pageTitles.find((page) => location.pathname === page.match || location.pathname.startsWith(`${page.match}/`)) ??
+    pageTitles.find((page) => {
+      const childMatch = page.match.endsWith("/") ? page.match : `${page.match}/`;
+      return location.pathname === page.match || location.pathname.startsWith(childMatch);
+    }) ??
     pageTitles[pageTitles.length - 1];
 
   const handleSignOut = async () => {
@@ -65,10 +72,7 @@ export function SuperAdminLayout() {
                     </div>
 
                     <div className="hidden sm:block">
-                      <div className="relative max-w-md">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input placeholder="Search platform..." className="h-9 border-border/50 bg-secondary pl-9" />
-                      </div>
+                      <SuperAdminSearch className="max-w-md" />
                     </div>
                   </div>
 
@@ -106,10 +110,7 @@ export function SuperAdminLayout() {
                     <h1 className="text-lg font-semibold text-foreground">{currentPage.title}</h1>
                     <p className="text-sm text-muted-foreground">{currentPage.description}</p>
                   </div>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input placeholder="Search platform..." className="h-10 rounded-xl border-border/50 bg-secondary pl-9" />
-                  </div>
+                  <SuperAdminSearch />
                 </div>
 
                 <div className="hidden min-h-14 items-center gap-4 sm:flex">
