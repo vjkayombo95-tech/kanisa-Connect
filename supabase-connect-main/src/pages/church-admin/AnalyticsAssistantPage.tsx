@@ -123,6 +123,8 @@ export default function AnalyticsAssistantPage() {
   const [isDashboardLoading, setIsDashboardLoading] = useState(false);
   const [churchBranding, setChurchBranding] = useState({
     churchName: "Church Analytics",
+    churchCode: "",
+    shortCode: "",
     churchLocation: "",
     churchLogoUrl: "",
   });
@@ -130,7 +132,7 @@ export default function AnalyticsAssistantPage() {
     {
       id: "intro",
       role: "assistant",
-      text: "Ask about giving trends, top contributors, monthly summaries, pledges, or announcement drafts. I will read live Supabase records and turn them into a structured church insight.",
+      text: "Ask Finance Intelligence about giving trends, top contributors, monthly summaries, pledges, or announcement drafts. I will read live Supabase records and turn them into a structured church insight.",
     },
   ]);
 
@@ -151,7 +153,7 @@ export default function AnalyticsAssistantPage() {
     const loadChurchBranding = async () => {
       const { data, error: churchError } = await supabase
         .from("churches")
-        .select("name, address, logo_url")
+        .select("name, address, logo_url, code, church_code, short_code")
         .eq("id", churchId)
         .maybeSingle();
 
@@ -164,6 +166,8 @@ export default function AnalyticsAssistantPage() {
 
       setChurchBranding({
         churchName: data.name || "Church Analytics",
+        churchCode: data.church_code || data.code || "",
+        shortCode: data.short_code || "",
         churchLocation: data.address || "",
         churchLogoUrl: data.logo_url || "",
       });
@@ -285,8 +289,8 @@ export default function AnalyticsAssistantPage() {
         className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between"
       >
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">AI Analytics</p>
-          <h1 className="mt-2 text-3xl font-semibold text-foreground">Analytics Assistant</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">Kanisa AI Domain</p>
+          <h1 className="mt-2 text-3xl font-semibold text-foreground">Finance Intelligence</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
             Explore church giving with local intent detection, live Supabase records, instant summaries, and downloadable PDF reports.
           </p>

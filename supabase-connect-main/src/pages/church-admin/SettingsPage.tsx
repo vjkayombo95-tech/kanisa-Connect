@@ -42,6 +42,7 @@ export default function SettingsPage() {
   const billing = useBillingAccess();
   const [churchName, setChurchName] = useState("");
   const [churchCode, setChurchCode] = useState("");
+  const [shortCode, setShortCode] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -83,7 +84,8 @@ export default function SettingsPage() {
   useEffect(() => {
     if (church) {
       setChurchName(church.name || "");
-      setChurchCode(church.code || "");
+      setChurchCode(church.church_code || church.code || "");
+      setShortCode(church.short_code || "");
       setEmail(church.email || "");
       setPhone(church.phone || "");
       setAddress(church.address || "");
@@ -256,7 +258,8 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Church Name</Label><Input value={churchName} onChange={(e) => setChurchName(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Church Code</Label><Input disabled value={churchCode} className="bg-muted/50" /></div>
+                <div className="space-y-2"><Label>Church Code</Label><Input disabled value={churchCode} className="bg-muted/50 font-mono" /></div>
+                <div className="space-y-2"><Label>Join Code</Label><Input disabled value={shortCode} className="bg-muted/50 font-mono" /></div>
                 <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
                 <div className="space-y-2"><Label>Phone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
                 <div className="space-y-2 md:col-span-2"><Label>Address</Label><Input value={address} onChange={(e) => setAddress(e.target.value)} /></div>

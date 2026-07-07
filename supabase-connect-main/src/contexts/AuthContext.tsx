@@ -3,6 +3,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearSensitiveOfflineData, readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { captureException, logSupabaseError } from "@/lib/error-logger";
+import { getDefaultRouteForRole } from "@/lib/role-utils";
 
 type AppRole = "super_admin" | "church_admin" | "pastor" | "secretary" | "treasurer" | "member";
 
@@ -159,12 +160,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }));
 
       if (shouldAutoNavigate()) {
-        if (isUserSuperAdmin) {
-          redirectTo("/super-admin");
-        } else if (resolvedRole === "church_admin") {
-          redirectTo("/church-admin");
-        } else if (resolvedChurchId) {
-          redirectTo("/portal");
+        if (isUserSuperAdmin || resolvedChurchId) {
+          redirectTo(getDefaultRouteForRole(resolvedRole, isUserSuperAdmin));
         }
       }
     } catch (err) {
@@ -230,6 +227,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, [isInvalidRefreshTokenError, loadUserData, resetUserData, returnToLoginAfterExpiredSession]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const refreshOnFocus = () => {
+      if (document.visibilityState === "visible") {
+        loadUserData(user);
+      }
+    };
+
+    window.addEventListener("focus", refreshOnFocus);
+    document.addEventListener("visibilitychange", refreshOnFocus);
+
+    return () => {
+      window.removeEventListener("focus", refreshOnFocus);
+      document.removeEventListener("visibilitychange", refreshOnFocus);
+    };
+  }, [loadUserData, user]);
 
   const signOut = async () => {
     await supabase.auth.signOut();

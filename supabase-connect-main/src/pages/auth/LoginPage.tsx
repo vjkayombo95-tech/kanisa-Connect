@@ -17,6 +17,7 @@ import {
 } from "@/lib/phone-auth";
 import { assertClientRateLimit } from "@/lib/client-rate-limit";
 import { logSupabaseError } from "@/lib/error-logger";
+import { getDefaultRouteForRole } from "@/lib/role-utils";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PENDING_REGISTRATION_REDIRECT_PREFIX = "pending-registration-redirect:";
@@ -55,12 +56,12 @@ export default function LoginPage() {
     () => getPendingRegistrationRedirect(user?.email || identity),
     [identity, user?.email],
   );
-  const redirectTarget = useMemo(() => {
+  const explicitRedirectTarget = useMemo(() => {
     const rawRedirect = searchParams.get("redirect");
     if (rawRedirect && rawRedirect.startsWith("/")) return rawRedirect;
     if (pendingRegistrationRedirect && pendingRegistrationRedirect.startsWith("/")) return pendingRegistrationRedirect;
-    return "/portal";
   }, [pendingRegistrationRedirect, searchParams]);
+  const redirectTarget = explicitRedirectTarget ?? getDefaultRouteForRole(userRole, isSuperAdmin);
   const initialMode = searchParams.get("mode");
   const presetEmail = searchParams.get("email");
 
@@ -117,8 +118,8 @@ export default function LoginPage() {
 
     setIsAwaitingRedirect(false);
     clearPendingRegistrationRedirect(user.email || identity);
-    navigate(redirectTarget, { replace: true });
-  }, [churchId, identity, isAwaitingRedirect, isAuthLoading, isSuperAdmin, navigate, pendingRegistrationRedirect, profile, redirectTarget, searchParams, user, userRole]);
+    navigate(explicitRedirectTarget ?? getDefaultRouteForRole(userRole, isSuperAdmin), { replace: true });
+  }, [churchId, explicitRedirectTarget, identity, isAwaitingRedirect, isAuthLoading, isSuperAdmin, navigate, pendingRegistrationRedirect, profile, redirectTarget, searchParams, user, userRole]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();

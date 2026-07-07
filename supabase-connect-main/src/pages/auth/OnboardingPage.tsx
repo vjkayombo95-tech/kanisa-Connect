@@ -178,7 +178,7 @@ export default function OnboardingPage() {
         _owner_name: user.user_metadata?.full_name || user.email || "Admin",
       });
       if (churchError) throw churchError;
-      const church = createdChurch as { id: string; code: string; name: string } | null;
+      const church = createdChurch as { id: string; code?: string | null; church_code?: string | null; short_code?: string | null; name: string } | null;
       if (!church?.id) throw new Error("Church workspace could not be created.");
 
       try {
@@ -202,7 +202,10 @@ export default function OnboardingPage() {
       }
 
       setSubmissionMessage("Church created. Opening your dashboard...");
-      toast({ title: "Church created!", description: `${church.name} (${church.code}) is ready.` });
+      toast({
+        title: "Church created!",
+        description: `${church.name} (${church.church_code || church.code || "code pending"}) is ready${church.short_code ? ` · Join Code: ${church.short_code}` : ""}.`,
+      });
       void refreshUserData();
       navigate("/church-admin", { replace: true });
     } catch (err: any) {

@@ -1,21 +1,49 @@
 import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft, ArrowRight, BookOpen, RotateCcw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { BibleAudioPlayer, TranslationInformationDialog } from "@/components/bible";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useWorkspacePage } from "@/components/workspace";
+import { parseStaticBookRouteId } from "@/hooks/useScriptureLinks";
+import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { supabase } from "@/integrations/supabase/client";
+import { getBibleBookDisplayName } from "@/lib/bible-display";
+import { BIBLE_AUDIO_FEATURE_KEY, isBibleAudioVisible } from "@/lib/bible-audio";
+import { PRIMARY_BIBLE_TRANSLATION_CODE, isMissingBibleTranslationMetadataColumn } from "@/lib/bible-translation";
+import { bibleQueryOptions } from "@/lib/portal-performance";
 import { cn } from "@/lib/utils";
 
 type BibleBookRow = {
   id: string;
+  translation_id: string;
   book_number: number;
   name: string;
   abbreviation: string | null;
   testament: "old" | "new" | "deuterocanonical";
+};
+
+type BibleTranslationRow = {
+  id: string;
+  code: string;
+  name: string;
+  language_code: string;
+  canon_type: string | null;
+  publisher: string | null;
+  copyright_notice: string | null;
+  license_name: string | null;
+  license_url: string | null;
+  source_url: string | null;
+  attribution_text: string | null;
+  audio_generation_allowed: boolean | null;
+  ai_processing_allowed: boolean | null;
+  active: boolean | null;
+  default_translation: boolean | null;
 };
 
 type BibleChapterRow = {
@@ -31,46 +59,109 @@ type BibleVerseRow = {
 };
 
 type ChapterReaderData = {
+  translation: BibleTranslationRow | null;
   book: BibleBookRow;
   chapters: BibleChapterRow[];
   selectedChapter: BibleChapterRow | null;
   verses: BibleVerseRow[];
 };
 
-const TESTAMENT_LABELS: Record<BibleBookRow["testament"], string> = {
-  old: "Old Testament",
-  new: "New Testament",
-  deuterocanonical: "Deuterocanonical",
-};
+function isMissingAudioEligibilityColumn(error: { message?: string; details?: string; hint?: string; code?: string }) {
+  const text = [error.message, error.details, error.hint, error.code].filter(Boolean).join(" ").toLowerCase();
+  return text.includes("audio_generation_allowed") && (text.includes("column") || text.includes("schema cache") || text.includes("pgrst204"));
+}
+
+function getWorkspaceBibleRoot(workspaceId: string) {
+  if (workspaceId === "pastoral") return "/pastoral/bible";
+  if (workspaceId === "church_admin") return "/church-admin/bible";
+  if (workspaceId === "finance") return "/finance/bible";
+  return "/portal/bible";
+}
+
+async function fetchTranslationWithAudioState(translationId: string): Promise<BibleTranslationRow | null> {
+  const translationResult = await supabase
+    .from("bible_translations" as never)
+    .select("id, code, name, language_code, canon_type, publisher, copyright_notice, license_name, license_url, source_url, attribution_text, audio_generation_allowed, ai_processing_allowed, active, default_translation")
+    .eq("id", translationId)
+    .maybeSingle();
+
+  if (!translationResult.error) return translationResult.data as unknown as BibleTranslationRow | null;
+  if (!isMissingAudioEligibilityColumn(translationResult.error) && !isMissingBibleTranslationMetadataColumn(translationResult.error)) throw translationResult.error;
+
+  const fallbackResult = await supabase
+    .from("bible_translations" as never)
+    .select("id, code, name, language_code")
+    .eq("id", translationId)
+    .maybeSingle();
+
+  if (fallbackResult.error) throw fallbackResult.error;
+  const fallbackTranslation = fallbackResult.data as unknown as Omit<BibleTranslationRow, "canon_type" | "publisher" | "copyright_notice" | "license_name" | "license_url" | "source_url" | "attribution_text" | "audio_generation_allowed" | "ai_processing_allowed" | "active" | "default_translation"> | null;
+  return fallbackTranslation
+    ? {
+        ...fallbackTranslation,
+        canon_type: null,
+        publisher: null,
+        copyright_notice: null,
+        license_name: null,
+        license_url: null,
+        source_url: null,
+        attribution_text: null,
+        audio_generation_allowed: false,
+        ai_processing_allowed: false,
+        active: true,
+        default_translation: false,
+      }
+    : null;
+}
 
 async function fetchChapterReaderData(bookId: string, chapterNumber: number): Promise<ChapterReaderData> {
-  const [bookResult, chaptersResult, versesResult] = await Promise.all([
-    supabase
-      .from("bible_books" as never)
-      .select("id, book_number, name, abbreviation, testament")
-      .eq("id", bookId)
-      .single(),
+  const routeBookNumber = parseStaticBookRouteId(bookId);
+  let bookQuery = supabase
+    .from("bible_books" as never)
+    .select("id, translation_id, book_number, name, abbreviation, testament");
+
+  if (routeBookNumber) {
+    const translationResult = await supabase
+      .from("bible_translations" as never)
+      .select("id")
+      .eq("code", PRIMARY_BIBLE_TRANSLATION_CODE)
+      .maybeSingle();
+
+    if (!translationResult.error && translationResult.data) {
+      bookQuery = bookQuery.eq("translation_id", (translationResult.data as { id: string }).id);
+    }
+  }
+
+  bookQuery = routeBookNumber ? bookQuery.eq("book_number", routeBookNumber) : bookQuery.eq("id", bookId);
+
+  const bookResult = await bookQuery.single();
+  if (bookResult.error) throw bookResult.error;
+
+  const book = bookResult.data as unknown as BibleBookRow;
+
+  const [translationResult, chaptersResult, versesResult] = await Promise.all([
+    fetchTranslationWithAudioState(book.translation_id),
     supabase
       .from("bible_chapters" as never)
       .select("id, chapter_number")
-      .eq("book_id", bookId)
+      .eq("book_id", book.id)
       .order("chapter_number", { ascending: true }),
     supabase
       .from("bible_verses" as never)
       .select("id, verse_number, verse_text, text")
-      .eq("book_id", bookId)
+      .eq("book_id", book.id)
       .eq("chapter_number", chapterNumber)
       .order("verse_number", { ascending: true }),
   ]);
 
-  if (bookResult.error) throw bookResult.error;
   if (chaptersResult.error) throw chaptersResult.error;
   if (versesResult.error) throw versesResult.error;
 
   const chapters = (chaptersResult.data ?? []) as unknown as BibleChapterRow[];
 
   return {
-    book: bookResult.data as unknown as BibleBookRow,
+    translation: translationResult,
+    book,
     chapters,
     selectedChapter: chapters.find((chapter) => chapter.chapter_number === chapterNumber) ?? null,
     verses: (versesResult.data ?? []) as unknown as BibleVerseRow[],
@@ -110,6 +201,9 @@ function parseVerseQueryParam(value: string | null) {
 }
 
 export default function MemberBibleChapterPage() {
+  const page = useWorkspacePage();
+  const { t, i18n } = useTranslation();
+  const featureAccess = useFeatureAccess();
   const { bookId, chapterNumber } = useParams();
   const [searchParams] = useSearchParams();
   const parsedChapterNumber = Number(chapterNumber);
@@ -123,7 +217,7 @@ export default function MemberBibleChapterPage() {
     queryKey: ["member-bible-chapter-reader", bookId, parsedChapterNumber],
     queryFn: () => fetchChapterReaderData(bookId!, parsedChapterNumber),
     enabled: canQuery,
-    staleTime: 10 * 60 * 1000,
+    ...bibleQueryOptions,
   });
 
   useEffect(() => {
@@ -153,7 +247,9 @@ export default function MemberBibleChapterPage() {
     };
   }, [data, parsedChapterNumber]);
 
-  const backToChaptersPath = bookId ? `/portal/bible/${bookId}` : "/portal/bible";
+  const bibleRoot = getWorkspaceBibleRoot(page.workspaceId);
+  const backToChaptersPath = bookId ? `${bibleRoot}/${bookId}` : bibleRoot;
+  const bibleAudioFeature = featureAccess.getFeatureState(BIBLE_AUDIO_FEATURE_KEY);
 
   return (
     <main className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-6 pb-28 lg:px-8 lg:pb-10">
@@ -161,15 +257,15 @@ export default function MemberBibleChapterPage() {
         <Button asChild variant="ghost" className="h-10 rounded-lg px-3">
           <Link to={backToChaptersPath}>
             <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
-            Back to Chapters
+            {t("member_portal.bible.back_to_chapters")}
           </Link>
         </Button>
 
         {!canQuery ? (
           <Alert variant="destructive" className="rounded-lg">
             <AlertCircle className="h-4 w-4" aria-hidden="true" />
-            <AlertTitle>Unable to load chapter</AlertTitle>
-            <AlertDescription>The chapter link is invalid.</AlertDescription>
+            <AlertTitle>{t("member_portal.bible.unable_chapter")}</AlertTitle>
+            <AlertDescription>{t("member_portal.bible.invalid_chapter_link")}</AlertDescription>
           </Alert>
         ) : null}
 
@@ -178,12 +274,12 @@ export default function MemberBibleChapterPage() {
         {isError ? (
           <Alert variant="destructive" className="rounded-lg">
             <AlertCircle className="h-4 w-4" aria-hidden="true" />
-            <AlertTitle>Unable to load chapter</AlertTitle>
+            <AlertTitle>{t("member_portal.bible.unable_chapter")}</AlertTitle>
             <AlertDescription className="space-y-4">
-              <span className="block">{error instanceof Error ? error.message : "Please try again."}</span>
+              <span className="block">{error instanceof Error ? error.message : t("member_portal.common.please_try_again")}</span>
               <Button type="button" variant="outline" size="sm" onClick={() => void refetch()} disabled={isFetching}>
                 <RotateCcw className="mr-2 h-4 w-4" aria-hidden="true" />
-                Retry
+                {t("member_portal.common.retry")}
               </Button>
             </AlertDescription>
           </Alert>
@@ -197,12 +293,31 @@ export default function MemberBibleChapterPage() {
                   <BookOpen className="h-6 w-6" aria-hidden="true" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-primary">{TESTAMENT_LABELS[data.book.testament]}</p>
-                  <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{data.book.name}</h1>
-                  <p className="mt-2 text-lg font-semibold text-muted-foreground">Chapter {parsedChapterNumber}</p>
+                  <p className="text-sm font-medium text-primary">{t(`member_portal.bible.testaments.${data.book.testament}`)}</p>
+                  <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{getBibleBookDisplayName(data.book, i18n.language)}</h1>
+                  <p className="mt-2 text-lg font-semibold text-muted-foreground">{t("member_portal.bible.chapter_number", { number: parsedChapterNumber })}</p>
+                </div>
+                <div className="ml-auto hidden shrink-0 sm:block">
+                  <TranslationInformationDialog translation={data.translation} />
                 </div>
               </CardContent>
             </Card>
+            <div className="sm:hidden">
+              <TranslationInformationDialog translation={data.translation} />
+            </div>
+
+            {data.translation && data.selectedChapter && data.verses.length > 0 && isBibleAudioVisible(bibleAudioFeature, data.translation) ? (
+              <BibleAudioPlayer
+                request={{
+                  translationId: data.translation.id,
+                  bookId: data.book.id,
+                  chapterNumber: parsedChapterNumber,
+                  languageCode: data.translation.language_code,
+                }}
+                previousPath={navigation.previous ? `${bibleRoot}/${data.book.id}/chapter/${navigation.previous}` : null}
+                nextPath={navigation.next ? `${bibleRoot}/${data.book.id}/chapter/${navigation.next}` : null}
+              />
+            ) : null}
 
             {!data.selectedChapter || data.verses.length === 0 ? (
               <Card className="rounded-lg border-border/70 bg-card/90">
@@ -210,7 +325,7 @@ export default function MemberBibleChapterPage() {
                   <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                     <BookOpen className="h-7 w-7" aria-hidden="true" />
                   </div>
-                  <h2 className="text-lg font-semibold">No verses found for this chapter.</h2>
+                  <h2 className="text-lg font-semibold">{t("member_portal.bible.no_verses")}</h2>
                 </CardContent>
               </Card>
             ) : (
@@ -239,31 +354,31 @@ export default function MemberBibleChapterPage() {
               </article>
             )}
 
-            <nav className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" aria-label="Chapter navigation">
+            <nav className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" aria-label={t("member_portal.bible.chapter_navigation")}>
               {navigation.previous ? (
                 <Button asChild variant="outline" className="h-11 justify-center rounded-lg">
-                  <Link to={`/portal/bible/${data.book.id}/chapter/${navigation.previous}`}>
+                  <Link to={`${bibleRoot}/${data.book.id}/chapter/${navigation.previous}`}>
                     <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Previous Chapter
+                    {t("member_portal.bible.previous_chapter")}
                   </Link>
                 </Button>
               ) : (
                 <Button variant="outline" className="h-11 justify-center rounded-lg" disabled>
                   <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Previous Chapter
+                  {t("member_portal.bible.previous_chapter")}
                 </Button>
               )}
 
               {navigation.next ? (
                 <Button asChild className="h-11 justify-center rounded-lg">
-                  <Link to={`/portal/bible/${data.book.id}/chapter/${navigation.next}`}>
-                    Next Chapter
+                  <Link to={`${bibleRoot}/${data.book.id}/chapter/${navigation.next}`}>
+                    {t("member_portal.bible.next_chapter")}
                     <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
               ) : (
                 <Button className="h-11 justify-center rounded-lg" disabled>
-                  Next Chapter
+                  {t("member_portal.bible.next_chapter")}
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Button>
               )}

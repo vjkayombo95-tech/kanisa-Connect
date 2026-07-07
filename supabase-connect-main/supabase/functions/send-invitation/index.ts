@@ -154,7 +154,17 @@ Deno.serve(async (req) => {
     }
 
     const origin = getOrigin(req);
-    const inviteLink = `${origin}/invite/${token}`;
+    const { data: invitationDetails } = await serviceSupabase
+      .from("invitations")
+      .select("churches(name, code, church_code, short_code)")
+      .eq("token", token)
+      .maybeSingle();
+    const church = Array.isArray(invitationDetails?.churches)
+      ? invitationDetails?.churches[0]
+      : invitationDetails?.churches;
+    const visibleChurchCode = church?.church_code || church?.code || "";
+    const visibleJoinCode = church?.short_code || "";
+    const inviteLink = `${origin}/invite/${token}${visibleJoinCode || visibleChurchCode ? `?churchCode=${encodeURIComponent(visibleJoinCode || visibleChurchCode)}` : ""}`;
 
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -165,8 +175,8 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: resendFromEmail,
         to: [email.trim().toLowerCase()],
-        subject: "You are invited to join a church",
-        text: `You have been invited to join a church platform.\nClick the link below to accept the invitation:\n\n${inviteLink}`,
+        subject: `You are invited to join ${church?.name || "a church"}`,
+        text: `You have been invited to join ${church?.name || "a church"} on Kanisa Connect.\n${visibleChurchCode ? `Church Code: ${visibleChurchCode}\n` : ""}${visibleJoinCode ? `Join Code: ${visibleJoinCode}\n` : ""}\nClick the link below to accept the invitation:\n\n${inviteLink}`,
       }),
     });
 

@@ -10,8 +10,8 @@ import { fetchImportHistory } from "@/lib/super-admin/import-history-service";
 
 const importCards = [
   { title: "Import Saints Workbook", description: "Excel, CSV, and JSON saint content imports.", to: "/super-admin/catholic-content/saints/cms", ready: true },
-  { title: "Import Daily Readings", description: "Future readings import pipeline.", to: "/super-admin/catholic-content/daily-readings", ready: false },
-  { title: "Import Prayer Library", description: "Future prayer collection import pipeline.", to: "/super-admin/catholic-content/prayer-library", ready: false },
+  { title: "Import Daily Readings", description: "Dry-run, validate, and import verified Daily Readings into the Catholic CMS.", to: "/super-admin/catholic-content/daily-readings", ready: true },
+  { title: "Import Prayer Library", description: "CMS-ready columns: Title, Category, Tags, Prayer, Season, Language, Status, Collection.", to: "/super-admin/catholic-content/prayer-library", ready: true },
   { title: "Import Liturgical Calendar", description: "Future calendar import pipeline.", to: "/super-admin/catholic-content/liturgical-calendar", ready: false },
   { title: "Import Catechism", description: "Future Catholic resources import.", to: "#", ready: false },
   { title: "Import Novenas", description: "Future devotional content import.", to: "#", ready: false },
@@ -35,9 +35,9 @@ export default function SuperAdminImportCenter() {
   return (
     <main className="space-y-6 p-4 lg:p-6">
       <section className="rounded-[28px] border border-border/70 bg-card/85 p-5">
-        <p className="flex items-center gap-2 text-sm font-medium text-primary"><Upload className="h-4 w-4" />Catholic Content</p>
+        <p className="flex items-center gap-2 text-sm font-medium text-primary"><Upload className="h-4 w-4" />Catholic CMS</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight">Import Center</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Centralized import workflows for global Catholic content.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Centralized import workflows for global Catholic CMS content.</p>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

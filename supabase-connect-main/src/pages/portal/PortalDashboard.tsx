@@ -2,8 +2,9 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { PersonalAssistantCard } from "@/components/assistant";
 import { useAuth } from "@/contexts/AuthContext";
-import { formatTZS } from "@/lib/currency";
+import { formatTZS, formatTZSForLanguage } from "@/lib/currency";
 import { useBillingAccess } from "@/hooks/use-billing-access";
 import { useLedCommunities } from "@/hooks/use-community-leader";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
@@ -39,6 +40,7 @@ import { optimizeImage, uploadFile, validateFile } from "@/lib/file-upload";
 import { useTranslation } from "react-i18next";
 import { translateContributionCategory } from "@/lib/translation-helpers";
 import { logSupabaseError } from "@/lib/error-logger";
+import { formatLocalizedDate, normalizeAppLanguage } from "@/lib/localization";
 
 const PortalContributionCharts = lazy(() => import("./PortalContributionCharts"));
 
@@ -565,6 +567,8 @@ function InfoRow({ label, value, icon: Icon }: { label: string; value: string | 
 // ─── Main Component ───────────────────────────────────────────
 export default function PortalDashboard() {
   const { user, profile, churchId, userRole } = useAuth();
+  const { t, i18n } = useTranslation();
+  const language = normalizeAppLanguage(i18n.language) ?? "en";
   const billing = useBillingAccess();
   const { isFeatureEnabled } = useFeatureAccess();
   const { toast } = useToast();
@@ -606,7 +610,6 @@ export default function PortalDashboard() {
   const { data: helpRequests = [] } = useMemberHelpRequests(member?.id, loadDashboardDetails);
   const { data: communities = [] } = useCommunities(churchId, loadDashboardDetails);
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const { data: roleProfile } = useParticipationAndLeadershipProfile({
     member,
@@ -792,6 +795,17 @@ export default function PortalDashboard() {
 
   const displayName = member?.full_name || profile?.full_name || "Member";
   const ministryNames = ministries.map((ministry: any) => ministry.name).filter(Boolean);
+  const assistantContext = useMemo(() => ({
+    announcements,
+    church,
+    community,
+    events,
+    massIntentions: massIntentionPageData,
+    member,
+    prayers: prayerPageData,
+    pledges,
+    stats,
+  }), [announcements, church, community, events, massIntentionPageData, member, prayerPageData, pledges, stats]);
 
   const uploadMemberPhoto = useMutation({
     mutationFn: async (file: File) => {
@@ -934,6 +948,14 @@ export default function PortalDashboard() {
   if (limitedPortal) {
     return (
       <div className="container mx-auto max-w-5xl space-y-6 px-4 py-8 animate-fade-in">
+        <PersonalAssistantCard
+          workspace="member"
+          role={userRole}
+          churchName={church?.name}
+          displayName={displayName}
+          dashboardContext={assistantContext}
+        />
+
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="flex flex-col gap-2 p-5 md:flex-row md:items-center md:justify-between">
             <div>
@@ -988,6 +1010,13 @@ export default function PortalDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8 animate-fade-in max-w-6xl">
+      <PersonalAssistantCard
+        workspace="member"
+        role={userRole}
+        churchName={church?.name}
+        displayName={displayName}
+        dashboardContext={assistantContext}
+      />
 
       {/* ── Welcome Header ── */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">

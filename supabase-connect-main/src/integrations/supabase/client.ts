@@ -4,10 +4,12 @@ import { isEnvironmentValid, supabaseAnonKey, supabaseUrl } from '@/lib/environm
 
 export const isSupabaseConfigured = isEnvironmentValid;
 export const PASSWORD_RECOVERY_PENDING_KEY = 'kanisa-password-recovery-pending';
+const DISABLED_SUPABASE_URL = 'https://disabled.supabase.co';
+const DISABLED_SUPABASE_CLIENT_KEY = 'disabled-client-key';
 
 export const supabase = createClient<Database>(
-  supabaseUrl || 'https://invalid.supabase.co',
-  supabaseAnonKey || 'placeholder-anon-key',
+  isSupabaseConfigured ? supabaseUrl! : DISABLED_SUPABASE_URL,
+  isSupabaseConfigured ? supabaseAnonKey! : DISABLED_SUPABASE_CLIENT_KEY,
   {
     auth: {
       detectSessionInUrl: (_url, params) => {

@@ -6,11 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PageToolbar, getWorkspacePageActions, useWorkspacePage } from "@/components/workspace";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarDays, Flame, Heart, Loader2, Plus, User } from "lucide-react";
+import { CalendarDays, Flame, Heart, Loader2, User } from "lucide-react";
 import { formatTZS } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
 import { MASS_INTENTION_SELECT, mapMassIntentionRecord, submitPortalMassIntention, type MassIntentionWithMember } from "@/lib/member-linked-requests";
@@ -23,6 +24,7 @@ import { useTranslation } from "react-i18next";
 import { translateStatus } from "@/lib/translation-helpers";
 import { assertClientRateLimit } from "@/lib/client-rate-limit";
 import { logSupabaseError } from "@/lib/error-logger";
+import { ScriptureText } from "@/components/bible";
 
 const intentionTypeOptions = [
   { value: "shukrani", label: "Shukrani", description: "Nia ya kumshukuru Mungu" },
@@ -64,6 +66,7 @@ function useMemberRecord() {
 }
 
 export default function PortalMassIntentions() {
+  const page = useWorkspacePage();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [intentionType, setIntentionType] = useState<IntentionTypeValue>("shukrani");
   const [message, setMessage] = useState("");
@@ -253,6 +256,10 @@ export default function PortalMassIntentions() {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     },
   });
+  const toolbarActions = useMemo(
+    () => getWorkspacePageActions("mass_intentions", page, { create: () => setDialogOpen(true) }),
+    [page],
+  );
 
   const statusColor = (status: string) => {
     if (status === "approved") return "bg-success/20 text-success border-success/30";
@@ -274,7 +281,9 @@ export default function PortalMassIntentions() {
                   </Badge>
                 </div>
                 <p className="mb-1 text-xs text-primary">{getIntentionTypeLabel(intention.intention_type)}</p>
-                <p className="text-sm text-muted-foreground">{intention.message}</p>
+                <p className="text-sm text-muted-foreground">
+                  <ScriptureText text={intention.message} />
+                </p>
                 {intention.offering_amount && (
                   <p className="mt-2 text-xs text-primary">{t("mass_intentions_form.offering", { amount: formatTZS(intention.offering_amount) })}</p>
                 )}
@@ -289,19 +298,13 @@ export default function PortalMassIntentions() {
 
   return (
     <div className="container mx-auto px-4 py-10 animate-fade-in">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="font-serif text-2xl font-bold md:text-3xl">Nia za Misa</h1>
-            <p className="mt-1 text-muted-foreground">Wasilisha nia ya Misa kwa faragha; unaona nia zako pekee.</p>
-          </div>
+      <div className="mx-auto max-w-3xl space-y-6">
+        <PageToolbar
+          title="Nia za Misa"
+          description="Wasilisha na fuatilia nia ya Misa bila kutoka kwenye workspace yako."
+          actions={toolbarActions}
+        />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Wasilisha Nia
-              </Button>
-            </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle className="font-serif">Wasilisha Nia ya Misa</DialogTitle>
@@ -423,7 +426,6 @@ export default function PortalMassIntentions() {
               </form>
             </DialogContent>
           </Dialog>
-        </div>
 
         {pendingMassIntentions.length > 0 ? (
           <Card className="mb-6 border-primary/20 bg-primary/5">
@@ -462,7 +464,9 @@ export default function PortalMassIntentions() {
                         {item.payload.requestedMassDate ? (
                           <p className="mt-1 text-xs text-muted-foreground">Tarehe ya Misa: {item.payload.requestedMassDate}</p>
                         ) : null}
-                        <p className="mt-1 text-sm text-muted-foreground">{item.payload.message}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          <ScriptureText text={item.payload.message} />
+                        </p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {t("mass_intentions_form.saved_at", { date: new Date(item.createdAt).toLocaleString() })}
                         </p>

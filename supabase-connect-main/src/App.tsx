@@ -8,11 +8,14 @@ import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { PreviewViewport } from "@/components/PreviewViewport";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Toaster } from "@/components/ui/toaster";
 import { isSupabaseConfigured } from "@/integrations/supabase/client";
-import { environmentValidationErrors, environmentValidationWarnings } from "@/lib/environment";
+import { environmentDiagnostics } from "@/lib/environment";
+import { DiagnosticsOverlay } from "@/lib/monitoring/DiagnosticsOverlay";
+import { RoutePerformanceMonitor, createQueryDurationTracker, trackPageLoad } from "@/lib/monitoring";
 import { StagingBanner } from "@/components/StagingBanner";
-import { Loader2 } from "lucide-react";
+import { KanisaCommandCenter } from "@/components/ai/KanisaCommandCenter";
 import Index from "./pages/Index";
 
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -24,18 +27,23 @@ const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"));
 const JoinChurchPage = lazy(() => import("./pages/auth/JoinChurchPage"));
 const ScanQR = lazy(() => import("./pages/ScanQR"));
 const PayPage = lazy(() => import("./pages/PayPage"));
+const KanisaAIPlayground = lazy(() => import("./pages/dev/KanisaAIPlayground"));
+const AutomationPlayground = lazy(() => import("./pages/dev/AutomationPlayground"));
+const BibleLicensesPage = lazy(() => import("./pages/BibleLicensesPage"));
 
 const MemberRoutes = lazy(() => import("./routes/MemberRoutes"));
 const StaffRoutes = lazy(() => import("./routes/StaffRoutes"));
 const AdminRoutes = lazy(() => import("./routes/AdminRoutes"));
+const PastoralRoutes = lazy(() => import("./routes/PastoralRoutes"));
+const FinanceRoutes = lazy(() => import("./routes/FinanceRoutes"));
 const SuperAdminRoutes = lazy(() => import("./routes/SuperAdminRoutes"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 60_000,
-      gcTime: 300_000,
-      retry: 2,
+      gcTime: 15 * 60_000,
+      retry: 1,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
     },
@@ -45,10 +53,21 @@ const queryClient = new QueryClient({
   },
 });
 
+createQueryDurationTracker(queryClient);
+trackPageLoad();
+
 function RouteLoadingFallback() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <div className="min-h-screen bg-background px-4 py-8">
+      <div className="mx-auto max-w-6xl space-y-5">
+        <Skeleton className="h-20 rounded-2xl" />
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-36 rounded-2xl" />
+          <Skeleton className="h-36 rounded-2xl" />
+          <Skeleton className="h-36 rounded-2xl" />
+        </div>
+        <Skeleton className="h-72 rounded-2xl" />
+      </div>
     </div>
   );
 }
@@ -57,6 +76,20 @@ function LegacyChurchAdminSystemHealthRedirect() {
   const { isSuperAdmin } = useAuth();
 
   return <Navigate to={isSuperAdmin ? "/super-admin/system-health" : "/church-admin"} replace />;
+}
+
+function ChurchAdminWorkspaceRoute() {
+  const { isLoading, isSuperAdmin } = useAuth();
+
+  if (!isLoading && isSuperAdmin) {
+    return <Navigate to="/super-admin" replace />;
+  }
+
+  return (
+    <ProtectedRoute requireChurch requireAdmin allowedRoles={["church_admin", "secretary"]}>
+      <AdminRoutes />
+    </ProtectedRoute>
+  );
 }
 
 function AppRoutes() {
@@ -83,6 +116,27 @@ function AppRoutes() {
         <Route path="/scan-qr" element={<ScanQR />} />
         <Route path="/give/:churchSlugOrId" element={<PayPage />} />
         <Route path="/pay" element={<PayPage />} />
+        <Route path="/bible-licenses" element={<BibleLicensesPage />} />
+        {import.meta.env.DEV ? (
+          <>
+            <Route
+              path="/dev/kanisa-ai"
+              element={
+                <ProtectedRoute>
+                  <KanisaAIPlayground />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dev/automation"
+              element={
+                <ProtectedRoute>
+                  <AutomationPlayground />
+                </ProtectedRoute>
+              }
+            />
+          </>
+        ) : null}
 
         <Route
           path="/portal/*"
@@ -109,16 +163,28 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/pastoral/*"
+          element={
+            <ProtectedRoute requireChurch requireAdmin allowedRoles={["pastor"]}>
+              <PastoralRoutes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/finance/*"
+          element={
+            <ProtectedRoute requireChurch requireAdmin allowedRoles={["treasurer"]}>
+              <FinanceRoutes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/church-admin/system-health"
           element={<LegacyChurchAdminSystemHealthRedirect />}
         />
         <Route
           path="/church-admin/*"
-          element={
-            <ProtectedRoute requireChurch requireAdmin>
-              <AdminRoutes />
-            </ProtectedRoute>
-          }
+          element={<ChurchAdminWorkspaceRoute />}
         />
         <Route
           path="/super-admin/*"
@@ -151,8 +217,12 @@ const App = () => {
                   Supabase connection is missing.
                 </h1>
                 <p className="mt-3 text-sm text-muted-foreground">
-                  {environmentValidationErrors.map((error) => <span key={error} className="block">{error}</span>)}
-                  {environmentValidationWarnings.map((warning) => <span key={warning} className="block text-amber-600">{warning}</span>)}
+                  {environmentDiagnostics.errors.map((error) => <span key={error} className="block">{error}</span>)}
+                  {environmentDiagnostics.warnings.map((warning) => <span key={warning} className="block text-amber-600">{warning}</span>)}
+                  <span className="mt-3 block">
+                    Environment: {environmentDiagnostics.environment}; Supabase project:{" "}
+                    {environmentDiagnostics.supabaseProjectRef ?? "unavailable"}.
+                  </span>
                 </p>
                 <Button onClick={() => window.location.reload()}>
                   Reload App
@@ -162,8 +232,11 @@ const App = () => {
           ) : (
             <AuthProvider>
               <ChurchThemeProvider>
-                <PreviewViewport>
+                  <PreviewViewport>
+                  <KanisaCommandCenter />
+                  <RoutePerformanceMonitor />
                   <AppRoutes />
+                  <DiagnosticsOverlay />
                 </PreviewViewport>
               </ChurchThemeProvider>
             </AuthProvider>

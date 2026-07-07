@@ -78,12 +78,20 @@
 }
 
 @layer base {
-  /* Clean focus states for form elements */
-  input:focus,
-  select:focus,
-  textarea:focus {
-    outline: none;
-    box-shadow: none;
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 3px;
+  }
+
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 3px;
   }
 }
 
@@ -581,6 +589,35 @@
   .scrollbar-gutter-stable {
     scrollbar-gutter: stable;
   }
+
+  .pilot-page {
+    @apply mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8;
+  }
+
+  .pilot-stack {
+    @apply space-y-4 sm:space-y-6;
+  }
+
+  .pilot-grid {
+    @apply grid gap-4 sm:gap-5;
+  }
+
+  .pilot-card {
+    @apply rounded-lg border border-border/60 bg-card/85 shadow-sm;
+  }
+
+  .pilot-table-wrap {
+    @apply w-full overflow-x-auto rounded-lg border border-border/60;
+  }
+
+  .pilot-touch-target {
+    min-height: 2.5rem;
+    min-width: 2.5rem;
+  }
+
+  .pilot-truncate {
+    overflow-wrap: anywhere;
+  }
 }
 
 @keyframes portal-rise-in {
@@ -776,6 +813,11 @@
   }
 
   .trusted-media-track {
+    transform: none !important;
+  }
+
+  .premium-card:hover,
+  .premium-button:hover {
     transform: none !important;
   }
 

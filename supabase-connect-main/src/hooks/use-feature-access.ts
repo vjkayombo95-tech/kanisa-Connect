@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,7 @@ type PlatformFeatureRow = {
 type ChurchFeatureRow = {
   feature_id: string;
   enabled: boolean;
+  locked?: boolean | null;
 };
 
 const FEATURE_KEY_ALIASES: Record<string, string[]> = {
@@ -61,7 +62,7 @@ export function useFeatureAccess() {
 
       const { data, error } = await supabase
         .from("church_features")
-        .select("feature_id, enabled")
+        .select("feature_id, enabled, locked")
         .eq("church_id", churchId);
 
       if (error) throw error;
@@ -73,18 +74,18 @@ export function useFeatureAccess() {
   });
 
   const featureMap = useMemo(() => {
-    const churchOverrides = new Map(churchFeatures.map((feature) => [feature.feature_id, feature.enabled]));
+    const churchOverrides = new Map(churchFeatures.map((feature) => [feature.feature_id, feature]));
     const result = new Map<string, FeatureState>();
 
     for (const feature of platformFeatures) {
       const globalEnabled = feature.globally_enabled;
       const globalLocked = feature.globally_locked;
-      const churchEnabled = churchOverrides.has(feature.id)
-        ? churchOverrides.get(feature.id) ?? globalEnabled
-        : globalEnabled;
+      const churchOverride = churchOverrides.get(feature.id);
+      const churchEnabled = churchOverride ? churchOverride.enabled : globalEnabled;
+      const churchLocked = churchOverride?.locked === true;
 
-      const visible = globalEnabled && (globalLocked || churchEnabled);
-      const locked = globalEnabled && globalLocked;
+      const visible = globalEnabled && churchEnabled;
+      const locked = visible && (globalLocked || churchLocked);
 
       result.set(feature.key, {
         key: feature.key,
@@ -98,7 +99,7 @@ export function useFeatureAccess() {
     return result;
   }, [churchFeatures, platformFeatures]);
 
-  const getFeatureState = (key: string): FeatureState => {
+  const getFeatureState = useCallback((key: string): FeatureState => {
     const directState = featureMap.get(key);
     if (directState) return directState;
 
@@ -114,15 +115,19 @@ export function useFeatureAccess() {
     }
 
     return DEFAULT_FEATURE_STATE(key);
-  };
+  }, [featureMap]);
+
+  const isFeatureVisible = useCallback((key: string) => getFeatureState(key).visible, [getFeatureState]);
+  const isFeatureLocked = useCallback((key: string) => getFeatureState(key).locked, [getFeatureState]);
+  const isFeatureEnabled = useCallback((key: string) => getFeatureState(key).enabled, [getFeatureState]);
 
   return {
     isLoading: platformLoading || churchLoading,
     platformFeatures,
     churchFeatures,
     getFeatureState,
-    isFeatureVisible: (key: string) => getFeatureState(key).visible,
-    isFeatureLocked: (key: string) => getFeatureState(key).locked,
-    isFeatureEnabled: (key: string) => getFeatureState(key).enabled,
+    isFeatureVisible,
+    isFeatureLocked,
+    isFeatureEnabled,
   };
 }

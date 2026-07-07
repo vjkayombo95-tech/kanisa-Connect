@@ -4,25 +4,32 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { PageToolbar, getWorkspacePageActions, useWorkspacePage } from "@/components/workspace";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Archive,
+  CalendarDays,
+  Copy,
+  Eye,
   Loader2,
   MessageCircle,
   Megaphone,
   Pencil,
-  Plus,
+  QrCode,
   RefreshCw,
   Send,
   Sparkles,
+  Star,
   Trash2,
   WandSparkles,
 } from "lucide-react";
@@ -43,7 +50,22 @@ type AnnouncementRecord = {
   created_at: string;
   updated_at: string;
   archived_at: string | null;
+  status?: AnnouncementStatus | null;
+  featured?: boolean | null;
+  publish_at?: string | null;
+  expires_at?: string | null;
+  timezone?: string | null;
+  never_expires?: boolean | null;
+  audience?: string[] | null;
+  target_ministry?: string | null;
+  target_community?: string | null;
+  show_on_calendar?: boolean | null;
+  notification_strategy?: AnnouncementNotificationStrategy | null;
+  category?: string | null;
 };
+
+type AnnouncementStatus = "draft" | "scheduled" | "active" | "featured" | "expired" | "archived";
+type AnnouncementNotificationStrategy = "none" | "immediate" | "on_publish" | "one_day_before_expiry";
 
 type MessageTemplateRecord = Tables<"message_templates">;
 type MessageInsert = TablesInsert<"messages">;
@@ -58,6 +80,17 @@ const EMPTY_FORM = {
   title: "",
   content: "",
   isPublished: false,
+  publishAt: "",
+  expiresAt: "",
+  timezone: "Africa/Nairobi",
+  neverExpires: true,
+  audience: ["everyone"] as string[],
+  targetMinistry: "",
+  targetCommunity: "",
+  showOnCalendar: false,
+  notificationStrategy: "none" as AnnouncementNotificationStrategy,
+  category: "general",
+  featured: false,
 };
 
 const EMPTY_AI_FORM: AIComposerForm = {
@@ -71,6 +104,53 @@ const suggestionOptions = [
   { label: "Prayer Meeting", type: "prayer", fallbackTitle: { sw: "Tangazo la Mkutano wa Maombi", en: "Prayer Meeting Announcement" } },
   { label: "Special Event", type: "event", fallbackTitle: { sw: "Tangazo la Tukio Maalum", en: "Special Event Announcement" } },
 ] as const;
+
+const audienceOptions = [
+  { value: "everyone", label: "Everyone" },
+  { value: "members", label: "Members" },
+  { value: "visitors", label: "Visitors" },
+  { value: "pastor", label: "Priests" },
+  { value: "church_admin", label: "Church Admin" },
+  { value: "finance", label: "Finance" },
+  { value: "super_admin", label: "Super Admin" },
+];
+
+const categoryOptions = ["general", "sunday_bulletin", "event", "ministry", "community", "finance", "pastoral"];
+
+function toDateTimeLocal(value: string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offset = date.getTimezoneOffset();
+  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+}
+
+function fromDateTimeLocal(value: string) {
+  return value ? new Date(value).toISOString() : null;
+}
+
+function resolveAnnouncementStatus(announcement: AnnouncementRecord): AnnouncementStatus {
+  if (announcement.archived_at) return "archived";
+  if (announcement.status) return announcement.status;
+  if (announcement.expires_at && !announcement.never_expires && new Date(announcement.expires_at) <= new Date()) return "expired";
+  if (!announcement.is_published && announcement.publish_at && new Date(announcement.publish_at) > new Date()) return "scheduled";
+  if (announcement.is_published && announcement.featured) return "featured";
+  if (announcement.is_published) return "active";
+  return "draft";
+}
+
+function statusBadgeClass(status: AnnouncementStatus) {
+  if (status === "active") return "border-emerald-400/30 bg-emerald-500/10 text-emerald-300";
+  if (status === "featured") return "border-primary/30 bg-primary/10 text-primary";
+  if (status === "scheduled") return "border-blue-400/30 bg-blue-500/10 text-blue-300";
+  if (status === "expired") return "border-orange-400/30 bg-orange-500/10 text-orange-300";
+  if (status === "archived") return "border-border text-muted-foreground";
+  return "border-amber-400/20 bg-amber-500/10 text-amber-200";
+}
+
+function formatWindow(value: string | null | undefined) {
+  return value ? new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "Not set";
+}
 
 type SuggestionType = (typeof suggestionOptions)[number]["type"];
 type LanguageType = "sw" | "en";
@@ -270,6 +350,7 @@ function isMissingAiMessageStorage(error: unknown) {
 }
 
 export default function AnnouncementsPage() {
+  const page = useWorkspacePage();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [selectedType, setSelectedType] = useState<SuggestionType>("service");
@@ -280,6 +361,11 @@ export default function AnnouncementsPage() {
   const [aiNotice, setAiNotice] = useState<string | null>(null);
   const [aiLoadingMessage, setAiLoadingMessage] = useState("Connecting to AI...");
   const [lastGeneratedAt, setLastGeneratedAt] = useState<number>(0);
+  const [statusFilter, setStatusFilter] = useState<AnnouncementStatus | "all">("all");
+  const [audienceFilter, setAudienceFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [dateFromFilter, setDateFromFilter] = useState("");
+  const [dateToFilter, setDateToFilter] = useState("");
   const { churchId, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -304,11 +390,21 @@ export default function AnnouncementsPage() {
     queryClient.setQueryData<AnnouncementRecord[]>(["announcements", churchId], (current = []) => updater(current));
   };
 
+  const invalidateAnnouncementConsumers = () => {
+    queryClient.invalidateQueries({ queryKey: ["announcements", churchId] });
+    queryClient.invalidateQueries({ queryKey: ["portal-announcements"] });
+    queryClient.invalidateQueries({ queryKey: ["portal-announcements-all"] });
+    queryClient.invalidateQueries({ queryKey: ["dash-announcements"] });
+    queryClient.invalidateQueries({ queryKey: ["portal-home"] });
+    queryClient.invalidateQueries({ queryKey: ["parish-calendar-events"] });
+  };
+
   const { data: announcements = [], isLoading } = useQuery({
     queryKey: ["announcements", churchId],
     queryFn: async () => {
       if (!churchId) return [];
       await ensureBirthdayAnnouncements(churchId);
+      await supabase.rpc("update_announcement_lifecycle" as never, { _church_id: churchId } as never);
       const { data, error } = await supabase
         .from("announcements")
         .select("*")
@@ -321,13 +417,29 @@ export default function AnnouncementsPage() {
     enabled: !!churchId,
   });
 
+  const filteredAnnouncements = useMemo(() => {
+    const from = dateFromFilter ? new Date(dateFromFilter) : null;
+    const to = dateToFilter ? new Date(dateToFilter) : null;
+
+    return announcements.filter((announcement) => {
+      const status = resolveAnnouncementStatus(announcement);
+      const announcementDate = new Date(announcement.publish_at ?? announcement.published_at ?? announcement.created_at);
+      if (statusFilter !== "all" && status !== statusFilter) return false;
+      if (audienceFilter !== "all" && !(announcement.audience ?? []).includes(audienceFilter)) return false;
+      if (categoryFilter !== "all" && (announcement.category ?? "general") !== categoryFilter) return false;
+      if (from && announcementDate < from) return false;
+      if (to && announcementDate > to) return false;
+      return true;
+    });
+  }, [announcements, audienceFilter, categoryFilter, dateFromFilter, dateToFilter, statusFilter]);
+
   const activeAnnouncements = useMemo(
-    () => announcements.filter((announcement) => !announcement.archived_at),
-    [announcements],
+    () => filteredAnnouncements.filter((announcement) => !announcement.archived_at),
+    [filteredAnnouncements],
   );
   const archivedAnnouncements = useMemo(
-    () => announcements.filter((announcement) => !!announcement.archived_at),
-    [announcements],
+    () => filteredAnnouncements.filter((announcement) => !!announcement.archived_at),
+    [filteredAnnouncements],
   );
 
   const selectedOption = useMemo(
@@ -342,12 +454,28 @@ export default function AnnouncementsPage() {
     setDialogOpen(true);
   };
 
+  const toolbarActions = useMemo(
+    () => getWorkspacePageActions("announcements", page, { create: openCreateDialog }),
+    [page],
+  );
+
   const openEditDialog = (announcement: AnnouncementRecord) => {
     setForm({
       id: announcement.id,
       title: announcement.title,
       content: announcement.content,
       isPublished: announcement.is_published,
+      publishAt: toDateTimeLocal(announcement.publish_at ?? announcement.published_at),
+      expiresAt: toDateTimeLocal(announcement.expires_at),
+      timezone: announcement.timezone ?? "Africa/Nairobi",
+      neverExpires: announcement.never_expires ?? !announcement.expires_at,
+      audience: announcement.audience?.length ? announcement.audience : ["everyone"],
+      targetMinistry: announcement.target_ministry ?? "",
+      targetCommunity: announcement.target_community ?? "",
+      showOnCalendar: Boolean(announcement.show_on_calendar),
+      notificationStrategy: announcement.notification_strategy ?? "none",
+      category: announcement.category ?? "general",
+      featured: Boolean(announcement.featured),
     });
     setDialogOpen(true);
   };
@@ -362,6 +490,17 @@ export default function AnnouncementsPage() {
         _title: form.title,
         _content: form.content,
         _is_published: form.isPublished,
+        _publish_at: fromDateTimeLocal(form.publishAt),
+        _expires_at: form.neverExpires ? null : fromDateTimeLocal(form.expiresAt),
+        _timezone: form.timezone,
+        _never_expires: form.neverExpires,
+        _audience: form.audience,
+        _target_ministry: form.targetMinistry || null,
+        _target_community: form.targetCommunity || null,
+        _show_on_calendar: form.showOnCalendar,
+        _notification_strategy: form.notificationStrategy,
+        _category: form.category,
+        _featured: form.featured,
       } as never);
 
       if (error) {
@@ -369,6 +508,19 @@ export default function AnnouncementsPage() {
 
         console.warn("Announcement save RPC unavailable; using direct Supabase fallback:", error);
         const publishedAt = form.isPublished ? new Date().toISOString() : null;
+        const lifecyclePayload = {
+          publish_at: fromDateTimeLocal(form.publishAt),
+          expires_at: form.neverExpires ? null : fromDateTimeLocal(form.expiresAt),
+          timezone: form.timezone,
+          never_expires: form.neverExpires,
+          audience: form.audience,
+          target_ministry: form.targetMinistry || null,
+          target_community: form.targetCommunity || null,
+          show_on_calendar: form.showOnCalendar,
+          notification_strategy: form.notificationStrategy,
+          category: form.category,
+          featured: form.featured,
+        };
 
         if (form.id) {
           const { error: updateError } = await supabase
@@ -380,6 +532,7 @@ export default function AnnouncementsPage() {
               published_at: publishedAt,
               archived_at: null,
               updated_at: new Date().toISOString(),
+              ...lifecyclePayload,
             })
             .eq("id", form.id)
             .eq("church_id", churchId);
@@ -397,6 +550,7 @@ export default function AnnouncementsPage() {
             is_published: form.isPublished,
             published_at: publishedAt,
             created_by: user?.id ?? null,
+            ...lifecyclePayload,
           });
 
         if (insertError) throw insertError;
@@ -409,11 +563,7 @@ export default function AnnouncementsPage() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["announcements", churchId] });
-      queryClient.invalidateQueries({ queryKey: ["portal-announcements"] });
-      queryClient.invalidateQueries({ queryKey: ["portal-announcements-all"] });
-      queryClient.invalidateQueries({ queryKey: ["dash-announcements"] });
-      queryClient.invalidateQueries({ queryKey: ["portal-home"] });
+      invalidateAnnouncementConsumers();
       toast({ title: form.id ? "Announcement updated" : "Announcement created" });
       setDialogOpen(false);
       resetForm();
@@ -478,10 +628,7 @@ export default function AnnouncementsPage() {
             : item,
         ),
       );
-      queryClient.invalidateQueries({ queryKey: ["announcements", churchId] });
-      queryClient.invalidateQueries({ queryKey: ["portal-announcements"] });
-      queryClient.invalidateQueries({ queryKey: ["portal-announcements-all"] });
-      queryClient.invalidateQueries({ queryKey: ["dash-announcements"] });
+      invalidateAnnouncementConsumers();
       toast({ title: announcement.archived_at ? "Announcement restored" : "Announcement archived" });
     },
     onError: (err: Error) => {
@@ -524,10 +671,7 @@ export default function AnnouncementsPage() {
     },
     onSuccess: (_, announcement) => {
       syncAnnouncementsQuery((items) => items.filter((item) => item.id !== announcement.id));
-      queryClient.invalidateQueries({ queryKey: ["announcements", churchId] });
-      queryClient.invalidateQueries({ queryKey: ["portal-announcements"] });
-      queryClient.invalidateQueries({ queryKey: ["portal-announcements-all"] });
-      queryClient.invalidateQueries({ queryKey: ["dash-announcements"] });
+      invalidateAnnouncementConsumers();
       toast({ title: "Announcement deleted" });
     },
     onError: (err: Error) => {
@@ -673,11 +817,7 @@ export default function AnnouncementsPage() {
       return { stored: !messageError };
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["announcements", churchId] });
-      queryClient.invalidateQueries({ queryKey: ["portal-announcements"] });
-      queryClient.invalidateQueries({ queryKey: ["portal-announcements-all"] });
-      queryClient.invalidateQueries({ queryKey: ["dash-announcements"] });
-      queryClient.invalidateQueries({ queryKey: ["portal-home"] });
+      invalidateAnnouncementConsumers();
       toast({
         title: "Announcement sent",
         description: result.stored
@@ -703,84 +843,209 @@ export default function AnnouncementsPage() {
     });
   };
 
-  const AnnouncementCard = ({ announcement }: { announcement: AnnouncementRecord }) => (
-    <Card key={announcement.id} className="glass-card">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-medium">{announcement.title}</h3>
-              <Badge
+  const publishNowAnnouncement = useMutation({
+    mutationFn: async (announcement: AnnouncementRecord) => {
+      if (!churchId) throw new Error("No church context");
+      const now = new Date().toISOString();
+      const { data, error } = await supabase.rpc("save_church_announcement" as never, {
+        _announcement_id: announcement.id,
+        _church_id: churchId,
+        _title: announcement.title,
+        _content: announcement.content,
+        _is_published: true,
+        _publish_at: now,
+        _expires_at: announcement.never_expires ? null : announcement.expires_at,
+        _timezone: announcement.timezone ?? "Africa/Nairobi",
+        _never_expires: announcement.never_expires ?? !announcement.expires_at,
+        _audience: announcement.audience?.length ? announcement.audience : ["everyone"],
+        _target_ministry: announcement.target_ministry ?? null,
+        _target_community: announcement.target_community ?? null,
+        _show_on_calendar: Boolean(announcement.show_on_calendar),
+        _notification_strategy: announcement.notification_strategy ?? "on_publish",
+        _category: announcement.category ?? "general",
+        _featured: Boolean(announcement.featured),
+      } as never);
+
+      if (error) {
+        if (!isMissingAnnouncementRpc(error)) throw error;
+
+        const { error: updateError } = await supabase
+          .from("announcements")
+          .update({
+            is_published: true,
+            published_at: now,
+            publish_at: now,
+            archived_at: null,
+            updated_at: now,
+          } as never)
+          .eq("id", announcement.id)
+          .eq("church_id", churchId);
+
+        if (updateError) throw updateError;
+        return;
+      }
+
+      const result = data as AnnouncementMutationResult | null;
+      if (!result?.success) {
+        throw new Error(result?.error || "Announcement publish failed.");
+      }
+    },
+    onSuccess: () => {
+      invalidateAnnouncementConsumers();
+      toast({ title: "Announcement published", description: "The announcement is active for its selected audience." });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Publish failed", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const duplicateAnnouncement = (announcement: AnnouncementRecord) => {
+    setForm({
+      id: null,
+      title: `${announcement.title} copy`,
+      content: announcement.content,
+      isPublished: false,
+      publishAt: "",
+      expiresAt: toDateTimeLocal(announcement.expires_at),
+      timezone: announcement.timezone ?? "Africa/Nairobi",
+      neverExpires: announcement.never_expires ?? !announcement.expires_at,
+      audience: announcement.audience?.length ? announcement.audience : ["everyone"],
+      targetMinistry: announcement.target_ministry ?? "",
+      targetCommunity: announcement.target_community ?? "",
+      showOnCalendar: Boolean(announcement.show_on_calendar),
+      notificationStrategy: announcement.notification_strategy ?? "none",
+      category: announcement.category ?? "general",
+      featured: Boolean(announcement.featured),
+    });
+    setDialogOpen(true);
+  };
+
+  const publishNow = (announcement: AnnouncementRecord) => {
+    publishNowAnnouncement.mutate(announcement);
+  };
+
+  const AnnouncementCard = ({ announcement }: { announcement: AnnouncementRecord }) => {
+    const status = resolveAnnouncementStatus(announcement);
+    const audience = announcement.audience?.length ? announcement.audience : ["everyone"];
+
+    return (
+      <Card key={announcement.id} className="glass-card">
+        <CardContent className="p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-medium">{announcement.title}</h3>
+                <Badge variant="outline" className={statusBadgeClass(status)}>
+                  {status.replace("_", " ")}
+                </Badge>
+                {announcement.featured && (
+                  <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
+                    <Star className="mr-1 h-3 w-3" />
+                    Featured
+                  </Badge>
+                )}
+                {announcement.show_on_calendar && (
+                  <Badge variant="outline" className="border-blue-400/30 bg-blue-500/10 text-blue-200">
+                    <CalendarDays className="mr-1 h-3 w-3" />
+                    Calendar
+                  </Badge>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{announcement.content}</p>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground/75">
+                <span>Publish: {formatWindow(announcement.publish_at ?? announcement.published_at)}</span>
+                <span>Expires: {announcement.never_expires ? "Never" : formatWindow(announcement.expires_at)}</span>
+                <span>Audience: {audience.join(", ")}</span>
+                <span>Category: {announcement.category ?? "general"}</span>
+                <span>Notify: {announcement.notification_strategy ?? "none"}</span>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <Button
                 variant="outline"
-                className={
-                  announcement.archived_at
-                    ? "border-border text-muted-foreground"
-                    : announcement.is_published
-                      ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
-                      : "border-amber-400/20 bg-amber-500/10 text-amber-200"
+                size="sm"
+                onClick={() =>
+                  openWhatsAppShare(
+                    buildAnnouncementShareMessage({
+                      churchName: church?.name,
+                      title: announcement.title,
+                      body: announcement.content,
+                    }),
+                  )
                 }
               >
-                {announcement.archived_at ? "Archived" : announcement.is_published ? "Published" : "Draft"}
-              </Badge>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{announcement.content}</p>
-            <p className="mt-2 text-xs text-muted-foreground/60">
-              {new Date(announcement.created_at).toLocaleDateString()}
-            </p>
-          </div>
-
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                openWhatsAppShare(
-                  buildAnnouncementShareMessage({
-                    churchName: church?.name,
+                <MessageCircle className="mr-2 h-3.5 w-3.5" />
+                Share
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  toast({
                     title: announcement.title,
-                    body: announcement.content,
-                  }),
-                )
-              }
-            >
-              <MessageCircle className="mr-2 h-3.5 w-3.5" />
-              Share to WhatsApp
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => openEditDialog(announcement)}>
-              <Pencil className="mr-2 h-3.5 w-3.5" />
-              Edit
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => archiveAnnouncement.mutate(announcement)}
-              disabled={archiveAnnouncement.isPending}
-            >
-              <Archive className="mr-2 h-3.5 w-3.5" />
-              {announcement.archived_at ? "Restore" : "Archive"}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => deleteAnnouncement.mutate(announcement)}
-              disabled={deleteAnnouncement.isPending}
-            >
-              <Trash2 className="mr-2 h-3.5 w-3.5" />
-              Delete
-            </Button>
+                    description: announcement.content.slice(0, 180),
+                  })
+                }
+              >
+                <Eye className="mr-2 h-3.5 w-3.5" />
+                Preview
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => duplicateAnnouncement(announcement)}>
+                <Copy className="mr-2 h-3.5 w-3.5" />
+                Duplicate
+              </Button>
+              {status !== "active" && status !== "featured" && !announcement.archived_at && (
+                <Button variant="outline" size="sm" onClick={() => publishNow(announcement)} disabled={publishNowAnnouncement.isPending}>
+                  <Send className="mr-2 h-3.5 w-3.5" />
+                  Publish now
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => openEditDialog(announcement)}>
+                <Pencil className="mr-2 h-3.5 w-3.5" />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => archiveAnnouncement.mutate(announcement)}
+                disabled={archiveAnnouncement.isPending}
+              >
+                <Archive className="mr-2 h-3.5 w-3.5" />
+                {announcement.archived_at ? "Restore" : "Archive"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => toast({ title: "QR placeholder", description: "Public QR sharing will be enabled with the external announcement page." })}
+              >
+                <QrCode className="mr-2 h-3.5 w-3.5" />
+                QR
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => deleteAnnouncement.mutate(announcement)}
+                disabled={deleteAnnouncement.isPending}
+              >
+                <Trash2 className="mr-2 h-3.5 w-3.5" />
+                Delete
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold font-serif">Announcements</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Manage church announcements and AI-crafted message ideas.</p>
-        </div>
+      <PageToolbar
+        title="Announcements"
+        description="Read and manage parish announcements using the active workspace permissions."
+        actions={toolbarActions}
+      />
+      <div>
         <Dialog
           open={dialogOpen}
           onOpenChange={(open) => {
@@ -788,13 +1053,7 @@ export default function AnnouncementsPage() {
             if (!open) resetForm();
           }}
         >
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={openCreateDialog}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Announcement
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-serif">{form.id ? "Edit Announcement" : "Create Announcement"}</DialogTitle>
             </DialogHeader>
@@ -831,6 +1090,142 @@ export default function AnnouncementsPage() {
                   onCheckedChange={(value) => setForm((current) => ({ ...current, isPublished: value }))}
                 />
                 <Label htmlFor="publish">Publish immediately</Label>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="publish-at">Publish date and time</Label>
+                  <Input
+                    id="publish-at"
+                    type="datetime-local"
+                    value={form.publishAt}
+                    onChange={(event) => setForm((current) => ({ ...current, publishAt: event.target.value, isPublished: false }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="timezone">Timezone</Label>
+                  <Input
+                    id="timezone"
+                    value={form.timezone}
+                    onChange={(event) => setForm((current) => ({ ...current, timezone: event.target.value }))}
+                    placeholder="Africa/Nairobi"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+                <div className="space-y-2">
+                  <Label htmlFor="expires-at">Expiry date and time</Label>
+                  <Input
+                    id="expires-at"
+                    type="datetime-local"
+                    value={form.expiresAt}
+                    disabled={form.neverExpires}
+                    onChange={(event) => setForm((current) => ({ ...current, expiresAt: event.target.value }))}
+                  />
+                </div>
+                <div className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2">
+                  <Switch
+                    id="never-expires"
+                    checked={form.neverExpires}
+                    onCheckedChange={(value) => setForm((current) => ({ ...current, neverExpires: value }))}
+                  />
+                  <Label htmlFor="never-expires">Never expire</Label>
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Category</Label>
+                  <Select
+                    value={form.category}
+                    onValueChange={(value) => setForm((current) => ({ ...current, category: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoryOptions.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category.replace("_", " ")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Notification</Label>
+                  <Select
+                    value={form.notificationStrategy}
+                    onValueChange={(value) =>
+                      setForm((current) => ({ ...current, notificationStrategy: value as AnnouncementNotificationStrategy }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose notification" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="immediate">Immediate</SelectItem>
+                      <SelectItem value="on_publish">On publish</SelectItem>
+                      <SelectItem value="one_day_before_expiry">One day before expiry</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Audience</Label>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {audienceOptions.map((option) => (
+                    <label key={option.value} className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm">
+                      <Checkbox
+                        checked={form.audience.includes(option.value)}
+                        onCheckedChange={(checked) =>
+                          setForm((current) => {
+                            const next = checked
+                              ? Array.from(new Set([...current.audience.filter((item) => item !== "everyone"), option.value]))
+                              : current.audience.filter((item) => item !== option.value);
+                            return { ...current, audience: next.length ? next : ["everyone"] };
+                          })
+                        }
+                      />
+                      {option.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="target-ministry">Target ministry</Label>
+                  <Input
+                    id="target-ministry"
+                    value={form.targetMinistry}
+                    onChange={(event) => setForm((current) => ({ ...current, targetMinistry: event.target.value }))}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="target-community">Target community</Label>
+                  <Input
+                    id="target-community"
+                    value={form.targetCommunity}
+                    onChange={(event) => setForm((current) => ({ ...current, targetCommunity: event.target.value }))}
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm">
+                  <Checkbox
+                    checked={form.featured}
+                    onCheckedChange={(checked) => setForm((current) => ({ ...current, featured: Boolean(checked) }))}
+                  />
+                  Feature this announcement
+                </label>
+                <label className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm">
+                  <Checkbox
+                    checked={form.showOnCalendar}
+                    onCheckedChange={(checked) => setForm((current) => ({ ...current, showOnCalendar: Boolean(checked) }))}
+                  />
+                  Show on parish calendar
+                </label>
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
@@ -1124,10 +1519,10 @@ export default function AnnouncementsPage() {
                             variant="outline"
                             onClick={() => {
                               setForm({
+                                ...EMPTY_FORM,
                                 id: null,
                                 title: aiDraft.title.trim() || getFallbackTitle(selectedType, language),
                                 content: aiDraft.content,
-                                isPublished: false,
                               });
                               setDialogOpen(true);
                             }}
@@ -1147,6 +1542,67 @@ export default function AnnouncementsPage() {
         </Card>
       </motion.section>
 
+      <Card className="glass-card">
+        <CardContent className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-5">
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as AnnouncementStatus | "all")}>
+              <SelectTrigger>
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                {(["draft", "scheduled", "active", "featured", "expired", "archived"] as AnnouncementStatus[]).map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {status.replace("_", " ")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Audience</Label>
+            <Select value={audienceFilter} onValueChange={setAudienceFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All audiences" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All audiences</SelectItem>
+                {audienceOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Category</Label>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All categories</SelectItem>
+                {categoryOptions.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category.replace("_", " ")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="date-from">From</Label>
+            <Input id="date-from" type="date" value={dateFromFilter} onChange={(event) => setDateFromFilter(event.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="date-to">To</Label>
+            <Input id="date-to" type="date" value={dateToFilter} onChange={(event) => setDateToFilter(event.target.value)} />
+          </div>
+        </CardContent>
+      </Card>
+
       {isLoading ? (
         <p className="text-muted-foreground">Loading...</p>
       ) : announcements.length === 0 ? (
@@ -1161,7 +1617,9 @@ export default function AnnouncementsPage() {
           <div className="space-y-3">
             {activeAnnouncements.length === 0 ? (
               <Card className="glass-card">
-                <CardContent className="py-8 text-center text-muted-foreground">No active announcements.</CardContent>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  No announcements match the current lifecycle filters.
+                </CardContent>
               </Card>
             ) : (
               activeAnnouncements.map((announcement) => (

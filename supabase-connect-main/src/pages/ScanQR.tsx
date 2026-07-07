@@ -1,12 +1,13 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { QrReader } from "react-qr-reader";
 import { Camera, Loader2, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { parseChurchQRPayload } from "@/lib/qr-payments";
+
+const QrReader = lazy(() => import("react-qr-reader").then((module) => ({ default: module.QrReader })));
 
 type ScannerStatus = "loading" | "ready" | "success";
 
@@ -66,46 +67,48 @@ export default function ScanQR() {
                 </div>
               ) : (
                 <div className="overflow-hidden rounded-[22px]">
-                  <QrReader
-                    constraints={{ facingMode: { ideal: "environment" } }}
-                    scanDelay={400}
-                    containerStyle={{ width: "100%" }}
-                    videoContainerStyle={{ width: "100%", paddingTop: 0 }}
-                    videoStyle={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    onResult={(result, error) => {
-                      if (!hasScanned && status === "loading") {
-                        setStatus("ready");
-                      }
-
-                      if (result && !hasScanned) {
-                        try {
-                          const payload = parseChurchQRPayload(result.getText());
-                          setHasScanned(true);
-                          setStatus("success");
-                          setErrorMessage("");
-                          navigate(`/give/${encodeURIComponent(payload.churchId)}`);
-                        } catch (parseError) {
-                          setErrorMessage(
-                            parseError instanceof Error ? parseError.message : "Invalid QR code. Please scan a church payment QR.",
-                          );
-                        }
-                      }
-
-                      if (error) {
-                        const message = error.message.toLowerCase();
-
-                        if (message.includes("permission") || message.includes("denied")) {
-                          setErrorMessage("Camera access was blocked. Please allow access and try again.");
+                  <Suspense fallback={<div className="aspect-[4/5] bg-black/40" aria-label="Loading QR scanner" />}>
+                    <QrReader
+                      constraints={{ facingMode: { ideal: "environment" } }}
+                      scanDelay={400}
+                      containerStyle={{ width: "100%" }}
+                      videoContainerStyle={{ width: "100%", paddingTop: 0 }}
+                      videoStyle={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      onResult={(result, error) => {
+                        if (!hasScanned && status === "loading") {
                           setStatus("ready");
                         }
 
-                        if (message.includes("no device") || message.includes("not found")) {
-                          setErrorMessage("No camera was found on this device.");
-                          setStatus("ready");
+                        if (result && !hasScanned) {
+                          try {
+                            const payload = parseChurchQRPayload(result.getText());
+                            setHasScanned(true);
+                            setStatus("success");
+                            setErrorMessage("");
+                            navigate(`/give/${encodeURIComponent(payload.churchId)}`);
+                          } catch (parseError) {
+                            setErrorMessage(
+                              parseError instanceof Error ? parseError.message : "Invalid QR code. Please scan a church payment QR.",
+                            );
+                          }
                         }
-                      }
-                    }}
-                  />
+
+                        if (error) {
+                          const message = error.message.toLowerCase();
+
+                          if (message.includes("permission") || message.includes("denied")) {
+                            setErrorMessage("Camera access was blocked. Please allow access and try again.");
+                            setStatus("ready");
+                          }
+
+                          if (message.includes("no device") || message.includes("not found")) {
+                            setErrorMessage("No camera was found on this device.");
+                            setStatus("ready");
+                          }
+                        }
+                      }}
+                    />
+                  </Suspense>
                 </div>
               )}
 

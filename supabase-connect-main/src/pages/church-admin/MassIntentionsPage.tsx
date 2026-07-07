@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { PageToolbar, getWorkspacePageActions, useWorkspacePage } from "@/components/workspace";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { useToast } from "@/hooks/use-toast";
@@ -181,6 +182,7 @@ function buildPdfRows(rows: MassIntentionRow[]) {
 }
 
 export default function MassIntentionsPage() {
+  const page = useWorkspacePage();
   const { churchId, userRole, isSuperAdmin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -255,6 +257,7 @@ export default function MassIntentionsPage() {
   const church = data?.church ?? null;
   const massTimeOptions = data?.massTimeOptions ?? EMPTY_MASS_TIMES;
   const summary = data?.summary ?? { today: 0, pendingPayment: 0, approved: 0, collected: 0 };
+  const toolbarActions = useMemo(() => getWorkspacePageActions("mass_intentions", page), [page]);
 
   useEffect(() => {
     setTotalCount(data?.count ?? 0);
@@ -475,22 +478,27 @@ export default function MassIntentionsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold font-serif">Mass Intentions</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Manage submitted Mass intentions and print office lists.</p>
-        </div>
+      <PageToolbar
+        title="Mass Intentions"
+        description="Review Mass intentions in the active workspace while reusing the same office list."
+        actions={toolbarActions}
+      />
+      {(page.permissions.has("export") || page.permissions.has("create")) ? (
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button variant="outline" onClick={generatePdf} disabled={intentions.length === 0}>
-            <Download className="mr-2 h-4 w-4" />
-            Generate PDF
-          </Button>
-          <Button onClick={openAddDialog}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Manual
-          </Button>
+          {page.permissions.has("export") ? (
+            <Button variant="outline" onClick={generatePdf} disabled={intentions.length === 0}>
+              <Download className="mr-2 h-4 w-4" />
+              Generate PDF
+            </Button>
+          ) : null}
+          {page.permissions.has("create") ? (
+            <Button onClick={openAddDialog}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Manual
+            </Button>
+          ) : null}
         </div>
-      </div>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="glass-card"><CardContent className="p-5"><p className="text-sm text-muted-foreground">Total intentions today</p><p className="mt-2 text-2xl font-bold font-serif">{summary.today}</p></CardContent></Card>

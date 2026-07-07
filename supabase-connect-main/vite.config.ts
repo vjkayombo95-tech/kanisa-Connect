@@ -27,6 +27,12 @@ export default defineConfig(() => ({
           // i18n-vendor caused production chunks to evaluate with React undefined.
           if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|react-i18next|use-sync-external-store)[\\/]/.test(id)) return "react-vendor";
           if (id.includes("clsx") || id.includes("tailwind-merge")) return "utils-vendor";
+          if (id.includes("@react-pdf")) return "pdf-vendor";
+          if (id.includes("jspdf")) return "jspdf-vendor";
+          if (id.includes("html2canvas")) return "html2canvas-vendor";
+          if (id.includes("xlsx")) return "xlsx-vendor";
+          if (id.includes("recharts") || /[\\/]node_modules[\\/]d3-/.test(id)) return "charts-vendor";
+          if (id.includes("qrcode.react")) return "qrcode-vendor";
           if (id.includes("react-qr-reader") || id.includes("@zxing")) return "scanner-vendor";
           if (id.includes("@supabase")) return "supabase-vendor";
           if (id.includes("@tanstack")) return "query-vendor";
