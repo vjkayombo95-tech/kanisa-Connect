@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { MASS_INTENTION_WORKFLOW } from "../_shared/whatsapp-dispatch-core.ts";
 import { normalizeTanzanianPhone, serviceWindow, statusPatch, transition, verifyChallenge, verifyMetaSignature, type NiaState } from "../_shared/whatsapp-core.ts";
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -42,7 +43,7 @@ Deno.serve(async (request) => {
       await db.from("whatsapp_conversations").update({ current_state: result.state, context: result.context, service_window_opened_at: window.openedAt, service_window_expires_at: window.expiresAt, last_inbound_at: window.openedAt }).eq("id", conversation.id).eq("church_id", account.church_id);
       await db.from("whatsapp_session_states").upsert({ conversation_id: conversation.id, church_id: account.church_id, state: result.state, collected_data: result.context, expires_at: window.expiresAt });
       // Queue only. A separate trusted worker invokes whatsapp-send; webhook never calls a billable API.
-      await db.from("whatsapp_messages").insert({ church_id: account.church_id, conversation_id: conversation.id, contact_id: contact.id, direction: "outbound", message_type: "text", message_category: "service", status: "queued", dispatch_status: "queued", body: result.message, payload: { to: message.from, dry_run_safe: true } });
+      await db.from("whatsapp_messages").insert({ church_id: account.church_id, conversation_id: conversation.id, contact_id: contact.id, direction: "outbound", message_type: "text", message_category: "service", status: "queued", dispatch_status: "queued", body: result.message, payload: { to: message.from, workflow: MASS_INTENTION_WORKFLOW, dry_run_safe: true } });
     }
     await db.from("whatsapp_webhook_events").update({ processing_status: "processed", processed_at: new Date().toISOString() }).eq("id", inserted.id);
   }
