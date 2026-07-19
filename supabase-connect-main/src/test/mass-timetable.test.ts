@@ -9,8 +9,20 @@ const migration = readFileSync(join(root, "supabase/migrations/20260719120000_ma
 const cancellationFix = readFileSync(join(root, "supabase/migrations/20260719210000_fix_mass_cancellation_notification_type.sql"), "utf8");
 const adminPage = readFileSync(join(root, "src/pages/church-admin/MassTimetablePage.tsx"), "utf8");
 const memberPage = readFileSync(join(root, "src/pages/portal/PortalMassIntentions.tsx"), "utf8");
+const intentionsPage = readFileSync(join(root, "src/pages/church-admin/MassIntentionsPage.tsx"), "utf8");
+const adminRoutes = readFileSync(join(root, "src/routes/AdminRoutes.tsx"), "utf8");
+const registry = readFileSync(join(root, "src/components/workspace/registry.ts"), "utf8");
 
 describe("Mass timetable domain", () => {
+  it("registers the linked Church Admin route behind Mass Intentions access", () => {
+    expect(intentionsPage).toContain('to="/church-admin/mass-timetable"');
+    expect(adminRoutes).toContain('import("@/pages/church-admin/MassTimetablePage")');
+    expect(adminRoutes).toContain('path="mass-timetable"');
+    expect(adminRoutes).toContain('<FeatureProtectedRoute featureKey="mass_intentions">');
+    expect(adminRoutes).toContain('<Route element={<WorkspaceRouteLayout workspaceId="church_admin" />}>');
+    expect(registry).toContain('id: "mass-timetable", label: "Mass Timetable", to: "/church-admin/mass-timetable", icon: CalendarDays, featureFlag: "mass_intentions"');
+  });
+
   it("uses the documented Sunday-first weekday convention", () => {
     expect(MASS_WEEKDAYS).toEqual(["Jumapili", "Jumatatu", "Jumanne", "Jumatano", "Alhamisi", "Ijumaa", "Jumamosi"]);
     expect(migration).toContain("extract(dow from d)::integer = s.day_of_week");

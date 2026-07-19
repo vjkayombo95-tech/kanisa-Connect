@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(join(root, path), "utf8");
 
 describe("Operations and Audio Processing feature controls", () => {
   const registry = read("src/components/workspace/registry.ts");
+  const workspaceFramework = read("src/components/workspace/framework.tsx");
   const featureManagement = read("src/pages/super-admin/FeatureManagement.tsx");
   const migration = read("supabase/migrations/20260713123000_register_operations_feature_controls.sql");
 
@@ -19,8 +20,15 @@ describe("Operations and Audio Processing feature controls", () => {
   });
 
   it("gates Church Admin sidebar visibility with the dedicated feature keys", () => {
-    expect(registry).toContain('id: "operations", label: "Operations", to: "/church-admin/operations", icon: Bell, featureFlag: "operations"');
-    expect(registry).toContain('id: "audio-processing", label: "Audio Processing", to: "/church-admin/audio", icon: AudioLines, featureFlag: "audio_processing"');
+    expect(registry).toContain('id: "operations", label: "Operations", to: "/church-admin/operations", icon: Bell, featureFlag: "operations", requireFeatureEnabled: true');
+    expect(registry).toContain('id: "audio-processing", label: "Audio Processing", to: "/church-admin/audio", icon: AudioLines, featureFlag: "audio_processing", requireFeatureEnabled: true');
     expect(registry).not.toContain('id: "audio-processing", label: "Audio Processing", to: "/church-admin/audio", icon: AudioLines, featureFlag: "catholic_content"');
+    expect(workspaceFramework).toContain("item.requireFeatureEnabled");
+    expect(workspaceFramework).toContain("isFeatureEnabled(item.featureFlag)");
+  });
+
+  it("keeps Operations and Audio Processing independently controlled", () => {
+    expect(registry.match(/featureFlag: "operations"/g)).toHaveLength(1);
+    expect(registry.match(/featureFlag: "audio_processing"/g)).toHaveLength(1);
   });
 });

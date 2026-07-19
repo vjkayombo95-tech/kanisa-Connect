@@ -38,6 +38,7 @@ export type WorkspaceNavigationItem = {
   keywords?: string[];
   permission?: string;
   featureFlag?: string;
+  requireFeatureEnabled?: boolean;
 };
 
 export type WorkspaceNavigationGroup = {
@@ -164,26 +165,36 @@ function areGroupStatesEqual(left: Record<string, boolean>, right: Record<string
 }
 
 function useVisibleNavigationGroups(groups: WorkspaceNavigationGroup[]) {
-  const featureAccess = useFeatureAccess();
+  const { isFeatureEnabled, isFeatureVisible } = useFeatureAccess();
 
   return useMemo(
     () =>
       groups
         .map((group) => ({
           ...group,
-          items: group.items.filter((item) => !item.featureFlag || featureAccess.isFeatureVisible(item.featureFlag)),
+          items: group.items.filter((item) => {
+            if (!item.featureFlag) return true;
+            return item.requireFeatureEnabled
+              ? isFeatureEnabled(item.featureFlag)
+              : isFeatureVisible(item.featureFlag);
+          }),
         }))
         .filter((group) => group.items.length > 0),
-    [featureAccess.isFeatureVisible, groups],
+    [groups, isFeatureEnabled, isFeatureVisible],
   );
 }
 
 function useVisibleNavigationItems(items: WorkspaceNavigationItem[]) {
-  const featureAccess = useFeatureAccess();
+  const { isFeatureEnabled, isFeatureVisible } = useFeatureAccess();
 
   return useMemo(
-    () => items.filter((item) => !item.featureFlag || featureAccess.isFeatureVisible(item.featureFlag)),
-    [featureAccess.isFeatureVisible, items],
+    () => items.filter((item) => {
+      if (!item.featureFlag) return true;
+      return item.requireFeatureEnabled
+        ? isFeatureEnabled(item.featureFlag)
+        : isFeatureVisible(item.featureFlag);
+    }),
+    [isFeatureEnabled, isFeatureVisible, items],
   );
 }
 

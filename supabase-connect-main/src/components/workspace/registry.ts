@@ -1,5 +1,6 @@
 import {
   Award,
+  AudioLines,
   BarChart3,
   Bell,
   BookOpen,
@@ -188,6 +189,7 @@ export const workspaceRegistry = {
           { id: "saints", label: "Saints", to: "/church-admin/saints", icon: Sparkles, featureFlag: "catholic_content" },
           { id: "prayer-requests", label: "Prayer Requests", to: "/church-admin/prayer-requests", icon: HeartHandshake, featureFlag: "prayer_requests" },
           { id: "mass-intentions", label: "Mass Intentions", to: "/church-admin/mass-intentions", icon: ClipboardList, featureFlag: "mass_intentions" },
+          { id: "mass-timetable", label: "Mass Timetable", to: "/church-admin/mass-timetable", icon: CalendarDays, featureFlag: "mass_intentions" },
         ],
       },
       {
@@ -199,6 +201,8 @@ export const workspaceRegistry = {
           { id: "event-requests", label: "Event Requests", to: "/church-admin/event-requests", icon: CalendarDays, featureFlag: "event_requests" },
           { id: "announcements", label: "Announcements", to: "/church-admin/announcements", icon: Megaphone, featureFlag: "announcements" },
           { id: "sermons", label: "Sermons", to: "/church-admin/sermons", icon: BookOpen, featureFlag: "sermons" },
+          { id: "operations", label: "Operations", to: "/church-admin/operations", icon: Bell, featureFlag: "operations", requireFeatureEnabled: true },
+          { id: "audio-processing", label: "Audio Processing", to: "/church-admin/audio", icon: AudioLines, featureFlag: "audio_processing", requireFeatureEnabled: true },
           { id: "reports", label: "Reports", to: "/church-admin/reports", icon: BarChart3, featureFlag: "reports" },
         ],
       },

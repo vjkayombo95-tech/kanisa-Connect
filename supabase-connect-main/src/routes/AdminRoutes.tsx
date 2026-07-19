@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
+import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { startMemberPreview } from "@/lib/member-preview";
 import { WorkspaceRouteLayout } from "./WorkspaceRouteLayout";
 
@@ -34,6 +35,7 @@ const MemberBibleBookPage = lazy(() => import("@/pages/portal/MemberBibleBookPag
 const MemberBibleChapterPage = lazy(() => import("@/pages/portal/MemberBibleChapterPage"));
 const PrayerRequestsPage = lazy(() => import("@/pages/church-admin/PrayerRequestsPage"));
 const MassIntentionsPage = lazy(() => import("@/pages/church-admin/MassIntentionsPage"));
+const MassTimetablePage = lazy(() => import("@/pages/church-admin/MassTimetablePage"));
 const CommunityHelpPage = lazy(() => import("@/pages/church-admin/CommunityHelpPage"));
 const NotificationsPage = lazy(() => import("@/pages/church-admin/NotificationsPage"));
 const ChannelsPage = lazy(() => import("@/pages/church-admin/ChannelsPage"));
@@ -56,6 +58,15 @@ function SectionFallback() {
 function MemberPreviewRedirect() {
   startMemberPreview();
   return <Navigate to="/portal" replace />;
+}
+
+function FeatureProtectedRoute({ children, featureKey }: { children: React.ReactNode; featureKey: string }) {
+  const { isFeatureEnabled, isLoading } = useFeatureAccess();
+
+  if (isLoading) return <SectionFallback />;
+  if (!isFeatureEnabled(featureKey)) return <Navigate to="/church-admin" replace />;
+
+  return children;
 }
 
 export default function AdminRoutes() {
@@ -93,6 +104,14 @@ export default function AdminRoutes() {
           <Route path="bible/:bookId/chapter/:chapterNumber" element={<MemberBibleChapterPage />} />
           <Route path="prayer-requests" element={<PrayerRequestsPage />} />
           <Route path="mass-intentions" element={<MassIntentionsPage />} />
+          <Route
+            path="mass-timetable"
+            element={
+              <FeatureProtectedRoute featureKey="mass_intentions">
+                <MassTimetablePage />
+              </FeatureProtectedRoute>
+            }
+          />
           <Route path="community-help" element={<CommunityHelpPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="channels" element={<ChannelsPage />} />
