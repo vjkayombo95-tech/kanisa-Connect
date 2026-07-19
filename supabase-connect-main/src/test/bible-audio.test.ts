@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -32,10 +32,11 @@ const cacheRequest = {
 };
 
 function sourceFiles(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry) => {
-    const fullPath = path.join(dir, entry);
-    if (statSync(fullPath).isDirectory()) return sourceFiles(fullPath);
-    return fullPath;
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (entry.name === "test" || entry.name === "__tests__") return [];
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) return sourceFiles(fullPath);
+    return entry.isFile() && /\.(ts|tsx|js|jsx)$/.test(entry.name) ? [fullPath] : [];
   });
 }
 
@@ -96,9 +97,11 @@ describe("Bible Audio infrastructure", () => {
   });
 
   it("keeps provider secrets out of browser source", () => {
-    const frontendText = sourceFiles(path.join(root, "src"))
-      .filter((file) => /\.(ts|tsx|js|jsx)$/.test(file))
-      .filter((file) => !file.includes(`${path.sep}test${path.sep}`))
+    const frontendText = [
+      ...sourceFiles(path.join(root, "src")),
+      path.join(root, "vite.config.ts"),
+      path.join(root, "index.html"),
+    ]
       .map((file) => readFileSync(file, "utf8"))
       .join("\n");
 

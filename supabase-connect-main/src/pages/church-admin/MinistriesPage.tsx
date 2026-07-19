@@ -210,7 +210,14 @@ export default function MinistriesPage() {
           <DialogTrigger asChild><Button size="sm"><Plus className="mr-2 h-4 w-4" /> Add Ministry</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle className="font-serif">{editingMinistry ? "Edit Ministry" : "New Ministry"}</DialogTitle></DialogHeader>
-            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); editingMinistry ? update.mutate() : create.mutate(); }}>
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (editingMinistry) update.mutate();
+                else create.mutate();
+              }}
+            >
               <div className="space-y-2"><Label>Name *</Label><Input placeholder="e.g. Choir, Youth Ministry" value={name} onChange={(e) => setName(e.target.value)} required /></div>
               <div className="space-y-2"><Label>Description</Label><Textarea placeholder="Ministry purpose..." value={description} onChange={(e) => setDescription(e.target.value)} /></div>
               <div className="flex justify-end gap-2">

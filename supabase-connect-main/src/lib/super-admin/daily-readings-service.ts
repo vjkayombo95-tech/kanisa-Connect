@@ -241,7 +241,7 @@ export async function deleteDailyReadingDraft(id: string) {
 }
 
 export async function fetchCmsDailyReadingByDate(date: string, languageCode?: string): Promise<CmsDailyReading | null> {
-  let query = supabase.from("content_daily_readings" as never).select(DAILY_READING_SELECT).eq("reading_date", date);
+  const query = supabase.from("content_daily_readings" as never).select(DAILY_READING_SELECT).eq("reading_date", date);
   const { data, error } = await query.order("updated_at", { ascending: false }).limit(5);
   if (error) throw error;
   const readings = (data ?? []) as unknown as CmsDailyReading[];
