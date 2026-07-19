@@ -4,7 +4,11 @@ import { normalizeTanzanianPhone, serviceWindow, statusPatch, transition, verify
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const MAX_BODY = 1_000_000;
-function eventKey(value: any, index: number) { return value.messages?.[0]?.id ?? value.statuses?.[0]?.id + ":" + value.statuses?.[0]?.status ?? `${value.metadata?.phone_number_id}:${index}:${JSON.stringify(value).slice(0, 200)}`; }
+function eventKey(value: any, index: number) {
+  const statusKey = value.statuses?.[0]?.id + ":" + value.statuses?.[0]?.status;
+  const fallbackKey = `${value.metadata?.phone_number_id}:${index}:${JSON.stringify(value).slice(0, 200)}`;
+  return value.messages?.[0]?.id ?? statusKey ?? fallbackKey;
+}
 
 Deno.serve(async (request) => {
   if (request.method === "GET") {
