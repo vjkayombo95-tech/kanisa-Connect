@@ -47,6 +47,8 @@ const DEFAULT_FEATURES = [
   { key: "sermons", name: "Sermons", description: "Sermon and homily content." },
   { key: "bible_verses", name: "Bible", description: "Bible reading and scripture surfaces." },
   { key: "bible_audio", name: "Bible Audio", description: "AI-assisted Bible chapter narration, cache, and member playback controls.", globallyEnabled: false },
+  { key: "operations", name: "Operations", description: "Parish operations health, queue telemetry, worker signals, and production events." },
+  { key: "audio_processing", name: "Audio Processing", description: "Audio upload, processing jobs, review workflow, and audio publishing operations." },
   { key: "prayer_requests", name: "Prayer Requests", description: "Prayer request submission, review, and tracking." },
   { key: "mass_intentions", name: "Mass Intentions", description: "Mass intention requests and scheduling." },
   { key: "sacraments", name: "Sacraments", description: "Sacramental records and pastoral sacrament workflows." },

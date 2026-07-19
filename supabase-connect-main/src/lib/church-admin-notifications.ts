@@ -1,22 +1,28 @@
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Award,
   CalendarDays,
   ClipboardList,
   CreditCard,
   HeartHandshake,
+  Megaphone,
   Users,
   type LucideIcon,
 } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export type ChurchAdminPendingCounts = {
   events: number;
   sacraments: number;
   massIntentions: number;
+  prayerRequests: number;
+  communityHelp: number;
+  invitations: number;
+  announcements: number;
   payments: number;
   memberships: number;
   volunteers: number;
@@ -38,13 +44,33 @@ export const EMPTY_CHURCH_ADMIN_PENDING_COUNTS: ChurchAdminPendingCounts = {
   events: 0,
   sacraments: 0,
   massIntentions: 0,
+  prayerRequests: 0,
+  communityHelp: 0,
+  invitations: 0,
+  announcements: 0,
   payments: 0,
   memberships: 0,
   volunteers: 0,
   total: 0,
 };
 
-export const CHURCH_ADMIN_NOTIFICATION_REFRESH_MS = 60_000;
+export const CHURCH_ADMIN_NOTIFICATION_REFRESH_MS = 15_000;
+
+const realtimeTables = [
+  "event_requests",
+  "mass_intentions",
+  "prayer_requests",
+  "community_help_requests",
+  "event_registration_payments",
+  "community_join_requests",
+  "community_membership_requests",
+  "ministry_join_requests",
+  "volunteer_requests",
+  "sacramental_records",
+  "invitations",
+  "invites",
+  "announcements",
+] as const;
 
 const itemDefinitions: Array<Omit<ChurchAdminNotificationItem, "count">> = [
   {
@@ -67,6 +93,34 @@ const itemDefinitions: Array<Omit<ChurchAdminNotificationItem, "count">> = [
     description: "Intentions waiting for approval, scheduling, or payment review.",
     route: "/church-admin/mass-intentions",
     icon: ClipboardList,
+  },
+  {
+    key: "prayerRequests",
+    label: "Prayer requests",
+    description: "Prayer requests waiting for pastoral or admin review.",
+    route: "/church-admin/prayer-requests",
+    icon: HeartHandshake,
+  },
+  {
+    key: "communityHelp",
+    label: "Community help",
+    description: "Community help requests awaiting review.",
+    route: "/church-admin/community-help",
+    icon: HeartHandshake,
+  },
+  {
+    key: "invitations",
+    label: "Invitations",
+    description: "Pending invitations and role invites.",
+    route: "/church-admin/roles",
+    icon: Users,
+  },
+  {
+    key: "announcements",
+    label: "Announcements",
+    description: "Draft or scheduled announcements awaiting publication.",
+    route: "/church-admin/announcements",
+    icon: Megaphone,
   },
   {
     key: "payments",
@@ -95,6 +149,10 @@ const sidebarBadgeMap: Record<string, ChurchAdminNotificationKey> = {
   "event-requests": "events",
   sacraments: "sacraments",
   "mass-intentions": "massIntentions",
+  "prayer-requests": "prayerRequests",
+  "community-help": "communityHelp",
+  roles: "invitations",
+  announcements: "announcements",
   events: "payments",
   "qr-payments": "payments",
   communities: "memberships",
@@ -112,6 +170,10 @@ export function normalizeChurchAdminPendingCounts(value: unknown): ChurchAdminPe
     events: readNumber(record.events),
     sacraments: readNumber(record.sacraments),
     massIntentions: readNumber(record.massIntentions),
+    prayerRequests: readNumber(record.prayerRequests),
+    communityHelp: readNumber(record.communityHelp),
+    invitations: readNumber(record.invitations),
+    announcements: readNumber(record.announcements),
     payments: readNumber(record.payments),
     memberships: readNumber(record.memberships),
     volunteers: readNumber(record.volunteers),
@@ -121,7 +183,16 @@ export function normalizeChurchAdminPendingCounts(value: unknown): ChurchAdminPe
     ...counts,
     total:
       readNumber(record.total) ||
-      counts.events + counts.sacraments + counts.massIntentions + counts.payments + counts.memberships + counts.volunteers,
+      counts.events +
+        counts.sacraments +
+        counts.massIntentions +
+        counts.prayerRequests +
+        counts.communityHelp +
+        counts.invitations +
+        counts.announcements +
+        counts.payments +
+        counts.memberships +
+        counts.volunteers,
   };
 }
 
@@ -155,6 +226,84 @@ export function useChurchAdminPendingCounts() {
     refetchInterval: enabled ? CHURCH_ADMIN_NOTIFICATION_REFRESH_MS : false,
     refetchOnWindowFocus: true,
   });
+}
+
+function playAdminNotificationSound() {
+  if (typeof window === "undefined") return;
+
+  const audioWindow = window as typeof window & { webkitAudioContext?: typeof AudioContext };
+  const AudioContextCtor = audioWindow.AudioContext ?? audioWindow.webkitAudioContext;
+  if (!AudioContextCtor) return;
+
+  try {
+    const context = new AudioContextCtor();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const now = context.currentTime;
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, now);
+    oscillator.frequency.exponentialRampToValueAtTime(660, now + 0.18);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.3);
+    window.setTimeout(() => void context.close().catch(() => undefined), 400);
+  } catch {
+    // Browsers may block audio until the user interacts with the page.
+  }
+}
+
+export function useChurchAdminRealtimeNotifications() {
+  const { churchId, userRole, isSuperAdmin } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const enabled = !!churchId && (isSuperAdmin || ["church_admin", "pastor", "secretary", "treasurer"].includes(userRole ?? ""));
+  const query = useChurchAdminPendingCounts();
+  const previousTotalRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!enabled || !churchId) return;
+
+    const channel = supabase.channel(`church-admin-work-queue-${churchId}`);
+
+    realtimeTables.forEach((table) => {
+      channel.on(
+        "postgres_changes",
+        { event: "*", schema: "public", table, filter: `church_id=eq.${churchId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["church-admin-pending-counts", churchId] });
+        },
+      );
+    });
+
+    channel.subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [churchId, enabled, queryClient]);
+
+  useEffect(() => {
+    const currentTotal = query.data?.total ?? 0;
+    const previousTotal = previousTotalRef.current;
+    previousTotalRef.current = currentTotal;
+
+    if (previousTotal === null || currentTotal <= previousTotal) return;
+
+    const newItems = currentTotal - previousTotal;
+    playAdminNotificationSound();
+    toast({
+      title: newItems === 1 ? "New admin action required" : `${newItems} new admin actions required`,
+      description: "The Action Required queue has been updated in real time.",
+    });
+  }, [query.data?.total, toast]);
+
+  return query;
 }
 
 export function useChurchAdminNotificationItems() {

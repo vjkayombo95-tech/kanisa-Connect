@@ -17,7 +17,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   EMPTY_CHURCH_ADMIN_PENDING_COUNTS,
   getActionRequiredItems,
-  useChurchAdminNotificationItems,
+  getChurchAdminNotificationItems,
+  useChurchAdminRealtimeNotifications,
   type ChurchAdminPendingCounts,
 } from "@/lib/church-admin-notifications";
 import { cn } from "@/lib/utils";
@@ -42,7 +43,10 @@ export function ChurchAdminSidebarBadge({ count }: { count: number }) {
 
 export function ChurchAdminNotificationBell({ className }: { className?: string }) {
   const navigate = useNavigate();
-  const { counts, items, isLoading, isError } = useChurchAdminNotificationItems();
+  const realtimeQuery = useChurchAdminRealtimeNotifications();
+  const counts = realtimeQuery.data ?? EMPTY_CHURCH_ADMIN_PENDING_COUNTS;
+  const items = getChurchAdminNotificationItems(counts);
+  const { isLoading, isError } = realtimeQuery;
   const total = counts.total;
   const pendingItems = items.filter((item) => item.count > 0);
 

@@ -48,6 +48,7 @@ type OfflineSyncAction =
         message: string;
         offeringAmount: number;
         requestedMassDate?: string | null;
+        massOccurrenceId: string;
       };
     }
   | {
@@ -157,6 +158,7 @@ async function processAction(action: OfflineSyncAction) {
       member_id: action.payload.memberId,
       church_id: action.payload.churchId,
       requested_mass_date: action.payload.requestedMassDate ?? "",
+      mass_occurrence_id: action.payload.massOccurrenceId,
       idempotency_key: action.id,
     });
 

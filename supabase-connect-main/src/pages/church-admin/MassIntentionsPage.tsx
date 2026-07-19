@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   Check,
+  CalendarClock,
   ClipboardList,
   Download,
   Eye,
@@ -12,6 +14,7 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +40,8 @@ import { formatTZS } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
 import { PaginationFooter } from "@/components/ui/pagination-footer";
 
+const untypedSupabase = supabase as unknown as SupabaseClient;
+
 type PaymentStatus = "pending" | "paid" | "unpaid" | "failed" | string;
 type IntentionStatus = "pending" | "approved" | "rejected" | "scheduled" | "completed" | "archived" | string;
 
@@ -60,6 +65,16 @@ type MassIntentionRow = {
   proof_image_url: string | null;
   created_at: string;
   updated_at: string | null;
+  mass_occurrence_id: string | null;
+  mass_location: string | null;
+  mass_occurrence?: {
+    id: string;
+    name: string;
+    occurrence_date: string;
+    start_time: string;
+    location_name: string | null;
+    celebrant_name: string | null;
+  } | null;
   members?: {
     full_name: string | null;
     email: string | null;
@@ -71,6 +86,8 @@ type ChurchInfo = {
   name: string | null;
   logo_url: string | null;
 };
+
+type OccurrenceOption = { id: string; name: string; occurrence_date: string; start_time: string; location_name: string | null; celebrant_name: string | null };
 
 const EMPTY_INTENTIONS: MassIntentionRow[] = [];
 const EMPTY_MASS_TIMES: string[] = [];
@@ -186,19 +203,21 @@ export default function MassIntentionsPage() {
   const { churchId, userRole, isSuperAdmin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
 
   const [dateFilter, setDateFilter] = useState("");
   const [massTimeFilter, setMassTimeFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [occurrenceFilter, setOccurrenceFilter] = useState(searchParams.get("occurrence") || "all");
   const [selectedRow, setSelectedRow] = useState<MassIntentionRow | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [totalCount, setTotalCount] = useState(0);
 
   const canDelete = isSuperAdmin || userRole === "church_admin";
-  const filtersKey = [churchId, dateFilter, massTimeFilter, paymentFilter, statusFilter, search.trim()].join("|");
+  const filtersKey = [churchId, dateFilter, massTimeFilter, paymentFilter, statusFilter, occurrenceFilter, search.trim()].join("|");
   const pagination = usePaginatedQuery({ totalCount, resetKey: filtersKey });
 
   const { data, isLoading, isError, error } = useQuery({
@@ -209,6 +228,7 @@ export default function MassIntentionsPage() {
       massTimeFilter,
       paymentFilter,
       statusFilter,
+      occurrenceFilter,
       search,
       pagination.page,
       pagination.pageSize,
@@ -216,13 +236,14 @@ export default function MassIntentionsPage() {
     enabled: !!churchId,
     queryFn: async (): Promise<MassIntentionsPageData> => {
       const [pageResult, churchResult] = await Promise.all([
-        supabase.rpc("get_mass_intentions_admin_page" as never, {
+        supabase.rpc("get_mass_intentions_admin_page_v2" as never, {
           p_church_id: churchId,
           p_search: search.trim() || null,
           p_mass_date: dateFilter || null,
           p_mass_time: massTimeFilter,
           p_payment_status: paymentFilter,
           p_status: statusFilter,
+          p_mass_occurrence_id: occurrenceFilter === "all" ? null : occurrenceFilter,
           p_limit: pagination.pageSize,
           p_offset: pagination.from,
         } as never),
@@ -256,6 +277,15 @@ export default function MassIntentionsPage() {
   const intentions = data?.rows ?? EMPTY_INTENTIONS;
   const church = data?.church ?? null;
   const massTimeOptions = data?.massTimeOptions ?? EMPTY_MASS_TIMES;
+  const { data: occurrenceOptions = [] } = useQuery({
+    queryKey: ["mass-intention-occurrence-options", churchId],
+    enabled: !!churchId,
+    queryFn: async () => {
+      const { data: rows, error: rowsError } = await untypedSupabase.from("mass_occurrences").select("id,name,occurrence_date,start_time,location_name,celebrant_name").eq("church_id", churchId).order("occurrence_date", { ascending: false }).limit(150);
+      if (rowsError) throw rowsError;
+      return (rows ?? []) as OccurrenceOption[];
+    },
+  });
   const summary = data?.summary ?? { today: 0, pendingPayment: 0, approved: 0, collected: 0 };
   const toolbarActions = useMemo(() => getWorkspacePageActions("mass_intentions", page), [page]);
 
@@ -380,6 +410,7 @@ export default function MassIntentionsPage() {
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 36;
     const rows = buildPdfRows(intentions);
+    const selectedOccurrence = occurrenceOptions.find((row) => row.id === occurrenceFilter);
     const totalPaid = intentions
       .filter((row) => row.payment_status === "paid")
       .reduce((total, row) => total + getAmount(row), 0);
@@ -395,12 +426,15 @@ export default function MassIntentionsPage() {
       doc.setFontSize(16);
       doc.text(church?.name || "Church", margin, 42);
       doc.setFontSize(13);
-      doc.text("Mass Intentions List", margin, 64);
+      doc.text(selectedOccurrence ? `${selectedOccurrence.name} — Mass Intentions` : "Mass Intentions List", margin, 64);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.text(`Date: ${titleDate}`, margin, 84);
       doc.text(`Mass time: ${titleMassTime}`, margin + 180, 84);
       doc.text(`Generated on: ${new Date().toLocaleString()}`, margin + 380, 84);
+      if (selectedOccurrence) {
+        doc.text(`Location: ${selectedOccurrence.location_name || "-"} · Celebrant: ${selectedOccurrence.celebrant_name || "-"}`, margin, 98);
+      }
 
       if (church?.logo_url?.startsWith("data:image")) {
         try {
@@ -485,6 +519,7 @@ export default function MassIntentionsPage() {
       />
       {(page.permissions.has("export") || page.permissions.has("create")) ? (
         <div className="flex flex-col gap-2 sm:flex-row">
+          <Button asChild variant="outline"><Link to="/church-admin/mass-timetable"><CalendarClock className="mr-2 h-4 w-4" />Manage Mass Timetable</Link></Button>
           {page.permissions.has("export") ? (
             <Button variant="outline" onClick={generatePdf} disabled={intentions.length === 0}>
               <Download className="mr-2 h-4 w-4" />
@@ -508,7 +543,7 @@ export default function MassIntentionsPage() {
       </div>
 
       <Card className="glass-card">
-        <CardContent className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-5">
+        <CardContent className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-6">
           <div>
             <Label htmlFor="mass-date">Date</Label>
             <Input id="mass-date" type="date" className="mt-2" value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} />
@@ -521,6 +556,13 @@ export default function MassIntentionsPage() {
                 <SelectItem value="all">All Masses</SelectItem>
                 {massTimeOptions.map((time) => <SelectItem key={time} value={time}>{time}</SelectItem>)}
               </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Mass occurrence</Label>
+            <Select value={occurrenceFilter} onValueChange={setOccurrenceFilter}>
+              <SelectTrigger className="mt-2"><SelectValue placeholder="All occurrences" /></SelectTrigger>
+              <SelectContent><SelectItem value="all">All occurrences</SelectItem>{occurrenceOptions.map((row) => <SelectItem key={row.id} value={row.id}>{row.occurrence_date} · {String(row.start_time).slice(0,5)} · {row.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div>
@@ -610,7 +652,7 @@ export default function MassIntentionsPage() {
                   intentions.map((row) => (
                     <TableRow key={row.id}>
                       <TableCell className="whitespace-nowrap text-sm">{formatDate(row.mass_date)}</TableCell>
-                      <TableCell className="min-w-36 text-sm">{row.mass_time || row.mass_name || "-"}</TableCell>
+                      <TableCell className="min-w-36 text-sm"><p>{row.mass_occurrence ? `${String(row.mass_occurrence.start_time).slice(0,5)} · ${row.mass_occurrence.name}` : row.mass_time || row.mass_name || "-"}</p>{row.mass_occurrence_id ? <Badge variant="outline" className="mt-1">Linked Mass</Badge> : <span className="mt-1 block text-xs text-muted-foreground">Legacy record</span>}</TableCell>
                       <TableCell className="min-w-36 font-medium">{getOfferedFor(row)}</TableCell>
                       <TableCell className="whitespace-nowrap text-sm">{cleanLabel(row.intention_type)}</TableCell>
                       <TableCell className="max-w-[260px] truncate text-sm text-muted-foreground" title={row.message || row.intention || undefined}>
@@ -666,8 +708,9 @@ export default function MassIntentionsPage() {
               <Detail label="Offered For" value={getOfferedFor(selectedRow)} />
               <Detail label="Requested By" value={getRequestedBy(selectedRow)} />
               <Detail label="Phone" value={getPhone(selectedRow)} />
-              <Detail label="Mass" value={selectedRow.mass_time || selectedRow.mass_name || "-"} />
+              <Detail label="Mass" value={selectedRow.mass_occurrence ? `${String(selectedRow.mass_occurrence.start_time).slice(0,5)} · ${selectedRow.mass_occurrence.name}` : selectedRow.mass_time || selectedRow.mass_name || "-"} />
               <Detail label="Date" value={formatDate(selectedRow.mass_date)} />
+              <Detail label="Location" value={selectedRow.mass_occurrence?.location_name || selectedRow.mass_location || "-"} />
               <Detail label="Amount" value={formatTZS(getAmount(selectedRow))} />
               <Detail label="Payment Status" value={cleanLabel(selectedRow.payment_status || "pending")} />
               <Detail label="Status" value={cleanLabel(selectedRow.status || "pending")} />
