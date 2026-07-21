@@ -50,6 +50,12 @@ const AnalyticsPage = lazy(() => import("@/pages/church-admin/AnalyticsPage"));
 const DataImportPage = lazy(() => import("@/pages/church-admin/DataImportPage"));
 const AuditLogsPage = lazy(() => import("@/pages/church-admin/AuditLogsPage"));
 const BillingPage = lazy(() => import("@/pages/church-admin/BillingPage"));
+const OperationsPage = lazy(() => import("@/pages/church-admin/OperationsPage"));
+const AudioDashboardPage = lazy(() => import("@/pages/church-admin/audio/AudioDashboardPage"));
+const AudioJobsPage = lazy(() => import("@/pages/church-admin/audio/AudioJobsPage"));
+const AudioUploadPage = lazy(() => import("@/pages/church-admin/audio/AudioUploadPage"));
+const AudioReviewPage = lazy(() => import("@/pages/church-admin/audio/AudioReviewPage"));
+const AudioSettingsPage = lazy(() => import("@/pages/church-admin/audio/AudioSettingsPage"));
 
 function SectionFallback() {
   return (
@@ -139,6 +145,13 @@ export default function AdminRoutes() {
           <Route path="data-import" element={<DataImportPage />} />
           <Route path="audit-logs" element={<AuditLogsPage />} />
           <Route path="billing" element={<BillingPage />} />
+          <Route path="operations" element={<OperationsPage />} />
+          <Route path="audio" element={<AudioDashboardPage />} />
+          <Route path="audio/jobs" element={<AudioJobsPage />} />
+          <Route path="audio/jobs/:id" element={<AudioReviewPage />} />
+          <Route path="audio/upload" element={<AudioUploadPage />} />
+          <Route path="audio/review/:id" element={<AudioReviewPage />} />
+          <Route path="audio/settings" element={<AudioSettingsPage />} />
           <Route path="preview-member" element={<MemberPreviewRedirect />} />
         </Route>
       </Routes>
