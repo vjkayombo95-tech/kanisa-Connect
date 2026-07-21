@@ -402,7 +402,7 @@ function getAccountInitials(name: string, fallback: string) {
   return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase();
 }
 
-function WorkspaceAccountMenu({ workspace, mode = "desktop" }: { workspace: WorkspaceConfig; mode?: "desktop" | "mobile" }) {
+function WorkspaceAccountMenu({ workspace, mode = "header" }: { workspace: WorkspaceConfig; mode?: "header" | "mobile" }) {
   const { profile, user, signOut } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -421,18 +421,21 @@ function WorkspaceAccountMenu({ workspace, mode = "desktop" }: { workspace: Work
   };
 
   return (
-    <div className={cn("border-t border-border/70 pt-3", mode === "mobile" ? "mt-4" : "mt-4")}>
+    <div className={cn(mode === "mobile" && "mt-4 border-t border-border/70 pt-3")}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            className={cn(
+              "flex items-center gap-3 rounded-2xl px-2 py-1.5 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+              mode === "mobile" ? "w-full px-3 py-2" : "w-auto max-w-[18rem]",
+            )}
             aria-label={t("account.open_menu")}
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
               {initials}
             </span>
-            <span className="min-w-0 flex-1">
+            <span className={cn("min-w-0 flex-1", mode === "header" && "hidden md:block")}>
               <span className="block truncate text-sm font-semibold text-foreground">{displayName}</span>
               {email ? <span className="block truncate text-xs text-muted-foreground">{email}</span> : null}
             </span>
@@ -556,7 +559,6 @@ export function WorkspaceLayout({ workspace, children }: WorkspaceLayoutProps) {
             <div className="min-h-0 flex-1 overflow-y-auto pr-1">
               <MobileWorkspaceNavigation groups={workspace.navigation} />
             </div>
-            <WorkspaceAccountMenu workspace={workspace} mode="mobile" />
           </SheetContent>
         </Sheet>
         {Icon ? (
@@ -568,11 +570,10 @@ export function WorkspaceLayout({ workspace, children }: WorkspaceLayoutProps) {
           <p className="truncate text-sm font-semibold text-foreground">{workspaceTitle}</p>
           {workspaceDescription ? <p className="truncate text-xs text-muted-foreground">{workspaceDescription}</p> : null}
         </div>
-        {workspace.id === "church_admin" ? (
-          <div className="ml-auto">
-            <ChurchAdminNotificationBell />
-          </div>
-        ) : null}
+        <div className="ml-auto flex items-center gap-2">
+          {workspace.id === "church_admin" ? <ChurchAdminNotificationBell /> : null}
+          <WorkspaceAccountMenu workspace={workspace} />
+        </div>
       </header>
       <MemberPreviewBanner workspaceId={workspace.id} />
 
@@ -586,7 +587,6 @@ export function WorkspaceLayout({ workspace, children }: WorkspaceLayoutProps) {
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             <WorkspaceNavigation groups={workspace.navigation} />
           </div>
-          <WorkspaceAccountMenu workspace={workspace} />
         </aside>
         <main id="workspace-main" className={cn("min-w-0 p-4 lg:p-6", workspace.theme?.dashboardClassName)}>
           <section
@@ -616,28 +616,7 @@ export function WorkspaceLayout({ workspace, children }: WorkspaceLayoutProps) {
           {children}
         </main>
       </div>
-      <WorkspaceMountDiagnostics workspace={workspace} />
     </div>
-  );
-}
-
-function WorkspaceMountDiagnostics({ workspace }: { workspace: WorkspaceConfig }) {
-  if (!import.meta.env.DEV) return null;
-
-  return (
-    <aside className="fixed bottom-3 left-3 z-[90] max-w-[calc(100vw-1.5rem)] rounded-lg border border-border bg-popover/95 px-3 py-2 text-xs text-popover-foreground shadow-lg backdrop-blur">
-      <p className="font-semibold">Workspace Diagnostics</p>
-      <dl className="mt-1 grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 gap-y-1">
-        <dt className="text-muted-foreground">Current Workspace</dt>
-        <dd className="truncate">{workspace.id}</dd>
-        <dt className="text-muted-foreground">Current Layout</dt>
-        <dd>WorkspaceLayout</dd>
-        <dt className="text-muted-foreground">Current Sidebar</dt>
-        <dd>WorkspaceNavigation</dd>
-        <dt className="text-muted-foreground">Mounted Workspace ID</dt>
-        <dd className="truncate">{workspace.id}</dd>
-      </dl>
-    </aside>
   );
 }
 
