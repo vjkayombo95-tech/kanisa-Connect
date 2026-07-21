@@ -10,6 +10,7 @@ const featureHook = read("src/hooks/use-feature-access.ts");
 const permissionHook = read("src/hooks/use-church-permission.ts");
 const routeLayout = read("src/routes/WorkspaceRouteLayout.tsx");
 const routeMetadata = read("src/lib/workspace-route-permissions.ts");
+const workspaceFramework = read("src/components/workspace/framework.tsx");
 const page = read("src/pages/church-admin/FeaturesPermissionsPage.tsx");
 const superAdminPage = read("src/pages/super-admin/FeatureManagement.tsx");
 
@@ -62,6 +63,12 @@ describe("tenant feature permission security boundary", () => {
     expect(routeLayout).toContain("permission.isLoading");
     expect(routeMetadata).toContain("/portal/contribution-receipt/");
     expect(routeMetadata).toContain("feature_permissions_admin");
+  });
+
+  it("uses authoritative route permissions when filtering workspace navigation", () => {
+    expect(workspaceFramework).toContain("getWorkspaceRoutePermission");
+    expect(workspaceFramework).toContain('supabase.rpc("has_church_feature_permission"');
+    expect(workspaceFramework).toContain('queries[index]?.data === true');
   });
 
   it("invalidates permission decisions across sessions", () => {

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronLeft, ChevronRight, HelpCircle, LogOut, Menu, Settings, UserCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -20,10 +20,13 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { DashboardExperience, type DashboardConfig, type DashboardWidget } from "@/components/portal/dashboard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
+import type { ChurchPermissionAction } from "@/hooks/use-church-permission";
+import { supabase } from "@/integrations/supabase/client";
 import { createPersonalAssistantModel } from "@/lib/assistant";
 import { EMPTY_CHURCH_ADMIN_PENDING_COUNTS, getChurchAdminSidebarBadge, useChurchAdminPendingCounts } from "@/lib/church-admin-notifications";
 import { isMemberPreviewActive, stopMemberPreview, subscribeMemberPreview } from "@/lib/member-preview";
 import { cn } from "@/lib/utils";
+import { getWorkspaceRoutePermission } from "@/lib/workspace-route-permissions";
 
 export type WorkspaceId = "member" | "pastoral" | "church_admin" | "finance" | "super_admin";
 
@@ -164,37 +167,92 @@ function areGroupStatesEqual(left: Record<string, boolean>, right: Record<string
   return leftKeys.every((key) => left[key] === right[key]);
 }
 
+type NavigationPermissionRequirement = {
+  featureKey: string;
+  action: ChurchPermissionAction;
+};
+
+function getNavigationPermissionRequirement(item: WorkspaceNavigationItem): NavigationPermissionRequirement | null {
+  if (!item.featureFlag) return null;
+
+  const routePermission = getWorkspaceRoutePermission(item.to);
+  if (routePermission) {
+    return { featureKey: routePermission.featureKey, action: routePermission.action };
+  }
+
+  return {
+    featureKey: item.featureFlag,
+    action: item.requireFeatureEnabled ? "manage" : "view",
+  };
+}
+
+function useNavigationPermissionDecisions(items: WorkspaceNavigationItem[]) {
+  const { churchId, user } = useAuth();
+  const requirements = useMemo(() => {
+    const unique = new Map<string, NavigationPermissionRequirement>();
+    for (const item of items) {
+      const requirement = getNavigationPermissionRequirement(item);
+      if (requirement) unique.set(`${requirement.featureKey}:${requirement.action}`, requirement);
+    }
+    return [...unique.values()];
+  }, [items]);
+  const queries = useQueries({
+    queries: requirements.map(({ featureKey, action }) => ({
+      queryKey: ["church-permission", churchId, user?.id, featureKey, action],
+      queryFn: async () => {
+        if (!churchId || !user?.id) return false;
+        const { data, error } = await supabase.rpc("has_church_feature_permission", {
+          _user_id: user.id,
+          _church_id: churchId,
+          _feature_key: featureKey,
+          _action: action,
+        });
+        if (error) throw error;
+        return data === true;
+      },
+      enabled: !!churchId && !!user?.id,
+      staleTime: 15 * 1000,
+      refetchOnWindowFocus: true,
+    })),
+  });
+
+  return useMemo(
+    () => new Map(requirements.map((requirement, index) => [
+      `${requirement.featureKey}:${requirement.action}`,
+      queries[index]?.data === true,
+    ])),
+    [queries, requirements],
+  );
+}
+
+function isNavigationItemVisible(item: WorkspaceNavigationItem, decisions: Map<string, boolean>) {
+  const requirement = getNavigationPermissionRequirement(item);
+  if (!requirement) return true;
+  return decisions.get(`${requirement.featureKey}:${requirement.action}`) === true;
+}
+
 function useVisibleNavigationGroups(groups: WorkspaceNavigationGroup[]) {
-  const { isFeatureEnabled, isFeatureVisible } = useFeatureAccess();
+  const items = useMemo(() => groups.flatMap((group) => group.items), [groups]);
+  const decisions = useNavigationPermissionDecisions(items);
 
   return useMemo(
     () =>
       groups
         .map((group) => ({
           ...group,
-          items: group.items.filter((item) => {
-            if (!item.featureFlag) return true;
-            return item.requireFeatureEnabled
-              ? isFeatureEnabled(item.featureFlag)
-              : isFeatureVisible(item.featureFlag);
-          }),
+          items: group.items.filter((item) => isNavigationItemVisible(item, decisions)),
         }))
         .filter((group) => group.items.length > 0),
-    [groups, isFeatureEnabled, isFeatureVisible],
+    [decisions, groups],
   );
 }
 
 function useVisibleNavigationItems(items: WorkspaceNavigationItem[]) {
-  const { isFeatureEnabled, isFeatureVisible } = useFeatureAccess();
+  const decisions = useNavigationPermissionDecisions(items);
 
   return useMemo(
-    () => items.filter((item) => {
-      if (!item.featureFlag) return true;
-      return item.requireFeatureEnabled
-        ? isFeatureEnabled(item.featureFlag)
-        : isFeatureVisible(item.featureFlag);
-    }),
-    [isFeatureEnabled, isFeatureVisible, items],
+    () => items.filter((item) => isNavigationItemVisible(item, decisions)),
+    [decisions, items],
   );
 }
 
