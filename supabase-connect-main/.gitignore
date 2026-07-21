@@ -12,10 +12,13 @@ dist
 dist-ssr
 .tmp/
 *.local
+**/__pycache__/
+*.py[cod]
 evaluation/speech_lab/golden/*.xlsx
 evaluation/speech_lab/model_cache/
 supabase/audio/.venv/
 supabase/audio/models/
+supabase/audio/cache/
 supabase/seed/bible/audio1/
 
 # Editor directories and files
