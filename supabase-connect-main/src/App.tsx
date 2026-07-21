@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Suspense, lazy } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Suspense, lazy, useEffect, useState } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ChurchThemeProvider } from "@/contexts/ChurchThemeContext";
@@ -12,12 +12,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Toaster } from "@/components/ui/toaster";
 import { isSupabaseConfigured } from "@/integrations/supabase/client";
 import { environmentDiagnostics } from "@/lib/environment";
-import { DiagnosticsOverlay } from "@/lib/monitoring/DiagnosticsOverlay";
 import { RoutePerformanceMonitor, createQueryDurationTracker, trackPageLoad } from "@/lib/monitoring";
 import { StagingBanner } from "@/components/StagingBanner";
-import { KanisaCommandCenter } from "@/components/ai/KanisaCommandCenter";
-import Index from "./pages/Index";
+import { markStartupEvent } from "@/lib/startup-diagnostics";
 
+const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const LoginPage = lazy(() => import("./pages/auth/LoginPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/auth/ForgotPasswordPage"));
@@ -37,6 +36,9 @@ const AdminRoutes = lazy(() => import("./routes/AdminRoutes"));
 const PastoralRoutes = lazy(() => import("./routes/PastoralRoutes"));
 const FinanceRoutes = lazy(() => import("./routes/FinanceRoutes"));
 const SuperAdminRoutes = lazy(() => import("./routes/SuperAdminRoutes"));
+const KanisaCommandCenter = lazy(() =>
+  import("@/components/ai/KanisaCommandCenter").then((module) => ({ default: module.KanisaCommandCenter })),
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,6 +74,44 @@ function RouteLoadingFallback() {
   );
 }
 
+function StartupRouteMarker() {
+  const location = useLocation();
+
+  useEffect(() => {
+    markStartupEvent("first_route_rendered", { route: `${location.pathname}${location.search}` });
+  }, [location.pathname, location.search]);
+
+  return null;
+}
+
+function DeferredGlobalTools() {
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    markStartupEvent("global_tools_defer_started");
+    const run = () => {
+      setEnabled(true);
+      markStartupEvent("global_tools_enabled");
+    };
+
+    if ("requestIdleCallback" in window) {
+      const handle = window.requestIdleCallback(run, { timeout: 1500 });
+      return () => window.cancelIdleCallback(handle);
+    }
+
+    const handle = window.setTimeout(run, 800);
+    return () => window.clearTimeout(handle);
+  }, []);
+
+  if (!enabled) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <KanisaCommandCenter />
+    </Suspense>
+  );
+}
+
 function LegacyChurchAdminSystemHealthRedirect() {
   const { isSuperAdmin } = useAuth();
 
@@ -95,6 +135,7 @@ function ChurchAdminWorkspaceRoute() {
 function AppRoutes() {
   return (
     <Suspense fallback={<RouteLoadingFallback />}>
+      <StartupRouteMarker />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<LoginPage />} />
@@ -202,6 +243,10 @@ function AppRoutes() {
 }
 
 const App = () => {
+  useEffect(() => {
+    markStartupEvent("app_mounted");
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -233,10 +278,9 @@ const App = () => {
             <AuthProvider>
               <ChurchThemeProvider>
                   <PreviewViewport>
-                  <KanisaCommandCenter />
                   <RoutePerformanceMonitor />
                   <AppRoutes />
-                  <DiagnosticsOverlay />
+                  <DeferredGlobalTools />
                 </PreviewViewport>
               </ChurchThemeProvider>
             </AuthProvider>
