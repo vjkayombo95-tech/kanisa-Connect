@@ -1,0 +1,73 @@
+{
+  "chapter_id": "ROM_008_1_10",
+  "source_name": "biblica_open_kiswahili",
+  "reference_source_version": "rev2-release",
+  "book": "Romans",
+  "chapter": 8,
+  "introductions": [
+    {
+      "type": "section_heading",
+      "text": "Maisha katika Roho wa Mungu"
+    },
+    {
+      "type": "section_heading",
+      "text": "Utukufu ujao"
+    },
+    {
+      "type": "section_heading",
+      "text": "Tu zaidi ya washindi"
+    },
+    {
+      "type": "section_heading",
+      "text": "Upendo wa Mwenyezi Mungu"
+    }
+  ],
+  "verses": [
+    {
+      "verse": 1,
+      "text": "Kwa hiyo, sasa hakuna hukumu ya adhabu kwa wale walio ndani ya Al-Masihi Isa ."
+    },
+    {
+      "verse": 2,
+      "text": "Kwa sababu sheria ya Roho wa uzima katika Al-Masihi Isa imeniweka huru mbali na sheria ya dhambi na mauti."
+    },
+    {
+      "verse": 3,
+      "text": "Kwa maana kile ambacho Torati haikuwa na uwezo wa kufanya, kwa vile ilivyokuwa dhaifu katika mwili, Mungu kwa kumtuma Mwanawe mwenyewe kwa mfano wa mwanadamu mwenye mwili ulio wa dhambi na kwa ajili ya dhambi, yeye aliihukumu dhambi katika mwili,"
+    },
+    {
+      "verse": 4,
+      "text": "ili haki ipatikanayo kwa Torati itimizwe ndani yetu sisi, ambao hatuenendi kwa kuufuata mwili bali kwa kufuata Roho wa Mungu."
+    },
+    {
+      "verse": 5,
+      "text": "Kwa maana wale wanaoishi kwa kuufuata mwili huziweka nia zao katika vitu vya mwili, lakini wale wanaoishi kwa kufuata Roho wa Mungu, huziweka nia zao katika mambo ya huyo Roho."
+    },
+    {
+      "verse": 6,
+      "text": "Kwa maana kuwa na nia ya mwili ni mauti, bali kuwa na nia inayoongozwa na Roho wa Mungu ni uzima na amani."
+    },
+    {
+      "verse": 7,
+      "text": "Kwa kuwa ile nia ya mwili ni uadui na Mungu, kwa maana haiitii Torati ya Mungu, wala haiwezi kuitii."
+    },
+    {
+      "verse": 8,
+      "text": "Wale wanaotawaliwa na mwili, hawawezi kumpendeza Mungu."
+    },
+    {
+      "verse": 9,
+      "text": "Lakini ninyi, hamtawaliwi na mwili, bali na Roho, ikiwa Roho wa Mungu anakaa ndani yenu. Mtu ambaye hana Roho wa Al-Masihi, huyo si wa Al-Masihi."
+    },
+    {
+      "verse": 10,
+      "text": "Lakini kama Al-Masihi anakaa ndani yenu, miili yenu imekufa kwa sababu ya dhambi, lakini roho zenu zi hai kwa sababu ya haki."
+    }
+  ],
+  "source_chapter_id": "ROM_008",
+  "reference_type": "biblica_candidate",
+  "verse_range": [
+    1,
+    10
+  ]
+}
