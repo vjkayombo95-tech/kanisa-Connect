@@ -114,6 +114,20 @@ function getChapterCount(book: BibleReferenceBook) {
   return (book as ScriptureReferenceBook).chapterCount;
 }
 
+function normalizeStaticBookCandidate(value: string) {
+  let decoded = value;
+  try {
+    decoded = decodeURIComponent(value);
+  } catch {
+    decoded = value;
+  }
+  return decoded
+    .toLowerCase()
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function isReferenceInRange(reference: ParsedBibleReference) {
   if (reference.kind === "book") return true;
 
@@ -133,6 +147,23 @@ export function parseStaticBookRouteId(bookId: string | null | undefined) {
 
   const bookNumber = Number(bookId.slice(SCRIPTURE_ROUTE_BOOK_PREFIX.length));
   return Number.isInteger(bookNumber) && bookNumber > 0 ? bookNumber : null;
+}
+
+export function resolveStaticBookRouteId(bookId: string | null | undefined) {
+  if (!bookId) return bookId;
+  if (parseStaticBookRouteId(bookId)) return bookId;
+
+  const normalized = normalizeStaticBookCandidate(bookId);
+  const numericBookNumber = Number(normalized);
+  if (Number.isInteger(numericBookNumber) && numericBookNumber > 0) {
+    return `${SCRIPTURE_ROUTE_BOOK_PREFIX}${numericBookNumber}`;
+  }
+
+  const match = SCRIPTURE_REFERENCE_BOOKS.find((book) =>
+    getBibleBookAliases(book).some((alias) => normalizeStaticBookCandidate(alias) === normalized),
+  );
+
+  return match?.id ?? bookId;
 }
 
 export function getScriptureAliasPattern(books?: BibleReferenceBook[]) {

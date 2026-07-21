@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { resolveStaticBookRouteId } from "@/hooks/useScriptureLinks";
 import { looksLikeBibleReference, parseBibleReference, type BibleReferenceBook } from "@/lib/bible-reference-parser";
 
 const books: BibleReferenceBook[] = [
@@ -32,5 +33,15 @@ describe("Bible reference parsing", () => {
       chapter: 3,
       startVerse: 16,
     });
+  });
+
+  it.each([
+    ["Ayubu", "book-18"],
+    ["Job", "book-18"],
+    ["ayubu", "book-18"],
+    ["3", "book-3"],
+    ["book-18", "book-18"],
+  ])("resolves legacy continue-reading book id %s to %s", (input, expected) => {
+    expect(resolveStaticBookRouteId(input)).toBe(expected);
   });
 });

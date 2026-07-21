@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspacePage } from "@/components/workspace";
-import { parseStaticBookRouteId } from "@/hooks/useScriptureLinks";
+import { parseStaticBookRouteId, resolveStaticBookRouteId } from "@/hooks/useScriptureLinks";
 import { supabase } from "@/integrations/supabase/client";
 import { getBibleBookDisplayName } from "@/lib/bible-display";
 import { PRIMARY_BIBLE_TRANSLATION_CODE } from "@/lib/bible-translation";
@@ -76,6 +76,7 @@ export default function MemberBibleBookPage() {
   const page = useWorkspacePage();
   const { t, i18n } = useTranslation();
   const { bookId } = useParams();
+  const resolvedBookId = resolveStaticBookRouteId(bookId);
   const bibleRoot = getWorkspaceBibleRoot(page.workspaceId);
 
   const {
@@ -84,9 +85,9 @@ export default function MemberBibleBookPage() {
     isError: isBookError,
     error: bookError,
   } = useQuery({
-    queryKey: ["member-bible-book", bookId],
+    queryKey: ["member-bible-book", resolvedBookId],
     queryFn: async () => {
-      const routeBookNumber = parseStaticBookRouteId(bookId);
+      const routeBookNumber = parseStaticBookRouteId(resolvedBookId);
       let query = supabase
         .from("bible_books" as never)
         .select("id, book_number, name, abbreviation, testament");
@@ -103,14 +104,14 @@ export default function MemberBibleBookPage() {
         }
       }
 
-      query = routeBookNumber ? query.eq("book_number", routeBookNumber) : query.eq("id", bookId);
+      query = routeBookNumber ? query.eq("book_number", routeBookNumber) : query.eq("id", resolvedBookId);
 
       const { data, error } = await query.single();
 
       if (error) throw error;
       return data as unknown as BibleBookRow;
     },
-    enabled: !!bookId,
+    enabled: !!resolvedBookId,
     ...bibleQueryOptions,
   });
 
