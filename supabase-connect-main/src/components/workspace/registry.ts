@@ -54,6 +54,7 @@ export const workspaceRegistry = {
         items: [
           { id: "bible", label: "Bible", to: "/portal/bible", icon: BookOpen, featureFlag: "bible_verses" },
           { id: "daily-readings", label: "Daily Readings", to: "/portal/daily-readings", icon: BookOpen, featureFlag: "catholic_content" },
+          { id: "prayer-library", label: "Maktaba ya Sala", to: "/portal/prayers", icon: HeartHandshake, featureFlag: "catholic_content" },
           { id: "saints", label: "Saints", to: "/portal/library", icon: Sparkles, featureFlag: "catholic_content" },
           { id: "liturgical-calendar", label: "Liturgical Calendar", to: "/portal/liturgical-calendar", icon: CalendarDays, featureFlag: "catholic_content" },
           { id: "prayer", label: "Prayer Requests", to: "/portal/prayer-requests", icon: HeartHandshake, featureFlag: "prayer_requests" },
@@ -187,6 +188,7 @@ export const workspaceRegistry = {
         items: [
           { id: "bible", label: "Bible", to: "/church-admin/bible", icon: BookOpen, featureFlag: "bible_verses" },
           { id: "daily-readings", label: "Daily Readings", to: "/church-admin/daily-readings", icon: BookOpen, featureFlag: "catholic_content" },
+          { id: "prayer-library", label: "Prayer Library", to: "/church-admin/prayers", icon: HeartHandshake, featureFlag: "catholic_content" },
           { id: "saints", label: "Saints", to: "/church-admin/saints", icon: Sparkles, featureFlag: "catholic_content" },
           { id: "prayer-requests", label: "Prayer Requests", to: "/church-admin/prayer-requests", icon: HeartHandshake, featureFlag: "prayer_requests" },
           { id: "mass-intentions", label: "Mass Intentions", to: "/church-admin/mass-intentions", icon: ClipboardList, featureFlag: "mass_intentions" },
@@ -346,6 +348,10 @@ export const workspaceRegistry = {
           { id: "saints-cms", label: "Saints", to: "/super-admin/catholic-content/saints", icon: Sparkles },
           { id: "daily-readings-cms", label: "Daily Readings", to: "/super-admin/catholic-content/daily-readings", icon: BookOpen },
           { id: "prayer-library", label: "Prayer Library", to: "/super-admin/catholic-content/prayer-library", icon: HeartHandshake },
+          { id: "prayer-import", label: "Import Prayers", to: "/super-admin/catholic-content/prayer-library/import", icon: Import },
+          { id: "prayer-import-history", label: "Import History", to: "/super-admin/catholic-content/prayer-library/import#history", icon: FileText },
+          { id: "prayer-validation-reports", label: "Validation Reports", to: "/super-admin/catholic-content/prayer-library/import#validation", icon: ClipboardList },
+          { id: "prayer-draft-review", label: "Draft Review", to: "/super-admin/catholic-content/prayer-library", icon: HeartHandshake },
           { id: "liturgical-calendar", label: "Liturgical Calendar", to: "/super-admin/catholic-content/liturgical-calendar", icon: CalendarDays },
           { id: "imports", label: "Imports", to: "/super-admin/catholic-content/import-center", icon: Import },
         ],
