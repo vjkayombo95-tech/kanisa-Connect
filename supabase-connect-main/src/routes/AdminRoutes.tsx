@@ -34,6 +34,7 @@ const MemberBibleHomePage = lazy(() => import("@/pages/portal/MemberBibleHomePag
 const MemberBibleBookPage = lazy(() => import("@/pages/portal/MemberBibleBookPage"));
 const MemberBibleChapterPage = lazy(() => import("@/pages/portal/MemberBibleChapterPage"));
 const PrayerRequestsPage = lazy(() => import("@/pages/church-admin/PrayerRequestsPage"));
+const PrayerLibraryPage = lazy(() => import("@/pages/church-admin/PrayerLibraryPage"));
 const MassIntentionsPage = lazy(() => import("@/pages/church-admin/MassIntentionsPage"));
 const MassTimetablePage = lazy(() => import("@/pages/church-admin/MassTimetablePage"));
 const CommunityHelpPage = lazy(() => import("@/pages/church-admin/CommunityHelpPage"));
@@ -103,6 +104,7 @@ export default function AdminRoutes() {
           <Route path="bible/:bookId" element={<MemberBibleBookPage />} />
           <Route path="bible/:bookId/chapter/:chapterNumber" element={<MemberBibleChapterPage />} />
           <Route path="prayer-requests" element={<PrayerRequestsPage />} />
+          <Route path="prayers" element={<PrayerLibraryPage />} />
           <Route path="mass-intentions" element={<MassIntentionsPage />} />
           <Route
             path="mass-timetable"

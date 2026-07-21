@@ -17,7 +17,8 @@ const PortalContributionHistoryPage = lazy(() => import("@/pages/portal/PortalCo
 const PortalContributionReceiptPage = lazy(() => import("@/pages/portal/PortalContributionReceiptPage"));
 const PortalPledges = lazy(() => import("@/pages/portal/PortalPledges"));
 const PortalPrayerRequests = lazy(() => import("@/pages/portal/PortalPrayerRequests"));
-const PortalPrayerPage = lazy(() => import("@/pages/portal/PortalPrayerPage"));
+const MemberPrayerLibraryPage = lazy(() => import("@/pages/portal/MemberPrayerLibraryPage"));
+const MemberPrayerDetailPage = lazy(() => import("@/pages/portal/MemberPrayerDetailPage"));
 const PortalReflectionPage = lazy(() => import("@/pages/portal/PortalReflectionPage"));
 const PortalMassIntentions = lazy(() => import("@/pages/portal/PortalMassIntentions"));
 const PortalMinistries = lazy(() => import("@/pages/portal/PortalMinistries"));
@@ -88,7 +89,8 @@ export default function MemberRoutes() {
           <Route path="contribution-receipt/:contributionId" element={<PortalContributionReceiptPage />} />
           <Route path="pledges" element={<PortalPledges />} />
           <Route path="prayer-requests" element={<PortalPrayerRequests />} />
-          <Route path="prayers/:prayerId" element={<PortalPrayerPage />} />
+          <Route path="prayers" element={<MemberPrayerLibraryPage />} />
+          <Route path="prayers/:slug" element={<MemberPrayerDetailPage />} />
           <Route path="reflections" element={<PortalReflectionPage />} />
           <Route path="reflections/:reflectionId" element={<PortalReflectionPage />} />
           <Route path="mass-intentions" element={<PortalMassIntentions />} />

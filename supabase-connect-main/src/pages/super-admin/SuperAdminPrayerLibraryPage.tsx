@@ -1,6 +1,6 @@
-import { type ChangeEvent, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Archive, BookOpen, CheckSquare, Eye, FileSpreadsheet, FolderPlus, GitCompare, Languages, Link2, Pencil, Plus, RotateCcw, Search, Send, Tags, Trash2, Upload } from "lucide-react";
+import { Archive, BookOpen, CheckSquare, Eye, FileSpreadsheet, FolderPlus, GitCompare, Languages, Link2, Pencil, Plus, RotateCcw, Search, Send, Tags, Trash2 } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,6 @@ import {
   fetchPrayerRelationships,
   fetchPrayerDrafts,
   fetchPrayerVersions,
-  importPrayerRows,
   prayerToEditorDraft,
   removePrayerRelationship,
   restorePrayerVersion,
@@ -38,13 +37,11 @@ import {
   updatePrayerLifecycleStatus,
   validatePrayerForEditorialReview,
   validatePrayerForPublication,
-  validatePrayerImport,
   type CatholicPrayerContent,
   type CatholicPrayerRelationship,
   type CatholicPrayerVersion,
   type PrayerEditorDraft,
 } from "@/lib/super-admin/prayer-library-service";
-import type { CmsImportIssue, CmsImportRow, CmsImportValidation } from "@/lib/catholic-cms";
 
 const SEASONS = ["", "Advent", "Christmas", "Ordinary Time", "Lent", "Holy Week", "Easter", "Pentecost"];
 const RELATIONSHIP_TYPES = ["related_to", "recommended_with", "prayer_for", "associated_with", "seasonal", "scripture_context"];
@@ -70,51 +67,6 @@ function StatCard({ label, value, icon: Icon }: { label: string; value: number |
   );
 }
 
-function normalizeImportHeader(value: unknown) {
-  return String(value ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "");
-}
-
-const importColumnMap: Record<string, keyof Omit<CmsImportRow, "rowNumber">> = {
-  title: "title",
-  slug: "slug",
-  summary: "summary",
-  prayerbody: "prayerBody",
-  prayer: "prayerBody",
-  category: "category",
-  tags: "tags",
-  language: "language",
-  status: "status",
-  visibility: "visibility",
-  featured: "featured",
-  author: "author",
-  source: "source",
-  liturgicalseason: "liturgicalSeason",
-  scripturereference: "scriptureReference",
-  collection: "collection",
-};
-
-async function parsePrayerWorkbook(file: File): Promise<CmsImportRow[]> {
-  const XLSX = await import("xlsx");
-  const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
-  const sheetName = workbook.SheetNames.includes("Prayers") ? "Prayers" : workbook.SheetNames[0];
-  if (!sheetName) throw new Error("Workbook has no sheets.");
-
-  const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: "" }) as unknown[][];
-  const headers = (rows[0] ?? []).map((header) => importColumnMap[normalizeImportHeader(header)] ?? null);
-
-  return rows
-    .slice(1)
-    .map((row, index) => {
-      const result: CmsImportRow = { rowNumber: index + 2 };
-      row.forEach((cell, cellIndex) => {
-        const key = headers[cellIndex];
-        if (key) (result as Record<string, unknown>)[key] = cell;
-      });
-      return result;
-    })
-    .filter((row) => Object.entries(row).some(([key, value]) => key !== "rowNumber" && String(value ?? "").trim()));
-}
-
 export default function SuperAdminPrayerLibraryPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
@@ -128,9 +80,6 @@ export default function SuperAdminPrayerLibraryPage() {
   const [newCollectionTitle, setNewCollectionTitle] = useState("");
   const [versionPreview, setVersionPreview] = useState<CatholicPrayerVersion | null>(null);
   const [relationshipDraft, setRelationshipDraft] = useState({ targetType: "prayer", relationshipType: "related_to", query: "", targetId: "", targetLabel: "" });
-  const [importRows, setImportRows] = useState<CmsImportRow[]>([]);
-  const [importValidation, setImportValidation] = useState<CmsImportValidation | null>(null);
-  const [importSummary, setImportSummary] = useState("");
   const [selectedPrayerIds, setSelectedPrayerIds] = useState<string[]>([]);
   const [bulkSummary, setBulkSummary] = useState("");
   const queryClient = useQueryClient();
@@ -147,7 +96,7 @@ export default function SuperAdminPrayerLibraryPage() {
   });
 
   const reference = referenceQuery.data;
-  const items = prayersQuery.data ?? [];
+  const items = useMemo(() => prayersQuery.data ?? [], [prayersQuery.data]);
   const currentPrayer = useMemo(() => (editing && !editing.id.startsWith("draft-") && !editing.id.startsWith("draft-import-") ? items.find((item) => item.id === editing.id) ?? null : null), [editing, items]);
 
   const versionsQuery = useQuery({
@@ -273,17 +222,6 @@ export default function SuperAdminPrayerLibraryPage() {
     onError: (error) => toast({ title: "Unable to remove relationship", description: (error as Error).message, variant: "destructive" }),
   });
 
-  const confirmImportMutation = useMutation({
-    mutationFn: () => importPrayerRows(importRows),
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["super-admin-prayer-library-drafts"] });
-      queryClient.invalidateQueries({ queryKey: ["super-admin-catholic-cms-dashboard"] });
-      setImportSummary(`${result.imported.length} prayer${result.imported.length === 1 ? "" : "s"} imported or updated.`);
-      toast({ title: "Prayer import complete", description: `${result.imported.length} CMS prayer records were processed.` });
-    },
-    onError: (error) => toast({ title: "Unable to import prayers", description: (error as Error).message, variant: "destructive" }),
-  });
-
   const filtered = useMemo(() => {
     const term = search.toLowerCase();
     return items.filter((item) => {
@@ -384,32 +322,6 @@ export default function SuperAdminPrayerLibraryPage() {
     lifecycleMutation.mutate({ prayer, nextStatus });
   };
 
-  const handleImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-
-    try {
-      const rows = await parsePrayerWorkbook(file);
-      const validation = await validatePrayerImport(rows);
-      setImportRows(rows);
-      setImportValidation(validation);
-      setImportSummary("");
-      toast({
-        title: "Workbook parsed",
-        description: `${rows.length} row${rows.length === 1 ? "" : "s"} ready for validation review.`,
-      });
-    } catch (parseError) {
-      setImportRows([]);
-      setImportValidation(null);
-      toast({
-        title: "Unable to read workbook",
-        description: parseError instanceof Error ? parseError.message : "Please upload a valid .xlsx file.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <main className="space-y-6 p-4 lg:p-6">
       <section className="flex flex-col gap-4 rounded-[28px] border border-border/70 bg-card/85 p-5 lg:flex-row lg:items-center lg:justify-between">
@@ -453,48 +365,18 @@ export default function SuperAdminPrayerLibraryPage() {
                 <FileSpreadsheet className="h-5 w-5 text-primary" aria-hidden="true" />
                 Prayer Library Excel Import
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">Upload a workbook with Title, Slug, Summary, Prayer Body, Category, Tags, Language, Status, Visibility, Featured, Author, Source, Liturgical Season, Scripture Reference, and Collection.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Workbook preview remains available here. Database import is intentionally restricted to the staging-only, prayer-code-matched CLI workflow with backup and dry-run evidence.</p>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <Input type="file" accept=".xlsx" onChange={handleImportFile} className="max-w-sm" aria-label="Upload Prayer Library workbook" />
-              <Button
-                type="button"
-                disabled={!importRows.length || importValidation?.hasErrors || confirmImportMutation.isPending}
-                onClick={() => confirmImportMutation.mutate()}
-                className="gap-2"
-              >
-                <Upload className="h-4 w-4" aria-hidden="true" />
-                Confirm Import
-              </Button>
-            </div>
+            <Badge variant="outline">Staging CLI Required</Badge>
           </div>
-          {importValidation ? (
-            <div className="rounded-2xl border border-border/70 bg-background/45 p-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={importValidation.hasErrors ? "destructive" : "default"}>{importValidation.hasErrors ? "Errors found" : "Ready to import"}</Badge>
-                <Badge variant="outline">{importValidation.validRows.length} valid row{importValidation.validRows.length === 1 ? "" : "s"}</Badge>
-                <Badge variant="outline">{importValidation.issues.length} issue{importValidation.issues.length === 1 ? "" : "s"}</Badge>
-              </div>
-              {importValidation.issues.length ? (
-                <div className="mt-3 max-h-48 overflow-y-auto rounded-xl border border-border/60">
-                  <Table>
-                    <TableHeader><TableRow><TableHead>Row</TableHead><TableHead>Field</TableHead><TableHead>Issue</TableHead><TableHead>Severity</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {importValidation.issues.map((issue, index) => (
-                        <TableRow key={`${issue.rowNumber}-${issue.field}-${index}`}>
-                          <TableCell>{issue.rowNumber}</TableCell>
-                          <TableCell>{issue.field}</TableCell>
-                          <TableCell>{issue.message}</TableCell>
-                          <TableCell><Badge variant={issue.severity === "error" ? "destructive" : "outline"}>{issue.severity}</Badge></TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-          {importSummary ? <p className="text-sm font-medium text-primary">{importSummary}</p> : null}
+          <Alert>
+            <AlertTitle>Controlled content workflow</AlertTitle>
+            <AlertDescription className="space-y-2">
+              <p>Export and edit <code>.tmp/catholic-prayer-content-import-template.xlsx</code>, then validate it without database writes.</p>
+              <p><code>npm run prayer:dry-run</code></p>
+              <p>Only an authorized staging operator may run the explicitly confirmed import command after reviewing both dry-run reports.</p>
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
 
@@ -731,6 +613,37 @@ export default function SuperAdminPrayerLibraryPage() {
                 <div><Label>Author</Label><Input value={editing.author ?? ""} onChange={(event) => setEditing({ ...editing, author: event.target.value })} /></div>
                 <div><Label>Source</Label><Input value={editing.source ?? ""} onChange={(event) => setEditing({ ...editing, source: event.target.value })} /></div>
               </div>
+
+              <section className="space-y-4 rounded-2xl border border-border/70 p-4" aria-labelledby="provenance-heading">
+                <h3 id="provenance-heading" className="font-semibold">Chanzo na Uidhinishaji</h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div><Label>Source Type</Label><Select value={editing.source_type || "none"} onValueChange={(value) => setEditing({ ...editing, source_type: value === "none" ? null : value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not supplied</SelectItem>{["roman_missal","catechism","bishops_conference","diocesan_publication","parish_publication","approved_prayer_book","scripture","public_domain","original_parish_content","user_submitted","other"].map((value) => <SelectItem key={value} value={value}>{value.replace(/_/g, " ")}</SelectItem>)}</SelectContent></Select></div>
+                  <div><Label>Source Title</Label><Input value={editing.source_title ?? ""} onChange={(event) => setEditing({ ...editing, source_title: event.target.value })} /></div>
+                  <div><Label>Source Organization</Label><Input value={editing.source_organization ?? ""} onChange={(event) => setEditing({ ...editing, source_organization: event.target.value })} /></div>
+                  <div><Label>Source Reference</Label><Input value={editing.source_reference ?? ""} onChange={(event) => setEditing({ ...editing, source_reference: event.target.value })} /></div>
+                  <div><Label>Source URL</Label><Input type="url" value={editing.source_url ?? ""} onChange={(event) => setEditing({ ...editing, source_url: event.target.value })} /></div>
+                  <div><Label>Copyright Holder</Label><Input value={editing.copyright_holder ?? ""} onChange={(event) => setEditing({ ...editing, copyright_holder: event.target.value })} /></div>
+                  <div className="md:col-span-2"><Label>Source Notes</Label><Textarea value={editing.source_notes ?? ""} onChange={(event) => setEditing({ ...editing, source_notes: event.target.value })} rows={2} /></div>
+                  <div className="md:col-span-2"><Label>Copyright Notice</Label><Textarea value={editing.copyright_notice ?? ""} onChange={(event) => setEditing({ ...editing, copyright_notice: event.target.value })} rows={2} /></div>
+                  <div><Label>License Type</Label><Select value={editing.license_type || "none"} onValueChange={(value) => setEditing({ ...editing, license_type: value === "none" ? null : value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not supplied</SelectItem>{["public_domain","permission_granted","licensed","attribution_required","internal_church_use","copyright_restricted","unknown"].map((value) => <SelectItem key={value} value={value}>{value.replace(/_/g, " ")}</SelectItem>)}</SelectContent></Select></div>
+                  <div><Label>License Reference</Label><Input value={editing.license_reference ?? ""} onChange={(event) => setEditing({ ...editing, license_reference: event.target.value })} /></div>
+                  <div><Label>Content Edition</Label><Input value={editing.content_edition ?? ""} onChange={(event) => setEditing({ ...editing, content_edition: event.target.value })} /></div>
+                  <div><Label>Content Version</Label><Input value={editing.content_version_label ?? ""} onChange={(event) => setEditing({ ...editing, content_version_label: event.target.value })} /></div>
+                  <div><Label>Reviewed By</Label><Input value={editing.reviewed_by ?? ""} onChange={(event) => setEditing({ ...editing, reviewed_by: event.target.value })} /></div>
+                  <div><Label>Review Date</Label><Input type="date" value={editing.reviewed_at ?? ""} onChange={(event) => setEditing({ ...editing, reviewed_at: event.target.value })} /></div>
+                  <div><Label>Ecclesial Approval Status</Label><Select value={editing.ecclesial_approval_status} onValueChange={(value) => setEditing({ ...editing, ecclesial_approval_status: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{["pending","under_review","approved","rejected","revision_required"].map((value) => <SelectItem key={value} value={value}>{value.replace(/_/g, " ")}</SelectItem>)}</SelectContent></Select></div>
+                  <div><Label>Ecclesial Approval Authority</Label><Input value={editing.ecclesial_approval_authority ?? ""} onChange={(event) => setEditing({ ...editing, ecclesial_approval_authority: event.target.value })} /></div>
+                  <div className="md:col-span-2"><Label>Ecclesial Approval Reference</Label><Input value={editing.ecclesial_approval_reference ?? ""} onChange={(event) => setEditing({ ...editing, ecclesial_approval_reference: event.target.value })} /></div>
+                </div>
+              </section>
+
+              <section className="rounded-2xl border border-border/70 p-4" aria-labelledby="translations-heading">
+                <h3 id="translations-heading" className="font-semibold">Translations</h3>
+                <dl className="mt-3 grid gap-2 text-sm md:grid-cols-2"><div><dt className="text-muted-foreground">Translation Key</dt><dd>{editing.translation_key || "Not assigned"}</dd></div><div><dt className="text-muted-foreground">Translation Group ID</dt><dd className="break-all">{editing.translation_group_id}</dd></div></dl>
+                <p className="mt-3 text-sm text-muted-foreground">Available languages: {items.filter((item) => item.translation_group_id === editing.translation_group_id).map((item) => item.language?.code).filter(Boolean).join(", ") || "none"}</p>
+                <p className="mt-1 text-sm text-muted-foreground">Missing languages: {["sw","en","la"].filter((code) => !items.some((item) => item.translation_group_id === editing.translation_group_id && item.language?.code === code)).join(", ") || "none"}</p>
+                <div className="mt-3 flex flex-wrap gap-2">{items.filter((item) => item.translation_group_id === editing.translation_group_id && item.id !== editing.id).map((item) => <Button key={item.id} type="button" size="sm" variant="outline" onClick={() => setEditing(prayerToEditorDraft(item))}>{item.language?.code || item.title}</Button>)}</div>
+              </section>
 
               <div><Label>Cover Image</Label><Input value={editing.cover_image ?? ""} onChange={(event) => setEditing({ ...editing, cover_image: event.target.value })} placeholder="https://..." /></div>
               <div><Label>Tags</Label><Input value={editing.tag_names} onChange={(event) => setEditing({ ...editing, tag_names: event.target.value })} placeholder="Hope, Mercy, Family" /></div>

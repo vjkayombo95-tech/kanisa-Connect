@@ -2,7 +2,6 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   buildPrayerRestoreDraft,
   filterMemberPrayers,
-  importRowToDraft,
   prayerMatchesCmsSearch,
   validatePrayerContent,
   validatePrayerImportRows,
@@ -71,6 +70,25 @@ export type CatholicPrayerContent = {
   visibility: CmsVisibility;
   author: string | null;
   source: string | null;
+  source_title: string | null;
+  source_type: string | null;
+  source_organization: string | null;
+  source_reference: string | null;
+  source_url: string | null;
+  source_notes: string | null;
+  copyright_holder: string | null;
+  copyright_notice: string | null;
+  license_type: string | null;
+  license_reference: string | null;
+  content_edition: string | null;
+  content_version_label: string | null;
+  ecclesial_approval_status: string;
+  ecclesial_approval_authority: string | null;
+  ecclesial_approval_reference: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  translation_group_id: string;
+  translation_key: string | null;
   liturgical_season: string | null;
   scripture_reference: string | null;
   estimated_read_time: number | null;
@@ -233,6 +251,11 @@ export function createEmptyPrayerDraft(reference?: CatholicCmsReferenceData): Pr
     visibility: "member",
     author: "",
     source: "",
+    source_title: "", source_type: null, source_organization: "", source_reference: "", source_url: "", source_notes: "",
+    copyright_holder: "", copyright_notice: "", license_type: null, license_reference: "",
+    content_edition: "", content_version_label: "", ecclesial_approval_status: "pending",
+    ecclesial_approval_authority: "", ecclesial_approval_reference: "", reviewed_by: "", reviewed_at: "",
+    translation_group_id: emptyUuid(), translation_key: null,
     liturgical_season: "",
     scripture_reference: "",
     estimated_read_time: null,
@@ -296,6 +319,8 @@ async function attachTaxonomy(prayers: CatholicPrayerContent[]): Promise<Catholi
 
   return prayers.map((prayer) => ({
     ...prayer,
+    // Title-only seed records intentionally store a null body until reviewed text is imported.
+    body: prayer.body ?? "",
     tags: tagsByPrayer.get(prayer.id) ?? [],
     collections: collectionsByPrayer.get(prayer.id) ?? [],
   }));
@@ -432,6 +457,13 @@ export function prayerToEditorDraft(prayer: CatholicPrayerContent): PrayerEditor
     visibility: prayer.visibility,
     author: prayer.author ?? "",
     source: prayer.source ?? "",
+    source_title: prayer.source_title ?? "", source_type: prayer.source_type, source_organization: prayer.source_organization ?? "",
+    source_reference: prayer.source_reference ?? "", source_url: prayer.source_url ?? "", source_notes: prayer.source_notes ?? "",
+    copyright_holder: prayer.copyright_holder ?? "", copyright_notice: prayer.copyright_notice ?? "", license_type: prayer.license_type,
+    license_reference: prayer.license_reference ?? "", content_edition: prayer.content_edition ?? "", content_version_label: prayer.content_version_label ?? "",
+    ecclesial_approval_status: prayer.ecclesial_approval_status, ecclesial_approval_authority: prayer.ecclesial_approval_authority ?? "",
+    ecclesial_approval_reference: prayer.ecclesial_approval_reference ?? "", reviewed_by: prayer.reviewed_by ?? "", reviewed_at: prayer.reviewed_at ?? "",
+    translation_group_id: prayer.translation_group_id, translation_key: prayer.translation_key,
     liturgical_season: prayer.liturgical_season ?? "",
     scripture_reference: prayer.scripture_reference ?? "",
     estimated_read_time: prayer.estimated_read_time,
@@ -462,6 +494,16 @@ export async function savePrayerDraft(draft: PrayerEditorDraft): Promise<Catholi
     visibility: draft.visibility,
     author: normalizeText(draft.author) || null,
     source: normalizeText(draft.source) || null,
+    source_title: normalizeText(draft.source_title) || null, source_type: normalizeText(draft.source_type) || null,
+    source_organization: normalizeText(draft.source_organization) || null, source_reference: normalizeText(draft.source_reference) || null,
+    source_url: normalizeText(draft.source_url) || null, source_notes: draft.source_notes?.trim() || null,
+    copyright_holder: normalizeText(draft.copyright_holder) || null, copyright_notice: draft.copyright_notice?.trim() || null,
+    license_type: normalizeText(draft.license_type) || null, license_reference: normalizeText(draft.license_reference) || null,
+    content_edition: normalizeText(draft.content_edition) || null, content_version_label: normalizeText(draft.content_version_label) || null,
+    ecclesial_approval_status: draft.ecclesial_approval_status || "pending",
+    ecclesial_approval_authority: normalizeText(draft.ecclesial_approval_authority) || null,
+    ecclesial_approval_reference: normalizeText(draft.ecclesial_approval_reference) || null,
+    reviewed_by: normalizeText(draft.reviewed_by) || null, reviewed_at: draft.reviewed_at || null,
     liturgical_season: normalizeText(draft.liturgical_season) || null,
     scripture_reference: normalizeText(draft.scripture_reference) || null,
     estimated_read_time: draft.estimated_read_time || estimateReadTime(draft.body),
@@ -663,24 +705,8 @@ export async function validatePrayerImport(rows: CmsImportRow[]): Promise<CmsImp
   return validatePrayerImportRows(rows, reference, existingPrayers);
 }
 
-export async function importPrayerRows(rows: CmsImportRow[]) {
-  const reference = await fetchCatholicCmsReferenceData();
-  const existingPrayers = await fetchPrayerDrafts();
-  const validation = validatePrayerImportRows(rows, reference, existingPrayers);
-  if (validation.hasErrors) {
-    throw new Error("Fix import validation errors before confirming import.");
-  }
-
-  const existingBySlug = new Map(existingPrayers.map((prayer) => [prayer.slug.toLowerCase(), prayer]));
-  const imported: CatholicPrayerContent[] = [];
-
-  for (const row of validation.validRows) {
-    const slug = (row.slug || row.title || "").toString().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-    const draft = importRowToDraft(row, reference, existingBySlug.get(slug));
-    imported.push(await savePrayerDraft(draft));
-  }
-
-  return { imported, validation };
+export async function importPrayerRows(_rows: CmsImportRow[]) {
+  throw new Error("Direct browser imports are disabled. Use the staging-only Prayer Library CLI so prayer_code matching, backup, dry-run, ownership preservation, and explicit confirmation are enforced.");
 }
 
 export async function createContentCategory(input: { name: string; description?: string; color?: string }) {

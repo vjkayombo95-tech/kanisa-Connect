@@ -25,6 +25,7 @@ const SuperAdminCatholicDashboard = lazy(() => import("@/pages/super-admin/Super
 const SuperAdminSaintsPage = lazy(() => import("@/pages/super-admin/SuperAdminSaintsPage"));
 const SuperAdminDailyReadingsPage = lazy(() => import("@/pages/super-admin/SuperAdminDailyReadingsPage"));
 const SuperAdminPrayerLibraryPage = lazy(() => import("@/pages/super-admin/SuperAdminPrayerLibraryPage"));
+const SuperAdminPrayerImportPage = lazy(() => import("@/pages/super-admin/SuperAdminPrayerImportPage"));
 const SuperAdminLiturgicalCalendarPage = lazy(() => import("@/pages/super-admin/SuperAdminLiturgicalCalendarPage"));
 const SuperAdminImportCenter = lazy(() => import("@/pages/super-admin/SuperAdminImportCenter"));
 const BibleTranslationManagerPage = lazy(() => import("@/pages/super-admin/BibleTranslationManagerPage"));
@@ -62,6 +63,7 @@ export default function SuperAdminRoutes() {
           <Route path="catholic-content/saints/cms" element={<CatholicSaintsPage />} />
           <Route path="catholic-content/daily-readings" element={<SuperAdminDailyReadingsPage />} />
           <Route path="catholic-content/prayer-library" element={<SuperAdminPrayerLibraryPage />} />
+          <Route path="catholic-content/prayer-library/import" element={<SuperAdminPrayerImportPage />} />
           <Route path="catholic-content/liturgical-calendar" element={<SuperAdminLiturgicalCalendarPage />} />
           <Route path="catholic-content/import-center" element={<SuperAdminImportCenter />} />
           <Route path="bible-translations" element={<BibleTranslationManagerPage />} />
