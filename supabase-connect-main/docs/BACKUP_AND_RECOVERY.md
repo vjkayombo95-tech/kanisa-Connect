@@ -42,6 +42,11 @@ Storage buckets contain user-visible and audit-relevant files. Back up:
 - `billing-receipts`
 - `catholic-content`
 - `record-preservation-proofs`
+- `audio`
+- `audio-reports`
+- `audio-indexes`
+- `audio-transcripts`
+- `audio-alignments`
 
 Recommended approach:
 
@@ -69,7 +74,16 @@ Storage restore:
 2. Confirm bucket policies.
 3. Confirm public assets render.
 4. Confirm private receipts/proofs are accessible only through intended paths.
-5. Validate upload paths for member photos, church assets, and receipts.
+5. Validate audio playback signed URLs for restored `audio` objects.
+6. Validate upload paths for member photos, church assets, receipts, audio source files, transcripts, indexes, reports, manifests, and alignments.
+
+Audio index restore:
+
+1. Restore `audio-indexes`, `audio-reports`, `audio-transcripts`, and `audio-alignments` to the exact bucket/object paths stored in `audio_assets`, `audio_jobs`, and `audio_versions`.
+2. Restore the corresponding database snapshot before exposing restored indexes to reviewers.
+3. Confirm review pages lazy-load restored QA reports, alignment JSON, and manifests on demand.
+4. Confirm published member playback works from the restored `audio` bucket.
+5. Run the post-deployment smoke script against the recovery environment.
 
 ## Disaster Recovery Checklist
 
@@ -84,6 +98,7 @@ Storage restore:
 | Frontend | Correct build artifact deployed. |
 | Security | Cross-tenant and receipt access tests pass. |
 | Finance | Contributions, receipts, pledges, and platform fees reconcile. |
+| Audio | Published playback, review artifacts, worker heartbeat, and queue metrics verified. |
 | Communications | Stakeholders informed of status and expected recovery time. |
 
 ## Recovery Testing Recommendations
