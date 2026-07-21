@@ -1,9 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearSensitiveOfflineData, readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { captureException, logSupabaseError } from "@/lib/error-logger";
 import { getDefaultRouteForRole } from "@/lib/role-utils";
+import { markStartupEvent } from "@/lib/startup-diagnostics";
 
 type AppRole = "super_admin" | "church_admin" | "pastor" | "secretary" | "treasurer" | "member";
 
@@ -46,6 +47,18 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const useAuth = () => useContext(AuthContext);
+const DEV_AUTH_TIMEOUT_MS = 6000;
+
+function withDevTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+  if (!import.meta.env.DEV) return promise;
+
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      window.setTimeout(() => reject(new Error(`${label} timed out after ${DEV_AUTH_TIMEOUT_MS}ms`)), DEV_AUTH_TIMEOUT_MS);
+    }),
+  ]);
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -55,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [churchId, setChurchId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<AppRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const loadSequenceRef = useRef(0);
 
   const shouldAutoNavigate = useCallback(() => {
     const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
@@ -90,12 +104,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadUserData = useCallback(async (currentUser: User | null) => {
+    const loadSequence = loadSequenceRef.current + 1;
+    loadSequenceRef.current = loadSequence;
+
     if (!currentUser) {
+      markStartupEvent("auth_user_context_skipped", { reason: "no_user" });
       resetUserData();
       return;
     }
 
     try {
+      markStartupEvent("auth_user_context_started");
       const authCacheKey = `offline-cache:auth-context:${currentUser.id}`;
       const cachedContext = readOfflineCache<{
         profile: any | null;
@@ -109,16 +128,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsSuperAdmin(cachedContext.isSuperAdmin);
         setChurchId(cachedContext.churchId);
         setUserRole(cachedContext.userRole);
+        setIsLoading(false);
+        markStartupEvent("auth_context_cache_used", {
+          role: cachedContext.userRole,
+          hasChurch: Boolean(cachedContext.churchId),
+        });
       }
 
       const contextData = await withOfflineCache<CurrentUserContext | null>(
         `offline-cache:current-user-context:${currentUser.id}`,
-        async () => {
+        () => withDevTimeout((async () => {
           const { data, error: contextError } = await supabase.rpc("get_current_user_context" as never);
 
           if (contextError) throw contextError;
           return data as unknown as CurrentUserContext;
-        },
+        })(), "get_current_user_context"),
         cachedContext
           ? {
               profile: cachedContext.profile,
@@ -141,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!contextData) {
         throw new Error("Unable to load user context.");
       }
+      if (loadSequence !== loadSequenceRef.current) return;
 
       const profileData = contextData.profile;
       const isUserSuperAdmin = !!contextData.is_super_admin || profileData?.role === "super_admin";
@@ -151,6 +176,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsSuperAdmin(isUserSuperAdmin);
       setChurchId(resolvedChurchId);
       setUserRole(resolvedRole);
+      markStartupEvent("auth_user_context_completed", {
+        role: resolvedRole,
+        hasChurch: Boolean(resolvedChurchId),
+        isSuperAdmin: isUserSuperAdmin,
+      });
 
       window.localStorage.setItem(authCacheKey, JSON.stringify({
         profile: profileData,
@@ -176,14 +206,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setChurchId(null);
       setUserRole(null);
     } finally {
-      setIsLoading(false);
+      if (loadSequence === loadSequenceRef.current) {
+        setIsLoading(false);
+        markStartupEvent("auth_loading_resolved");
+      }
     }
   }, [redirectTo, resetUserData, shouldAutoNavigate]);
 
   useEffect(() => {
+    markStartupEvent("auth_initialization_started");
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (event === "INITIAL_SESSION") return;
+      markStartupEvent("auth_state_changed", { event });
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
@@ -194,7 +230,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setTimeout(() => loadUserData(newSession?.user ?? null), 0);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session: existingSession }, error }) => {
+    withDevTimeout(supabase.auth.getSession(), "auth.getSession").then(async ({ data: { session: existingSession }, error }) => {
+      markStartupEvent("auth_get_session_completed", { hasSession: Boolean(existingSession), hasError: Boolean(error) });
       if (error) {
         if (isInvalidRefreshTokenError(error)) {
           logSupabaseError(error, {
@@ -223,6 +260,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
       loadUserData(existingSession?.user ?? null);
+    }).catch((error) => {
+      captureException(error, {
+        page: "Authentication",
+        component: "AuthProvider",
+        function: "restoreSession",
+        metadata: { reason: "auth_initialization_timeout" },
+      });
+      resetUserData();
+      markStartupEvent("auth_get_session_failed", { error: error instanceof Error ? error.message : "unknown" });
     });
 
     return () => subscription.unsubscribe();
