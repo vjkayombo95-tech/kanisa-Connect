@@ -1,0 +1,53 @@
+paths:
+  source: source
+  transcripts: transcripts
+  alignments: alignments
+  indexes: indexes
+  reports: reports
+  cache: cache
+  models: models
+  temp: temp
+
+processing:
+  retries: 3
+  backoff_seconds: 2
+  overwrite: false
+
+whisper:
+  model_size: base
+  language: sw
+  batch_size: 8
+  compute_type: float32
+
+alignment:
+  language: en
+
+speech_engine:
+  provider: whisperx
+  transcription_model: base
+  alignment_model:
+  language: sw
+  provider_options: {}
+
+qa:
+  minimum_confidence: 0.90
+  warning_confidence: 0.95
+  flag_low_confidence: true
+
+indexing:
+  boundary_rolling_window_tokens: 80
+  minimum_verse_duration_seconds: 0.05
+
+audio_provider: open_bible
+
+audio_provider_options:
+  base_dir: supabase/seed/bible/audio1/open bible/extracted
+
+text_provider: supabase
+
+text_provider_options:
+  translation: sw-biblica
+
+supabase:
+  url:
+  key:

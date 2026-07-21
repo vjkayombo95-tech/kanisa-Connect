@@ -16,6 +16,8 @@ const root = process.cwd();
 const edgeFunctionSource = readFileSync(path.join(root, "supabase/functions/generate-bible-audio/index.ts"), "utf8");
 const migrationSource = readFileSync(path.join(root, "supabase/migrations/20260706110000_bible_audio_infrastructure.sql"), "utf8");
 const chapterSource = readFileSync(path.join(root, "src/pages/portal/MemberBibleChapterPage.tsx"), "utf8");
+const readerSource = readFileSync(path.join(root, "src/pages/portal/BibleReaderPage.tsx"), "utf8");
+const bottomMiniPlayerSource = readFileSync(path.join(root, "src/components/bible/reader/BottomMiniPlayer.tsx"), "utf8");
 const playerSource = readFileSync(path.join(root, "src/components/bible/BibleAudioPlayer.tsx"), "utf8");
 
 const validRequest = {
@@ -28,7 +30,7 @@ const validRequest = {
 const cacheRequest = {
   ...validRequest,
   voiceId: "voice-a",
-  audioVersion: "rc-3.0.0",
+  audioVersion: "rc-3.4.0",
 };
 
 function sourceFiles(dir: string): string[] {
@@ -55,9 +57,9 @@ describe("Bible Audio infrastructure", () => {
   });
 
   it("builds deterministic cache identity and private storage paths", () => {
-    expect(buildBibleAudioCacheKey(cacheRequest)).toBe("translation-1:book-1:3:sw:voice-a:rc-3.0.0");
+    expect(buildBibleAudioCacheKey(cacheRequest)).toBe("translation-1:book-1:3:sw:voice-a:rc-3.4.0");
     expect(buildBibleAudioCacheKey({ ...cacheRequest })).toBe(buildBibleAudioCacheKey(cacheRequest));
-    expect(buildBibleAudioStoragePath(cacheRequest)).toBe("translation-1/sw/voice-a/rc-3.0.0/book-1-3.mp3");
+    expect(buildBibleAudioStoragePath(cacheRequest)).toBe("translation-1/sw/voice-a/rc-3.4.0/book-1-3.mp3");
   });
 
   it("registers Bible Audio as disabled by default and keeps sw-biblica ineligible", () => {
@@ -72,7 +74,7 @@ describe("Bible Audio infrastructure", () => {
     const featureCheck = edgeFunctionSource.indexOf(".eq(\"key\", BIBLE_AUDIO_FEATURE_KEY)");
     const eligibilityCheck = edgeFunctionSource.indexOf("audio_generation_allowed !== true");
     const cacheCheck = edgeFunctionSource.indexOf(".from(\"bible_audio_assets\")");
-    const providerCall = edgeFunctionSource.indexOf("api.elevenlabs.io");
+    const providerCall = edgeFunctionSource.lastIndexOf("api.elevenlabs.io");
 
     expect(featureCheck).toBeGreaterThan(-1);
     expect(eligibilityCheck).toBeGreaterThan(featureCheck);
@@ -96,6 +98,35 @@ describe("Bible Audio infrastructure", () => {
     expect(edgeFunctionSource).toContain("PROVIDER_TIMEOUT_MS");
   });
 
+  it("prefers official Open.Bible audio before cached or generated AI audio", () => {
+    const officialLookup = edgeFunctionSource.indexOf(".eq(\"provider\", \"Open.Bible\")");
+    const officialModel = edgeFunctionSource.indexOf(".eq(\"provider_model\", \"official-human\")");
+    const aiConfig = edgeFunctionSource.indexOf("audioRequest = applyProviderConfig");
+    const cachedLookup = edgeFunctionSource.indexOf(".eq(\"cache_key\", cacheKey)");
+    const providerCall = edgeFunctionSource.lastIndexOf("api.elevenlabs.io");
+
+    expect(officialLookup).toBeGreaterThan(-1);
+    expect(officialModel).toBeGreaterThan(officialLookup);
+    expect(edgeFunctionSource).toContain("source: \"official\"");
+    expect(edgeFunctionSource).toContain("source: \"ai-cache\"");
+    expect(edgeFunctionSource).toContain("source: \"ai-generated\"");
+    expect(aiConfig).toBeGreaterThan(officialLookup);
+    expect(cachedLookup).toBeGreaterThan(officialLookup);
+    expect(providerCall).toBeGreaterThan(officialLookup);
+  });
+
+  it("routes provider text through the narration engine before ElevenLabs", () => {
+    const narrationBuild = edgeFunctionSource.indexOf("buildBibleNarrationText");
+    const providerPayload = edgeFunctionSource.indexOf("text: narrationText");
+    const providerCall = edgeFunctionSource.indexOf("api.elevenlabs.io");
+
+    expect(edgeFunctionSource).toContain("../_shared/bible-narration.ts");
+    expect(narrationBuild).toBeGreaterThan(-1);
+    expect(providerPayload).toBeGreaterThan(narrationBuild);
+    expect(providerCall).toBeGreaterThan(narrationBuild);
+    expect(edgeFunctionSource).not.toContain("`${verse.verse_number}. ${verse.verse_text}`");
+  });
+
   it("keeps provider secrets out of browser source", () => {
     const frontendText = [
       ...sourceFiles(path.join(root, "src")),
@@ -110,6 +141,60 @@ describe("Bible Audio infrastructure", () => {
     expect(edgeFunctionSource).toContain("Deno.env.get(\"ELEVENLABS_API_KEY\")");
   });
 
+  it("adds a controlled ElevenLabs pilot lane without enabling normal Bible generation", () => {
+    expect(edgeFunctionSource).toContain("PILOT_MAX_TEXT_CHARS = 500");
+    expect(edgeFunctionSource).toContain("BIBLE_AUDIO_PILOT_BUCKET = \"bible-audio-pilot\"");
+    expect(edgeFunctionSource).toContain("pilot=true");
+    expect(edgeFunctionSource).toContain("confirmBillableGeneration=true");
+    expect(edgeFunctionSource).toContain("Pilot audio accepts one supplied text sample only");
+    expect(edgeFunctionSource).toContain("book, chapter, and verse inputs are rejected");
+    expect(edgeFunctionSource).toContain("Pilot output path cannot target Open.Bible audio");
+    expect(edgeFunctionSource).toContain("ElevenLabs pilot requires a Super Admin");
+    expect(edgeFunctionSource).toContain("ELEVENLABS_PILOT_LOCAL_TOKEN");
+    expect(edgeFunctionSource).toContain("dryRun: true");
+    expect(edgeFunctionSource).toContain("estimatedApiRequests: 0");
+    expect(edgeFunctionSource).toContain("estimatedApiRequests: 1");
+    expect(edgeFunctionSource).toContain("metadataPath");
+    expect(edgeFunctionSource).toContain("voice_id_redacted");
+    expect(edgeFunctionSource).toContain("resolveElevenLabsVoiceConfig");
+    expect(edgeFunctionSource).toContain("voiceSource");
+    expect(edgeFunctionSource).toContain("diagnostic: true");
+    expect(edgeFunctionSource).toContain("MISSING_ELEVENLABS_VOICE_ID");
+    expect(edgeFunctionSource).not.toContain("console.log(elevenLabsApiKey");
+  });
+
+  it("returns structured pilot errors and safe stage diagnostics for billable generation", () => {
+    [
+      "request_received",
+      "auth_started",
+      "auth_completed",
+      "pilot_validation_completed",
+      "secrets_validated",
+      "duplicate_check_started",
+      "duplicate_check_completed",
+      "elevenlabs_request_started",
+      "elevenlabs_response_received",
+      "audio_upload_started",
+      "audio_upload_completed",
+      "metadata_upload_started",
+      "metadata_upload_completed",
+      "response_returned",
+      "request_failed",
+    ].forEach((stage) => expect(edgeFunctionSource).toContain(stage));
+    expect(edgeFunctionSource).toContain("PilotStageError");
+    expect(edgeFunctionSource).toContain("error_code");
+    expect(edgeFunctionSource).toContain("provider_status");
+    expect(edgeFunctionSource).toContain("retryable");
+    expect(edgeFunctionSource).toContain("ELEVENLABS_PROVIDER_ERROR");
+    expect(edgeFunctionSource).toContain("PILOT_AUDIO_UPLOAD_FAILED");
+    expect(edgeFunctionSource).toContain("PILOT_METADATA_UPLOAD_FAILED");
+    expect(edgeFunctionSource).toContain("await providerResponse.text()");
+    expect(edgeFunctionSource).toContain("await providerResponse.arrayBuffer()");
+    expect(edgeFunctionSource).not.toContain("authorization_header");
+    expect(edgeFunctionSource).not.toContain("console.info(serviceRoleKey");
+    expect(edgeFunctionSource).not.toContain("console.info(elevenLabsApiKey");
+  });
+
   it("adds localized English and Kiswahili member player labels", () => {
     expect(en.member_portal.bible.audio.listen).toBe("Listen");
     expect(sw.member_portal.bible.audio.listen).toBe("Sikiliza");
@@ -117,12 +202,15 @@ describe("Bible Audio infrastructure", () => {
     expect(sw.member_portal.bible.audio.auto_play_next).toBeTruthy();
   });
 
-  it("preserves the existing Bible reader while adding mobile-friendly audio controls", () => {
+  it("preserves the Bible chapter route while the premium reader hosts reusable audio UI", () => {
     expect(chapterSource).toContain("MemberBibleChapterPage");
-    expect(chapterSource).toContain("BibleAudioPlayer");
-    expect(chapterSource).toContain("isBibleAudioVisible");
-    expect(chapterSource).not.toContain("voiceId:");
-    expect(chapterSource).not.toContain("audioVersion:");
+    expect(chapterSource).toContain("BibleReaderPage");
+    expect(readerSource).toContain("getApprovedBibleChapterAudio");
+    expect(readerSource).not.toContain("SyncedBibleAudioPlayer");
+    expect(bottomMiniPlayerSource).toContain("MiniAudioPlayer");
+    expect(bottomMiniPlayerSource).toContain("seekRequest");
+    expect(readerSource).not.toContain("voiceId:");
+    expect(readerSource).not.toContain("audioVersion:");
     expect(playerSource).toContain("sm:flex-row");
     expect(playerSource).toContain("Slider");
     expect(playerSource).toContain("Select");

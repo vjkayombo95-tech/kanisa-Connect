@@ -2,7 +2,7 @@
 
 ## Status
 
-Bible Audio is implemented as dormant infrastructure for RC-3.0.0. The platform feature key is `bible_audio`, and it is globally disabled by default.
+Bible Audio is implemented as dormant infrastructure. The platform feature key is `bible_audio`, and it is globally disabled by default.
 
 No Bible audio has been generated in this repository. The existing `sw-biblica` translation is not approved for AI audio generation based on repository evidence, so `audio_generation_allowed` defaults to `false`.
 
@@ -55,10 +55,11 @@ The member must never submit narration text or provider identity. Requests conta
 11. Return a signed URL for ready cached audio.
 12. Reserve a unique cache row to block duplicate concurrent generation.
 13. Retrieve canonical Bible text server-side from `bible_verses`.
-14. Call ElevenLabs with server-side secrets and a bounded timeout.
-15. Store MP3 in private Supabase Storage.
-16. Mark metadata ready and return a signed playback URL.
-17. Mark metadata failed when provider/storage/update errors occur.
+14. Prepare narration text server-side, including the spoken introduction, verse-number removal, and narration whitespace cleanup.
+15. Call ElevenLabs with server-side secrets and a bounded timeout.
+16. Store MP3 in private Supabase Storage.
+17. Mark metadata ready and return a signed playback URL.
+18. Mark metadata failed when provider/storage/update errors occur.
 
 ## ElevenLabs Provider
 
@@ -70,7 +71,7 @@ ElevenLabs is only called from the Edge Function. Required secret:
 Optional secret/config:
 
 - `ELEVENLABS_MODEL_ID`, default `eleven_multilingual_v2`
-- `BIBLE_AUDIO_VERSION`, default `rc-3.0.0`
+- `BIBLE_AUDIO_VERSION`, default `rc-3.4.0`
 
 These values must be configured as Supabase function secrets. They must never be placed in `VITE_` environment variables or browser code.
 
@@ -88,7 +89,7 @@ Required local values:
 Optional local values:
 
 - `ELEVENLABS_MODEL_ID`, default `eleven_multilingual_v2`
-- `BIBLE_AUDIO_VERSION`, default `rc-3.0.0`
+- `BIBLE_AUDIO_VERSION`, default `rc-3.4.0`
 
 Run the function locally with the Supabase CLI env file flag:
 
@@ -107,6 +108,8 @@ Cache identity is deterministic:
 `translationId:bookId:chapterNumber:languageCode:voiceId:audioVersion`
 
 The implementation also includes the provider model in the internal cache key and unique tuple so changing the configured ElevenLabs model invalidates cache safely.
+
+The RC-3.4 narration engine changes the text sent to ElevenLabs by adding the spoken chapter introduction and removing verse numbers from the provider payload. The default audio version is therefore `rc-3.4.0` so previous numbered narration is not reused accidentally.
 
 Metadata is stored in `bible_audio_assets`. The table has a unique `cache_key` and a unique tuple over translation, book, chapter, language, voice, audio version, and provider model. Ready cache rows are reused with signed URLs. Fresh pending/generating rows return a duplicate-generation response. Failed rows and stale in-progress rows are retried by updating the existing metadata row.
 

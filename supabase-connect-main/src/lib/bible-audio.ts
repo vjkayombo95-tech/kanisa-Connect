@@ -1,6 +1,6 @@
 export const BIBLE_AUDIO_FEATURE_KEY = "bible_audio";
 export const BIBLE_AUDIO_BUCKET = "bible-audio";
-export const BIBLE_AUDIO_VERSION = "rc-3.0.0";
+export const BIBLE_AUDIO_VERSION = "rc-3.4.0";
 export const DEFAULT_BIBLE_AUDIO_VOICE_ID = "kanisa-default-sw";
 
 export type BibleAudioRequest = {
