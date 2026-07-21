@@ -36,6 +36,7 @@ import { PageToolbar, getWorkspacePageActions, useWorkspacePage } from "@/compon
 import { useAuth } from "@/contexts/AuthContext";
 import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { useToast } from "@/hooks/use-toast";
+import { useChurchPermission } from "@/hooks/use-church-permission";
 import { formatTZS } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
 import { PaginationFooter } from "@/components/ui/pagination-footer";
@@ -203,6 +204,7 @@ export default function MassIntentionsPage() {
   const { churchId, userRole, isSuperAdmin } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const exportPermission = useChurchPermission("mass_intentions", "manage");
   const [searchParams] = useSearchParams();
 
   const [dateFilter, setDateFilter] = useState("");
@@ -521,7 +523,7 @@ export default function MassIntentionsPage() {
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button asChild variant="outline"><Link to="/church-admin/mass-timetable"><CalendarClock className="mr-2 h-4 w-4" />Manage Mass Timetable</Link></Button>
           {page.permissions.has("export") ? (
-            <Button variant="outline" onClick={generatePdf} disabled={intentions.length === 0}>
+            <Button variant="outline" onClick={() => { if (exportPermission.allowed) void generatePdf(); }} disabled={exportPermission.isLoading || !exportPermission.allowed || intentions.length === 0}>
               <Download className="mr-2 h-4 w-4" />
               Generate PDF
             </Button>

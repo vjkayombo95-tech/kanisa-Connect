@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
+import { useChurchPermission } from "@/hooks/use-church-permission";
 import { supabase } from "@/integrations/supabase/client";
 import type {
   AnalyticsContext,
@@ -135,12 +136,14 @@ export default function AnalyticsAssistantPage() {
       text: "Ask Finance Intelligence about giving trends, top contributors, monthly summaries, pledges, or announcement drafts. I will read live Supabase records and turn them into a structured church insight.",
     },
   ]);
+  const exportPermission = useChurchPermission("finance_intelligence", "manage");
 
   const latestReport = useMemo(
     () => [...messages].reverse().find((message) => message.role === "assistant" && message.report)?.report ?? null,
     [messages],
   );
   const exportReport = async (report: AnalyticsResponse) => {
+    if (!exportPermission.allowed) return;
     const { exportAnalyticsPdf } = await import("@/lib/analytics-assistant");
     await exportAnalyticsPdf({ ...report, proactiveDashboard: dashboard }, churchBranding);
   };

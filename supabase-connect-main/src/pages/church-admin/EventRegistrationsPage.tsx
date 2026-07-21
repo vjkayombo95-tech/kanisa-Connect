@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ResponsiveTable } from "@/components/ui/responsive-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { useChurchPermission } from "@/hooks/use-church-permission";
 import { formatTZS } from "@/lib/currency";
 import {
   buildEventRosterCsv,
@@ -49,6 +50,7 @@ export default function EventRegistrationsPage() {
   const { churchId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const exportPermission = useChurchPermission("events", "manage");
   const [search, setSearch] = useState("");
   const [registrationFilter, setRegistrationFilter] = useState(ALL);
   const [paymentFilter, setPaymentFilter] = useState(ALL);
@@ -136,11 +138,13 @@ export default function EventRegistrationsPage() {
   });
 
   const exportCsv = () => {
+    if (!exportPermission.allowed) return;
     const csv = buildEventRosterCsv(filteredRows);
     downloadBlob(`${eventInfo?.event_title || "event"}-registrations.csv`, new Blob([csv], { type: "text/csv;charset=utf-8" }));
   };
 
   const downloadPdf = async () => {
+    if (!exportPermission.allowed) return;
     const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
     const left = 40;
@@ -230,8 +234,8 @@ export default function EventRegistrationsPage() {
           <p className="text-sm text-muted-foreground">{eventInfo?.event_title || t("church_admin.events.roster.no_registrations")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={exportCsv} disabled={filteredRows.length === 0}><FileDown className="mr-2 h-4 w-4" />{t("church_admin.events.roster.export_csv")}</Button>
-          <Button onClick={downloadPdf} disabled={filteredRows.length === 0}><Download className="mr-2 h-4 w-4" />{t("church_admin.events.roster.download_pdf")}</Button>
+          <Button variant="outline" onClick={exportCsv} disabled={exportPermission.isLoading || !exportPermission.allowed || filteredRows.length === 0}><FileDown className="mr-2 h-4 w-4" />{t("church_admin.events.roster.export_csv")}</Button>
+          <Button onClick={downloadPdf} disabled={exportPermission.isLoading || !exportPermission.allowed || filteredRows.length === 0}><Download className="mr-2 h-4 w-4" />{t("church_admin.events.roster.download_pdf")}</Button>
         </div>
       </div>
 

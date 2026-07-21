@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { getWorkspaceIdForRole, useWorkspaceContext } from "@/components/workspace";
 import { KanisaAIPreviewDialog } from "@/components/ai/KanisaAIPreviewDialog";
@@ -259,202 +258,164 @@ export default function KanisaAIHome() {
 
   return (
     <main className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-6 pb-28 lg:px-8 lg:pb-10">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <section className="rounded-lg border border-border/70 bg-card/95 p-5 shadow-sm sm:p-7">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="flex items-center gap-2 text-sm font-medium text-primary">
-                <Sparkles className="h-4 w-4" />
-                {t("ai.brand")}
-              </p>
-              <h1 className="mt-2 font-serif text-3xl font-bold tracking-tight text-foreground">{experience.title}</h1>
-              <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-                {experience.description}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {experience.sections.map((section) => (
-                  <Badge key={section} variant="secondary" className="rounded-full">
-                    {section}
-                  </Badge>
-                ))}
+      <div className="mx-auto max-w-6xl space-y-5">
+        <section className="overflow-hidden rounded-2xl border border-primary/20 bg-card/95 shadow-sm" aria-label={t("ai.conversation_label")}>
+          <div className="border-b border-border/70 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.16),transparent_34rem)] p-5 sm:p-7">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="flex items-center gap-2 text-sm font-medium text-primary">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                    <Sparkles className="h-4 w-4" />
+                  </span>
+                  {t("ai.brand")}
+                </p>
+                <h1 className="mt-4 font-serif text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                  {experience.title}
+                </h1>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">
+                  {experience.description}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {experience.sections.map((section) => (
+                    <Badge key={section} variant="secondary" className="rounded-full">
+                      {section}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-background/70 p-3 text-sm text-muted-foreground lg:max-w-xs">
+                <Badge variant="outline" className="mb-3 w-fit rounded-full">
+                  {t("ai.workspace_badge", { workspace: workspace.replace("_", " ") })}
+                </Badge>
+                <p>{t("ai.scope_description")}</p>
               </div>
             </div>
-            <Badge variant="outline" className="w-fit rounded-full">
-              {t("ai.workspace_badge", { workspace: workspace.replace("_", " ") })}
-            </Badge>
           </div>
-        </section>
 
-        <section className="rounded-lg border border-border/70 bg-card/95 p-4 shadow-sm sm:p-5" aria-label={t("ai.conversation_label")}>
-          <form onSubmit={onSubmit} className="space-y-3">
-            <label htmlFor="kanisa-ai-composer" className="font-serif text-xl font-bold">
-              {t("ai.ask")}
-            </label>
-            <div className="flex flex-col gap-3 md:flex-row md:items-end">
-              <textarea
-                ref={composerRef}
-                id="kanisa-ai-composer"
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                onKeyDown={onComposerKeyDown}
-                rows={3}
-                className="min-h-24 flex-1 resize-y rounded-lg border border-input bg-background px-3 py-3 text-sm text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                placeholder={t(`ai.placeholder.${workspace}`)}
-                aria-label={t("ai.ask_aria")}
-              />
-              <div className="flex gap-2 md:flex-col">
-                <Button type="submit" disabled={!draft.trim() || isProcessing} className="min-w-32 gap-2">
-                  <Send className="h-4 w-4" />
-                  {isProcessing ? t("ai.checking") : t("ai.ask")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={!messages.length || isProcessing}
-                  onClick={() => {
-                    setMessages([]);
-                    setDraft("");
-                    composerRef.current?.focus();
-                  }}
-                  className="gap-2"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  {t("ai.clear")}
-                </Button>
+          <div className="grid min-h-[58vh] bg-background/30 lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <div className="flex min-h-[58vh] flex-col">
+              <div className="flex-1 space-y-4 p-4 sm:p-6" aria-live="polite" aria-busy={isProcessing}>
+                {messages.length ? (
+                  messages.map((message) => <ConversationMessage key={message.id} message={message} onPreview={setActivePreview} onRetry={submitQuestion} />)
+                ) : (
+                  <div className="flex min-h-64 items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card/70 p-6 text-center">
+                    <div className="max-w-2xl">
+                      <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Bot className="h-7 w-7" />
+                      </span>
+                      <h2 className="mt-4 font-serif text-2xl font-bold text-foreground">{t("ai.ask")}</h2>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("ai.empty_thread")}</p>
+                      <div className="mt-5 flex flex-wrap justify-center gap-2" aria-label="Suggested prompts">
+                        {experience.suggestedPrompts.slice(0, 4).map((prompt) => (
+                          <Button
+                            key={prompt}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-auto whitespace-normal rounded-full py-1.5 text-left"
+                            onClick={() => submitQuestion(prompt)}
+                          >
+                            {prompt}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {isProcessing ? (
+                  <div className="rounded-lg border border-border/70 bg-card/90 px-4 py-3 text-sm text-muted-foreground">
+                    {t("ai.checking_data")}
+                  </div>
+                ) : null}
               </div>
+
+              <form onSubmit={onSubmit} className="border-t border-border/70 bg-card/95 p-4 sm:p-5">
+                <label htmlFor="kanisa-ai-composer" className="sr-only">
+                  {t("ai.ask")}
+                </label>
+                <div className="flex flex-col gap-3 md:flex-row md:items-end">
+                  <textarea
+                    ref={composerRef}
+                    id="kanisa-ai-composer"
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    onKeyDown={onComposerKeyDown}
+                    rows={3}
+                    className="min-h-24 flex-1 resize-y rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    placeholder={t(`ai.placeholder.${workspace}`)}
+                    aria-label={t("ai.ask_aria")}
+                  />
+                  <div className="flex gap-2 md:flex-col">
+                    <Button type="submit" disabled={!draft.trim() || isProcessing} className="min-w-32 gap-2">
+                      <Send className="h-4 w-4" />
+                      {isProcessing ? t("ai.checking") : t("ai.ask")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!messages.length || isProcessing}
+                      onClick={() => {
+                        setMessages([]);
+                        setDraft("");
+                        composerRef.current?.focus();
+                      }}
+                      className="gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {t("ai.clear")}
+                    </Button>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">{t("ai.enter_hint")}</p>
+              </form>
             </div>
-            <p className="text-xs text-muted-foreground">{t("ai.enter_hint")}</p>
-          </form>
 
-          <div className="mt-4 flex flex-wrap gap-2" aria-label="Suggested prompts">
-            {experience.suggestedPrompts.map((prompt) => (
-              <Button key={prompt} type="button" variant="outline" size="sm" className="h-auto whitespace-normal rounded-full py-1.5 text-left" onClick={() => submitQuestion(prompt)}>
-                {prompt}
-              </Button>
-            ))}
-          </div>
-
-          <div className="mt-5 space-y-4" aria-live="polite" aria-busy={isProcessing}>
-            {messages.length ? (
-              messages.map((message) => <ConversationMessage key={message.id} message={message} onPreview={setActivePreview} onRetry={submitQuestion} />)
-            ) : (
-              <div className="rounded-lg border border-dashed border-border/80 bg-background/50 p-5 text-sm text-muted-foreground">
-                {t("ai.empty_thread")}
-              </div>
-            )}
-            {isProcessing ? (
-              <div className="rounded-lg border border-border/70 bg-background/70 px-4 py-3 text-sm text-muted-foreground">
-                {t("ai.checking_data")}
-              </div>
-            ) : null}
-          </div>
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
-          <Card className="rounded-lg border-border/70 bg-card/95 shadow-sm">
-            <CardContent className="space-y-3 p-5">
-              <h2 className="font-serif text-xl font-bold">{t("ai.scope_title")}</h2>
-              <p className="text-sm leading-6 text-muted-foreground">
-                {t("ai.scope_description")}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-lg border-border/70 bg-card/95 shadow-sm">
-            <CardContent className="space-y-3 p-5">
+            <aside className="border-t border-border/70 bg-card/70 p-4 lg:border-l lg:border-t-0 sm:p-5">
               <p className="flex items-center gap-2 text-sm font-semibold">
                 <Clock className="h-4 w-4 text-primary" />
                 {t("ai.recent_commands")}
               </p>
               {recentCommands.length ? (
-                <div className="space-y-2">
+                <div className="mt-3 space-y-2">
                   {recentCommands.map((command) => (
-                    <div key={command.id} className="rounded-lg border border-border/70 px-3 py-2">
+                    <div key={command.id} className="rounded-lg border border-border/70 bg-background/70 px-3 py-2">
                       <p className="text-sm font-medium">{command.title}</p>
                       <p className="text-xs text-muted-foreground">{command.intent}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">{t("ai.no_recent_commands")}</p>
+                <p className="mt-3 text-sm text-muted-foreground">{t("ai.no_recent_commands")}</p>
               )}
-            </CardContent>
-          </Card>
-        </section>
 
-        <section>
-          <div className="mb-3">
-            <h2 className="font-serif text-2xl font-bold">{t("ai.explore_assistants")}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t("ai.assistant_cards_description")}</p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Kanisa AI assistants">
-          {assistants.map((assistant) => {
-            const route = assistant.route;
-
-            return (
-              <Card key={assistant.id} className="rounded-lg border-border/70 bg-card/95 shadow-sm">
-                <CardContent className="flex h-full flex-col gap-4 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <Bot className="h-5 w-5" />
-                    </span>
-                    <Badge variant={assistant.requiresAI ? "outline" : "secondary"} className="rounded-full">
-                      {assistant.requiresAI ? t("ai.provider_required") : t("ai.available")}
-                    </Badge>
-                  </div>
-                  <div>
-                    <h2 className="font-serif text-xl font-bold">{assistant.title}</h2>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{assistant.description}</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase text-muted-foreground">{t("ai.available_capabilities")}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {assistant.capabilities.length ? (
-                        assistant.capabilities.slice(0, 6).map((capability) => (
-                          <Badge key={capability.id} variant="secondary" className="rounded-full">
-                            {capability.label}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-sm text-muted-foreground">{t("ai.none_available")}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {assistant.futureCapabilities.length ? (
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase text-muted-foreground">{t("ai.future_capabilities")}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {assistant.futureCapabilities.slice(0, 5).map((capability) => (
-                          <Badge key={capability.id} variant="outline" className="rounded-full">
-                            {capability.label}
-                          </Badge>
-                        ))}
+              <div className="mt-5 space-y-2">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">{t("ai.explore_assistants")}</p>
+                {assistants.slice(0, 4).map((assistant) => (
+                  <div key={assistant.id} className="rounded-lg border border-border/70 bg-background/70 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{assistant.title}</p>
+                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">{assistant.description}</p>
                       </div>
+                      <Badge variant={assistant.requiresAI ? "outline" : "secondary"} className="shrink-0 rounded-full">
+                        {assistant.requiresAI ? t("ai.provider_required") : t("ai.available")}
+                      </Badge>
                     </div>
-                  ) : null}
-
-                  <div className="mt-auto pt-2">
-                    {route ? (
-                      <Button asChild className="w-full justify-center">
-                        <Link to={route}>
+                    {assistant.route ? (
+                      <Button asChild variant="link" size="sm" className="mt-2 h-auto p-0 text-primary">
+                        <Link to={assistant.route}>
                           {t("ai.open")}
-                          <ExternalLink className="ml-2 h-4 w-4" />
+                          <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
                         </Link>
                       </Button>
-                    ) : (
-                      <Button disabled className="w-full justify-center">
-                        {t("ai.not_available")}
-                      </Button>
-                    )}
+                    ) : null}
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                ))}
+              </div>
+            </aside>
           </div>
         </section>
+
       </div>
       <KanisaAIPreviewDialog
         preview={activePreview}
