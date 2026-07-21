@@ -1,0 +1,721 @@
+{
+  "chapter_id": "MAT_005_1_10",
+  "text": "Basi Isa alipona makundia watu, alipanda mlimani, akaketichini na wanafunzi wake wakamjia. Sifa za aliebarikiwa. Ndipo akanza kuafundisha akisema, heri walio masikini waroho, maana ufalme wa mbinguni ni wao. Heri wale wanauhuzunika maana hao watafarijiwa. Heri walio wapole maana hao watairithi nchi. Heri wenye njana kiu ya haki maana hao watatoshelezwa. Heri wenye huruma maana hao watapatarehema. Heri walio namoyosafi maana hao watamuona mungu. Heri walio wapatanishi maana hao wataituwa wanawamungu. Heri wanauteswa kwa sababu ya haki maana ufalme wa mbinguni ni wao.",
+  "words": [
+    {
+      "word": "Basi",
+      "start_ms": 10000,
+      "end_ms": 11000,
+      "confidence": 0.9829185605049133,
+      "verse": null
+    },
+    {
+      "word": "Isa",
+      "start_ms": 11000,
+      "end_ms": 11280,
+      "confidence": 0.7998052835464478,
+      "verse": null
+    },
+    {
+      "word": "alipona",
+      "start_ms": 11280,
+      "end_ms": 12140,
+      "confidence": 0.9365747769673666,
+      "verse": null
+    },
+    {
+      "word": "makundia",
+      "start_ms": 12140,
+      "end_ms": 12740,
+      "confidence": 0.9059488574663798,
+      "verse": null
+    },
+    {
+      "word": "watu,",
+      "start_ms": 12740,
+      "end_ms": 13180,
+      "confidence": 0.997981607913971,
+      "verse": null
+    },
+    {
+      "word": "alipanda",
+      "start_ms": 13260,
+      "end_ms": 13940,
+      "confidence": 0.9791762828826904,
+      "verse": null
+    },
+    {
+      "word": "mlimani,",
+      "start_ms": 13940,
+      "end_ms": 14600,
+      "confidence": 0.8765578468640646,
+      "verse": null
+    },
+    {
+      "word": "akaketichini",
+      "start_ms": 14680,
+      "end_ms": 15680,
+      "confidence": 0.9303733110427856,
+      "verse": null
+    },
+    {
+      "word": "na",
+      "start_ms": 15680,
+      "end_ms": 16020,
+      "confidence": 0.9387921094894409,
+      "verse": null
+    },
+    {
+      "word": "wanafunzi",
+      "start_ms": 16020,
+      "end_ms": 16740,
+      "confidence": 0.9272511005401611,
+      "verse": null
+    },
+    {
+      "word": "wake",
+      "start_ms": 16740,
+      "end_ms": 16980,
+      "confidence": 0.9231180548667908,
+      "verse": null
+    },
+    {
+      "word": "wakamjia.",
+      "start_ms": 16980,
+      "end_ms": 17920,
+      "confidence": 0.9890365242958069,
+      "verse": null
+    },
+    {
+      "word": "Sifa",
+      "start_ms": 20040,
+      "end_ms": 20600,
+      "confidence": 0.9320483803749084,
+      "verse": null
+    },
+    {
+      "word": "za",
+      "start_ms": 20600,
+      "end_ms": 21340,
+      "confidence": 0.9957231283187866,
+      "verse": null
+    },
+    {
+      "word": "aliebarikiwa.",
+      "start_ms": 21340,
+      "end_ms": 22280,
+      "confidence": 0.9160383224487305,
+      "verse": null
+    },
+    {
+      "word": "Ndipo",
+      "start_ms": 24440,
+      "end_ms": 25000,
+      "confidence": 0.9868113696575165,
+      "verse": null
+    },
+    {
+      "word": "akanza",
+      "start_ms": 25000,
+      "end_ms": 25680,
+      "confidence": 0.6882718652486801,
+      "verse": null
+    },
+    {
+      "word": "kuafundisha",
+      "start_ms": 25680,
+      "end_ms": 26340,
+      "confidence": 0.8525318205356598,
+      "verse": null
+    },
+    {
+      "word": "akisema,",
+      "start_ms": 26340,
+      "end_ms": 26980,
+      "confidence": 0.9655035535494486,
+      "verse": null
+    },
+    {
+      "word": "heri",
+      "start_ms": 27120,
+      "end_ms": 28000,
+      "confidence": 0.9586675763130188,
+      "verse": null
+    },
+    {
+      "word": "walio",
+      "start_ms": 28000,
+      "end_ms": 28460,
+      "confidence": 0.6683094054460526,
+      "verse": null
+    },
+    {
+      "word": "masikini",
+      "start_ms": 28460,
+      "end_ms": 28980,
+      "confidence": 0.9722925225893656,
+      "verse": null
+    },
+    {
+      "word": "waroho,",
+      "start_ms": 28980,
+      "end_ms": 29540,
+      "confidence": 0.9907718896865845,
+      "verse": null
+    },
+    {
+      "word": "maana",
+      "start_ms": 29620,
+      "end_ms": 30340,
+      "confidence": 0.9522555470466614,
+      "verse": null
+    },
+    {
+      "word": "ufalme",
+      "start_ms": 30340,
+      "end_ms": 30860,
+      "confidence": 0.7459613730510076,
+      "verse": null
+    },
+    {
+      "word": "wa",
+      "start_ms": 30860,
+      "end_ms": 30900,
+      "confidence": 0.5378974080085754,
+      "verse": null
+    },
+    {
+      "word": "mbinguni",
+      "start_ms": 30900,
+      "end_ms": 31400,
+      "confidence": 0.9855071107546488,
+      "verse": null
+    },
+    {
+      "word": "ni",
+      "start_ms": 31400,
+      "end_ms": 31600,
+      "confidence": 0.9972981810569763,
+      "verse": null
+    },
+    {
+      "word": "wao.",
+      "start_ms": 31600,
+      "end_ms": 31840,
+      "confidence": 0.8941303789615631,
+      "verse": null
+    },
+    {
+      "word": "Heri",
+      "start_ms": 31980,
+      "end_ms": 32620,
+      "confidence": 0.9895562529563904,
+      "verse": null
+    },
+    {
+      "word": "wale",
+      "start_ms": 32620,
+      "end_ms": 32940,
+      "confidence": 0.9982602000236511,
+      "verse": null
+    },
+    {
+      "word": "wanauhuzunika",
+      "start_ms": 32940,
+      "end_ms": 34220,
+      "confidence": 0.8811496744553248,
+      "verse": null
+    },
+    {
+      "word": "maana",
+      "start_ms": 34220,
+      "end_ms": 34820,
+      "confidence": 0.7861738502979279,
+      "verse": null
+    },
+    {
+      "word": "hao",
+      "start_ms": 34820,
+      "end_ms": 35220,
+      "confidence": 0.9903481602668762,
+      "verse": null
+    },
+    {
+      "word": "watafarijiwa.",
+      "start_ms": 35220,
+      "end_ms": 36360,
+      "confidence": 0.7953953519463539,
+      "verse": null
+    },
+    {
+      "word": "Heri",
+      "start_ms": 36360,
+      "end_ms": 37300,
+      "confidence": 0.7940108776092529,
+      "verse": null
+    },
+    {
+      "word": "walio",
+      "start_ms": 37300,
+      "end_ms": 37640,
+      "confidence": 0.7735297679901123,
+      "verse": null
+    },
+    {
+      "word": "wapole",
+      "start_ms": 37640,
+      "end_ms": 38100,
+      "confidence": 0.9642056624094645,
+      "verse": null
+    },
+    {
+      "word": "maana",
+      "start_ms": 38100,
+      "end_ms": 38760,
+      "confidence": 0.8535667061805725,
+      "verse": null
+    },
+    {
+      "word": "hao",
+      "start_ms": 38760,
+      "end_ms": 39120,
+      "confidence": 0.9602180123329163,
+      "verse": null
+    },
+    {
+      "word": "watairithi",
+      "start_ms": 39120,
+      "end_ms": 39980,
+      "confidence": 0.9330248832702637,
+      "verse": null
+    },
+    {
+      "word": "nchi.",
+      "start_ms": 39980,
+      "end_ms": 40380,
+      "confidence": 0.639450266957283,
+      "verse": null
+    },
+    {
+      "word": "Heri",
+      "start_ms": 40800,
+      "end_ms": 41280,
+      "confidence": 0.9985538125038147,
+      "verse": null
+    },
+    {
+      "word": "wenye",
+      "start_ms": 41280,
+      "end_ms": 41580,
+      "confidence": 0.9725719392299652,
+      "verse": null
+    },
+    {
+      "word": "njana",
+      "start_ms": 41580,
+      "end_ms": 41920,
+      "confidence": 0.9799698193868002,
+      "verse": null
+    },
+    {
+      "word": "kiu",
+      "start_ms": 41920,
+      "end_ms": 42380,
+      "confidence": 0.8258300423622131,
+      "verse": null
+    },
+    {
+      "word": "ya",
+      "start_ms": 42380,
+      "end_ms": 42540,
+      "confidence": 0.942977249622345,
+      "verse": null
+    },
+    {
+      "word": "haki",
+      "start_ms": 42540,
+      "end_ms": 43000,
+      "confidence": 0.9970025420188904,
+      "verse": null
+    },
+    {
+      "word": "maana",
+      "start_ms": 43000,
+      "end_ms": 43480,
+      "confidence": 0.9992109835147858,
+      "verse": null
+    },
+    {
+      "word": "hao",
+      "start_ms": 43480,
+      "end_ms": 43920,
+      "confidence": 0.999699741601944,
+      "verse": null
+    },
+    {
+      "word": "watatoshelezwa.",
+      "start_ms": 43920,
+      "end_ms": 45240,
+      "confidence": 0.8705509781837464,
+      "verse": null
+    },
+    {
+      "word": "Heri",
+      "start_ms": 45300,
+      "end_ms": 46120,
+      "confidence": 0.9990370273590088,
+      "verse": null
+    },
+    {
+      "word": "wenye",
+      "start_ms": 46120,
+      "end_ms": 46360,
+      "confidence": 0.9981664717197418,
+      "verse": null
+    },
+    {
+      "word": "huruma",
+      "start_ms": 46360,
+      "end_ms": 46900,
+      "confidence": 0.9988255798816681,
+      "verse": null
+    },
+    {
+      "word": "maana",
+      "start_ms": 46900,
+      "end_ms": 47400,
+      "confidence": 0.9999067187309265,
+      "verse": null
+    },
+    {
+      "word": "hao",
+      "start_ms": 47400,
+      "end_ms": 47760,
+      "confidence": 0.9999410510063171,
+      "verse": null
+    },
+    {
+      "word": "watapatarehema.",
+      "start_ms": 47760,
+      "end_ms": 48780,
+      "confidence": 0.9048356890678406,
+      "verse": null
+    },
+    {
+      "word": "Heri",
+      "start_ms": 49520,
+      "end_ms": 50000,
+      "confidence": 0.9990813434123993,
+      "verse": null
+    },
+    {
+      "word": "walio",
+      "start_ms": 50000,
+      "end_ms": 50320,
+      "confidence": 0.9298239946365356,
+      "verse": null
+    },
+    {
+      "word": "namoyosafi",
+      "start_ms": 50320,
+      "end_ms": 51300,
+      "confidence": 0.8066353619098663,
+      "verse": null
+    },
+    {
+      "word": "maana",
+      "start_ms": 51300,
+      "end_ms": 51960,
+      "confidence": 0.9995830357074738,
+      "verse": null
+    },
+    {
+      "word": "hao",
+      "start_ms": 51960,
+      "end_ms": 52300,
+      "confidence": 0.9999315142631531,
+      "verse": null
+    },
+    {
+      "word": "watamuona",
+      "start_ms": 52300,
+      "end_ms": 52940,
+      "confidence": 0.8890729248523712,
+      "verse": null
+    },
+    {
+      "word": "mungu.",
+      "start_ms": 52940,
+      "end_ms": 53440,
+      "confidence": 0.9890660842259725,
+      "verse": null
+    },
+    {
+      "word": "Heri",
+      "start_ms": 53860,
+      "end_ms": 54820,
+      "confidence": 0.9991349577903748,
+      "verse": null
+    },
+    {
+      "word": "walio",
+      "start_ms": 54820,
+      "end_ms": 55220,
+      "confidence": 0.9982861578464508,
+      "verse": null
+    },
+    {
+      "word": "wapatanishi",
+      "start_ms": 55220,
+      "end_ms": 56140,
+      "confidence": 0.9744160920381546,
+      "verse": null
+    },
+    {
+      "word": "maana",
+      "start_ms": 56140,
+      "end_ms": 56680,
+      "confidence": 0.9999154806137085,
+      "verse": null
+    },
+    {
+      "word": "hao",
+      "start_ms": 56680,
+      "end_ms": 57280,
+      "confidence": 0.9999579191207886,
+      "verse": null
+    },
+    {
+      "word": "wataituwa",
+      "start_ms": 57280,
+      "end_ms": 57960,
+      "confidence": 0.8623115122318268,
+      "verse": null
+    },
+    {
+      "word": "wanawamungu.",
+      "start_ms": 57960,
+      "end_ms": 58760,
+      "confidence": 0.8542786359786987,
+      "verse": null
+    },
+    {
+      "word": "Heri",
+      "start_ms": 59280,
+      "end_ms": 59760,
+      "confidence": 0.9992462992668152,
+      "verse": null
+    },
+    {
+      "word": "wanauteswa",
+      "start_ms": 59760,
+      "end_ms": 60460,
+      "confidence": 0.9250069409608841,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 60460,
+      "end_ms": 60660,
+      "confidence": 0.9671925008296967,
+      "verse": null
+    },
+    {
+      "word": "sababu",
+      "start_ms": 60660,
+      "end_ms": 61040,
+      "confidence": 0.9994589686393738,
+      "verse": null
+    },
+    {
+      "word": "ya",
+      "start_ms": 61040,
+      "end_ms": 61100,
+      "confidence": 0.9995470643043518,
+      "verse": null
+    },
+    {
+      "word": "haki",
+      "start_ms": 61100,
+      "end_ms": 61580,
+      "confidence": 0.9998134970664978,
+      "verse": null
+    },
+    {
+      "word": "maana",
+      "start_ms": 61580,
+      "end_ms": 62420,
+      "confidence": 0.9973973631858826,
+      "verse": null
+    },
+    {
+      "word": "ufalme",
+      "start_ms": 62420,
+      "end_ms": 62920,
+      "confidence": 0.9883955518404642,
+      "verse": null
+    },
+    {
+      "word": "wa",
+      "start_ms": 62920,
+      "end_ms": 62960,
+      "confidence": 0.24811969697475433,
+      "verse": null
+    },
+    {
+      "word": "mbinguni",
+      "start_ms": 62960,
+      "end_ms": 63540,
+      "confidence": 0.9923807978630066,
+      "verse": null
+    },
+    {
+      "word": "ni",
+      "start_ms": 63540,
+      "end_ms": 63800,
+      "confidence": 0.9950770735740662,
+      "verse": null
+    },
+    {
+      "word": "wao.",
+      "start_ms": 63800,
+      "end_ms": 63980,
+      "confidence": 0.08357250411063433,
+      "verse": null
+    }
+  ],
+  "verse_boundaries": [],
+  "verses": [],
+  "introductions": [],
+  "metadata": {
+    "provider": "faster-whisper",
+    "model_name": "evaluation\\speech_lab\\model_cache\\large-v3",
+    "resolved_model_name": "evaluation\\speech_lab\\model_cache\\large-v3",
+    "device": "cpu",
+    "compute_type": "int8",
+    "language": "sw",
+    "model_cached_before_run": false,
+    "audio_path": "supabase\\seed\\bible\\audio1\\open bible\\extracted\\MAT\\MAT_005.mp3",
+    "transcription_runtime_seconds": 710.9380358000053,
+    "detected_language": "sw",
+    "detected_language_probability": 1,
+    "duration_seconds": 472.656,
+    "segments": [
+      {
+        "id": 1,
+        "start_ms": 10000,
+        "end_ms": 17920,
+        "text": "Basi Isa alipona makundia watu, alipanda mlimani, akaketichini na wanafunzi wake wakamjia.",
+        "avg_logprob": -0.1943009892212493,
+        "no_speech_prob": 3.7851867091376334e-05
+      },
+      {
+        "id": 2,
+        "start_ms": 20160,
+        "end_ms": 22280,
+        "text": "Sifa za aliebarikiwa.",
+        "avg_logprob": -0.1943009892212493,
+        "no_speech_prob": 3.7851867091376334e-05
+      },
+      {
+        "id": 3,
+        "start_ms": 24580,
+        "end_ms": 31840,
+        "text": "Ndipo akanza kuafundisha akisema, heri walio masikini waroho, maana ufalme wa mbinguni ni wao.",
+        "avg_logprob": -0.1943009892212493,
+        "no_speech_prob": 3.7851867091376334e-05
+      },
+      {
+        "id": 4,
+        "start_ms": 31980,
+        "end_ms": 36360,
+        "text": "Heri wale wanauhuzunika maana hao watafarijiwa.",
+        "avg_logprob": -0.1943009892212493,
+        "no_speech_prob": 3.7851867091376334e-05
+      },
+      {
+        "id": 5,
+        "start_ms": 36360,
+        "end_ms": 40380,
+        "text": "Heri walio wapole maana hao watairithi nchi.",
+        "avg_logprob": -0.1267657031258233,
+        "no_speech_prob": 2.193523187088431e-06
+      },
+      {
+        "id": 6,
+        "start_ms": 41100,
+        "end_ms": 45240,
+        "text": "Heri wenye njana kiu ya haki maana hao watatoshelezwa.",
+        "avg_logprob": -0.1267657031258233,
+        "no_speech_prob": 2.193523187088431e-06
+      },
+      {
+        "id": 7,
+        "start_ms": 45300,
+        "end_ms": 48780,
+        "text": "Heri wenye huruma maana hao watapatarehema.",
+        "avg_logprob": -0.1267657031258233,
+        "no_speech_prob": 2.193523187088431e-06
+      },
+      {
+        "id": 8,
+        "start_ms": 49700,
+        "end_ms": 53440,
+        "text": "Heri walio namoyosafi maana hao watamuona mungu.",
+        "avg_logprob": -0.1267657031258233,
+        "no_speech_prob": 2.193523187088431e-06
+      },
+      {
+        "id": 9,
+        "start_ms": 53860,
+        "end_ms": 58760,
+        "text": "Heri walio wapatanishi maana hao wataituwa wanawamungu.",
+        "avg_logprob": -0.1267657031258233,
+        "no_speech_prob": 2.193523187088431e-06
+      },
+      {
+        "id": 10,
+        "start_ms": 59440,
+        "end_ms": 63980,
+        "text": "Heri wanauteswa kwa sababu ya haki maana ufalme wa mbinguni ni wao.",
+        "avg_logprob": -0.1267657031258233,
+        "no_speech_prob": 2.193523187088431e-06
+      }
+    ],
+    "transcription_options": {
+      "vad_filter": true,
+      "vad_parameters": {
+        "min_silence_duration_ms": 500,
+        "speech_pad_ms": 200
+      },
+      "clip_timestamps": [
+        10.0,
+        64.0
+      ]
+    },
+    "sample_id": "MAT_005_1_10",
+    "source_chapter_id": "MAT_005",
+    "verse_range": [
+      1,
+      10
+    ],
+    "model_key": "large-v3",
+    "model_id": "Systran/faster-whisper-large-v3",
+    "model_label": "Faster Whisper Large-v3",
+    "reference_type": "biblica_candidate",
+    "generated_at": "2026-07-10T21:45:01Z",
+    "effective_transcription_options": {
+      "vad_filter": true,
+      "vad_parameters": {
+        "min_silence_duration_ms": 500,
+        "speech_pad_ms": 200
+      },
+      "clip_timestamps": [
+        10.0,
+        64.0
+      ]
+    },
+    "word_timestamps": true,
+    "no_download": true
+  }
+}

@@ -1,0 +1,274 @@
+{
+  "book": "John",
+  "chapter": 3,
+  "audio_duration": 378.8432,
+  "processing_duration": 0.0,
+  "verse_count": 36,
+  "word_count": 618,
+  "average_confidence": 0.0,
+  "minimum_confidence": 0.0,
+  "maximum_confidence": 0.0,
+  "missing_verses": 0,
+  "overlapping_verses": 0,
+  "alignment_errors": 36,
+  "status": "FAIL",
+  "missing_verse_numbers": [],
+  "overlapping_verse_ids": [],
+  "overlap_details": [],
+  "verse_boundary_qa": [
+    {
+      "verse_number": 1,
+      "expected_opening_text": "basi palikuwa na",
+      "closest_aligned_text": "Basi, Palikuana, Mtumoya,",
+      "similarity_score": 0.736842,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 2,
+      "expected_opening_text": "huyu alimjia yesu usiku akamwambia rabi",
+      "closest_aligned_text": "Huyo, Alim, Dia, Isausico, Komambia,",
+      "similarity_score": 0.676923,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 3,
+      "expected_opening_text": "yesu akamjibu amin amin nakuambia hakuna",
+      "closest_aligned_text": "Isa kamambia. Amin. Amin nakwambia. Akunam",
+      "similarity_score": 0.78481,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 4,
+      "expected_opening_text": "nikodemo akauliza awezaje mtu kuzaliwa wakati",
+      "closest_aligned_text": "nakwaroho. Muili huzaa muili.",
+      "similarity_score": 0.5,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 5,
+      "expected_opening_text": "yesu akamwambia amin amin nakuambia hakuna",
+      "closest_aligned_text": "kamambia. Amin. Amin nakwambia. Akunam tuyeote",
+      "similarity_score": 0.776471,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 6,
+      "expected_opening_text": "mwili huzaa mwili",
+      "closest_aligned_text": "Muili huzaa muili.",
+      "similarity_score": 0.882353,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 7,
+      "expected_opening_text": "kwa hiyo usishangae ninapokuambia huna budi",
+      "closest_aligned_text": "Kuaiou si shangaininapu kambia. Hunabu di",
+      "similarity_score": 0.746988,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 8,
+      "expected_opening_text": "upepo huvuma popote upendapo mvumo wake",
+      "closest_aligned_text": "Tuna, Zungum, Zalile, Tuna,",
+      "similarity_score": 0.431373,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 9,
+      "expected_opening_text": "nikodemo akamuuliza mambo haya yanawezekanaje",
+      "closest_aligned_text": "Ni, Takapua, Ambi,",
+      "similarity_score": 0.6,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 10,
+      "expected_opening_text": "yesu akamwambia wewe ni mwalimu mashuhuri",
+      "closest_aligned_text": "yahia wakamambia moalimu",
+      "similarity_score": 0.545455,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 11,
+      "expected_opening_text": "amin amin ninakuambia sisi",
+      "closest_aligned_text": "Amin, Amin, Nakwambia, Sisi,",
+      "similarity_score": 0.92,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 12,
+      "expected_opening_text": "nimewaambia mambo ya duniani",
+      "closest_aligned_text": "Me, Ambi, Amamboya, Duniani,",
+      "similarity_score": 0.846154,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 13,
+      "expected_opening_text": "hakuna mtu yeyote",
+      "closest_aligned_text": "Akunam, Tu, Iot,",
+      "similarity_score": 0.733333,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 14,
+      "expected_opening_text": "kama vile mose alivyomwinua yule nyoka",
+      "closest_aligned_text": "Ila ni me",
+      "similarity_score": 0.521739,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 15,
+      "expected_opening_text": "ili kila mtu amwaminiye awe na",
+      "closest_aligned_text": "Isi pokuakile tu",
+      "similarity_score": 0.642857,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 16,
+      "expected_opening_text": "kwa maana jinsi hii mungu aliupenda",
+      "closest_aligned_text": "a man, I",
+      "similarity_score": 0.636364,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 17,
+      "expected_opening_text": "kwa maana mungu hakumtuma mwanawe kuuhukumu",
+      "closest_aligned_text": "Alie, Andam, Benguni,",
+      "similarity_score": 0.545455,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 18,
+      "expected_opening_text": "yeyote amwaminiye hahukumiwi lakini asiyeamini amekwisha",
+      "closest_aligned_text": "Ye, Alie, Shuka,",
+      "similarity_score": 0.487805,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 19,
+      "expected_opening_text": "hii ndiyo hukumu kwamba nuru imekuja",
+      "closest_aligned_text": "Hii ilikuwa ka belaya",
+      "similarity_score": 0.545455,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 20,
+      "expected_opening_text": "kwa kuwa kila atendaye maovu huchukia",
+      "closest_aligned_text": "Hii ilikuwa ka",
+      "similarity_score": 0.592593,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 21,
+      "expected_opening_text": "lakini yule aishiye kwa ukweli huja",
+      "closest_aligned_text": "yordani yule uliyashuhudia",
+      "similarity_score": 0.577778,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 22,
+      "expected_opening_text": "baada ya haya",
+      "closest_aligned_text": "the Badaya Hayah.",
+      "similarity_score": 0.758621,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 23,
+      "expected_opening_text": "yohana naye alikuwa",
+      "closest_aligned_text": "Yahya nae alikuwa",
+      "similarity_score": 0.833333,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 24,
+      "expected_opening_text": "g hii ilikuwa kabla",
+      "closest_aligned_text": "Hii ilikuwa ka belaya",
+      "similarity_score": 0.85,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 25,
+      "expected_opening_text": "mashindano yakazuka kati",
+      "closest_aligned_text": "Machindano yakazu ka",
+      "similarity_score": 0.863636,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 26,
+      "expected_opening_text": "wakamwendea yohana wakamwambia",
+      "closest_aligned_text": "Wakamuindia yahia wakamambia",
+      "similarity_score": 0.793103,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 27,
+      "expected_opening_text": "yohana akawajibu hakuna",
+      "closest_aligned_text": "yahia kawajibu Haku",
+      "similarity_score": 0.809524,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 28,
+      "expected_opening_text": "ninyi wenyewe ni mashahidi wangu",
+      "closest_aligned_text": "niyo ni mashai di wangu",
+      "similarity_score": 0.763636,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 29,
+      "expected_opening_text": "bibi arusi ni",
+      "closest_aligned_text": "Bibhi arusi niwa",
+      "similarity_score": 0.896552,
+      "reason": "fuzzy"
+    },
+    {
+      "verse_number": 30,
+      "expected_opening_text": "yeye hana budi kuwa mkuu zaidi",
+      "closest_aligned_text": "yeah, yeah, yeah, I am",
+      "similarity_score": 0.511628,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 31,
+      "expected_opening_text": "yeye ajaye kutoka juu yu juu",
+      "closest_aligned_text": "Yeah, yeah, yeah.",
+      "similarity_score": 0.516129,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 32,
+      "expected_opening_text": "yeye hushuhudia yale aliyoyaona na kuyasikia",
+      "closest_aligned_text": "Yeah, yeah, yeah.",
+      "similarity_score": 0.470588,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 33,
+      "expected_opening_text": "lakini yeyote anayekubali huo ushuhuda anathibitisha",
+      "closest_aligned_text": "arusi. Yeah, yeah,",
+      "similarity_score": 0.45,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 34,
+      "expected_opening_text": "yeye aliyetumwa na mungu husema maneno",
+      "closest_aligned_text": "Yeah, yeah, yeah.",
+      "similarity_score": 0.5,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 35,
+      "expected_opening_text": "baba anampenda mwana naye ametia vitu",
+      "closest_aligned_text": "am not a man, I am",
+      "similarity_score": 0.444444,
+      "reason": "boundary_not_found"
+    },
+    {
+      "verse_number": 36,
+      "expected_opening_text": "yeyote anayemwamini mwana ana uzima wa",
+      "closest_aligned_text": "not a man,",
+      "similarity_score": 0.470588,
+      "reason": "boundary_not_found"
+    }
+  ],
+  "issues": [],
+  "generated": "2026-07-08T19:10:04.423509+00:00"
+}
