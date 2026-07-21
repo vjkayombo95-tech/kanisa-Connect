@@ -10,6 +10,7 @@ import { WorkspaceRouteLayout } from "./WorkspaceRouteLayout";
 const PortalEvents = lazy(() => import("@/pages/portal/PortalEvents"));
 const ParishCalendarPage = lazy(() => import("@/pages/portal/ParishCalendarPage"));
 const PortalHome = lazy(() => import("@/pages/portal/PortalHome"));
+const MyParishPage = lazy(() => import("@/pages/portal/MyParishPage"));
 const PortalSermons = lazy(() => import("@/pages/portal/PortalSermons"));
 const PortalAnnouncements = lazy(() => import("@/pages/portal/PortalAnnouncements"));
 const PortalGive = lazy(() => import("@/pages/portal/PortalGive"));
@@ -77,6 +78,7 @@ export default function MemberRoutes() {
       <Routes>
         <Route element={<WorkspaceRouteLayout workspaceId="member" />}>
           <Route index element={<PortalIndexRoute />} />
+          <Route path="my-parish" element={<MyParishPage />} />
           <Route path="bible-verses" element={<PortalHome />} />
           <Route path="dashboard" element={<PortalDashboardRoute />} />
           <Route path="events" element={<PortalEvents />} />

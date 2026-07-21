@@ -44,6 +44,7 @@ export const workspaceRegistry = {
         label: "Home",
         items: [
           { id: "dashboard", label: "Dashboard", to: "/portal", icon: Church },
+          { id: "my-parish", label: "My Parish", to: "/portal/my-parish", icon: Church },
           { id: "kanisa-ai", label: "Kanisa AI", to: "/portal/kanisa-ai", icon: Sparkles, featureFlag: "kanisa_ai" },
         ],
       },
