@@ -228,6 +228,7 @@ export const workspaceRegistry = {
           { id: "preview-member", label: "Preview Member Experience", to: "/church-admin/preview-member", icon: Eye },
           { id: "billing", label: "Billing", to: "/church-admin/billing", icon: CreditCard },
           { id: "settings", label: "Settings", to: "/church-admin/settings", icon: Settings },
+          { id: "features-permissions", label: "Features & Permissions", to: "/church-admin/settings/features-permissions", icon: Shield, featureFlag: "roles", requireFeatureEnabled: true },
         ],
       },
     ],

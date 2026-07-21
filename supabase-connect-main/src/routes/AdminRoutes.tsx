@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
 import { useFeatureAccess } from "@/hooks/use-feature-access";
+import { useChurchPermission } from "@/hooks/use-church-permission";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { startMemberPreview } from "@/lib/member-preview";
 import { WorkspaceRouteLayout } from "./WorkspaceRouteLayout";
 
@@ -42,6 +44,7 @@ const NotificationsPage = lazy(() => import("@/pages/church-admin/NotificationsP
 const ChannelsPage = lazy(() => import("@/pages/church-admin/ChannelsPage"));
 const RolesPage = lazy(() => import("@/pages/church-admin/RolesPage"));
 const SettingsPage = lazy(() => import("@/pages/church-admin/SettingsPage"));
+const FeaturesPermissionsPage = lazy(() => import("@/pages/church-admin/FeaturesPermissionsPage"));
 const ReportsPage = lazy(() => import("@/pages/church-admin/ReportsPage"));
 const AnalyticsPage = lazy(() => import("@/pages/church-admin/AnalyticsPage"));
 const DataImportPage = lazy(() => import("@/pages/church-admin/DataImportPage"));
@@ -68,6 +71,13 @@ function FeatureProtectedRoute({ children, featureKey }: { children: React.React
   if (!isFeatureEnabled(featureKey)) return <Navigate to="/church-admin" replace />;
 
   return children;
+}
+
+function ManagePermissionsRoute() {
+  const { allowed, isLoading } = useChurchPermission("feature_permissions_admin", "manage");
+  if (isLoading) return <SectionFallback />;
+  if (!allowed) return <Card><CardHeader><CardTitle>Access denied</CardTitle><CardDescription>Only a Church Admin with role-management permission can change feature and role controls.</CardDescription></CardHeader></Card>;
+  return <FeaturesPermissionsPage />;
 }
 
 export default function AdminRoutes() {
@@ -119,6 +129,7 @@ export default function AdminRoutes() {
           <Route path="channels" element={<ChannelsPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings/features-permissions" element={<ManagePermissionsRoute />} />
           <Route path="settings/billing" element={<BillingPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
