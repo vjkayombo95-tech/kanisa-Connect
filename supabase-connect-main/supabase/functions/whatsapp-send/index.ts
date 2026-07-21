@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { redactSecrets } from "../_shared/whatsapp-core.ts";
 import { buildProviderPayload, sendToMeta } from "../_shared/whatsapp-sender.ts";
+import { isServiceFeatureAvailable } from "../_shared/feature-eligibility.ts";
 
 type SendInput = { churchId: string; conversationId: string; contactId: string; to: string; type: "text" | "buttons" | "list" | "template"; text?: string; buttons?: Array<{ id: string; title: string }>; sections?: unknown[]; template?: { name: string; language: string; components?: unknown[] }; category?: "service" | "utility" | "marketing" | "authentication"; dryRun?: boolean };
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -13,6 +14,9 @@ Deno.serve(async (request) => {
     const input = await request.json() as SendInput;
     if (!input.churchId || !input.conversationId || !input.contactId || !input.to || !input.type) return json(400, { error: "Missing required fields" });
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    if (!await isServiceFeatureAvailable(supabase, input.churchId, "notifications")) {
+      return json(403, { error: "Notifications are unavailable for this church" });
+    }
     const base = { messaging_product: "whatsapp", recipient_type: "individual", to: input.to.replace(/^\+/, "") };
     const providerPayload = input.type === "text" ? undefined : input.type === "buttons"
       ? { ...base, type: "interactive", interactive: { type: "button", body: { text: input.text }, action: { buttons: input.buttons?.slice(0, 3).map((button) => ({ type: "reply", reply: button })) } } }

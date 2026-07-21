@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { MASS_INTENTION_WORKFLOW } from "../_shared/whatsapp-dispatch-core.ts";
 import { normalizeTanzanianPhone, serviceWindow, statusPatch, transition, verifyChallenge, verifyMetaSignature, type NiaState } from "../_shared/whatsapp-core.ts";
+import { isServiceFeatureAvailable } from "../_shared/feature-eligibility.ts";
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const MAX_BODY = 1_000_000;
@@ -29,6 +30,10 @@ Deno.serve(async (request) => {
     if (!inserted) continue; // unique event key makes retries reply-free
     const phoneId = value.metadata?.phone_number_id; const { data: account } = await db.from("whatsapp_accounts").select("church_id").eq("phone_number_id", phoneId).eq("status", "active").maybeSingle();
     if (!account) { await db.from("whatsapp_webhook_events").update({ processing_status: "ignored", processed_at: new Date().toISOString() }).eq("id", inserted.id); continue; }
+    if (!await isServiceFeatureAvailable(db, account.church_id, "notifications")) {
+      await db.from("whatsapp_webhook_events").update({ church_id: account.church_id, processing_status: "ignored", processed_at: new Date().toISOString() }).eq("id", inserted.id);
+      continue;
+    }
     await db.from("whatsapp_webhook_events").update({ church_id: account.church_id, processing_status: "processing" }).eq("id", inserted.id);
     for (const status of value.statuses ?? []) {
       const patch = statusPatch(status.status, Number(status.timestamp), status.errors?.[0]?.title);

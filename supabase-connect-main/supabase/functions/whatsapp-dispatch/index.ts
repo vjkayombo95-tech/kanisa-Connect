@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { authorizeInternal, classifyProviderFailure, MAX_ATTEMPTS, retryAt, safeBatchSize, safeClaimDiagnostic, safeFailureReason, sendUnlessDryRun, validateClaim, type ClaimedMessage, type DispatchOutcome } from "../_shared/whatsapp-dispatch-core.ts";
 import { sendToMeta } from "../_shared/whatsapp-sender.ts";
+import { isServiceFeatureAvailable } from "../_shared/feature-eligibility.ts";
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 type Complete = { outcome: DispatchOutcome; providerId?: string | null; category?: string | null; reason?: string | null; next?: string | null };
@@ -24,6 +25,7 @@ Deno.serve(async (request) => {
     try {
       const validation = validateClaim(message, new Date(), { dryRun: input.dryRun });
       if (!validation.allowed) completion = { outcome: validation.outcome, category: validation.category, reason: validation.reason, next: validation.outcome === "retry_scheduled" ? retryAt(message.attempt_count, new Date(new Date().setHours(24, 0, 0, 0))) : null };
+      else if (!await isServiceFeatureAvailable(db, message.church_id, "notifications")) completion = { outcome: "permanent_failed", category: "feature_disabled", reason: "Notifications are unavailable for this church" };
       else {
         const dispatch = await sendUnlessDryRun(input.dryRun, async () => {
           const token = Deno.env.get("WHATSAPP_ACCESS_TOKEN");
