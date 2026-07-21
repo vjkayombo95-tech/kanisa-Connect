@@ -20,6 +20,7 @@ type Feature = {
   description: string | null;
   globally_enabled: boolean;
   globally_locked: boolean;
+  is_mandatory: boolean;
 };
 
 type ChurchFeature = {
@@ -126,7 +127,7 @@ export default function FeatureManagement() {
       const draft: Record<string, LocalChurch> = {};
       features.forEach((f) => {
         const cf = churchFeatures.find((c) => c.feature_id === f.id);
-        draft[f.id] = { enabled: cf ? cf.enabled : f.globally_enabled, locked: cf?.locked === true };
+        draft[f.id] = { enabled: cf?.enabled === true, locked: cf?.locked === true };
       });
       setChurchDraft(draft);
       setChurchDirty(false);
@@ -220,9 +221,17 @@ export default function FeatureManagement() {
   const resetChurch = useMutation({
     mutationFn: async () => {
       if (!selectedChurchId) return;
-      for (const cf of churchFeatures) {
-        await supabase.from("church_features").delete().eq("id", cf.id);
-      }
+      const { error } = await supabase.from("church_features").upsert(
+        features.map((feature) => ({
+          church_id: selectedChurchId,
+          feature_id: feature.id,
+          enabled: feature.is_mandatory ? true : feature.globally_enabled,
+          locked: feature.is_mandatory ? true : feature.globally_locked,
+          updated_at: new Date().toISOString(),
+        })),
+        { onConflict: "church_id,feature_id" },
+      );
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["sa-church-features", selectedChurchId] });
@@ -305,7 +314,7 @@ export default function FeatureManagement() {
     if (gd.locked) return { enabled: gd.enabled, locked: true, source: "Global Locked" };
     const cd = churchDraft[f.id];
     return {
-      enabled: cd ? cd.enabled : gd.enabled,
+      enabled: cd?.enabled === true,
       locked: cd?.locked === true,
       source: cd?.locked ? "Church Locked" : cd?.enabled === false ? "Church Hidden" : "Active",
     };
@@ -392,6 +401,7 @@ export default function FeatureManagement() {
                               <Switch
                                 checked={s.enabled}
                                 onCheckedChange={(v) => updateGlobal(f.id, "enabled", v)}
+                                disabled={f.is_mandatory}
                                 aria-label={`Set ${f.name} global visibility`}
                               />
                             </TableCell>
@@ -399,7 +409,7 @@ export default function FeatureManagement() {
                               <Switch
                                 checked={s.locked}
                                 onCheckedChange={(v) => updateGlobal(f.id, "locked", v)}
-                                disabled={!s.enabled}
+                                disabled={f.is_mandatory || !s.enabled}
                                 aria-label={`Lock ${f.name} globally`}
                               />
                             </TableCell>
@@ -519,6 +529,7 @@ export default function FeatureManagement() {
                                   <Switch
                                     checked={ce.enabled}
                                     onCheckedChange={(v) => updateChurch(f.id, "enabled", v)}
+                                    disabled={f.is_mandatory}
                                     aria-label={`Set ${f.name} visibility for selected church`}
                                   />
                                 )}
@@ -529,7 +540,7 @@ export default function FeatureManagement() {
                                 ) : (
                                   <Switch
                                     checked={ce.locked}
-                                    disabled={!ce.enabled}
+                                    disabled={f.is_mandatory || !ce.enabled}
                                     onCheckedChange={(v) => updateChurch(f.id, "locked", v)}
                                     aria-label={`Lock ${f.name} for selected church`}
                                   />
