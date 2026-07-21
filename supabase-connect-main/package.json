@@ -15,6 +15,8 @@
     "bible:import-usx": "node scripts/bible/import-usx.ts",
     "bible:validate": "node scripts/bible/validate-bible-json.ts",
     "bible:validate-metadata": "node scripts/bible/validate-translation-metadata.ts",
+    "bible:prepare-audio": "node scripts/bible/prepare-open-bible-audio.cjs",
+    "bible:import-audio": "node scripts/bible/import-open-bible-audio.ts",
     "bible:import": "node scripts/bible/import-bible.ts",
     "import:liturgy": "node scripts/liturgy/index.ts",
     "prayer:export-content": "node scripts/prayer-library/prayer-content-workflow.ts export",
@@ -23,6 +25,7 @@
     "prayer:import-staging": "node scripts/prayer-library/prayer-content-workflow.ts import",
     "lint": "eslint .",
     "preview": "vite preview",
+    "smoke:postdeploy": "node scripts/ops/post-deployment-smoke.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
