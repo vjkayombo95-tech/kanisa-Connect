@@ -105,10 +105,12 @@ async function authorizeInvitationSender(req: Request, token: string, email: str
   }
 
   const { data: canManageChurch, error: canManageError } = await callerSupabase.rpc(
-    "can_manage_church_workspace",
+    "has_church_feature_permission",
     {
       _user_id: authData.user.id,
       _church_id: invitation.church_id,
+      _feature_key: "roles",
+      _action: "manage",
     },
   );
 
