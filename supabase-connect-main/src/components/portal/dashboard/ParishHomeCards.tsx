@@ -27,6 +27,7 @@ import { bibleReferenceToPath, parseBibleReference } from "@/lib/bible-reference
 import { formatLiturgicalDate, type BibleBookRow, type LiturgicalDayRow } from "@/lib/liturgy";
 import { bibleQueryOptions } from "@/lib/portal-performance";
 import { cn } from "@/lib/utils";
+import { announcementHtmlToPlainText } from "@/lib/announcement-content";
 
 import { SaintOfTheDayCard } from "./SaintOfTheDayCard";
 import { TodaysPrayerCard } from "./TodaysPrayerCard";
@@ -393,7 +394,7 @@ export function ParishLifeCard({ churchId, latestAnnouncement }: ParishLifeCardP
               icon={Megaphone}
               label="Latest Announcement"
               title={latestAnnouncement?.title ?? "No announcement"}
-              detail={latestAnnouncement?.content ? truncatePreview(latestAnnouncement.content, 120) : "No parish announcement is published right now."}
+              detail={latestAnnouncement?.content ? truncatePreview(announcementHtmlToPlainText(latestAnnouncement.content), 120) : "No parish announcement is published right now."}
               to="/portal/announcements"
             />
           </div>
