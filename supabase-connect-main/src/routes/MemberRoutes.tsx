@@ -10,6 +10,7 @@ import { WorkspaceRouteLayout } from "./WorkspaceRouteLayout";
 const PortalEvents = lazy(() => import("@/pages/portal/PortalEvents"));
 const ParishCalendarPage = lazy(() => import("@/pages/portal/ParishCalendarPage"));
 const PortalHome = lazy(() => import("@/pages/portal/PortalHome"));
+const LiturgyHomePage = lazy(() => import("@/pages/portal/LiturgyHomePage"));
 const MyParishPage = lazy(() => import("@/pages/portal/MyParishPage"));
 const PortalSermons = lazy(() => import("@/pages/portal/PortalSermons"));
 const PortalAnnouncements = lazy(() => import("@/pages/portal/PortalAnnouncements"));
@@ -59,7 +60,7 @@ function PortalIndexRoute() {
     return <Navigate to={getDefaultRouteForRole(userRole, isSuperAdmin)} replace />;
   }
 
-  return <MemberDashboard />;
+  return <LiturgyHomePage />;
 }
 
 function PortalDashboardRoute() {
