@@ -189,24 +189,36 @@ export type Database = {
           church_id: string
           created_at: string
           enabled: boolean
+          enabled_at: string | null
+          enabled_by: string | null
           feature_id: string
           id: string
+          locked: boolean
+          settings: Json
           updated_at: string
         }
         Insert: {
           church_id: string
           created_at?: string
           enabled?: boolean
+          enabled_at?: string | null
+          enabled_by?: string | null
           feature_id: string
           id?: string
+          locked?: boolean
+          settings?: Json
           updated_at?: string
         }
         Update: {
           church_id?: string
           created_at?: string
           enabled?: boolean
+          enabled_at?: string | null
+          enabled_by?: string | null
           feature_id?: string
           id?: string
+          locked?: boolean
+          settings?: Json
           updated_at?: string
         }
         Relationships: [
@@ -219,6 +231,72 @@ export type Database = {
           },
           {
             foreignKeyName: "church_features_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "platform_features"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      church_role_permissions: {
+        Row: {
+          can_approve: boolean
+          can_create: boolean
+          can_delete: boolean
+          can_edit: boolean
+          can_manage: boolean
+          can_publish: boolean
+          can_view: boolean
+          church_id: string
+          created_at: string
+          feature_id: string
+          id: string
+          role: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          can_approve?: boolean
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_manage?: boolean
+          can_publish?: boolean
+          can_view?: boolean
+          church_id: string
+          created_at?: string
+          feature_id: string
+          id?: string
+          role: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          can_approve?: boolean
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_manage?: boolean
+          can_publish?: boolean
+          can_view?: boolean
+          church_id?: string
+          created_at?: string
+          feature_id?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "church_role_permissions_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "church_role_permissions_feature_id_fkey"
             columns: ["feature_id"]
             isOneToOne: false
             referencedRelation: "platform_features"
@@ -1514,34 +1592,55 @@ export type Database = {
       }
       platform_features: {
         Row: {
+          available_plans: string[]
+          category: string
+          church_configurable: boolean
           created_at: string
           description: string | null
           globally_enabled: boolean
           globally_locked: boolean
           id: string
           is_global: boolean
+          is_mandatory: boolean
           key: string
+          member_available: boolean
           name: string
+          staff_available: boolean
+          updated_at: string
         }
         Insert: {
+          available_plans?: string[]
+          category?: string
+          church_configurable?: boolean
           created_at?: string
           description?: string | null
           globally_enabled?: boolean
           globally_locked?: boolean
           id?: string
           is_global?: boolean
+          is_mandatory?: boolean
           key: string
+          member_available?: boolean
           name: string
+          staff_available?: boolean
+          updated_at?: string
         }
         Update: {
+          available_plans?: string[]
+          category?: string
+          church_configurable?: boolean
           created_at?: string
           description?: string | null
           globally_enabled?: boolean
           globally_locked?: boolean
           id?: string
           is_global?: boolean
+          is_mandatory?: boolean
           key?: string
+          member_available?: boolean
           name?: string
+          staff_available?: boolean
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2220,6 +2319,73 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_church_roles: {
+        Args: { _church_id: string; _user_id: string }
+        Returns: boolean
+      }
+      get_church_feature_permission_matrix: {
+        Args: { _church_id: string }
+        Returns: {
+          can_approve: boolean
+          can_create: boolean
+          can_delete: boolean
+          can_edit: boolean
+          can_manage: boolean
+          can_publish: boolean
+          can_view: boolean
+          category: string
+          church_enabled: boolean
+          description: string | null
+          feature_id: string
+          feature_key: string
+          feature_name: string
+          globally_enabled: boolean
+          globally_locked: boolean
+          member_available: boolean
+          role: string
+          staff_available: boolean
+          subscription_available: boolean
+        }[]
+      }
+      has_church_feature_permission: {
+        Args: {
+          _action: string
+          _church_id: string
+          _feature_key: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_related_feature_permission: {
+        Args: { _action: string; _row: Json; _table: string }
+        Returns: boolean
+      }
+      is_feature_available_for_church: {
+        Args: { _church_id: string; _feature_key: string }
+        Returns: boolean
+      }
+      is_service_feature_available: {
+        Args: { _church_id: string; _feature_key: string }
+        Returns: boolean
+      }
+      recommended_church_feature_permission: {
+        Args: {
+          _action: string
+          _feature_key: string
+          _member_available: boolean
+          _role: string
+          _staff_available: boolean
+        }
+        Returns: boolean
+      }
+      save_church_role_permissions: {
+        Args: { _church_id: string; _permissions: Json; _role: string }
+        Returns: undefined
+      }
+      set_church_feature_enabled: {
+        Args: { _church_id: string; _enabled: boolean; _feature_key: string }
+        Returns: undefined
+      }
       accept_invitation: { Args: { _token: string }; Returns: Json }
       get_public_invitation: {
         Args: { _token: string }
