@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,17 +8,18 @@ import { Badge } from "@/components/ui/badge";
 import { Megaphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CommentThread, type CommentReactionSummary } from "@/components/portal/CommentThread";
-import { ScriptureText } from "@/components/bible";
+import { AnnouncementContent } from "@/components/announcements/AnnouncementContent";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { fetchPortalAnnouncements, getPortalAnnouncementsCache } from "@/lib/portal-announcements";
 import { useTranslation } from "react-i18next";
 import { formatLocalizedDate, normalizeAppLanguage } from "@/lib/localization";
+import { announcementHtmlToPlainText } from "@/lib/announcement-content";
 
 const ANNOUNCEMENT_REACTION_EMOJIS = ["🎉", "❤️", "🙏", "🥳", "👏", "😊"] as const;
 const ANNOUNCEMENT_COMMENT_EMOJIS = ["🎉", "❤️", "🙏", "👏", "😊"] as const;
 
 function isCelebrationAnnouncement(title: string, content: string) {
-  const text = `${title} ${content}`.toLowerCase();
+  const text = `${title} ${announcementHtmlToPlainText(content)}`.toLowerCase();
   return (
     text.includes("birthday") ||
     text.includes("birthdays") ||
@@ -33,6 +34,7 @@ export default function PortalAnnouncements() {
   const language = normalizeAppLanguage(i18n.language) ?? "en";
   const { user, churchId } = useAuth();
   const { isFeatureEnabled } = useFeatureAccess();
+  const announcementsEnabled = isFeatureEnabled("announcements");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
@@ -161,8 +163,8 @@ export default function PortalAnnouncements() {
         comments: commentsMap.get(announcement.id) ?? [],
       }));
     },
-    enabled: !!churchId && isFeatureEnabled("announcements"),
-    initialData: () =>
+    enabled: !!churchId && announcementsEnabled,
+    placeholderData: () =>
       getPortalAnnouncementsCache(churchId, 25).map((announcement) => ({
         ...announcement,
         isCelebration: isCelebrationAnnouncement(announcement.title, announcement.content),
@@ -170,7 +172,27 @@ export default function PortalAnnouncements() {
         comments: [],
       })),
     staleTime: 30_000,
+    refetchOnMount: "always",
   });
+
+  useEffect(() => {
+    if (!churchId || !announcementsEnabled) return;
+
+    const channel = supabase
+      .channel(`portal-announcements-${churchId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "announcements", filter: `church_id=eq.${churchId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["portal-announcements-all", user?.id, churchId] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [announcementsEnabled, churchId, queryClient, user?.id]);
 
   const toggleReaction = useMutation({
     mutationFn: async ({ announcementId, emoji, reacted }: { announcementId: string; emoji: string; reacted: boolean }) => {
@@ -300,9 +322,7 @@ export default function PortalAnnouncements() {
                     </div>
                   </div>
 
-                  <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">
-                    <ScriptureText text={announcement.content} />
-                  </p>
+                  <AnnouncementContent content={announcement.content} className="mt-2" />
                   <p className="text-xs text-muted-foreground/60 mt-4">
                     {formatLocalizedDate(announcement.created_at, language, {
                       weekday: "long",

@@ -1,7 +1,7 @@
 import { Megaphone } from "lucide-react";
 
 import { AppLink } from "@/components/AppLink";
-import { ScriptureText } from "@/components/bible";
+import { AnnouncementContent } from "@/components/announcements/AnnouncementContent";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -34,9 +34,7 @@ export function AnnouncementsCard({
           <div>
             <p className="text-xl font-bold text-foreground">{latestAnnouncement.title}</p>
             {latestAnnouncement.content ? (
-              <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
-                <ScriptureText text={latestAnnouncement.content} />
-              </p>
+              <AnnouncementContent content={latestAnnouncement.content} className="mt-2 line-clamp-3" />
             ) : null}
             <p className="mt-3 text-xs text-muted-foreground">{formatDate(latestAnnouncement.date)}</p>
           </div>
