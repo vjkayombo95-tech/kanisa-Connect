@@ -59,13 +59,15 @@ try {
       await page.getByTestId("login-submit").click();
       await waitForWorkspace(page, persona.expectedPath);
 
-      const sidebarGroupCount = await page.locator("[data-navigation-group-id]").count();
-      if (sidebarGroupCount === 0) throw new Error("Workspace sidebar did not render");
-
+      await page.locator("[data-navigation-group-id]").first().waitFor({ state: "visible", timeout: 45_000 });
       for (const groupId of persona.expectedGroups) {
+        await page.locator(`[data-navigation-group-id="${groupId}"]`).waitFor({ state: "visible", timeout: 45_000 });
         const count = await page.locator(`[data-navigation-group-id="${groupId}"]`).count();
         if (count !== 1) throw new Error(`Expected one ${groupId} group, received ${count}`);
       }
+
+      const sidebarGroupCount = await page.locator("[data-navigation-group-id]").count();
+      if (sidebarGroupCount === 0) throw new Error("Workspace sidebar did not render");
 
       const beforeRefreshPath = new URL(page.url()).pathname;
       await page.reload({ waitUntil: "domcontentloaded" });
@@ -78,6 +80,13 @@ try {
       await page.getByTestId("workspace-account-menu-trigger").click();
       await page.getByTestId("workspace-account-sign-out").click();
       await page.waitForURL((url) => url.pathname === "/login", { timeout: 30_000 });
+
+      if (!authResponses.some((response) => response === "200 /auth/v1/token")) {
+        throw new Error("Login did not receive a successful authentication response");
+      }
+      if (browserErrors.length > 0) {
+        throw new Error(`Uncaught browser errors: ${browserErrors.join(" | ")}`);
+      }
 
       results.push({ persona: persona.name, status: "PASS", durationMs: Date.now() - startedAt });
     } catch (error) {
