@@ -11,6 +11,8 @@
     "build:staging": "vite build --mode staging",
     "build:dev": "vite build --mode development",
     "bootstrap:staging": "node scripts/bootstrap-staging.ts",
+    "uat:seed": "node scripts/uat/bootstrap-multi-role-uat.ts",
+    "uat:reset": "node scripts/uat/bootstrap-multi-role-uat.ts --reset",
     "bible:extract": "node scripts/bible/extract-bible-from-pdf.ts",
     "bible:import-usx": "node scripts/bible/import-usx.ts",
     "bible:validate": "node scripts/bible/validate-bible-json.ts",

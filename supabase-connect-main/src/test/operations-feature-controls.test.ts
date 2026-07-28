@@ -24,7 +24,9 @@ describe("Operations and Audio Processing feature controls", () => {
     expect(registry).toContain('id: "audio-processing", label: "Audio Processing", to: "/church-admin/audio", icon: AudioLines, featureFlag: "audio_processing", requireFeatureEnabled: true');
     expect(registry).not.toContain('id: "audio-processing", label: "Audio Processing", to: "/church-admin/audio", icon: AudioLines, featureFlag: "catholic_content"');
     expect(workspaceFramework).toContain("item.requireFeatureEnabled");
-    expect(workspaceFramework).toContain("isFeatureEnabled(item.featureFlag)");
+    expect(workspaceFramework).toContain("getNavigationPermissionRequirement(item)");
+    expect(workspaceFramework).toContain('supabase.rpc("has_church_feature_permission"');
+    expect(workspaceFramework).toContain("queries[index]?.data === true");
   });
 
   it("keeps Operations and Audio Processing independently controlled", () => {

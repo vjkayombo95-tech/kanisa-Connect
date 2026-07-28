@@ -733,7 +733,7 @@ async function seedRoles(churchId: string | undefined, usersByRole: Map<string, 
   for (const account of USERS.filter((user) => user.role === "church_admin" || user.role === "member")) {
     const userId = usersByRole.get(account.key);
     if (!userId) continue;
-    await upsertByFilter("user_roles", { user_id: userId, church_id: churchId }, { user_id: userId, church_id: churchId, role: account.role }, "user_roles");
+    await upsertByFilter("user_roles", { user_id: userId, church_id: churchId, role: account.role }, { user_id: userId, church_id: churchId, role: account.role }, "user_roles");
   }
 
   const superAdminId = usersByRole.get("super_admin");

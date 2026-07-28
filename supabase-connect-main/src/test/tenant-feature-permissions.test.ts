@@ -5,13 +5,17 @@ import { describe, expect, it } from "vitest";
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
 const initial = read("supabase/migrations/20260721120000_tenant_feature_permissions.sql");
 const hardened = read("supabase/migrations/20260721130000_harden_tenant_feature_permissions.sql");
-const migrations = `${initial}\n${hardened}`;
+const triggerFix = read("supabase/migrations/20260721140000_fix_mandatory_feature_trigger_row_shapes.sql");
+const permissionConstraints = read("supabase/migrations/20260727120000_enforce_role_permission_constraints.sql");
+const migrations = `${initial}\n${hardened}\n${triggerFix}\n${permissionConstraints}`;
 const featureHook = read("src/hooks/use-feature-access.ts");
 const permissionHook = read("src/hooks/use-church-permission.ts");
+const authContext = read("src/contexts/AuthContext.tsx");
 const routeLayout = read("src/routes/WorkspaceRouteLayout.tsx");
 const routeMetadata = read("src/lib/workspace-route-permissions.ts");
 const workspaceFramework = read("src/components/workspace/framework.tsx");
 const page = read("src/pages/church-admin/FeaturesPermissionsPage.tsx");
+const permissionControl = read("src/components/permissions/PermissionControl.tsx");
 const superAdminPage = read("src/pages/super-admin/FeatureManagement.tsx");
 
 describe("tenant feature permission security boundary", () => {
@@ -41,7 +45,21 @@ describe("tenant feature permission security boundary", () => {
     expect(hardened).toContain("feature_permissions_admin");
     expect(hardened).toContain("Mandatory recovery feature cannot be disabled");
     expect(hardened).toContain("protect_last_church_admin");
-    expect(page).toContain('row.feature_key === "feature_permissions_admin"');
+    expect(permissionConstraints).toContain("This mandatory administrative recovery permission is platform controlled.");
+    expect(page).toContain("get_church_permission_constraints");
+    expect(permissionControl).toContain("Only a Platform Administrator can change this permission.");
+  });
+
+  it("branches by trigger table and operation before accessing OLD or NEW row fields", () => {
+    expect(triggerFix).toContain("tg_table_name = 'platform_features'");
+    expect(triggerFix).toContain("tg_table_name = 'church_features'");
+    expect(triggerFix).toContain("if tg_op = 'DELETE' then");
+    expect(triggerFix).toContain("elsif tg_op = 'UPDATE' then");
+    expect(triggerFix).toContain("elsif tg_op = 'INSERT' then");
+    expect(triggerFix).toContain("where pf.id = old.feature_id");
+    expect(triggerFix).toContain("where pf.id = new.feature_id");
+    expect(triggerFix).toContain("before insert or update or delete on public.platform_features");
+    expect(triggerFix).toContain("before insert or update or delete on public.church_features");
   });
 
   it("uses lifecycle actions for mutation paths while preserving permissive row ownership", () => {
@@ -69,11 +87,15 @@ describe("tenant feature permission security boundary", () => {
     expect(workspaceFramework).toContain("getWorkspaceRoutePermission");
     expect(workspaceFramework).toContain('supabase.rpc("has_church_feature_permission"');
     expect(workspaceFramework).toContain('queries[index]?.data === true');
+    expect(workspaceFramework).toContain("[workspace-permission] hidden navigation route");
+    expect(workspaceFramework).toContain("if (!import.meta.env.DEV");
+    expect(workspaceFramework).toContain("_church_id: churchId");
+    expect(workspaceFramework).toContain("_user_id: user.id");
   });
 
   it("invalidates permission decisions across sessions", () => {
-    expect(permissionHook).toContain('table: "church_features"');
-    expect(permissionHook).toContain('table: "church_role_permissions"');
+    expect(authContext).toContain('"church_role_permissions", "church_features", "subscriptions"');
+    expect(authContext).toContain('config: { private: true }');
     expect(hardened).toContain("alter publication supabase_realtime add table");
   });
 
