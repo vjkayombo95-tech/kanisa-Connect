@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Toaster } from "@/components/ui/toaster";
 import { isSupabaseConfigured } from "@/integrations/supabase/client";
-import { environmentDiagnostics } from "@/lib/environment";
+import { environmentDiagnostics, isStaging } from "@/lib/environment";
 import { RoutePerformanceMonitor, createQueryDurationTracker, trackPageLoad } from "@/lib/monitoring";
 import { StagingBanner } from "@/components/StagingBanner";
 import { markStartupEvent } from "@/lib/startup-diagnostics";
@@ -126,7 +126,7 @@ function ChurchAdminWorkspaceRoute() {
   }
 
   return (
-    <ProtectedRoute requireChurch requireAdmin allowedRoles={["church_admin", "secretary"]}>
+    <ProtectedRoute requireChurch requireAdmin>
       <AdminRoutes />
     </ProtectedRoute>
   );
@@ -251,41 +251,47 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AppErrorBoundary>
-          <StagingBanner />
-          {!isSupabaseConfigured ? (
-            <div className="min-h-screen bg-background px-4 py-16">
-              <div className="mx-auto max-w-2xl rounded-2xl border border-destructive/20 bg-card p-8 shadow-xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-destructive">
-                  Setup Required
-                </p>
-                <h1 className="mt-3 text-2xl font-bold font-serif">
-                  Supabase connection is missing.
-                </h1>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {environmentDiagnostics.errors.map((error) => <span key={error} className="block">{error}</span>)}
-                  {environmentDiagnostics.warnings.map((warning) => <span key={warning} className="block text-amber-600">{warning}</span>)}
-                  <span className="mt-3 block">
-                    Environment: {environmentDiagnostics.environment}; Supabase project:{" "}
-                    {environmentDiagnostics.supabaseProjectRef ?? "unavailable"}.
-                  </span>
-                </p>
-                <Button onClick={() => window.location.reload()}>
-                  Reload App
-                </Button>
+          <div
+            className={isStaging
+              ? "min-h-screen pt-[var(--staging-banner-height)] [--staging-banner-height:calc(2rem+env(safe-area-inset-top,0px))]"
+              : "min-h-screen"}
+          >
+            <StagingBanner />
+            {!isSupabaseConfigured ? (
+              <div className="min-h-screen bg-background px-4 py-16">
+                <div className="mx-auto max-w-2xl rounded-2xl border border-destructive/20 bg-card p-8 shadow-xl">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-destructive">
+                    Setup Required
+                  </p>
+                  <h1 className="mt-3 text-2xl font-bold font-serif">
+                    Supabase connection is missing.
+                  </h1>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {environmentDiagnostics.errors.map((error) => <span key={error} className="block">{error}</span>)}
+                    {environmentDiagnostics.warnings.map((warning) => <span key={warning} className="block text-amber-600">{warning}</span>)}
+                    <span className="mt-3 block">
+                      Environment: {environmentDiagnostics.environment}; Supabase project:{" "}
+                      {environmentDiagnostics.supabaseProjectRef ?? "unavailable"}.
+                    </span>
+                  </p>
+                  <Button onClick={() => window.location.reload()}>
+                    Reload App
+                  </Button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <AuthProvider>
-              <ChurchThemeProvider>
+            ) : (
+              <AuthProvider>
+                <ChurchThemeProvider>
                   <PreviewViewport>
-                  <RoutePerformanceMonitor />
-                  <AppRoutes />
-                  <DeferredGlobalTools />
-                </PreviewViewport>
-              </ChurchThemeProvider>
-            </AuthProvider>
-          )}
-          <Toaster />
+                    <RoutePerformanceMonitor />
+                    <AppRoutes />
+                    <DeferredGlobalTools />
+                  </PreviewViewport>
+                </ChurchThemeProvider>
+              </AuthProvider>
+            )}
+            <Toaster />
+          </div>
         </AppErrorBoundary>
       </BrowserRouter>
     </QueryClientProvider>

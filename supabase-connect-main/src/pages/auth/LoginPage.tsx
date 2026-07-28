@@ -17,7 +17,7 @@ import {
 } from "@/lib/phone-auth";
 import { assertClientRateLimit } from "@/lib/client-rate-limit";
 import { logSupabaseError } from "@/lib/error-logger";
-import { getDefaultRouteForRole } from "@/lib/role-utils";
+import { getDefaultRouteForRoles } from "@/lib/role-utils";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PENDING_REGISTRATION_REDIRECT_PREFIX = "pending-registration-redirect:";
@@ -51,7 +51,17 @@ export default function LoginPage() {
   const expiredSessionNoticeShown = useRef(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user, profile, isSuperAdmin, churchId, userRole, isLoading: isAuthLoading } = useAuth();
+  const {
+    user,
+    profile,
+    isSuperAdmin,
+    churchId,
+    userRole,
+    userRoles,
+    isLoading: isAuthLoading,
+    authorizationReady,
+    authorizationError,
+  } = useAuth();
   const pendingRegistrationRedirect = useMemo(
     () => getPendingRegistrationRedirect(user?.email || identity),
     [identity, user?.email],
@@ -61,7 +71,7 @@ export default function LoginPage() {
     if (rawRedirect && rawRedirect.startsWith("/")) return rawRedirect;
     if (pendingRegistrationRedirect && pendingRegistrationRedirect.startsWith("/")) return pendingRegistrationRedirect;
   }, [pendingRegistrationRedirect, searchParams]);
-  const redirectTarget = explicitRedirectTarget ?? getDefaultRouteForRole(userRole, isSuperAdmin);
+  const redirectTarget = explicitRedirectTarget ?? getDefaultRouteForRoles(userRoles, isSuperAdmin);
   const initialMode = searchParams.get("mode");
   const presetEmail = searchParams.get("email");
 
@@ -93,7 +103,7 @@ export default function LoginPage() {
       Boolean(searchParams.get("redirect")) ||
       Boolean(pendingRegistrationRedirect);
 
-    if (!shouldResolveRedirect || isAuthLoading || !user) {
+    if (!shouldResolveRedirect || isAuthLoading || !authorizationReady || authorizationError || !user) {
       return;
     }
 
@@ -118,8 +128,8 @@ export default function LoginPage() {
 
     setIsAwaitingRedirect(false);
     clearPendingRegistrationRedirect(user.email || identity);
-    navigate(explicitRedirectTarget ?? getDefaultRouteForRole(userRole, isSuperAdmin), { replace: true });
-  }, [churchId, explicitRedirectTarget, identity, isAwaitingRedirect, isAuthLoading, isSuperAdmin, navigate, pendingRegistrationRedirect, profile, redirectTarget, searchParams, user, userRole]);
+    navigate(explicitRedirectTarget ?? getDefaultRouteForRoles(userRoles, isSuperAdmin), { replace: true });
+  }, [authorizationError, authorizationReady, churchId, explicitRedirectTarget, identity, isAwaitingRedirect, isAuthLoading, isSuperAdmin, navigate, pendingRegistrationRedirect, profile, redirectTarget, searchParams, user, userRole, userRoles]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -346,6 +356,7 @@ export default function LoginPage() {
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   )}
                   <Input
+                    data-testid="login-identity"
                     type={isSignUp ? "email" : "text"}
                     placeholder={isSignUp ? "you@example.com" : "Email or Phone Number"}
                     className="pl-9"
@@ -383,6 +394,7 @@ export default function LoginPage() {
                 </div>
                 <div className="relative">
                   <Input
+                    data-testid="login-password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
@@ -397,7 +409,7 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
-              <Button className="w-full" disabled={isLoading || isAwaitingRedirect}>
+              <Button data-testid="login-submit" className="w-full" disabled={isLoading || isAwaitingRedirect}>
                 {(isLoading || isAwaitingRedirect) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isSignUp ? "Create Account" : "Sign In"}
               </Button>

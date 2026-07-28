@@ -4,7 +4,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { isMemberPreviewActive } from "@/lib/member-preview";
-import { getDefaultRouteForRole, isAdminRole } from "@/lib/role-utils";
+import { getDefaultRouteForRoles, isAdminRoles } from "@/lib/role-utils";
 import { WorkspaceRouteLayout } from "./WorkspaceRouteLayout";
 
 const PortalEvents = lazy(() => import("@/pages/portal/PortalEvents"));
@@ -54,20 +54,20 @@ function SectionFallback() {
 }
 
 function PortalIndexRoute() {
-  const { isSuperAdmin, userRole } = useAuth();
+  const { isSuperAdmin, userRoles } = useAuth();
 
-  if ((isSuperAdmin || isAdminRole(userRole)) && !isMemberPreviewActive()) {
-    return <Navigate to={getDefaultRouteForRole(userRole, isSuperAdmin)} replace />;
+  if ((isSuperAdmin || isAdminRoles(userRoles)) && !isMemberPreviewActive()) {
+    return <Navigate to={getDefaultRouteForRoles(userRoles, isSuperAdmin)} replace />;
   }
 
   return <LiturgyHomePage />;
 }
 
 function PortalDashboardRoute() {
-  const { isSuperAdmin, userRole } = useAuth();
+  const { isSuperAdmin, userRoles } = useAuth();
 
-  if ((isSuperAdmin || isAdminRole(userRole)) && !isMemberPreviewActive()) {
-    return <Navigate to={getDefaultRouteForRole(userRole, isSuperAdmin)} replace />;
+  if ((isSuperAdmin || isAdminRoles(userRoles)) && !isMemberPreviewActive()) {
+    return <Navigate to={getDefaultRouteForRoles(userRoles, isSuperAdmin)} replace />;
   }
 
   return <PortalDashboard />;

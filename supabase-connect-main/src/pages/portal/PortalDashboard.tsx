@@ -566,7 +566,7 @@ function InfoRow({ label, value, icon: Icon }: { label: string; value: string | 
 
 // ─── Main Component ───────────────────────────────────────────
 export default function PortalDashboard() {
-  const { user, profile, churchId, userRole } = useAuth();
+  const { user, profile, churchId, userRole, userRoles } = useAuth();
   const { t, i18n } = useTranslation();
   const language = normalizeAppLanguage(i18n.language) ?? "en";
   const billing = useBillingAccess();
@@ -992,7 +992,7 @@ export default function PortalDashboard() {
             </CardHeader>
             <CardContent className="space-y-1">
               <InfoRow label="Church" value={church?.name} icon={Church} />
-              <InfoRow label="Role" value={userRole ? userRole.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase()) : "Member"} icon={Shield} />
+              <InfoRow label="Roles" value={(userRoles.length ? userRoles : ["member"]).map((role) => role.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())).join(", ")} icon={Shield} />
               <InfoRow label="Family" value={family?.name} icon={Users} />
               <InfoRow label="Family Role" value={family?.role ? family.role.charAt(0).toUpperCase() + family.role.slice(1) : null} icon={Shield} />
             </CardContent>
@@ -1069,7 +1069,7 @@ export default function PortalDashboard() {
         </div>
         <Badge variant="outline" className="border-primary/30 text-primary">
           <Shield className="h-3 w-3 mr-1" />
-          {userRole ? userRole.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase()) : "Member"}
+          {(userRoles.length ? userRoles : ["member"]).map((role) => role.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())).join(", ")}
         </Badge>
       </div>
 
