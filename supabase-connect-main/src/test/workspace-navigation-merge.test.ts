@@ -20,6 +20,7 @@ import { getWorkspaceRoutePermission } from "@/lib/workspace-route-permissions";
 
 const frameworkSource = readFileSync(resolve(process.cwd(), "src/components/workspace/framework.tsx"), "utf8");
 const registrySource = readFileSync(resolve(process.cwd(), "src/components/workspace/registry.ts"), "utf8");
+const browserSmokeSource = readFileSync(resolve(process.cwd(), "scripts/uat/final-release-browser-smoke.mjs"), "utf8");
 const en = JSON.parse(readFileSync(resolve(process.cwd(), "src/locales/en.json"), "utf8"));
 const sw = JSON.parse(readFileSync(resolve(process.cwd(), "src/locales/sw.json"), "utf8"));
 
@@ -202,6 +203,17 @@ describe("multi-role workspace navigation merging", () => {
     expect(registrySource.match(/labelKey: "navigation\.groups\.operations",/g)).toHaveLength(2);
     expect(registrySource).not.toContain("NavigationGroups.ADMIN_OPERATIONS");
     expect(registrySource).not.toContain("NavigationGroups.PASTORAL_OPERATIONS");
+  });
+
+  it("waits for one stable canonical Operations group and its authorized children", () => {
+    expect(browserSmokeSource).toContain("waitForStableNavigation");
+    expect(browserSmokeSource).toContain("groupsAreUnique");
+    expect(browserSmokeSource).toContain("expectedGroupsExistOnce");
+    expect(browserSmokeSource).toContain("expectedItemsExistOnce");
+    expect(browserSmokeSource).toContain("stableForMs: 1_000");
+    for (const itemId of ["calendar", "events", "event-requests", "announcements", "sermons", "reports", "finance-summary"]) {
+      expect(browserSmokeSource).toContain(`"${itemId}"`);
+    }
   });
 
   it("registers every Finance navigation section with the central semantic ID", () => {
