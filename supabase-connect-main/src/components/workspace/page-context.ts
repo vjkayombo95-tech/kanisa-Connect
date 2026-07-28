@@ -41,6 +41,23 @@ export type WorkspacePagePermission =
   | "cms"
   | "payment_status";
 
+export const ALL_WORKSPACE_PAGE_PERMISSIONS: WorkspacePagePermission[] = [
+  "read",
+  "create",
+  "edit",
+  "archive",
+  "publish",
+  "review",
+  "assign",
+  "respond",
+  "complete",
+  "schedule",
+  "export",
+  "manage",
+  "cms",
+  "payment_status",
+];
+
 export type WorkspacePageAction = {
   id: string;
   label: string;
@@ -83,6 +100,18 @@ export const WORKSPACE_PAGE_PERMISSIONS: Record<WorkspaceId, WorkspacePagePermis
   finance: ["read", "payment_status"],
   super_admin: ["read", "create", "edit", "archive", "publish", "review", "assign", "respond", "complete", "schedule", "export", "manage", "cms", "payment_status"],
 };
+
+export function resolveWorkspacePagePermissions(
+  workspaceId: WorkspaceId,
+  hasAuthoritativeRoutePermission: boolean,
+  decisions: Partial<Record<WorkspacePagePermission, boolean>> = {},
+) {
+  const candidates = hasAuthoritativeRoutePermission
+    ? ALL_WORKSPACE_PAGE_PERMISSIONS
+    : (WORKSPACE_PAGE_PERMISSIONS[workspaceId] ?? []);
+
+  return new Set(candidates.filter((permission) => !hasAuthoritativeRoutePermission || decisions[permission] === true));
+}
 
 export type WorkspacePageKind =
   | "daily_readings"

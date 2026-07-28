@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronLeft, ChevronRight, HelpCircle, LogOut, Menu, Settings, UserCircle } from "lucide-react";
@@ -25,8 +25,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { createPersonalAssistantModel } from "@/lib/assistant";
 import { EMPTY_CHURCH_ADMIN_PENDING_COUNTS, getChurchAdminSidebarBadge, useChurchAdminPendingCounts } from "@/lib/church-admin-notifications";
 import { isMemberPreviewActive, stopMemberPreview, subscribeMemberPreview } from "@/lib/member-preview";
+import { isStaging } from "@/lib/environment";
 import { cn } from "@/lib/utils";
 import { getWorkspaceRoutePermission } from "@/lib/workspace-route-permissions";
+import { filterVisibleNavigationGroups } from "./navigation-merge";
+import type { NavigationGroupId } from "./navigation-groups";
 
 export type WorkspaceId = "member" | "pastoral" | "church_admin" | "finance" | "super_admin";
 
@@ -45,7 +48,7 @@ export type WorkspaceNavigationItem = {
 };
 
 export type WorkspaceNavigationGroup = {
-  id: string;
+  id: NavigationGroupId;
   label?: string;
   labelKey?: string;
   items: WorkspaceNavigationItem[];
@@ -143,7 +146,7 @@ function isWorkspaceRouteActive(pathname: string, target: string) {
   return pathname.startsWith(`${target.replace(/\/$/, "")}/`);
 }
 
-function getNavigationStorageKey(workspaceId: string, groupId: string) {
+function getNavigationStorageKey(workspaceId: string, groupId: NavigationGroupId) {
   return `kanisa.workspace.navigation.${workspaceId}.${groupId}.expanded`;
 }
 
@@ -173,12 +176,12 @@ type NavigationPermissionRequirement = {
 };
 
 function getNavigationPermissionRequirement(item: WorkspaceNavigationItem): NavigationPermissionRequirement | null {
-  if (!item.featureFlag) return null;
-
   const routePermission = getWorkspaceRoutePermission(item.to);
   if (routePermission) {
     return { featureKey: routePermission.featureKey, action: routePermission.action };
   }
+
+  if (!item.featureFlag) return null;
 
   return {
     featureKey: item.featureFlag,
@@ -187,7 +190,8 @@ function getNavigationPermissionRequirement(item: WorkspaceNavigationItem): Navi
 }
 
 function useNavigationPermissionDecisions(items: WorkspaceNavigationItem[]) {
-  const { churchId, user } = useAuth();
+  const { churchId, user, userRole } = useAuth();
+  const reportedDevelopmentDecisions = useRef(new Set<string>());
   const requirements = useMemo(() => {
     const unique = new Map<string, NavigationPermissionRequirement>();
     for (const item of items) {
@@ -216,6 +220,52 @@ function useNavigationPermissionDecisions(items: WorkspaceNavigationItem[]) {
     })),
   });
 
+  useEffect(() => {
+    if (!import.meta.env.DEV || !churchId || !user?.id) return;
+
+    for (const item of items) {
+      const requirement = getNavigationPermissionRequirement(item);
+      if (!requirement) continue;
+
+      const queryIndex = requirements.findIndex(
+        (candidate) => candidate.featureKey === requirement.featureKey && candidate.action === requirement.action,
+      );
+      const query = queries[queryIndex];
+      if (!query || query.isPending || query.fetchStatus !== "idle" || query.data === true) continue;
+
+      const rpcError = query.error && typeof query.error === "object"
+        ? {
+            name: "name" in query.error ? String(query.error.name) : undefined,
+            message: "message" in query.error ? String(query.error.message) : undefined,
+            code: "code" in query.error ? String(query.error.code) : undefined,
+            details: "details" in query.error ? String(query.error.details) : undefined,
+            hint: "hint" in query.error ? String(query.error.hint) : undefined,
+          }
+        : query.error ?? null;
+      const diagnostic = {
+        routePath: item.to,
+        featureKey: requirement.featureKey,
+        action: requirement.action,
+        userId: user.id,
+        churchId,
+        currentRole: userRole,
+        rpcArguments: {
+          _user_id: user.id,
+          _church_id: churchId,
+          _feature_key: requirement.featureKey,
+          _action: requirement.action,
+        },
+        rpcData: query.data ?? null,
+        rpcError,
+      };
+      const signature = JSON.stringify(diagnostic);
+      if (reportedDevelopmentDecisions.current.has(signature)) continue;
+
+      reportedDevelopmentDecisions.current.add(signature);
+      console.debug("[workspace-permission] hidden navigation route", diagnostic);
+    }
+  }, [churchId, items, queries, requirements, user?.id, userRole]);
+
   return useMemo(
     () => new Map(requirements.map((requirement, index) => [
       `${requirement.featureKey}:${requirement.action}`,
@@ -236,13 +286,7 @@ function useVisibleNavigationGroups(groups: WorkspaceNavigationGroup[]) {
   const decisions = useNavigationPermissionDecisions(items);
 
   return useMemo(
-    () =>
-      groups
-        .map((group) => ({
-          ...group,
-          items: group.items.filter((item) => isNavigationItemVisible(item, decisions)),
-        }))
-        .filter((group) => group.items.length > 0),
+    () => filterVisibleNavigationGroups(groups, (item) => isNavigationItemVisible(item, decisions)),
     [decisions, groups],
   );
 }
@@ -269,7 +313,7 @@ export function WorkspaceNavigation({ groups, mode = "desktop" }: WorkspaceNavig
     setExpandedGroups((current) => (areGroupStatesEqual(current, initialGroupState) ? current : initialGroupState));
   }, [initialGroupState]);
 
-  const toggleGroup = useCallback((groupId: string) => {
+  const toggleGroup = useCallback((groupId: NavigationGroupId) => {
     setExpandedGroups((current) => {
       const next = { ...current, [groupId]: !current[groupId] };
       if (typeof window !== "undefined") {
@@ -279,7 +323,7 @@ export function WorkspaceNavigation({ groups, mode = "desktop" }: WorkspaceNavig
     });
   }, [workspaceId]);
 
-  const onGroupKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>, groupId: string) => {
+  const onGroupKeyDown = useCallback((event: KeyboardEvent<HTMLButtonElement>, groupId: NavigationGroupId) => {
     if (event.key === "ArrowRight") {
       event.preventDefault();
       setExpandedGroups((current) => (current[groupId] === true ? current : { ...current, [groupId]: true }));
@@ -292,7 +336,7 @@ export function WorkspaceNavigation({ groups, mode = "desktop" }: WorkspaceNavig
   return (
     <nav className="space-y-5" aria-label={t("workspace.navigation")}>
       {visibleGroups.map((group) => (
-        <div key={group.id} className="space-y-2">
+        <div key={group.id} className="space-y-2" data-navigation-group-id={group.id}>
           {group.label ? (
             <button
               type="button"
@@ -322,6 +366,7 @@ export function WorkspaceNavigation({ groups, mode = "desktop" }: WorkspaceNavig
                   <AppLink
                     key={item.id}
                     to={item.to}
+                    data-navigation-item-id={item.id}
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "group flex items-center gap-3 rounded-2xl px-3 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/50",
@@ -349,7 +394,7 @@ function MobileWorkspaceNavigation({ groups }: { groups: WorkspaceNavigationGrou
   const workspaceId = location.pathname.split("/").filter(Boolean)[0] || "workspace";
   const visibleGroups = useVisibleNavigationGroups(groups);
   const { data: pendingCounts = EMPTY_CHURCH_ADMIN_PENDING_COUNTS } = useChurchAdminPendingCounts();
-  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [activeGroupId, setActiveGroupId] = useState<NavigationGroupId | null>(null);
   const activeGroup = visibleGroups.find((group) => group.id === activeGroupId);
 
   if (activeGroup) {
@@ -371,6 +416,7 @@ function MobileWorkspaceNavigation({ groups }: { groups: WorkspaceNavigationGrou
                 <AppLink
                   key={item.id}
                   to={item.to}
+                  data-navigation-item-id={item.id}
                   className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                 >
                   {Icon ? <Icon className="h-4 w-4 shrink-0" /> : null}
@@ -398,6 +444,7 @@ function MobileWorkspaceNavigation({ groups }: { groups: WorkspaceNavigationGrou
         <button
           key={group.id}
           type="button"
+          data-navigation-group-id={group.id}
           className="flex w-full items-center justify-between rounded-2xl border border-border/60 bg-card/70 px-3 py-3 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           onClick={() => setActiveGroupId(group.id)}
         >
@@ -461,7 +508,7 @@ function getAccountInitials(name: string, fallback: string) {
 }
 
 function WorkspaceAccountMenu({ workspace, mode = "header" }: { workspace: WorkspaceConfig; mode?: "header" | "mobile" }) {
-  const { profile, user, signOut } = useAuth();
+  const { profile, user, userRoles, isSuperAdmin, signOut } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const displayName =
@@ -471,6 +518,13 @@ function WorkspaceAccountMenu({ workspace, mode = "header" }: { workspace: Works
     "Account";
   const email = profile?.email || user?.email || "";
   const initials = getAccountInitials(displayName, email);
+  const workspaceLinks = [
+    { id: "member", label: "Member Portal", to: "/portal", visible: true },
+    { id: "church_admin", label: "Church Operations", to: "/church-admin", visible: userRoles.some((role) => role !== "member") },
+    { id: "pastoral", label: "Pastoral Workspace", to: "/pastoral", visible: userRoles.includes("pastor") },
+    { id: "finance", label: "Finance Workspace", to: "/finance", visible: userRoles.includes("treasurer") },
+    { id: "super_admin", label: "Platform Administration", to: "/super-admin", visible: isSuperAdmin },
+  ].filter((item) => item.visible && item.id !== workspace.id);
 
   const handleSignOut = async () => {
     stopMemberPreview();
@@ -484,6 +538,7 @@ function WorkspaceAccountMenu({ workspace, mode = "header" }: { workspace: Works
         <DropdownMenuTrigger asChild>
           <button
             type="button"
+            data-testid="workspace-account-menu-trigger"
             className={cn(
               "flex items-center gap-3 rounded-2xl px-2 py-1.5 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
               mode === "mobile" ? "w-full px-3 py-2" : "w-auto max-w-[18rem]",
@@ -510,6 +565,12 @@ function WorkspaceAccountMenu({ workspace, mode = "header" }: { workspace: Works
             <LanguageSwitcher className="justify-between" />
           </div>
           <DropdownMenuSeparator />
+          {workspaceLinks.map((item) => (
+            <DropdownMenuItem key={item.id} asChild>
+              <AppLink to={item.to}>{item.label}</AppLink>
+            </DropdownMenuItem>
+          ))}
+          {workspaceLinks.length > 0 ? <DropdownMenuSeparator /> : null}
           <DropdownMenuItem asChild>
             <AppLink to={getWorkspaceProfilePath(workspace.id)} className="gap-2">
               <UserCircle className="h-4 w-4" aria-hidden="true" />
@@ -527,7 +588,7 @@ function WorkspaceAccountMenu({ workspace, mode = "header" }: { workspace: Works
             {t("account.help")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={handleSignOut} className="gap-2 text-destructive hover:text-destructive">
+          <DropdownMenuItem data-testid="workspace-account-sign-out" onSelect={handleSignOut} className="gap-2 text-destructive hover:text-destructive">
             <LogOut className="h-4 w-4" aria-hidden="true" />
             {t("sign_out")}
           </DropdownMenuItem>
@@ -593,23 +654,29 @@ export function WorkspaceLayout({ workspace, children }: WorkspaceLayoutProps) {
     <div className={cn("min-h-screen bg-background", workspace.theme?.shellClassName)}>
       <a
         href="#workspace-main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-[calc(var(--staging-banner-height,0px)+1rem)] focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
       >
         Skip to main content
       </a>
       <header
         className={cn(
-          "sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-sm lg:px-6",
+          "sticky top-[var(--staging-banner-height,0px)] z-40 flex h-14 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-sm lg:px-6",
           workspace.theme?.topBarClassName,
         )}
       >
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open workspace navigation">
+            <Button data-testid="workspace-mobile-navigation-trigger" variant="ghost" size="icon" className="lg:hidden" aria-label="Open workspace navigation">
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="flex w-80 max-w-[88vw] flex-col p-4">
+          <SheetContent
+            side="left"
+            className={cn(
+              "flex w-80 max-w-[88vw] flex-col p-4",
+              isStaging && "top-[calc(2rem+env(safe-area-inset-top,0px))] h-[calc(100%_-_2rem_-_env(safe-area-inset-top,0px))]",
+            )}
+          >
             <SheetHeader className="mb-5 pr-8 text-left">
               <SheetTitle>{workspaceTitle}</SheetTitle>
               {workspaceDescription ? <SheetDescription>{workspaceDescription}</SheetDescription> : null}
@@ -635,10 +702,10 @@ export function WorkspaceLayout({ workspace, children }: WorkspaceLayoutProps) {
       </header>
       <MemberPreviewBanner workspaceId={workspace.id} />
 
-      <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[280px_minmax(0,1fr)]">
+      <div className="grid min-h-[calc(100svh-3.5rem-var(--staging-banner-height,0px))] lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside
           className={cn(
-            "hidden border-r border-border bg-card/40 p-4 lg:flex lg:max-h-[calc(100vh-3.5rem)] lg:flex-col",
+            "hidden border-r border-border bg-card/40 p-4 lg:flex lg:max-h-[calc(100svh-3.5rem-var(--staging-banner-height,0px))] lg:flex-col",
             workspace.theme?.sidebarClassName,
           )}
         >

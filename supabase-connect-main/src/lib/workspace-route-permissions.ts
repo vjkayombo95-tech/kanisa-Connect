@@ -8,12 +8,14 @@ export type WorkspaceRoutePermission = {
 
 // Explicit route metadata is the source of truth for direct-URL protection.
 // Longest paths win, so detail and workflow routes cannot inherit a weaker rule.
-export const WORKSPACE_ROUTE_PERMISSIONS: WorkspaceRoutePermission[] = [
+export const WORKSPACE_ROUTE_PERMISSIONS: WorkspaceRoutePermission[] = ([
   { path: "/church-admin/settings/features-permissions", featureKey: "feature_permissions_admin", action: "manage" },
   { path: "/church-admin/events/", featureKey: "events", action: "view" },
   { path: "/church-admin/audio", featureKey: "audio_processing", action: "manage" },
   { path: "/church-admin/members", featureKey: "members", action: "view" },
   { path: "/church-admin/contributions", featureKey: "contributions", action: "view" },
+  { path: "/church-admin/finance", featureKey: "contributions", action: "view" },
+  { path: "/church-admin/qr-payments", featureKey: "give", action: "view" },
   { path: "/church-admin/pledges", featureKey: "pledges", action: "view" },
   { path: "/church-admin/communities", featureKey: "communities", action: "view" },
   { path: "/church-admin/ministries", featureKey: "ministries", action: "view" },
@@ -36,7 +38,8 @@ export const WORKSPACE_ROUTE_PERMISSIONS: WorkspaceRoutePermission[] = [
   { path: "/church-admin/community-help", featureKey: "community_help", action: "view" },
   { path: "/church-admin/notifications", featureKey: "notifications", action: "view" },
   { path: "/church-admin/channels", featureKey: "channels", action: "view" },
-  { path: "/church-admin/roles", featureKey: "roles", action: "view" },
+  { path: "/church-admin/roles", featureKey: "feature_permissions_admin", action: "manage" },
+  { path: "/church-admin/settings", featureKey: "feature_permissions_admin", action: "manage" },
   { path: "/church-admin/reports", featureKey: "reports", action: "view" },
   { path: "/church-admin/analytics", featureKey: "reports", action: "view" },
   { path: "/church-admin/finance-intelligence", featureKey: "finance_intelligence", action: "view" },
@@ -46,8 +49,10 @@ export const WORKSPACE_ROUTE_PERMISSIONS: WorkspaceRoutePermission[] = [
   { path: "/church-admin/data-import", featureKey: "members", action: "manage" },
   { path: "/church-admin/audit-logs", featureKey: "reports", action: "view" },
   { path: "/pastoral/mass-intentions", featureKey: "mass_intentions", action: "view" },
+  { path: "/pastoral/dashboard", featureKey: "catholic_content", action: "view" },
   { path: "/pastoral/prayer-requests", featureKey: "prayer_requests", action: "view" },
   { path: "/pastoral/community-help", featureKey: "community_help", action: "view" },
+  { path: "/pastoral/mass-schedule", featureKey: "events", action: "view" },
   { path: "/pastoral/events", featureKey: "events", action: "view" },
   { path: "/pastoral/announcements", featureKey: "announcements", action: "view" },
   { path: "/pastoral/contributions", featureKey: "contributions", action: "view" },
@@ -74,6 +79,7 @@ export const WORKSPACE_ROUTE_PERMISSIONS: WorkspaceRoutePermission[] = [
   { path: "/finance/daily-readings", featureKey: "catholic_content", action: "view" },
   { path: "/finance/saints", featureKey: "catholic_content", action: "view" },
   { path: "/finance/library", featureKey: "catholic_content", action: "view" },
+  { path: "/finance/settings", featureKey: "feature_permissions_admin", action: "manage" },
   { path: "/portal/contribution-receipt/", featureKey: "contributions", action: "view" },
   { path: "/portal/contribution-history", featureKey: "contributions", action: "view" },
   { path: "/portal/give", featureKey: "give", action: "view" },
@@ -97,7 +103,7 @@ export const WORKSPACE_ROUTE_PERMISSIONS: WorkspaceRoutePermission[] = [
   { path: "/portal/saints", featureKey: "catholic_content", action: "view" },
   { path: "/portal/liturgical-calendar", featureKey: "catholic_content", action: "view" },
   { path: "/portal/daily-readings", featureKey: "catholic_content", action: "view" },
-].sort((left, right) => right.path.length - left.path.length);
+] satisfies WorkspaceRoutePermission[]).sort((left, right) => right.path.length - left.path.length);
 
 export function getWorkspaceRoutePermission(pathname: string) {
   return WORKSPACE_ROUTE_PERMISSIONS.find(({ path }) => pathname === path || pathname.startsWith(`${path}/`) || (path.endsWith("/") && pathname.startsWith(path))) ?? null;

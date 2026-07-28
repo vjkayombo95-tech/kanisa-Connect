@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 
 import { WorkspaceLayout, WorkspaceProvider } from "@/components/workspace/framework";
-import { getWorkspaceConfig } from "@/components/workspace/registry";
+import { getWorkspaceConfigForRoles } from "@/components/workspace/registry";
 import { useAuth } from "@/contexts/AuthContext";
-import { useChurchPermission, usePermissionCacheInvalidation } from "@/hooks/use-church-permission";
+import { useChurchPermission } from "@/hooks/use-church-permission";
 import { getWorkspaceRoutePermission } from "@/lib/workspace-route-permissions";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingState } from "@/components/ui/page-state";
@@ -16,9 +16,8 @@ type WorkspaceRouteLayoutProps = {
 
 export function WorkspaceRouteLayout({ workspaceId }: WorkspaceRouteLayoutProps) {
   const location = useLocation();
-  const { churchId, isSuperAdmin, profile, user, userRole } = useAuth();
-  const workspace = getWorkspaceConfig(workspaceId);
-  usePermissionCacheInvalidation();
+  const { churchId, isSuperAdmin, profile, user, userRole, userRoles } = useAuth();
+  const workspace = useMemo(() => getWorkspaceConfigForRoles(workspaceId, userRoles), [userRoles, workspaceId]);
   const routePermission = useMemo(() => getWorkspaceRoutePermission(location.pathname), [location.pathname]);
   const permission = useChurchPermission(routePermission?.featureKey ?? "", routePermission?.action ?? "view");
   const role = isSuperAdmin ? "super_admin" : userRole;

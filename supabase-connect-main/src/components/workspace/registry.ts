@@ -28,7 +28,12 @@ import {
 
 import { dashboardConfigs } from "@/components/portal/dashboard";
 
-import type { WorkspaceConfig, WorkspaceId } from "./framework";
+import type { WorkspaceConfig, WorkspaceId, WorkspaceNavigationGroup } from "./framework";
+import { mergeNavigationGroups } from "./navigation-merge";
+import {
+  NavigationGroups,
+  warnAboutDuplicateNavigationGroupTranslationKeys,
+} from "./navigation-groups";
 
 export const workspaceRegistry = {
   member: {
@@ -40,7 +45,7 @@ export const workspaceRegistry = {
     dashboard: dashboardConfigs.member,
     navigation: [
       {
-        id: "member-home",
+        id: NavigationGroups.MEMBER_HOME,
         label: "Home",
         items: [
           { id: "dashboard", label: "Dashboard", to: "/portal", icon: Church },
@@ -49,7 +54,7 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "member-liturgy",
+        id: NavigationGroups.MEMBER_LITURGY,
         label: "Liturgy",
         items: [
           { id: "bible", label: "Bible", to: "/portal/bible", icon: BookOpen, featureFlag: "bible_verses" },
@@ -63,7 +68,7 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "member-community",
+        id: NavigationGroups.MEMBER_COMMUNITY,
         label: "Community",
         items: [
           { id: "calendar", label: "Parish Calendar", to: "/portal/calendar", icon: CalendarDays, featureFlag: "events" },
@@ -76,13 +81,12 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "member-finance",
+        id: NavigationGroups.MEMBER_FINANCE,
         label: "Giving",
         items: [
           { id: "giving", label: "Giving", to: "/portal/give", icon: HandCoins, featureFlag: "give" },
           { id: "contribution-history", label: "Contribution History", to: "/portal/contribution-history", icon: Receipt, featureFlag: "contributions" },
           { id: "pledges", label: "Pledges", to: "/portal/pledges", icon: ClipboardList, featureFlag: "pledges" },
-          { id: "giving-mass-intentions", label: "Mass Intentions", to: "/portal/mass-intentions", icon: ClipboardList, featureFlag: "mass_intentions" },
         ],
       },
     ],
@@ -104,16 +108,16 @@ export const workspaceRegistry = {
     dashboard: dashboardConfigs.priest,
     navigation: [
       {
-        id: "pastoral-home",
+        id: NavigationGroups.PASTORAL_HOME,
         label: "Home",
         items: [
           { id: "dashboard", label: "Dashboard", to: "/pastoral", icon: HeartHandshake },
           { id: "kanisa-ai", label: "Kanisa AI", to: "/pastoral/kanisa-ai", icon: Sparkles, featureFlag: "kanisa_ai" },
-          { id: "todays-ministry", label: "Today's Ministry", to: "/pastoral", icon: BookOpen, featureFlag: "catholic_content" },
+          { id: "todays-ministry", label: "Today's Ministry", to: "/pastoral/dashboard", icon: BookOpen, featureFlag: "catholic_content" },
         ],
       },
       {
-        id: "pastoral-care",
+        id: NavigationGroups.PASTORAL_CARE,
         label: "Pastoral Care",
         items: [
           { id: "mass-intentions", label: "Mass Intentions", to: "/pastoral/mass-intentions", icon: ClipboardList, featureFlag: "mass_intentions" },
@@ -124,7 +128,7 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "pastoral-liturgy",
+        id: NavigationGroups.PASTORAL_LITURGY,
         label: "Liturgy",
         items: [
           { id: "bible", label: "Bible", to: "/pastoral/bible", icon: BookOpen, featureFlag: "bible_verses" },
@@ -134,8 +138,9 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "pastoral-operations",
+        id: NavigationGroups.OPERATIONS,
         label: "Operations",
+        labelKey: "navigation.groups.operations",
         items: [
           { id: "calendar", label: "Parish Calendar", to: "/pastoral/calendar", icon: CalendarDays, featureFlag: "events" },
           { id: "events", label: "Events", to: "/pastoral/events", icon: CalendarDays, featureFlag: "events" },
@@ -162,7 +167,7 @@ export const workspaceRegistry = {
     dashboard: dashboardConfigs.church_admin,
     navigation: [
       {
-        id: "admin-home",
+        id: NavigationGroups.ADMIN_HOME,
         label: "Home",
         items: [
           { id: "dashboard", label: "Dashboard", to: "/church-admin", icon: Building2 },
@@ -170,7 +175,7 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "admin-people",
+        id: NavigationGroups.ADMIN_PEOPLE,
         label: "People",
         items: [
           { id: "members", label: "Members", to: "/church-admin/members", icon: Users, featureFlag: "members" },
@@ -183,7 +188,7 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "admin-liturgy",
+        id: NavigationGroups.ADMIN_LITURGY,
         label: "Liturgy",
         items: [
           { id: "bible", label: "Bible", to: "/church-admin/bible", icon: BookOpen, featureFlag: "bible_verses" },
@@ -196,8 +201,9 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "admin-operations",
+        id: NavigationGroups.OPERATIONS,
         label: "Operations",
+        labelKey: "navigation.groups.operations",
         items: [
           { id: "calendar", label: "Parish Calendar", to: "/church-admin/calendar", icon: CalendarDays, featureFlag: "events" },
           { id: "events", label: "Events", to: "/church-admin/events", icon: CalendarDays, featureFlag: "events" },
@@ -210,8 +216,9 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "admin-finance",
+        id: NavigationGroups.FINANCE,
         label: "Finance",
+        labelKey: "navigation.groups.finance",
         items: [
           { id: "finance-dashboard", label: "Finance Dashboard", to: "/church-admin/finance", icon: Wallet, featureFlag: "contributions" },
           { id: "contributions", label: "Contributions", to: "/church-admin/contributions", icon: HandCoins, featureFlag: "contributions" },
@@ -221,7 +228,7 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "admin-administration",
+        id: NavigationGroups.ADMIN_ADMINISTRATION,
         label: "Administration",
         items: [
           { id: "notifications", label: "Notifications", to: "/church-admin/notifications", icon: Bell, featureFlag: "notifications" },
@@ -256,7 +263,7 @@ export const workspaceRegistry = {
     dashboard: dashboardConfigs.finance,
     navigation: [
       {
-        id: "finance-home",
+        id: NavigationGroups.FINANCE_HOME,
         label: "Home",
         items: [
           { id: "dashboard", label: "Dashboard", to: "/finance", icon: Wallet },
@@ -264,8 +271,9 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "finance-finance",
+        id: NavigationGroups.FINANCE,
         label: "Finance",
+        labelKey: "navigation.groups.finance",
         items: [
           { id: "contributions", label: "Contributions", to: "/finance/contributions", icon: HandCoins, featureFlag: "contributions" },
           { id: "receipts", label: "Receipts", to: "/finance/receipts", icon: Receipt, featureFlag: "contributions" },
@@ -276,7 +284,7 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "finance-parish",
+        id: NavigationGroups.FINANCE_PARISH,
         label: "Parish",
         items: [
           { id: "community-help", label: "Community Help", to: "/finance/community-help", icon: HelpCircle, featureFlag: "community_help" },
@@ -287,7 +295,7 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "finance-administration",
+        id: NavigationGroups.FINANCE_ADMINISTRATION,
         label: "Administration",
         items: [
           { id: "audit-logs", label: "Audit Logs", to: "/finance/audit-logs", icon: Shield },
@@ -314,7 +322,7 @@ export const workspaceRegistry = {
     dashboard: dashboardConfigs.super_admin,
     navigation: [
       {
-        id: "platform-home",
+        id: NavigationGroups.PLATFORM_HOME,
         label: "Home",
         items: [
           { id: "dashboard", label: "Dashboard", to: "/super-admin", icon: Shield },
@@ -322,7 +330,7 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "platform-tenants",
+        id: NavigationGroups.PLATFORM_TENANTS,
         label: "Tenants",
         items: [
           { id: "churches", label: "Churches", to: "/super-admin/churches", icon: Building2 },
@@ -333,14 +341,14 @@ export const workspaceRegistry = {
         ],
       },
       {
-        id: "platform-finance",
+        id: NavigationGroups.PLATFORM_FINANCE,
         label: "Finance",
         items: [
           { id: "revenue", label: "Revenue", to: "/super-admin/revenue", icon: BarChart3 },
         ],
       },
       {
-        id: "platform-content",
+        id: NavigationGroups.PLATFORM_CONTENT,
         label: "Catholic CMS",
         items: [
           { id: "cms", label: "Catholic CMS", to: "/super-admin/catholic-content", icon: BookOpen },
@@ -351,13 +359,12 @@ export const workspaceRegistry = {
           { id: "prayer-import", label: "Import Prayers", to: "/super-admin/catholic-content/prayer-library/import", icon: Import },
           { id: "prayer-import-history", label: "Import History", to: "/super-admin/catholic-content/prayer-library/import#history", icon: FileText },
           { id: "prayer-validation-reports", label: "Validation Reports", to: "/super-admin/catholic-content/prayer-library/import#validation", icon: ClipboardList },
-          { id: "prayer-draft-review", label: "Draft Review", to: "/super-admin/catholic-content/prayer-library", icon: HeartHandshake },
           { id: "liturgical-calendar", label: "Liturgical Calendar", to: "/super-admin/catholic-content/liturgical-calendar", icon: CalendarDays },
           { id: "imports", label: "Imports", to: "/super-admin/catholic-content/import-center", icon: Import },
         ],
       },
       {
-        id: "platform-administration",
+        id: NavigationGroups.PLATFORM_ADMINISTRATION,
         label: "Administration",
         items: [
           { id: "activity", label: "Activity", to: "/super-admin/activity", icon: Users },
@@ -381,10 +388,40 @@ export const workspaceRegistry = {
   },
 } satisfies Record<WorkspaceId, WorkspaceConfig>;
 
+warnAboutDuplicateNavigationGroupTranslationKeys(
+  Object.values(workspaceRegistry).flatMap<WorkspaceNavigationGroup>(
+    (workspace) => workspace.navigation as readonly WorkspaceNavigationGroup[],
+  ),
+);
+
 export type WorkspaceRegistry = typeof workspaceRegistry;
 
 export function getWorkspaceConfig(id: WorkspaceId) {
   return workspaceRegistry[id];
+}
+
+const SUPPLEMENTAL_WORKSPACE_ORDER: WorkspaceId[] = ["church_admin", "pastoral", "finance"];
+
+/**
+ * Adds navigation supplied by every assigned role while keeping the scalar
+ * workspace as a presentation preference only. Item visibility is still
+ * decided later by has_church_feature_permission(), never by this composition.
+ */
+export function getWorkspaceConfigForRoles(
+  id: WorkspaceId,
+  roles: readonly string[] | null | undefined,
+): WorkspaceConfig {
+  const base = getWorkspaceConfig(id) as WorkspaceConfig;
+
+  const supplementalIds = [...new Set((roles ?? []).map((role) => getWorkspaceIdForRole(role)))]
+    .filter((workspaceId) => workspaceId !== id && workspaceId !== "member" && workspaceId !== "super_admin")
+    .sort((left, right) => SUPPLEMENTAL_WORKSPACE_ORDER.indexOf(left) - SUPPLEMENTAL_WORKSPACE_ORDER.indexOf(right));
+  const supplements = supplementalIds.map((workspaceId) => getWorkspaceConfig(workspaceId) as WorkspaceConfig);
+
+  return {
+    ...base,
+    navigation: mergeNavigationGroups([base.navigation, ...supplements.map((supplement) => supplement.navigation)]),
+  };
 }
 
 export function getWorkspaceNavigationItems(id: WorkspaceId) {

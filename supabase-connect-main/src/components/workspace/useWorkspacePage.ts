@@ -10,7 +10,7 @@ import { getWorkspaceRoutePermission } from "@/lib/workspace-route-permissions";
 import { useWorkspaceContext } from "./framework";
 import { getWorkspaceConfig, getWorkspaceConfigForRole } from "./registry";
 import {
-  WORKSPACE_PAGE_PERMISSIONS,
+  resolveWorkspacePagePermissions,
   type WorkspacePageContext,
   type WorkspacePagePermission,
 } from "./page-context";
@@ -34,7 +34,7 @@ export function useWorkspacePage(): WorkspacePageContext {
   const role = (workspaceContext?.role ?? (isSuperAdmin ? "super_admin" : userRole)) as AppRole | "priest" | "finance" | null;
 
   return useMemo(() => {
-    const permissions = new Set<WorkspacePagePermission>(WORKSPACE_PAGE_PERMISSIONS[workspace.id] ?? []);
+    let permissions: Set<WorkspacePagePermission>;
     if (routePermission) {
       const decisions: Record<WorkspacePagePermission, boolean> = {
         read: view.allowed,
@@ -52,9 +52,11 @@ export function useWorkspacePage(): WorkspacePageContext {
         cms: manage.allowed,
         payment_status: approve.allowed,
       };
-      for (const permission of permissions) {
-        if (!decisions[permission]) permissions.delete(permission);
-      }
+      // A workspace is presentation. The route's effective permission matrix,
+      // not the scalar/workspace role defaults, authorizes each page action.
+      permissions = resolveWorkspacePagePermissions(workspace.id, true, decisions);
+    } else {
+      permissions = resolveWorkspacePagePermissions(workspace.id, false);
     }
     const workspaceConfig = getWorkspaceConfig(workspace.id);
 
