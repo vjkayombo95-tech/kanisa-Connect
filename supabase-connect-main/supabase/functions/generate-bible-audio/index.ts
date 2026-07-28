@@ -717,15 +717,12 @@ Deno.serve(async (request) => {
 
     let audioRequest = normalizeRequest(parsedBody);
 
-    const { data: role } = await supabase
-      .from("user_roles")
-      .select("church_id")
-      .eq("user_id", userData.user!.id)
-      .not("church_id", "is", null)
-      .limit(1)
-      .maybeSingle();
+    const { data: currentContext, error: contextError } = await callerSupabase
+      .rpc("get_current_user_context");
+    if (contextError) throw new Error(contextError.message);
+    const roleContext = currentContext as { church_id?: string | null } | null;
 
-    if (!role?.church_id) {
+    if (!roleContext?.church_id) {
       return jsonResponse(403, { success: false, error: "A church membership is required for Bible Audio." });
     }
 
@@ -743,7 +740,7 @@ Deno.serve(async (request) => {
     const { data: churchFeature, error: churchFeatureError } = await supabase
       .from("church_features")
       .select("enabled, locked")
-      .eq("church_id", role.church_id)
+      .eq("church_id", roleContext.church_id)
       .eq("feature_id", feature.id)
       .maybeSingle();
 

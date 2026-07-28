@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useChurchPermission } from "@/hooks/use-church-permission";
 
 export type ChurchFinancialSummary = {
   totalReceived: number;
@@ -58,8 +59,9 @@ export function normalizeChurchFinancialSummary(value: unknown): ChurchFinancial
 }
 
 export function useChurchFinancialSummary() {
-  const { churchId, userRole, isSuperAdmin } = useAuth();
-  const enabled = !!churchId && (isSuperAdmin || ["church_admin", "pastor", "secretary", "treasurer"].includes(userRole ?? ""));
+  const { churchId } = useAuth();
+  const permission = useChurchPermission("reports", "view");
+  const enabled = !!churchId && permission.allowed;
 
   return useQuery({
     queryKey: ["church-financial-summary", churchId],

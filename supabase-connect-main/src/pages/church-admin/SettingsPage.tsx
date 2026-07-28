@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Palette, Church, Loader2, Image, Check, RotateCcw, Eye, CreditCard, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useBillingAccess } from "@/hooks/use-billing-access";
+import { useChurchPermission } from "@/hooks/use-church-permission";
 import OptimizedImageUpload from "@/components/church-admin/OptimizedImageUpload";
 import type { UploadResult } from "@/lib/file-upload";
 import {
@@ -40,6 +41,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const billing = useBillingAccess();
+  const settingsPermission = useChurchPermission("feature_permissions_admin", "manage");
   const [churchName, setChurchName] = useState("");
   const [churchCode, setChurchCode] = useState("");
   const [shortCode, setShortCode] = useState("");
@@ -99,6 +101,7 @@ export default function SettingsPage() {
 
   const saveGeneral = useMutation({
     mutationFn: async () => {
+      if (!settingsPermission.allowed) throw new Error("You do not have permission to manage church settings.");
       if (!churchId) throw new Error("No church");
       const { error } = await supabase.from("churches").update({
         name: churchName, email, phone: phone || null, address: address || null,
@@ -116,6 +119,7 @@ export default function SettingsPage() {
 
   const saveTheme = useMutation({
     mutationFn: async () => {
+      if (!settingsPermission.allowed) throw new Error("You do not have permission to manage church settings.");
       if (!churchId) throw new Error("No church");
       const { error } = await supabase.from("churches").update({ theme_color: themeColor }).eq("id", churchId);
       if (error) throw error;
@@ -133,6 +137,7 @@ export default function SettingsPage() {
 
   const saveMessageTemplate = useMutation({
     mutationFn: async () => {
+      if (!settingsPermission.allowed) throw new Error("You do not have permission to manage church settings.");
       await saveChurchMessageTemplate({ ...messageTemplate, church_id: churchId ?? null, template_type: templateType });
     },
     onSuccess: () => {
@@ -175,6 +180,7 @@ export default function SettingsPage() {
   };
 
   const handleLogoUploaded = async (result: UploadResult) => {
+    if (!settingsPermission.allowed) return;
     if (!churchId) return;
     const { error } = await supabase
       .from("churches")
@@ -191,6 +197,7 @@ export default function SettingsPage() {
   };
 
   const handleBannerUploaded = async (result: UploadResult) => {
+    if (!settingsPermission.allowed) return;
     if (!churchId) return;
     const { error } = await supabase
       .from("churches")
@@ -207,6 +214,7 @@ export default function SettingsPage() {
   };
 
   const removeImage = async (type: "logo" | "banner") => {
+    if (!settingsPermission.allowed) return;
     if (!churchId) return;
     const updateField = type === "logo" ? { logo_url: null } : { banner_url: null };
     const { error } = await supabase.from("churches").update(updateField).eq("id", churchId);
@@ -257,14 +265,14 @@ export default function SettingsPage() {
             <CardHeader><CardTitle className="text-base font-sans flex items-center gap-2"><Church className="h-4 w-4 text-primary" /> Church Information</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Church Name</Label><Input value={churchName} onChange={(e) => setChurchName(e.target.value)} /></div>
+                <div className="space-y-2"><Label>Church Name</Label><Input disabled={!settingsPermission.allowed} value={churchName} onChange={(e) => setChurchName(e.target.value)} /></div>
                 <div className="space-y-2"><Label>Church Code</Label><Input disabled value={churchCode} className="bg-muted/50 font-mono" /></div>
                 <div className="space-y-2"><Label>Join Code</Label><Input disabled value={shortCode} className="bg-muted/50 font-mono" /></div>
-                <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-                <div className="space-y-2"><Label>Phone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
-                <div className="space-y-2 md:col-span-2"><Label>Address</Label><Input value={address} onChange={(e) => setAddress(e.target.value)} /></div>
+                <div className="space-y-2"><Label>Email</Label><Input disabled={!settingsPermission.allowed} type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+                <div className="space-y-2"><Label>Phone</Label><Input disabled={!settingsPermission.allowed} value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
+                <div className="space-y-2 md:col-span-2"><Label>Address</Label><Input disabled={!settingsPermission.allowed} value={address} onChange={(e) => setAddress(e.target.value)} /></div>
               </div>
-              <Button onClick={() => saveGeneral.mutate()} disabled={saveGeneral.isPending}>
+              <Button onClick={() => saveGeneral.mutate()} disabled={saveGeneral.isPending || !settingsPermission.allowed}>
                 {saveGeneral.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save Changes
               </Button>
             </CardContent>
@@ -276,7 +284,7 @@ export default function SettingsPage() {
             <CardHeader><CardTitle className="text-base font-sans flex items-center gap-2"><Image className="h-4 w-4 text-primary" /> Church Logo</CardTitle></CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">Upload your church logo. Images are auto-optimized for web.</p>
-              {churchId && (
+              {churchId && settingsPermission.allowed && (
                 <OptimizedImageUpload
                   profile="logo"
                   churchId={churchId}
@@ -291,7 +299,7 @@ export default function SettingsPage() {
             <CardHeader><CardTitle className="text-base font-sans flex items-center gap-2"><Image className="h-4 w-4 text-primary" /> Church Banner</CardTitle></CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">Upload a banner image. Large images are automatically resized and compressed.</p>
-              {churchId && (
+              {churchId && settingsPermission.allowed && (
                 <OptimizedImageUpload
                   profile="banner"
                   churchId={churchId}
@@ -362,6 +370,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label>Template type</Label>
                   <select
+                    disabled={!settingsPermission.allowed}
                     value={templateType}
                     onChange={(event) => setTemplateType(event.target.value as ChurchMessageTemplateType)}
                     className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
@@ -374,6 +383,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <Label>Default Bible verse</Label>
                   <select
+                    disabled={!settingsPermission.allowed}
                     value={messageTemplate.default_bible_verse ?? ""}
                     onChange={(event) =>
                       setMessageTemplate((current) => ({ ...current, default_bible_verse: event.target.value || null }))
@@ -393,7 +403,7 @@ export default function SettingsPage() {
                 <Input
                   value={messageTemplate.title}
                   onChange={(event) => setMessageTemplate((current) => ({ ...current, title: event.target.value }))}
-                  disabled={templateLoading}
+                  disabled={templateLoading || !settingsPermission.allowed}
                 />
               </div>
 
@@ -403,7 +413,7 @@ export default function SettingsPage() {
                   rows={10}
                   value={messageTemplate.body}
                   onChange={(event) => setMessageTemplate((current) => ({ ...current, body: event.target.value }))}
-                  disabled={templateLoading}
+                  disabled={templateLoading || !settingsPermission.allowed}
                 />
                 <p className="text-xs text-muted-foreground">
                   Placeholders: {"{church_name}"}, {"{member_name}"}, {"{first_name}"}, {"{date}"}, {"{bible_verse}"}, {"{community_name}"}
@@ -416,11 +426,11 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <Button onClick={() => saveMessageTemplate.mutate()} disabled={saveMessageTemplate.isPending || templateLoading}>
+                <Button onClick={() => saveMessageTemplate.mutate()} disabled={saveMessageTemplate.isPending || templateLoading || !settingsPermission.allowed}>
                   {saveMessageTemplate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Save Template
                 </Button>
-                <Button variant="outline" onClick={resetMessageTemplate}>
+                <Button variant="outline" onClick={resetMessageTemplate} disabled={!settingsPermission.allowed}>
                   <RotateCcw className="mr-2 h-4 w-4" /> Reset to Default
                 </Button>
               </div>
@@ -548,11 +558,11 @@ export default function SettingsPage() {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <Button onClick={() => saveTheme.mutate()} disabled={saveTheme.isPending || !isChanged}>
+            <Button onClick={() => saveTheme.mutate()} disabled={saveTheme.isPending || !isChanged || !settingsPermission.allowed}>
               {saveTheme.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <Check className="mr-2 h-4 w-4" /> Apply Theme
             </Button>
-            <Button variant="outline" onClick={resetToDefault} disabled={themeColor === "#d4a017"}>
+            <Button variant="outline" onClick={resetToDefault} disabled={themeColor === "#d4a017" || !settingsPermission.allowed}>
               <RotateCcw className="mr-2 h-4 w-4" /> Reset to Default
             </Button>
           </div>

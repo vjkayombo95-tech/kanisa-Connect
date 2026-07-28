@@ -28,6 +28,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,8 +71,18 @@ type RoleAssignmentRow = {
   created_at: string | null;
   full_name: string | null;
 };
+type PermissionMatrixRow = {
+  feature_key: string;
+  feature_name: string;
+  role: string;
+  church_enabled: boolean;
+  subscription_available: boolean;
+  globally_enabled: boolean;
+  can_view: boolean;
+};
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
+const roleLabel = (role: string) => role.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 const inviteUrlForToken = (token: string, churchCode?: string | null) =>
   `${window.location.origin}/invite/${token}${churchCode ? `?churchCode=${encodeURIComponent(churchCode)}` : ""}`;
 const slugify = (value: string) =>
@@ -132,6 +143,7 @@ export default function RolesPage() {
   const [inviteRole, setInviteRole] = useState("member");
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedRole, setSelectedRole] = useState("member");
+  const [roleSearch, setRoleSearch] = useState("");
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [welcomeMessage, setWelcomeMessage] = useState("Join our parish community");
 
@@ -141,11 +153,11 @@ export default function RolesPage() {
       if (!churchId) return null;
       const { data, error } = await supabase
         .from("churches")
-        .select("id, name, code, church_code, short_code, slug, logo_url, metadata")
+        .select("id, name, code, church_code, short_code, slug, logo_url")
         .eq("id", churchId)
         .maybeSingle();
       if (error) throw error;
-      return data as ChurchInviteConfig | null;
+      return data ? { ...data, metadata: null } as ChurchInviteConfig : null;
     },
     enabled: Boolean(churchId),
   });
@@ -192,6 +204,32 @@ export default function RolesPage() {
     },
     enabled: Boolean(churchId),
   });
+
+  const { data: permissionMatrix = [] } = useQuery({
+    queryKey: ["church-feature-permission-matrix", churchId],
+    queryFn: async () => {
+      if (!churchId) return [];
+      const { data, error } = await supabase.rpc("get_church_feature_permission_matrix", { _church_id: churchId });
+      if (error) throw error;
+      return (data ?? []) as PermissionMatrixRow[];
+    },
+    enabled: Boolean(churchId),
+  });
+
+  const roleOptions = useMemo(() => [...new Set(permissionMatrix.map((row) => row.role))]
+    .sort((left, right) => roleLabel(left).localeCompare(roleLabel(right))), [permissionMatrix]);
+  const linkedMembers = members.filter((member: any) => member.user_id);
+  const staffUsers = useMemo(() => linkedMembers
+    .filter((member: any) => member.full_name.toLowerCase().includes(roleSearch.trim().toLowerCase()))
+    .map((member: any) => {
+      const assignments = memberRoles.filter((assignment) => assignment.user_id === member.user_id);
+      const assigned = new Set(assignments.map((assignment) => assignment.role));
+      const effectivePermissions = [...new Set(permissionMatrix
+        .filter((permission) => assigned.has(permission.role) && permission.can_view
+          && permission.church_enabled && permission.subscription_available && permission.globally_enabled)
+        .map((permission) => permission.feature_name))].sort();
+      return { ...member, assignments, assigned, effectivePermissions };
+    }), [linkedMembers, memberRoles, permissionMatrix, roleSearch]);
 
   const publicRegistrationEnabled = getMetadataBoolean(church?.metadata, "public_registration_enabled", true);
   const approvalRequired = getMetadataBoolean(church?.metadata, "public_registration_approval_required", false);
@@ -341,12 +379,14 @@ export default function RolesPage() {
   });
 
   const assignRole = useMutation({
-    mutationFn: async () => {
-      if (!churchId || !selectedUserId) throw new Error("Select a linked member first.");
+    mutationFn: async (assignment?: { userId: string; role: string }) => {
+      const userId = assignment?.userId ?? selectedUserId;
+      const role = assignment?.role ?? selectedRole;
+      if (!churchId || !userId) throw new Error("Select a linked member first.");
       const { error } = await supabase.rpc("assign_church_member_role" as never, {
         _church_id: churchId,
-        _user_id: selectedUserId,
-        _role: selectedRole,
+        _user_id: userId,
+        _role: role,
       } as never);
       if (error) throw error;
     },
@@ -482,7 +522,6 @@ export default function RolesPage() {
     return "bg-accent/20 text-accent border-accent/30";
   };
 
-  const linkedMembers = members.filter((member: any) => member.user_id);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -748,16 +787,23 @@ export default function RolesPage() {
 
         <TabsContent value="roles" className="space-y-4">
           <div className="grid gap-3 md:grid-cols-5">
-            {appRoles.map((role) => (
-              <MetricCard key={role.value} label={role.label} value={memberRoles.filter((item) => item.role === role.value).length} />
+            {roleOptions.map((role) => (
+              <MetricCard key={role} label={roleLabel(role)} value={memberRoles.filter((item) => item.role === role).length} />
             ))}
           </div>
-          <div className="flex justify-end">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Input
+              value={roleSearch}
+              onChange={(event) => setRoleSearch(event.target.value)}
+              placeholder="Search staff by name"
+              aria-label="Search staff by name"
+              className="sm:max-w-sm"
+            />
             <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
               <DialogTrigger asChild><Button><UserPlus className="mr-2 h-4 w-4" /> Assign Role</Button></DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle className="font-serif">Assign Role to Linked Member</DialogTitle></DialogHeader>
-                <form onSubmit={(event) => { event.preventDefault(); assignRole.mutate(); }} className="space-y-4">
+                <form onSubmit={(event) => { event.preventDefault(); assignRole.mutate(undefined); }} className="space-y-4">
                   <div className="space-y-2">
                     <Label>Member</Label>
                     <Select value={selectedUserId} onValueChange={setSelectedUserId}>
@@ -772,7 +818,7 @@ export default function RolesPage() {
                     <Select value={selectedRole} onValueChange={setSelectedRole}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {appRoles.map((role) => <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>)}
+                        {roleOptions.map((role) => <SelectItem key={role} value={role}>{roleLabel(role)}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -787,31 +833,54 @@ export default function RolesPage() {
               </DialogContent>
             </Dialog>
           </div>
-          <Card className="glass-card">
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader><TableRow><TableHead>Member</TableHead><TableHead>Role</TableHead><TableHead>Assigned</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {rolesLoading ? (
-                    <TableRow><TableCell colSpan={4} className="py-12 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></TableCell></TableRow>
-                  ) : memberRoles.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="py-12 text-center text-muted-foreground">No role assignments yet.</TableCell></TableRow>
-                  ) : memberRoles.map((role) => (
-                    <TableRow key={role.id}>
-                      <TableCell className="font-medium">{role.full_name || "Linked member"}</TableCell>
-                      <TableCell><Badge variant="outline"><Shield className="mr-1 h-3 w-3" />{role.role.replace("_", " ")}</Badge></TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{role.created_at ? new Date(role.created_at).toLocaleDateString() : "Recently"}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteRole.mutate(role.id)} aria-label={`Remove ${role.role} role`}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          {rolesLoading ? (
+            <Card><CardContent className="py-12"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></CardContent></Card>
+          ) : staffUsers.length === 0 ? (
+            <Card><CardContent className="py-12 text-center text-muted-foreground">No linked staff match your search.</CardContent></Card>
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {staffUsers.map((staff: any) => (
+                <Card key={staff.user_id} className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base"><Shield className="h-4 w-4 text-primary" />{staff.full_name}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="mb-2 text-sm font-medium">Roles</p>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {roleOptions.map((role) => {
+                          const assignment = staff.assignments.find((item: RoleAssignmentRow) => item.role === role);
+                          const checked = Boolean(assignment);
+                          return (
+                            <label key={role} className="flex items-center gap-2 rounded-md border p-2 text-sm">
+                              <Checkbox
+                                checked={checked}
+                                disabled={assignRole.isPending || deleteRole.isPending}
+                                aria-label={`${checked ? "Remove" : "Assign"} ${roleLabel(role)} for ${staff.full_name}`}
+                                onCheckedChange={(next) => {
+                                  if (next === true) assignRole.mutate({ userId: staff.user_id, role });
+                                  else if (assignment) deleteRole.mutate(assignment.id);
+                                }}
+                              />
+                              {roleLabel(role)}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-2 text-sm font-medium">Effective permissions</p>
+                      <div className="flex flex-wrap gap-2">
+                        {staff.effectivePermissions.length > 0
+                          ? staff.effectivePermissions.map((permission: string) => <Badge key={permission} variant="secondary"><Check className="mr-1 h-3 w-3" />{permission}</Badge>)
+                          : <span className="text-sm text-muted-foreground">No feature access inherited from assigned roles.</span>}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

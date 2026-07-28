@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, RotateCcw, Save, ShieldCheck } from "lucide-react";
+import { CircleHelp, LockKeyhole, RotateCcw, Save, ShieldCheck, ShieldX, Loader2 } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,14 +8,24 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import { PermissionControl } from "@/components/permissions/PermissionControl";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  applyRecommendedPermissions,
+  CHURCH_PERMISSION_ACTIONS,
+  indexPermissionConstraints,
+  PERMISSION_CLASSIFICATIONS,
+  resolvePermissionConstraint,
+  type PermissionConstraint,
+  type PermissionDraft,
+} from "@/lib/permission-constraints";
 
-type ChurchRole = "church_admin" | "pastor" | "secretary" | "treasurer" | "member";
-type Action = "view" | "create" | "edit" | "delete" | "approve" | "publish" | "manage";
+type ChurchRole = string;
+type Action = (typeof CHURCH_PERMISSION_ACTIONS)[number];
 type MatrixRow = {
   feature_id: string;
   feature_key: string;
@@ -38,24 +48,21 @@ type MatrixRow = {
   can_manage: boolean;
 };
 
-const roles: ChurchRole[] = ["church_admin", "pastor", "secretary", "treasurer", "member"];
-const actions: Action[] = ["view", "create", "edit", "delete", "approve", "publish", "manage"];
-const roleLabels: Record<ChurchRole, string> = {
-  church_admin: "Church Admin", pastor: "Pastor", secretary: "Secretary", treasurer: "Treasurer", member: "Member",
-};
+const actions = CHURCH_PERMISSION_ACTIONS;
+const roleLabel = (role: string) => role.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 
 function recommended(role: ChurchRole, feature: MatrixRow, action: Action) {
   if (role === "church_admin") return true;
   if (action === "view") return role === "member" ? feature.member_available : feature.staff_available;
-  const createEdit: Record<ChurchRole, string[]> = {
+  const createEdit: Record<string, string[]> = {
     church_admin: [],
     pastor: ["prayer_requests", "mass_intentions", "sacraments", "events", "announcements", "community_help"],
     secretary: ["members", "families", "communities", "ministries", "events", "event_requests", "announcements", "mass_intentions", "notifications", "channels"],
     treasurer: ["contributions", "pledges", "reports", "finance_intelligence"],
     member: ["prayer_requests", "mass_intentions", "event_requests", "community_help", "give", "pledges"],
   };
-  if (action === "create") return createEdit[role].includes(feature.feature_key);
-  if (action === "edit") return role !== "member" && createEdit[role].includes(feature.feature_key);
+  if (action === "create") return (createEdit[role] ?? []).includes(feature.feature_key);
+  if (action === "edit") return role !== "member" && (createEdit[role] ?? []).includes(feature.feature_key);
   if (action === "approve") return role === "pastor" && ["prayer_requests", "mass_intentions", "sacraments", "community_help"].includes(feature.feature_key);
   if (action === "publish") return ["pastor", "secretary"].includes(role) && ["announcements", "events", "sermons"].includes(feature.feature_key);
   return false;
@@ -66,7 +73,7 @@ export default function FeaturesPermissionsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedRole, setSelectedRole] = useState<ChurchRole>("church_admin");
-  const [draft, setDraft] = useState<Record<string, Record<Action, boolean>>>({});
+  const [draft, setDraft] = useState<PermissionDraft>({});
   const [dirty, setDirty] = useState(false);
 
   const matrixQuery = useQuery({
@@ -80,11 +87,37 @@ export default function FeaturesPermissionsPage() {
     enabled: !!churchId,
   });
   const rows = useMemo(() => matrixQuery.data ?? [], [matrixQuery.data]);
-  const featureRows = useMemo(() => rows.filter((row) => row.role === "church_admin"), [rows]);
-  const roleRows = useMemo(() => rows.filter((row) => row.role === selectedRole && row.church_enabled), [rows, selectedRole]);
+  const roles = useMemo(() => [...new Set(rows.map((row) => row.role))].sort((a, b) => roleLabel(a).localeCompare(roleLabel(b))), [rows]);
+  const featureRows = useMemo(() => rows.filter((row) => row.role === (roles.includes("church_admin") ? "church_admin" : roles[0])), [roles, rows]);
+  const roleRows = useMemo(() => rows.filter((row) => (
+    row.role === selectedRole
+    && row.church_enabled
+    && (selectedRole === "member" ? row.member_available : row.staff_available)
+  )), [rows, selectedRole]);
+  const constraintsQuery = useQuery({
+    queryKey: ["church-permission-constraints", churchId, selectedRole],
+    queryFn: async () => {
+      if (!churchId) return [];
+      const { data, error } = await supabase.rpc("get_church_permission_constraints", {
+        _church_id: churchId,
+        _role: selectedRole,
+      });
+      if (error) throw error;
+      return (data ?? []) as PermissionConstraint[];
+    },
+    enabled: !!churchId && !!selectedRole,
+  });
+  const constraints = useMemo(
+    () => indexPermissionConstraints(constraintsQuery.data ?? []),
+    [constraintsQuery.data],
+  );
 
   useEffect(() => {
-    setDraft(Object.fromEntries(roleRows.map((row) => [row.feature_key, Object.fromEntries(actions.map((action) => [action, row[`can_${action}`]]))])) as Record<string, Record<Action, boolean>>);
+    if (roles.length > 0 && !roles.includes(selectedRole)) setSelectedRole(roles[0]);
+  }, [roles, selectedRole]);
+
+  useEffect(() => {
+    setDraft(Object.fromEntries(roleRows.map((row) => [row.feature_key, Object.fromEntries(actions.map((action) => [action, row[`can_${action}`]]))])) as PermissionDraft);
     setDirty(false);
   }, [roleRows]);
 
@@ -100,6 +133,7 @@ export default function FeaturesPermissionsPage() {
       queryClient.invalidateQueries({ queryKey: ["portal-church-features", churchId] }),
       queryClient.invalidateQueries({ queryKey: ["church-role-permissions", churchId] }),
       queryClient.invalidateQueries({ queryKey: ["church-permission", churchId] }),
+      queryClient.invalidateQueries({ queryKey: ["church-permission-constraints", churchId] }),
     ]);
   };
 
@@ -128,6 +162,27 @@ export default function FeaturesPermissionsPage() {
     (groups[row.category] ??= []).push(row); return groups;
   }, {})), [featureRows]);
 
+  const resetToRecommended = () => {
+    if (!window.confirm(`Reset ${roleLabel(selectedRole)} to recommended defaults?`)) return;
+    const result = applyRecommendedPermissions(
+      draft,
+      roleRows.map((row) => row.feature_key),
+      constraints,
+      (featureKey, action) => {
+        const row = roleRows.find((candidate) => candidate.feature_key === featureKey);
+        return row ? recommended(selectedRole, row, action) : false;
+      },
+    );
+    setDraft(result.draft);
+    setDirty(true);
+    if (result.skipped > 0) {
+      toast({
+        title: "Recommended defaults applied safely",
+        description: `${result.skipped} locked or system-protected permissions were skipped.`,
+      });
+    }
+  };
+
   if (matrixQuery.isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (matrixQuery.error) return <Card><CardHeader><CardTitle>Features & Permissions unavailable</CardTitle><CardDescription>{(matrixQuery.error as Error).message}</CardDescription></CardHeader></Card>;
 
@@ -145,7 +200,117 @@ export default function FeaturesPermissionsPage() {
           })}</div></section>)}
         </TabsContent>
         <TabsContent value="roles" className="mt-4 space-y-4">
-          <Card><CardHeader><CardTitle className="flex items-center gap-2 text-base"><ShieldCheck className="h-4 w-4 text-primary" /> Role Permissions</CardTitle><CardDescription>Only enabled features are shown. Member access remains constrained to the member's own private records by record-level policies.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="max-w-xs"><Label>Church role</Label><Select value={selectedRole} onValueChange={(value) => { if (!dirty || window.confirm("Discard unsaved permission changes?")) setSelectedRole(value as ChurchRole); }}><SelectTrigger className="mt-2"><SelectValue /></SelectTrigger><SelectContent>{roles.map((role) => <SelectItem key={role} value={role}>{roleLabels[role]}</SelectItem>)}</SelectContent></Select></div><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-sm"><thead><tr className="border-b"><th className="p-2 text-left">Feature</th>{actions.map((action) => <th key={action} className="p-2 text-center capitalize">{action}</th>)}</tr></thead><tbody>{roleRows.map((row) => <tr key={row.feature_key} className="border-b"><td className="p-2 font-medium">{row.feature_name}</td>{actions.map((action) => { const protectedPath = selectedRole === "church_admin" && row.feature_key === "feature_permissions_admin" && ["view", "manage"].includes(action); return <td key={action} className="p-2 text-center"><Checkbox checked={draft[row.feature_key]?.[action] ?? false} disabled={protectedPath} aria-label={`${roleLabels[selectedRole]} may ${action} ${row.feature_name}`} onCheckedChange={(checked) => { setDraft((current) => ({ ...current, [row.feature_key]: { ...current[row.feature_key], [action]: checked === true } })); setDirty(true); }} /></td>; })}</tr>)}</tbody></table></div><div className="flex flex-wrap gap-2"><Button onClick={() => savePermissions.mutate()} disabled={!dirty || savePermissions.isPending}>{savePermissions.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}Save Changes</Button><Button variant="outline" onClick={() => { if (!window.confirm(`Reset ${roleLabels[selectedRole]} to recommended defaults?`)) return; setDraft(Object.fromEntries(roleRows.map((row) => [row.feature_key, Object.fromEntries(actions.map((action) => [action, recommended(selectedRole, row, action)]))])) as Record<string, Record<Action, boolean>>); setDirty(true); }}><RotateCcw className="mr-2 h-4 w-4" />Reset to Recommended Defaults</Button>{dirty && <span className="self-center text-sm text-amber-600">You have unsaved changes.</span>}</div></CardContent></Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ShieldCheck className="h-4 w-4 text-primary" /> Role Permissions
+              </CardTitle>
+              <CardDescription>
+                Only enabled features are shown. An “own records” scope is displayed only where database policies enforce ownership.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+                Some permissions are locked to protect church data, financial records, tenant isolation, and platform security.
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-[minmax(14rem,20rem)_1fr] lg:items-start">
+                <div>
+                  <Label>Church role</Label>
+                  <Select
+                    value={selectedRole}
+                    onValueChange={(value) => {
+                      if (!dirty || window.confirm("Discard unsaved permission changes?")) setSelectedRole(value);
+                    }}
+                  >
+                    <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {roles.map((role) => <SelectItem key={role} value={role}>{roleLabel(role)}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <p className="font-medium">Permission states</p>
+                  <div className="flex flex-wrap gap-x-5 gap-y-2 text-muted-foreground" aria-label="Permission state legend">
+                    <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-primary" /> Configurable</span>
+                    <span className="inline-flex items-center gap-1.5"><LockKeyhole className="h-4 w-4 text-amber-700" /> Restricted</span>
+                    <span className="inline-flex items-center gap-1.5"><ShieldX className="h-4 w-4" /> System Protected</span>
+                  </div>
+                  <details className="rounded-md border p-3">
+                    <summary className="flex cursor-pointer list-none items-center gap-2 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      <CircleHelp className="h-4 w-4" /> Why are some permissions locked?
+                    </summary>
+                    <p className="mt-2 text-muted-foreground">
+                      Restricted permissions require a Platform Administrator. System-protected permissions are unsupported or exceed the selected role’s safe authority. The database applies the same rules to direct and stale-client requests.
+                    </p>
+                  </details>
+                </div>
+              </div>
+
+              {constraintsQuery.error && (
+                <p role="alert" className="text-sm text-destructive">
+                  Permission constraints could not be loaded. All cells are locked until the server rules are available.
+                </p>
+              )}
+
+              <TooltipProvider delayDuration={200}>
+                <div className="overflow-x-auto rounded-md border">
+                  <table className="w-full min-w-[820px] text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/60">
+                        <th className="sticky left-0 z-20 min-w-52 bg-muted p-2 text-left">Feature</th>
+                        {actions.map((action) => <th key={action} className="p-2 text-center capitalize">{action}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {roleRows.map((row) => (
+                        <tr key={row.feature_key} className="border-b last:border-0">
+                          <th scope="row" className="sticky left-0 z-10 bg-background p-2 text-left font-medium">
+                            {row.feature_name}
+                          </th>
+                          {actions.map((action) => {
+                            const constraint = resolvePermissionConstraint(constraints, row.feature_key, action);
+                            return (
+                              <td key={action} className="p-2 text-center">
+                                <PermissionControl
+                                  checked={draft[row.feature_key]?.[action] ?? false}
+                                  constraint={constraint}
+                                  label={`${roleLabel(selectedRole)} may ${action} ${row.feature_name}`}
+                                  onCheckedChange={(checked) => {
+                                    if (constraint.classification !== PERMISSION_CLASSIFICATIONS.CONFIGURABLE) return;
+                                    setDraft((current) => ({
+                                      ...current,
+                                      [row.feature_key]: { ...current[row.feature_key], [action]: checked },
+                                    }));
+                                    setDirty(true);
+                                  }}
+                                />
+                                {constraint.record_scope === "own" && (
+                                  <span className="mt-1 block text-[10px] font-medium text-muted-foreground">Own records</span>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </TooltipProvider>
+
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => savePermissions.mutate()} disabled={!dirty || savePermissions.isPending || constraintsQuery.isLoading || !!constraintsQuery.error}>
+                  {savePermissions.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                  Save Changes
+                </Button>
+                <Button variant="outline" onClick={resetToRecommended} disabled={constraintsQuery.isLoading || !!constraintsQuery.error}>
+                  <RotateCcw className="mr-2 h-4 w-4" />Reset to Recommended Defaults
+                </Button>
+                {dirty && <span className="self-center text-sm text-amber-600">You have unsaved changes.</span>}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

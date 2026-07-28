@@ -45,7 +45,7 @@ const DEFAULT_FEATURE_STATE = (key: string): FeatureState => ({
 });
 
 export function useFeatureAccess() {
-  const { churchId, isSuperAdmin, userRole } = useAuth();
+  const { churchId, isSuperAdmin, user, userRoles } = useAuth();
 
   const { data: platformFeatures = [], isLoading: platformLoading } = useQuery({
     queryKey: ["portal-platform-features"],
@@ -81,18 +81,18 @@ export function useFeatureAccess() {
   });
 
   const { data: rolePermissions = [], isLoading: permissionsLoading } = useQuery({
-    queryKey: ["church-role-permissions", churchId, userRole],
+    queryKey: ["church-role-permissions", churchId, user?.id, [...userRoles].sort().join(",")],
     queryFn: async () => {
-      if (!churchId || !userRole || isSuperAdmin) return [];
+      if (!churchId || userRoles.length === 0 || isSuperAdmin) return [];
       const { data, error } = await supabase
         .from("church_role_permissions")
         .select("feature_id, can_view")
         .eq("church_id", churchId)
-        .eq("role", userRole);
+        .in("role", userRoles);
       if (error) throw error;
       return (data ?? []) as RolePermissionRow[];
     },
-    enabled: !!churchId && !!userRole && !isSuperAdmin,
+    enabled: !!churchId && userRoles.length > 0 && !isSuperAdmin,
     staleTime: 60 * 1000,
   });
 
@@ -116,7 +116,10 @@ export function useFeatureAccess() {
 
   const featureMap = useMemo(() => {
     const churchOverrides = new Map(churchFeatures.map((feature) => [feature.feature_id, feature]));
-    const permissionMap = new Map(rolePermissions.map((permission) => [permission.feature_id, permission.can_view]));
+    const permissionMap = new Map<string, boolean>();
+    rolePermissions.forEach((permission) => {
+      if (permission.can_view) permissionMap.set(permission.feature_id, true);
+    });
     const result = new Map<string, FeatureState>();
 
     for (const feature of platformFeatures) {

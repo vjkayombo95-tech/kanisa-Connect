@@ -43,8 +43,19 @@ import { PaginationFooter } from "@/components/ui/pagination-footer";
 
 const untypedSupabase = supabase as unknown as SupabaseClient;
 
-type PaymentStatus = "pending" | "paid" | "unpaid" | "failed" | string;
-type IntentionStatus = "pending" | "approved" | "rejected" | "scheduled" | "completed" | "archived" | string;
+type PaymentStatus = "pending" | "paid" | "unpaid" | "failed";
+type IntentionStatus = "pending" | "approved" | "rejected" | "scheduled" | "completed" | "archived";
+
+const paymentStatuses: readonly PaymentStatus[] = ["pending", "paid", "unpaid", "failed"];
+const intentionStatuses: readonly IntentionStatus[] = ["pending", "approved", "rejected", "scheduled", "completed", "archived"];
+
+function isPaymentStatus(value: string): value is PaymentStatus {
+  return paymentStatuses.some((status) => status === value);
+}
+
+function isIntentionStatus(value: string): value is IntentionStatus {
+  return intentionStatuses.some((status) => status === value);
+}
 
 type MassIntentionRow = {
   id: string;
@@ -201,10 +212,11 @@ function buildPdfRows(rows: MassIntentionRow[]) {
 
 export default function MassIntentionsPage() {
   const page = useWorkspacePage();
-  const { churchId, userRole, isSuperAdmin } = useAuth();
+  const { churchId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const exportPermission = useChurchPermission("mass_intentions", "manage");
+  const deletePermission = useChurchPermission("mass_intentions", "delete");
   const [searchParams] = useSearchParams();
 
   const [dateFilter, setDateFilter] = useState("");
@@ -218,7 +230,7 @@ export default function MassIntentionsPage() {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [totalCount, setTotalCount] = useState(0);
 
-  const canDelete = isSuperAdmin || userRole === "church_admin";
+  const canDelete = deletePermission.allowed;
   const filtersKey = [churchId, dateFilter, massTimeFilter, paymentFilter, statusFilter, occurrenceFilter, search.trim()].join("|");
   const pagination = usePaginatedQuery({ totalCount, resetKey: filtersKey });
 
@@ -339,7 +351,7 @@ export default function MassIntentionsPage() {
   });
 
   const updateIntention = useMutation({
-    mutationFn: async ({ id, values }: { id: string; values: Partial<Pick<MassIntentionRow, "status" | "payment_status">> }) => {
+    mutationFn: async ({ id, values }: { id: string; values: Partial<{ status: IntentionStatus; payment_status: PaymentStatus }> }) => {
       if (!churchId) throw new Error("Church context is required.");
       const { data: updatedRows, error: updateError } = await supabase
         .from("mass_intentions")
@@ -748,7 +760,9 @@ export default function MassIntentionsPage() {
             <Field label="Mass name"><Input value={form.mass_name} placeholder="Morning Mass" onChange={(event) => setForm({ ...form, mass_name: event.target.value })} /></Field>
             <Field label="Amount"><Input type="number" min="0" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} /></Field>
             <Field label="Payment status">
-              <Select value={form.payment_status} onValueChange={(value) => setForm({ ...form, payment_status: value })}>
+              <Select value={form.payment_status} onValueChange={(value) => {
+                if (isPaymentStatus(value)) setForm({ ...form, payment_status: value });
+              }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">Pending</SelectItem>
@@ -759,7 +773,9 @@ export default function MassIntentionsPage() {
               </Select>
             </Field>
             <Field label="Approval/status">
-              <Select value={form.status} onValueChange={(value) => setForm({ ...form, status: value })}>
+              <Select value={form.status} onValueChange={(value) => {
+                if (isIntentionStatus(value)) setForm({ ...form, status: value });
+              }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">Pending</SelectItem>

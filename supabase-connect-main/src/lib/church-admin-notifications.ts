@@ -14,6 +14,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useChurchPermission } from "@/hooks/use-church-permission";
 
 export type ChurchAdminPendingCounts = {
   events: number;
@@ -210,8 +211,9 @@ export function getChurchAdminSidebarBadge(itemId: string, counts: ChurchAdminPe
 }
 
 export function useChurchAdminPendingCounts() {
-  const { churchId, userRole, isSuperAdmin } = useAuth();
-  const enabled = !!churchId && (isSuperAdmin || ["church_admin", "pastor", "secretary", "treasurer"].includes(userRole ?? ""));
+  const { churchId } = useAuth();
+  const permission = useChurchPermission("feature_permissions_admin", "manage");
+  const enabled = !!churchId && permission.allowed;
 
   return useQuery({
     queryKey: ["church-admin-pending-counts", churchId],
@@ -259,10 +261,11 @@ function playAdminNotificationSound() {
 }
 
 export function useChurchAdminRealtimeNotifications() {
-  const { churchId, userRole, isSuperAdmin } = useAuth();
+  const { churchId } = useAuth();
+  const permission = useChurchPermission("feature_permissions_admin", "manage");
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const enabled = !!churchId && (isSuperAdmin || ["church_admin", "pastor", "secretary", "treasurer"].includes(userRole ?? ""));
+  const enabled = !!churchId && permission.allowed;
   const query = useChurchAdminPendingCounts();
   const previousTotalRef = useRef<number | null>(null);
 

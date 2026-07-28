@@ -114,6 +114,7 @@ function shouldShowSection(report: AnalyticsResponse, section: AnalyticsReportSe
 
 export default function AnalyticsAssistantPage() {
   const { churchId, session, user, userRole } = useAuth();
+  const analyticsPermission = useChurchPermission("finance_intelligence", "view");
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -138,10 +139,12 @@ export default function AnalyticsAssistantPage() {
   ]);
   const exportPermission = useChurchPermission("finance_intelligence", "manage");
 
-  const latestReport = useMemo(
-    () => [...messages].reverse().find((message) => message.role === "assistant" && message.report)?.report ?? null,
-    [messages],
-  );
+  const latestReport = useMemo(() => {
+    for (const message of [...messages].reverse()) {
+      if (message.role === "assistant" && message.report) return message.report;
+    }
+    return null;
+  }, [messages]);
   const exportReport = async (report: AnalyticsResponse) => {
     if (!exportPermission.allowed) return;
     const { exportAnalyticsPdf } = await import("@/lib/analytics-assistant");
@@ -195,7 +198,7 @@ export default function AnalyticsAssistantPage() {
     let isActive = true;
     setIsDashboardLoading(true);
     import("@/lib/analytics-assistant")
-      .then(({ fetchAnalyticsDashboard }) => fetchAnalyticsDashboard({ churchId, userRole, userId: user?.id }))
+      .then(({ fetchAnalyticsDashboard }) => fetchAnalyticsDashboard({ churchId, userRole, userId: user?.id, hasStaffAccess: analyticsPermission.allowed }))
       .then((snapshot) => {
         if (!isActive) return;
         dashboardCache.set(cacheKey, snapshot);
@@ -211,7 +214,7 @@ export default function AnalyticsAssistantPage() {
     return () => {
       isActive = false;
     };
-  }, [churchId, session?.access_token, user?.id, userRole]);
+  }, [analyticsPermission.allowed, churchId, session?.access_token, user?.id, userRole]);
 
   const handleSubmit = useCallback(async (event?: FormEvent, overrideQuery?: string) => {
     event?.preventDefault();
@@ -244,6 +247,7 @@ export default function AnalyticsAssistantPage() {
         accessToken: session.access_token,
         userId: user?.id,
         userRole,
+        hasStaffAccess: analyticsPermission.allowed,
         previousContext: assistantContext,
       });
       const assistantMessage: ChatMessage = {
@@ -264,7 +268,7 @@ export default function AnalyticsAssistantPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [assistantContext, churchId, query, session?.access_token, user?.id, userRole]);
+  }, [analyticsPermission.allowed, assistantContext, churchId, query, session?.access_token, user?.id, userRole]);
 
   useEffect(() => {
     const queuedPrompt = searchParams.get("q")?.trim() || "";
@@ -415,7 +419,7 @@ export default function AnalyticsAssistantPage() {
 
                       <p className="text-sm leading-6 text-foreground">{message.text}</p>
 
-                      {message.report ? (() => {
+                      {message.role === "assistant" && message.report ? (() => {
                         const report = message.report;
                         const reportArrays = getReportArrays(report);
                         const comparison = report.comparison;
@@ -451,7 +455,7 @@ export default function AnalyticsAssistantPage() {
                           <div className="grid gap-2 rounded-2xl border border-white/8 bg-background/50 p-4 text-xs text-muted-foreground sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                               <p className="uppercase tracking-[0.18em] text-muted-foreground/80">Intent</p>
-                              <p className="mt-1 text-foreground">{report.intent?.type?.replaceAll("_", " ") || "Unknown"}</p>
+                              <p className="mt-1 text-foreground">{report.intent?.type?.split("_").join(" ") || "Unknown"}</p>
                             </div>
                             <div>
                               <p className="uppercase tracking-[0.18em] text-muted-foreground/80">Date Range</p>
