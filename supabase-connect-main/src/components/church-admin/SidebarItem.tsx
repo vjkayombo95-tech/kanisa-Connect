@@ -46,8 +46,6 @@ export function SidebarItem({
       <AppLink
         to={href}
         onClick={onClick}
-        aria-current={active ? "page" : undefined}
-        aria-label={collapsed ? label : undefined}
         className={cn(
           "group relative flex items-center overflow-hidden rounded-2xl px-3 py-2.5 text-sm transition-colors",
           "border border-transparent",

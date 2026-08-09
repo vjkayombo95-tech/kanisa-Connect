@@ -1,6 +1,4 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, CheckCircle2, Clock, Edit, Loader2, Plus, RefreshCw, XCircle } from "lucide-react";
 
@@ -85,13 +83,10 @@ function fromDatetimeLocal(value: string) {
 
 export default function MassSchedulePage() {
   const { churchId, user } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
-  const eventRequestId = searchParams.get("eventRequestId");
-  const eventRequestSearch = searchParams.toString();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["mass-schedule-admin", churchId],
@@ -139,20 +134,6 @@ export default function MassSchedulePage() {
   const upcomingEvents = activeEvents.filter((event) => event.mass_date >= new Date().toISOString().slice(0, 10));
   const totalExpected = upcomingEvents.reduce((sum, event) => sum + (countsByEvent.get(event.id)?.yes ?? 0), 0);
 
-  useEffect(() => {
-    if (!eventRequestId) return;
-    const params = new URLSearchParams(eventRequestSearch);
-    setForm((current) => ({
-      ...current,
-      title: params.get("title") || current.title || "Special Mass",
-      description: params.get("description") || current.description,
-      mass_date: params.get("date") || current.mass_date,
-      start_time: params.get("startTime") || current.start_time,
-      end_time: params.get("endTime") || current.end_time,
-    }));
-    setFormOpen(true);
-  }, [eventRequestId, eventRequestSearch]);
-
   const saveMass = useMutation({
     mutationFn: async () => {
       if (!churchId) throw new Error("No church context");
@@ -173,37 +154,12 @@ export default function MassSchedulePage() {
         created_by: user?.id ?? null,
       };
 
-      let massEventId = form.id;
-      if (form.id) {
-        const { error } = await supabase
-          .from("mass_events" as never)
-          .update(payload as never)
-          .eq("id", form.id)
-          .eq("church_id", churchId);
-        if (error) throw error;
-      } else {
-        const { data, error } = await supabase
-          .from("mass_events" as never)
-          .insert(payload as never)
-          .select("id")
-          .single();
-        if (error) throw error;
-        massEventId = (data as { id: string }).id;
-      }
+      const query = form.id
+        ? supabase.from("mass_events" as never).update(payload as never).eq("id", form.id).eq("church_id", churchId)
+        : supabase.from("mass_events" as never).insert(payload as never);
 
-      if (eventRequestId && massEventId && !form.id) {
-        const { error } = await supabase
-          .from("event_requests")
-          .update({
-            converted_mass_event_id: massEventId,
-            converted_at: new Date().toISOString(),
-            status: "scheduled",
-          })
-          .eq("id", eventRequestId)
-          .eq("church_id", churchId)
-          .is("converted_mass_event_id", null);
-        if (error) throw error;
-      }
+      const { error } = await query;
+      if (error) throw error;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["mass-schedule-admin"] });
@@ -211,7 +167,6 @@ export default function MassSchedulePage() {
       await queryClient.invalidateQueries({ queryKey: ["church-dashboard-deferred"] });
       setFormOpen(false);
       setForm(emptyForm);
-      if (eventRequestId) setSearchParams({});
       toast({ title: "Mass saved", description: "The Mass schedule has been updated." });
     },
     onError: (error: any) => {

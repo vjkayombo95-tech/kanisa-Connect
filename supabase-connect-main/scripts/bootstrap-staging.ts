@@ -9,20 +9,12 @@ type Action = "created" | "updated" | "skipped" | "failed";
 type HealthStatus = "PASS" | "FAIL" | "SKIP";
 
 type BootstrapUser = {
-  key: string;
   label: string;
   email: string;
   password: string;
   role: AppRole;
   fullName: string;
   phone: string;
-};
-
-type BootstrapMember = {
-  id: string;
-  email: string;
-  full_name: string;
-  user_id?: string | null;
 };
 
 type Counters = Record<Action, number>;
@@ -54,17 +46,9 @@ type Report = {
   users: Array<{ label: string; email: string; role: AppRole; id?: string; action?: Action }>;
   church: { id?: string; name: string; code: string; action?: Action };
   saint_count: number;
-  cms_prayer_count: number;
-  cms_daily_reading_count: number;
   contribution_count: number;
   attendance_count: number;
-  pledge_count: number;
-  ministry_count: number;
-  channel_count: number;
-  prayer_request_count: number;
-  mass_intention_count: number;
   notification_count: number;
-  targeted_event_count: number;
   import_summary: Record<string, unknown>;
   health_checks: HealthCheck[];
 };
@@ -96,7 +80,6 @@ const DEMO_CHURCH = {
 
 const USERS: BootstrapUser[] = [
   {
-    key: "super_admin",
     label: "Super Admin",
     email: "uat.superadmin@kanisaconnect.test",
     password: "StagingSuperAdmin#2026",
@@ -105,7 +88,6 @@ const USERS: BootstrapUser[] = [
     phone: "+255700000001",
   },
   {
-    key: "church_admin",
     label: "Church Admin",
     email: "uat.churchadmin@kanisaconnect.test",
     password: "StagingChurchAdmin#2026",
@@ -114,7 +96,6 @@ const USERS: BootstrapUser[] = [
     phone: "+255700000002",
   },
   {
-    key: "member",
     label: "Member",
     email: "uat.member@kanisaconnect.test",
     password: "StagingMember#2026",
@@ -122,52 +103,12 @@ const USERS: BootstrapUser[] = [
     fullName: "UAT Member",
     phone: "+255700000003",
   },
-  {
-    key: "choir_member",
-    label: "Choir Member",
-    email: "uat.choir.member@kanisaconnect.test",
-    password: "StagingChoirMember#2026",
-    role: "member",
-    fullName: "UAT Choir Member",
-    phone: "+255700000005",
-  },
-  {
-    key: "youth_member",
-    label: "Youth Member",
-    email: "uat.youth.member@kanisaconnect.test",
-    password: "StagingYouthMember#2026",
-    role: "member",
-    fullName: "UAT Youth Member",
-    phone: "+255700000006",
-  },
-  {
-    key: "general_member",
-    label: "General Member",
-    email: "uat.general.member@kanisaconnect.test",
-    password: "StagingGeneralMember#2026",
-    role: "member",
-    fullName: "UAT General Member",
-    phone: "+255700000007",
-  },
-  {
-    key: "multi_group_member",
-    label: "Multi-Group Member",
-    email: "uat.multigroup.member@kanisaconnect.test",
-    password: "StagingMultiGroupMember#2026",
-    role: "member",
-    fullName: "UAT Multi-Group Member",
-    phone: "+255700000008",
-  },
 ];
 
 const INVITATION_TOKEN = "uat-member-invite-demo-catholic-parish";
 const SEEDED_MEMBER_EMAILS = [
   "uat.churchadmin@kanisaconnect.test",
   "uat.member@kanisaconnect.test",
-  "uat.choir.member@kanisaconnect.test",
-  "uat.youth.member@kanisaconnect.test",
-  "uat.general.member@kanisaconnect.test",
-  "uat.multigroup.member@kanisaconnect.test",
   "maria.demo@kanisaconnect.test",
 ];
 const SEEDED_CONTRIBUTION_REFS = [
@@ -176,33 +117,9 @@ const SEEDED_CONTRIBUTION_REFS = [
   "STAGING-UAT-CONTRIB-003",
 ];
 const SEEDED_EVENT_TITLES = ["UAT Sunday Service", "UAT Weekday Service"];
-const SEEDED_TARGETED_EVENT_TITLES = [
-  "UAT Choir Rehearsal",
-  "UAT Youth Retreat",
-  "UAT Choir + Youth Meeting",
-  "UAT Parish Meeting",
-  "UAT Public Parish Event",
-];
 const SEEDED_MASS_TITLES = ["Weekend Mass", "Weekday Mass"];
 const SEEDED_ANNOUNCEMENT_TITLES = ["Welcome to Demo Catholic Parish", "Weekend Mass Reminder"];
 const SEEDED_NOTIFICATION_TITLES = ["Birthday Blessings", "Contribution Reminder", "Weekend Mass RSVP"];
-const SEEDED_CMS_PRAYER_SLUG = "uat-sala-ya-asubuhi";
-const SEEDED_CMS_DAILY_READING_CELEBRATIONS = [
-  "Staging UAT Reading - Yesterday",
-  "Staging UAT Reading - Today",
-  "Staging UAT Reading - Tomorrow",
-];
-const SEEDED_COMMUNITY_NAME = "UAT St. Monica Community";
-const SEEDED_MINISTRY_NAME = "UAT Choir Ministry";
-const SEEDED_TARGETED_MINISTRIES = {
-  choir: "Choir",
-  youth: "Youth Ministry",
-};
-const SEEDED_CHANNEL_NAME = "UAT St. Monica Community Channel";
-const SEEDED_CHANNEL_MESSAGE = "Karibu kwenye kituo cha mawasiliano cha UAT kwa waumini.";
-const SEEDED_PRAYER_REQUEST_TEXT = "Please pray for the Demo Catholic Parish UAT family.";
-const SEEDED_PRAYER_COMMENT = "Tunaungana nawe katika sala wakati wa UAT.";
-const SEEDED_MASS_INTENTION_MESSAGE = "Thanksgiving for the Demo Catholic Parish UAT launch.";
 
 const startedAt = Date.now();
 const now = new Date();
@@ -232,17 +149,9 @@ const report: Report = {
   users: USERS.map((user) => ({ label: user.label, email: user.email, role: user.role })),
   church: { name: DEMO_CHURCH.name, code: DEMO_CHURCH.code },
   saint_count: 0,
-  cms_prayer_count: 0,
-  cms_daily_reading_count: 0,
   contribution_count: 0,
   attendance_count: 0,
-  pledge_count: 0,
-  ministry_count: 0,
-  channel_count: 0,
-  prayer_request_count: 0,
-  mass_intention_count: 0,
   notification_count: 0,
-  targeted_event_count: 0,
   import_summary: {},
   health_checks: healthChecks,
 };
@@ -559,31 +468,6 @@ async function deleteByIds(table: string, ids: string[], entity = table) {
   record("updated", entity, `deleted ${ids.length}`);
 }
 
-async function deleteByFilter(table: string, match: Record<string, unknown>, entity = table) {
-  if (isDryRun) {
-    record("skipped", entity, "dry-run would delete matching records");
-    return;
-  }
-
-  let query = supabase.from(table).delete();
-  for (const [column, value] of Object.entries(match)) query = query.eq(column, value as never);
-  const { error } = await query;
-  if (error) throw error;
-  record("updated", entity, "deleted matching records");
-}
-
-async function findContentLanguageId(code: string) {
-  if (!(await maybeSelect("content_languages"))) return null;
-  const row = await findOne("content_languages", { code }, "id");
-  return (row?.id as string | undefined) ?? null;
-}
-
-async function findContentCategoryId(slug: string) {
-  if (!(await maybeSelect("content_categories"))) return null;
-  const row = await findOne("content_categories", { slug }, "id");
-  return (row?.id as string | undefined) ?? null;
-}
-
 async function listUsers() {
   const { data, error } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
   if (error) throw error;
@@ -593,7 +477,7 @@ async function listUsers() {
 async function ensureUsers() {
   logStep("users", "Ensuring UAT auth users");
   const existingUsers = await listUsers();
-  const usersByRole = new Map<string, string>();
+  const usersByRole = new Map<AppRole, string>();
 
   for (const account of USERS) {
     const existing = existingUsers.find((candidate) => candidate.email?.toLowerCase() === account.email.toLowerCase());
@@ -602,7 +486,7 @@ async function ensureUsers() {
     if (isDryRun) {
       const action = existing ? "updated" : "created";
       record(action, "auth.users", `${account.email} would be ${action}`);
-      if (existing) usersByRole.set(account.key, existing.id);
+      if (existing) usersByRole.set(account.role, existing.id);
       if (reportUser) {
         reportUser.id = existing?.id;
         reportUser.action = action;
@@ -618,7 +502,7 @@ async function ensureUsers() {
         user_metadata: { full_name: account.fullName, role: account.role, staging: true },
       });
       if (error) throw error;
-      usersByRole.set(account.key, data.user.id);
+      usersByRole.set(account.role, data.user.id);
       if (reportUser) {
         reportUser.id = data.user.id;
         reportUser.action = "updated";
@@ -632,7 +516,7 @@ async function ensureUsers() {
         user_metadata: { full_name: account.fullName, role: account.role, staging: true },
       });
       if (error) throw error;
-      usersByRole.set(account.key, data.user.id);
+      usersByRole.set(account.role, data.user.id);
       if (reportUser) {
         reportUser.id = data.user.id;
         reportUser.action = "created";
@@ -644,12 +528,12 @@ async function ensureUsers() {
   return usersByRole;
 }
 
-async function seedProfiles(usersByRole: Map<string, string>, churchId: string | undefined) {
+async function seedProfiles(usersByRole: Map<AppRole, string>, churchId: string | undefined) {
   logStep("profiles", "Ensuring UAT profiles");
   await profileSupportsChurchContext();
 
   for (const account of USERS) {
-    const userId = usersByRole.get(account.key);
+    const userId = usersByRole.get(account.role);
     if (!userId) {
       record("skipped", "profiles", `${account.email} has no user id in dry-run`);
       continue;
@@ -685,7 +569,7 @@ async function seedProfiles(usersByRole: Map<string, string>, churchId: string |
   }
 }
 
-async function seedChurch(usersByRole: Map<string, string>) {
+async function seedChurch(usersByRole: Map<AppRole, string>) {
   logStep("church", "Ensuring Demo Catholic Parish");
   const existing = await findOne("churches", { code: DEMO_CHURCH.code }, "id");
   const churchPayload: Record<string, unknown> = {
@@ -723,50 +607,26 @@ async function seedChurch(usersByRole: Map<string, string>) {
   return report.church.id;
 }
 
-async function seedRoles(churchId: string | undefined, usersByRole: Map<string, string>) {
+async function seedRoles(churchId: string | undefined, usersByRole: Map<AppRole, string>) {
   logStep("roles", "Ensuring UAT roles");
   if (!churchId) {
     record("skipped", "user_roles", "no church id available");
     return;
   }
 
-  for (const account of USERS.filter((user) => user.role === "church_admin" || user.role === "member")) {
-    const userId = usersByRole.get(account.key);
+  for (const role of ["church_admin", "member"] as AppRole[]) {
+    const userId = usersByRole.get(role);
     if (!userId) continue;
-    await upsertByFilter("user_roles", { user_id: userId, church_id: churchId, role: account.role }, { user_id: userId, church_id: churchId, role: account.role }, "user_roles");
+    await upsertByFilter("user_roles", { user_id: userId, church_id: churchId }, { user_id: userId, church_id: churchId, role }, "user_roles");
   }
 
   const superAdminId = usersByRole.get("super_admin");
   if (superAdminId) {
-    await seedSuperAdminMarker(superAdminId);
-  }
-}
-
-async function seedSuperAdminMarker(superAdminId: string) {
-  if (!(await maybeSelect("super_admins", "*"))) {
-    record("skipped", "super_admins", "table missing");
-    return;
-  }
-
-  const hasId = await hasColumn("super_admins", "id");
-  const hasUserId = await hasColumn("super_admins", "user_id");
-  if (hasId && hasUserId) {
     await upsertByFilter("super_admins", { id: superAdminId }, { id: superAdminId, user_id: superAdminId }, "super_admins");
-    return;
   }
-  if (hasUserId) {
-    await upsertByFilter("super_admins", { user_id: superAdminId }, { user_id: superAdminId }, "super_admins");
-    return;
-  }
-  if (hasId) {
-    await upsertByFilter("super_admins", { id: superAdminId }, { id: superAdminId }, "super_admins");
-    return;
-  }
-
-  throw new Error("public.super_admins has neither id nor user_id");
 }
 
-async function seedMembers(churchId: string | undefined, usersByRole: Map<string, string>) {
+async function seedMembers(churchId: string | undefined, usersByRole: Map<AppRole, string>) {
   logStep("members", "Ensuring UAT member records");
   if (!churchId) {
     record("skipped", "members", "no church id available");
@@ -793,42 +653,6 @@ async function seedMembers(churchId: string | undefined, usersByRole: Map<string
       gender: "female",
     },
     {
-      full_name: "UAT Choir Member",
-      email: "uat.choir.member@kanisaconnect.test",
-      phone: "+255700000005",
-      church_id: churchId,
-      user_id: usersByRole.get("choir_member"),
-      status: "active",
-      gender: "female",
-    },
-    {
-      full_name: "UAT Youth Member",
-      email: "uat.youth.member@kanisaconnect.test",
-      phone: "+255700000006",
-      church_id: churchId,
-      user_id: usersByRole.get("youth_member"),
-      status: "active",
-      gender: "male",
-    },
-    {
-      full_name: "UAT General Member",
-      email: "uat.general.member@kanisaconnect.test",
-      phone: "+255700000007",
-      church_id: churchId,
-      user_id: usersByRole.get("general_member"),
-      status: "active",
-      gender: "female",
-    },
-    {
-      full_name: "UAT Multi-Group Member",
-      email: "uat.multigroup.member@kanisaconnect.test",
-      phone: "+255700000008",
-      church_id: churchId,
-      user_id: usersByRole.get("multi_group_member"),
-      status: "active",
-      gender: "male",
-    },
-    {
       full_name: "Maria Demo",
       email: "maria.demo@kanisaconnect.test",
       phone: "+255700000004",
@@ -845,9 +669,9 @@ async function seedMembers(churchId: string | undefined, usersByRole: Map<string
   }
 
   if (!ids.length) return [];
-  const { data, error } = await supabase.from("members").select("id, email, full_name, user_id").in("id", ids);
+  const { data, error } = await supabase.from("members").select("id, email, full_name").in("id", ids);
   if (error) throw error;
-  return (data ?? []) as BootstrapMember[];
+  return (data ?? []) as { id: string; email: string; full_name: string }[];
 }
 
 async function seedSaints() {
@@ -890,535 +714,7 @@ async function seedDailyReadings() {
   }
 }
 
-async function seedCmsPrayer(usersByRole: Map<string, string>) {
-  logStep("cms_prayers", "Ensuring one published Member Prayer Library prayer");
-  if (!(await maybeSelect("content_prayers"))) {
-    record("skipped", "content_prayers", "CMS prayers table missing");
-    return;
-  }
-
-  const languageId = await findContentLanguageId("sw") ?? await findContentLanguageId("en");
-  const categoryId = await findContentCategoryId("morning");
-  const payload = {
-    title: "Sala ya Asubuhi ya UAT",
-    slug: SEEDED_CMS_PRAYER_SLUG,
-    summary: "Sala fupi ya asubuhi kwa ukaguzi wa UAT.",
-    body: "Ee Bwana, tuongoze leo katika imani, tumaini, na upendo. Bariki familia ya parokia na kazi ya UAT. Amina.",
-    category_id: categoryId,
-    language_id: languageId,
-    status: "published",
-    featured: false,
-    visibility: "member",
-    author: "Kanisa Connect UAT",
-    source: "Staging UAT seed data",
-    liturgical_season: "Ordinary Time",
-    scripture_reference: "Psalm 118:24",
-    estimated_read_time: 1,
-    created_by: usersByRole.get("super_admin") ?? null,
-    updated_by: usersByRole.get("super_admin") ?? null,
-  };
-
-  await upsertByFilter("content_prayers", { slug: SEEDED_CMS_PRAYER_SLUG }, payload, "content_prayers");
-  report.cms_prayer_count = 1;
-}
-
-async function seedCmsDailyReadings(usersByRole: Map<string, string>) {
-  logStep("cms_daily_readings", "Ensuring published CMS Daily Readings for UAT dates");
-  if (!(await maybeSelect("content_daily_readings"))) {
-    record("skipped", "content_daily_readings", "CMS daily readings table missing");
-    return;
-  }
-
-  const languageId = await findContentLanguageId("sw") ?? await findContentLanguageId("en");
-  if (!languageId) {
-    record("skipped", "content_daily_readings", "no content language available");
-    return;
-  }
-
-  const rows = [yesterday, today, tomorrow].map((date, index) => ({
-    reading_date: dateKey(date),
-    liturgical_year: "C",
-    liturgical_season: "Ordinary Time",
-    celebration: SEEDED_CMS_DAILY_READING_CELEBRATIONS[index],
-    liturgical_color: "Green",
-    first_reading_reference: index === 0 ? "Isaiah 55:10-11" : index === 1 ? "Romans 8:18-23" : "Micah 6:6-8",
-    responsorial_psalm_reference: index === 0 ? "Psalm 65" : index === 1 ? "Psalm 126" : "Psalm 50",
-    second_reading_reference: null,
-    gospel_acclamation_reference: null,
-    gospel_reference: index === 0 ? "Matthew 13:1-9" : index === 1 ? "Luke 10:25-37" : "Matthew 5:13-16",
-    reflection: "Tafakari ya UAT inathibitisha kuwa ukurasa wa Masomo ya Siku unaonyesha maudhui yaliyochapishwa.",
-    prayer: "Bwana, tusaidie kusikiliza Neno lako na kulitenda kwa upendo. Amina.",
-    meditation_questions: "Je, neno la Mungu linanialika kufanya nini leo?",
-    daily_challenge: "Fanya tendo moja la huruma kwa jirani.",
-    language_id: languageId,
-    status: "published",
-    visibility: "member",
-    source_attribution: "Kanisa Connect Staging UAT",
-    editorial_notes: "Bootstrap-owned UAT reading; not official liturgical text.",
-    created_by: usersByRole.get("super_admin") ?? null,
-    updated_by: usersByRole.get("super_admin") ?? null,
-  }));
-
-  for (const row of rows) {
-    await upsertByFilter(
-      "content_daily_readings",
-      { reading_date: row.reading_date, language_id: row.language_id },
-      row,
-      "content_daily_readings",
-    );
-  }
-  report.cms_daily_reading_count = rows.length;
-}
-
-async function seedCommunityAndMinistry(churchId: string | undefined, members: BootstrapMember[]) {
-  logStep("member_groups", "Ensuring community and ministry memberships");
-  if (!churchId || !members.length) {
-    record("skipped", "member_groups", "missing church or members");
-    return { communityId: undefined, ministryId: undefined };
-  }
-
-  const member = members.find((row) => row.email === "uat.member@kanisaconnect.test") ?? members[0];
-  let communityId: string | undefined;
-  let ministryId: string | undefined;
-
-  if (await maybeSelect("communities")) {
-    communityId = await upsertByFilter(
-      "communities",
-      { church_id: churchId, name: SEEDED_COMMUNITY_NAME },
-      {
-        church_id: churchId,
-        name: SEEDED_COMMUNITY_NAME,
-        description: "Bootstrap-owned community for Member UAT channels and pledges.",
-        chairperson_id: member.id,
-      },
-      "communities",
-    );
-
-    if (communityId && await maybeSelect("member_communities")) {
-      await upsertByFilter("member_communities", { member_id: member.id, community_id: communityId }, { member_id: member.id, community_id: communityId }, "member_communities");
-    }
-
-    if (communityId && await hasColumn("members", "community_id") && !isDryRun) {
-      const { error } = await supabase.from("members").update({ community_id: communityId } as never).eq("id", member.id);
-      if (error) throw error;
-    }
-  }
-
-  if (await maybeSelect("ministries")) {
-    ministryId = await upsertByFilter(
-      "ministries",
-      { church_id: churchId, name: SEEDED_MINISTRY_NAME },
-      {
-        church_id: churchId,
-        name: SEEDED_MINISTRY_NAME,
-        description: "Bootstrap-owned ministry for Member UAT membership checks.",
-      },
-      "ministries",
-    );
-
-    if (ministryId && await maybeSelect("member_ministries")) {
-      await upsertByFilter("member_ministries", { member_id: member.id, ministry_id: ministryId }, { member_id: member.id, ministry_id: ministryId }, "member_ministries");
-    }
-  }
-
-  report.ministry_count = ministryId ? 1 : 0;
-  return { communityId, ministryId };
-}
-
-function memberByEmail(members: BootstrapMember[], email: string) {
-  return members.find((member) => member.email.toLowerCase() === email.toLowerCase());
-}
-
-async function clearTargetedMinistryMemberships(memberIds: string[], ministryIds: string[]) {
-  if (!memberIds.length || !ministryIds.length || !(await maybeSelect("member_ministries"))) return;
-  const { data, error } = await supabase
-    .from("member_ministries")
-    .select("id")
-    .in("member_id", memberIds)
-    .in("ministry_id", ministryIds);
-  if (error) throw error;
-  await deleteByIds("member_ministries", ((data ?? []) as { id: string }[]).map((row) => row.id), "member_ministries");
-}
-
-async function setLegacyMemberMinistry(memberId: string, ministryId: string | null) {
-  if (!(await hasColumn("members", "ministry_id")) || isDryRun) return;
-  const { error } = await supabase.from("members").update({ ministry_id: ministryId } as never).eq("id", memberId);
-  if (error) throw error;
-}
-
-async function seedMemberMinistry(member: BootstrapMember | undefined, ministryId: string | undefined) {
-  if (!member || !ministryId) return;
-  if (await maybeSelect("member_ministries")) {
-    await upsertByFilter(
-      "member_ministries",
-      { member_id: member.id, ministry_id: ministryId },
-      { member_id: member.id, ministry_id: ministryId },
-      "member_ministries",
-    );
-  }
-}
-
-async function seedTargetedEventUatData(
-  churchId: string | undefined,
-  members: BootstrapMember[],
-  usersByRole: Map<string, string>,
-) {
-  logStep("targeted_events", "Ensuring targeted event UAT data");
-  if (!churchId || !members.length || !(await maybeSelect("ministries")) || !(await maybeSelect("events"))) {
-    record("skipped", "targeted_events", "missing church, members, ministries, or events table");
-    return { choirMinistryId: undefined, youthMinistryId: undefined, eventIds: {} as Record<string, string> };
-  }
-
-  const choirMember = memberByEmail(members, "uat.choir.member@kanisaconnect.test");
-  const youthMember = memberByEmail(members, "uat.youth.member@kanisaconnect.test");
-  const generalMember = memberByEmail(members, "uat.general.member@kanisaconnect.test");
-  const multiGroupMember = memberByEmail(members, "uat.multigroup.member@kanisaconnect.test");
-
-  const choirMinistryPayload: Record<string, unknown> = {
-    church_id: churchId,
-    name: SEEDED_TARGETED_MINISTRIES.choir,
-    description: "Bootstrap-owned ministry for targeted event UAT.",
-  };
-  const youthMinistryPayload: Record<string, unknown> = {
-    church_id: churchId,
-    name: SEEDED_TARGETED_MINISTRIES.youth,
-    description: "Bootstrap-owned ministry for targeted event UAT.",
-  };
-  if (await hasColumn("ministries", "is_active")) {
-    choirMinistryPayload.is_active = true;
-    youthMinistryPayload.is_active = true;
-  }
-
-  const choirMinistryId = await upsertByFilter(
-    "ministries",
-    { church_id: churchId, name: SEEDED_TARGETED_MINISTRIES.choir },
-    choirMinistryPayload,
-    "ministries",
-  );
-  const youthMinistryId = await upsertByFilter(
-    "ministries",
-    { church_id: churchId, name: SEEDED_TARGETED_MINISTRIES.youth },
-    youthMinistryPayload,
-    "ministries",
-  );
-  report.ministry_count += [choirMinistryId, youthMinistryId].filter(Boolean).length;
-
-  const targetedMembers = [choirMember, youthMember, generalMember, multiGroupMember].filter(Boolean) as BootstrapMember[];
-  await clearTargetedMinistryMemberships(targetedMembers.map((member) => member.id), [choirMinistryId, youthMinistryId].filter(Boolean) as string[]);
-  await seedMemberMinistry(choirMember, choirMinistryId);
-  await seedMemberMinistry(youthMember, youthMinistryId);
-  await seedMemberMinistry(multiGroupMember, choirMinistryId);
-  await seedMemberMinistry(multiGroupMember, youthMinistryId);
-
-  if (choirMember) await setLegacyMemberMinistry(choirMember.id, choirMinistryId ?? null);
-  if (youthMember) await setLegacyMemberMinistry(youthMember.id, youthMinistryId ?? null);
-  if (generalMember) await setLegacyMemberMinistry(generalMember.id, null);
-  if (multiGroupMember) await setLegacyMemberMinistry(multiGroupMember.id, choirMinistryId ?? null);
-
-  if (!(await hasColumn("events", "audience_mode"))) {
-    record("skipped", "targeted_events", "events.audience_mode missing; apply RC-2.7.7 migration first");
-    return { choirMinistryId, youthMinistryId, eventIds: {} as Record<string, string> };
-  }
-
-  const choirDate = nextWeekday(today, 3);
-  const youthDate = addDays(today, 10);
-  const meetingDate = addDays(today, 12);
-  const parishDate = addDays(today, 14);
-  const publicDate = addDays(today, 16);
-  const basePayload = {
-    church_id: churchId,
-    status: "upcoming",
-    visibility: "member",
-    created_by: usersByRole.get("church_admin"),
-  };
-  const events = [
-    {
-      ...basePayload,
-      title: SEEDED_TARGETED_EVENT_TITLES[0],
-      description: "Weekly rehearsal used to verify Choir-only targeted event access.",
-      location: "Choir Loft",
-      start_date: isoAt(choirDate, 18),
-      end_date: isoAt(choirDate, 19, 30),
-      event_type: "choir_practice",
-      ministry: SEEDED_TARGETED_MINISTRIES.choir,
-      audience_mode: "specific_groups",
-      recurrence_frequency: "weekly",
-      recurrence_interval: 1,
-      recurrence_days_of_week: [3],
-      recurrence_count: 8,
-    },
-    {
-      ...basePayload,
-      title: SEEDED_TARGETED_EVENT_TITLES[1],
-      description: "One-time retreat used to verify Youth-only targeted event access.",
-      location: "Youth Hall",
-      start_date: isoAt(youthDate, 9),
-      end_date: isoAt(youthDate, 16),
-      event_type: "retreat",
-      ministry: SEEDED_TARGETED_MINISTRIES.youth,
-      audience_mode: "specific_groups",
-    },
-    {
-      ...basePayload,
-      title: SEEDED_TARGETED_EVENT_TITLES[2],
-      description: "Combined planning meeting visible to Choir and Youth Ministry members.",
-      location: "Parish Hall",
-      start_date: isoAt(meetingDate, 17),
-      end_date: isoAt(meetingDate, 18),
-      event_type: "meeting",
-      ministry: "Choir and Youth Ministry",
-      audience_mode: "specific_groups",
-    },
-    {
-      ...basePayload,
-      title: SEEDED_TARGETED_EVENT_TITLES[3],
-      description: "All-member parish meeting used to verify parish-wide member visibility.",
-      location: "Main Church Hall",
-      start_date: isoAt(parishDate, 15),
-      end_date: isoAt(parishDate, 16),
-      event_type: "parish_meeting",
-      ministry: "Parish",
-      audience_mode: "all_members",
-    },
-    {
-      ...basePayload,
-      title: SEEDED_TARGETED_EVENT_TITLES[4],
-      description: "Public parish event used to verify everyone audience visibility.",
-      location: "Church Grounds",
-      start_date: isoAt(publicDate, 10),
-      end_date: isoAt(publicDate, 12),
-      event_type: "community",
-      ministry: "Parish",
-      visibility: "public",
-      audience_mode: "everyone",
-    },
-  ];
-
-  const eventIds: Record<string, string> = {};
-  for (const event of events) {
-    const payload: Record<string, unknown> = { ...event };
-    for (const optionalColumn of [
-      "event_type",
-      "ministry",
-      "visibility",
-      "recurrence_frequency",
-      "recurrence_interval",
-      "recurrence_days_of_week",
-      "recurrence_count",
-    ]) {
-      if (!(await hasColumn("events", optionalColumn))) delete payload[optionalColumn];
-    }
-    const eventId = await upsertByFilter("events", { church_id: churchId, title: event.title }, payload, "events");
-    if (eventId) eventIds[event.title] = eventId;
-  }
-
-  if (await maybeSelect("event_audience_targets")) {
-    for (const eventId of Object.values(eventIds)) {
-      await deleteByFilter("event_audience_targets", { event_id: eventId }, "event_audience_targets");
-    }
-
-    const targetRows = [
-      { event_id: eventIds[SEEDED_TARGETED_EVENT_TITLES[0]], ministry_id: choirMinistryId },
-      { event_id: eventIds[SEEDED_TARGETED_EVENT_TITLES[1]], ministry_id: youthMinistryId },
-      { event_id: eventIds[SEEDED_TARGETED_EVENT_TITLES[2]], ministry_id: choirMinistryId },
-      { event_id: eventIds[SEEDED_TARGETED_EVENT_TITLES[2]], ministry_id: youthMinistryId },
-    ].filter((row) => row.event_id && row.ministry_id);
-
-    for (const row of targetRows) {
-      await upsertByFilter(
-        "event_audience_targets",
-        { event_id: row.event_id, ministry_id: row.ministry_id },
-        { church_id: churchId, event_id: row.event_id, ministry_id: row.ministry_id },
-        "event_audience_targets",
-      );
-    }
-  }
-
-  report.targeted_event_count = Object.keys(eventIds).length;
-  return { choirMinistryId, youthMinistryId, eventIds };
-}
-
-async function seedPledge(churchId: string | undefined, members: BootstrapMember[], communityId: string | undefined) {
-  logStep("pledges", "Ensuring member pledge data");
-  if (!churchId || !members.length || !(await maybeSelect("pledges"))) {
-    record("skipped", "pledges", "missing church, members, or pledges table");
-    return;
-  }
-
-  const member = members.find((row) => row.email === "uat.member@kanisaconnect.test") ?? members[0];
-  const payload: Record<string, unknown> = {
-    church_id: churchId,
-    member_id: member.id,
-    amount_pledged: 75000,
-    amount_paid: 25000,
-    status: "partial",
-  };
-  if (communityId) payload.community_id = communityId;
-
-  const match: Record<string, unknown> = { church_id: churchId, member_id: member.id };
-  if (communityId) match.community_id = communityId;
-
-  await upsertByFilter("pledges", match, payload, "pledges");
-  report.pledge_count = 1;
-}
-
-async function upsertChatChannelMember(channelId: string, member: BootstrapMember) {
-  if (!member.user_id) {
-    record("skipped", "chat_channel_members", "member has no linked auth user");
-    return;
-  }
-
-  const existing = await findOne("chat_channel_members", { channel_id: channelId, user_id: member.user_id }, "channel_id");
-  if (isDryRun) {
-    record(existing ? "updated" : "created", "chat_channel_members", existing ? "would update existing membership" : "would create membership");
-    return;
-  }
-
-  if (existing) {
-    const { error } = await supabase
-      .from("chat_channel_members" as never)
-      .update({ member_id: member.id } as never)
-      .eq("channel_id", channelId)
-      .eq("user_id", member.user_id);
-    if (error) throw error;
-    record("updated", "chat_channel_members");
-    return;
-  }
-
-  const { error } = await supabase.from("chat_channel_members" as never).insert({
-    channel_id: channelId,
-    user_id: member.user_id,
-    member_id: member.id,
-  } as never);
-  if (error) throw error;
-  record("created", "chat_channel_members");
-}
-
-async function seedChannelAndMessage(
-  churchId: string | undefined,
-  members: BootstrapMember[],
-  usersByRole: Map<string, string>,
-  communityId: string | undefined,
-) {
-  logStep("channels", "Ensuring member channel and starter message");
-  if (!churchId || !members.length || !communityId || !(await maybeSelect("chat_channels")) || !(await maybeSelect("chat_channel_members")) || !(await maybeSelect("chat_messages"))) {
-    record("skipped", "channels", "missing church, community, member, or chat tables");
-    return;
-  }
-
-  const member = members.find((row) => row.email === "uat.member@kanisaconnect.test") ?? members[0];
-  const channelId = await upsertByFilter(
-    "chat_channels",
-    { church_id: churchId, name: SEEDED_CHANNEL_NAME },
-    {
-      church_id: churchId,
-      name: SEEDED_CHANNEL_NAME,
-      description: "Bootstrap-owned channel for Member UAT conversations.",
-      owner_scope: "church_admin",
-      audience_type: "community_members",
-      community_id: communityId,
-      metadata: { staging_bootstrap: true },
-      created_by: usersByRole.get("church_admin") ?? member.user_id,
-    },
-    "chat_channels",
-  );
-
-  if (!channelId) return;
-  await upsertChatChannelMember(channelId, member);
-
-  if (!member.user_id) {
-    record("skipped", "chat_messages", "member has no linked auth user");
-    return;
-  }
-
-  await upsertByFilter(
-    "chat_messages",
-    { channel_id: channelId, body: SEEDED_CHANNEL_MESSAGE },
-    {
-      channel_id: channelId,
-      sender_user_id: member.user_id,
-      sender_member_id: member.id,
-      body: SEEDED_CHANNEL_MESSAGE,
-    },
-    "chat_messages",
-  );
-  report.channel_count = 1;
-}
-
-async function seedPortalPrayerRequest(churchId: string | undefined, members: BootstrapMember[]) {
-  logStep("prayer_requests", "Ensuring member prayer request data");
-  if (!churchId || !members.length || !(await maybeSelect("prayer_requests"))) {
-    record("skipped", "prayer_requests", "missing church, members, or prayer_requests table");
-    return;
-  }
-
-  const member = members.find((row) => row.email === "uat.member@kanisaconnect.test") ?? members[0];
-  const requestPayload: Record<string, unknown> = {
-    church_id: churchId,
-    member_id: member.id,
-    request_text: SEEDED_PRAYER_REQUEST_TEXT,
-    status: "approved",
-    offering_amount: 0,
-    is_anonymous: false,
-  };
-  if (await hasColumn("prayer_requests", "request")) requestPayload.request = SEEDED_PRAYER_REQUEST_TEXT;
-  if (await hasColumn("prayer_requests", "privacy")) requestPayload.privacy = "public_to_church";
-
-  const requestId = await upsertByFilter(
-    "prayer_requests",
-    { church_id: churchId, member_id: member.id, request_text: SEEDED_PRAYER_REQUEST_TEXT },
-    requestPayload,
-    "prayer_requests",
-  );
-
-  if (requestId && await maybeSelect("prayer_request_comments")) {
-    await upsertByFilter(
-      "prayer_request_comments",
-      { prayer_request_id: requestId, comment: SEEDED_PRAYER_COMMENT },
-      {
-        prayer_request_id: requestId,
-        church_id: churchId,
-        member_id: member.id,
-        author_name: member.full_name,
-        comment: SEEDED_PRAYER_COMMENT,
-      },
-      "prayer_request_comments",
-    );
-  }
-
-  report.prayer_request_count = 1;
-}
-
-async function seedMemberMassIntention(churchId: string | undefined, members: BootstrapMember[]) {
-  logStep("mass_intentions", "Ensuring member Mass intention data");
-  if (!churchId || !members.length || !(await maybeSelect("mass_intentions"))) {
-    record("skipped", "mass_intentions", "missing church, members, or mass_intentions table");
-    return;
-  }
-
-  const member = members.find((row) => row.email === "uat.member@kanisaconnect.test") ?? members[0];
-  const payload: Record<string, unknown> = {
-    church_id: churchId,
-    member_id: member.id,
-    intention_type: "shukrani",
-    message: SEEDED_MASS_INTENTION_MESSAGE,
-    offering_amount: 5000,
-    status: "pending",
-  };
-  if (await hasColumn("mass_intentions", "intention")) payload.intention = SEEDED_MASS_INTENTION_MESSAGE;
-  if (await hasColumn("mass_intentions", "requested_mass_date")) payload.requested_mass_date = dateKey(tomorrow);
-  if (await hasColumn("mass_intentions", "mass_date")) payload.mass_date = dateKey(tomorrow);
-
-  await upsertByFilter(
-    "mass_intentions",
-    { church_id: churchId, member_id: member.id, message: SEEDED_MASS_INTENTION_MESSAGE },
-    payload,
-    "mass_intentions",
-  );
-  report.mass_intention_count = 1;
-}
-
-async function seedContributions(churchId: string | undefined, members: BootstrapMember[], usersByRole: Map<string, string>) {
+async function seedContributions(churchId: string | undefined, members: { id: string; email: string; full_name: string }[], usersByRole: Map<AppRole, string>) {
   logStep("contributions", "Ensuring contribution records");
   if (!churchId || !members.length) {
     record("skipped", "contributions", "missing church or members");
@@ -1469,7 +765,7 @@ async function seedContributions(churchId: string | undefined, members: Bootstra
   report.contribution_count = rows.length;
 }
 
-async function seedMassRsvp(churchId: string | undefined, members: { id: string; email: string; full_name: string }[], usersByRole: Map<string, string>) {
+async function seedMassRsvp(churchId: string | undefined, members: { id: string; email: string; full_name: string }[], usersByRole: Map<AppRole, string>) {
   logStep("mass_rsvp", "Ensuring Mass RSVP records");
   if (!churchId || !members.length || !(await maybeSelect("mass_events")) || !(await maybeSelect("mass_responses"))) {
     record("skipped", "mass_rsvp", "Mass RSVP tables or dependencies missing");
@@ -1521,7 +817,7 @@ async function seedMassRsvp(churchId: string | undefined, members: { id: string;
   report.attendance_count += responses.length;
 }
 
-async function seedEventAttendance(churchId: string | undefined, members: { id: string; email: string; full_name: string }[], usersByRole: Map<string, string>) {
+async function seedEventAttendance(churchId: string | undefined, members: { id: string; email: string; full_name: string }[], usersByRole: Map<AppRole, string>) {
   logStep("attendance", "Ensuring event attendance records");
   if (!churchId || !members.length || !(await maybeSelect("events")) || !(await maybeSelect("event_attendances"))) {
     record("skipped", "event_attendance", "events/event_attendances tables or dependencies missing");
@@ -1570,7 +866,7 @@ async function seedEventAttendance(churchId: string | undefined, members: { id: 
   report.attendance_count += responses.length;
 }
 
-async function seedAnnouncements(churchId: string | undefined, usersByRole: Map<string, string>) {
+async function seedAnnouncements(churchId: string | undefined, usersByRole: Map<AppRole, string>) {
   logStep("announcements", "Ensuring announcements");
   if (!churchId) {
     record("skipped", "announcements", "no church id available");
@@ -1598,7 +894,7 @@ async function seedAnnouncements(churchId: string | undefined, usersByRole: Map<
   for (const row of rows) await upsertByFilter("announcements", { church_id: churchId, title: row.title }, row, "announcements");
 }
 
-async function seedNotifications(churchId: string | undefined, usersByRole: Map<string, string>) {
+async function seedNotifications(churchId: string | undefined, usersByRole: Map<AppRole, string>) {
   logStep("notifications", "Ensuring notifications");
   if (!churchId) {
     record("skipped", "notifications", "no church id available");
@@ -1616,7 +912,7 @@ async function seedNotifications(churchId: string | undefined, usersByRole: Map<
   report.notification_count = rows.length;
 }
 
-async function seedInvitation(churchId: string | undefined, usersByRole: Map<string, string>) {
+async function seedInvitation(churchId: string | undefined, usersByRole: Map<AppRole, string>) {
   logStep("invitations", "Ensuring pending invitation");
   if (!churchId) {
     record("skipped", "invitations", "no church id available");
@@ -1648,117 +944,14 @@ async function resetSeedData() {
   const saints = loadSaintPackRows();
 
   if (churchId) {
-    if (await maybeSelect("chat_channels")) {
-      const { data: channels, error: channelError } = await supabase.from("chat_channels").select("id").eq("church_id", churchId).eq("name", SEEDED_CHANNEL_NAME);
-      if (channelError) throw channelError;
-      const channelIds = ((channels ?? []) as { id: string }[]).map((row) => row.id);
-      if (channelIds.length && await maybeSelect("chat_messages")) {
-        const { data, error } = await supabase.from("chat_messages").select("id").in("channel_id", channelIds);
-        if (error) throw error;
-        await deleteByIds("chat_messages", ((data ?? []) as { id: string }[]).map((row) => row.id), "chat_messages");
-      }
-      if (channelIds.length && await maybeSelect("chat_channel_members")) {
-        for (const channelId of channelIds) await deleteByFilter("chat_channel_members", { channel_id: channelId }, "chat_channel_members");
-      }
-      await deleteByIds("chat_channels", channelIds, "chat_channels");
-    }
-
-    if (await maybeSelect("prayer_requests")) {
-      const { data: prayerRequests, error } = await supabase
-        .from("prayer_requests")
-        .select("id")
-        .eq("church_id", churchId)
-        .eq("request_text", SEEDED_PRAYER_REQUEST_TEXT);
-      if (error) throw error;
-      const prayerRequestIds = ((prayerRequests ?? []) as { id: string }[]).map((row) => row.id);
-      if (prayerRequestIds.length && await maybeSelect("prayer_request_comments")) {
-        const { data, error: commentsError } = await supabase.from("prayer_request_comments").select("id").in("prayer_request_id", prayerRequestIds);
-        if (commentsError) throw commentsError;
-        await deleteByIds("prayer_request_comments", ((data ?? []) as { id: string }[]).map((row) => row.id), "prayer_request_comments");
-      }
-      if (prayerRequestIds.length && await maybeSelect("prayer_request_prayers")) {
-        const { data, error: prayersError } = await supabase.from("prayer_request_prayers").select("id").in("prayer_request_id", prayerRequestIds);
-        if (prayersError) throw prayersError;
-        await deleteByIds("prayer_request_prayers", ((data ?? []) as { id: string }[]).map((row) => row.id), "prayer_request_prayers");
-      }
-      await deleteByIds("prayer_requests", prayerRequestIds, "prayer_requests");
-    }
-
-    if (await maybeSelect("mass_intentions")) {
-      const { data, error } = await supabase
-        .from("mass_intentions")
-        .select("id")
-        .eq("church_id", churchId)
-        .eq("message", SEEDED_MASS_INTENTION_MESSAGE);
-      if (error) throw error;
-      await deleteByIds("mass_intentions", ((data ?? []) as { id: string }[]).map((row) => row.id), "mass_intentions");
-    }
-
-    if (await maybeSelect("pledges")) {
-      const { data, error } = await supabase
-        .from("pledges")
-        .select("id")
-        .eq("church_id", churchId)
-        .eq("amount_pledged", 75000)
-        .eq("amount_paid", 25000);
-      if (error) throw error;
-      await deleteByIds("pledges", ((data ?? []) as { id: string }[]).map((row) => row.id), "pledges");
-    }
-
-    if (await maybeSelect("ministries")) {
-      const { data: ministries, error } = await supabase
-        .from("ministries")
-        .select("id")
-        .eq("church_id", churchId)
-        .in("name", [SEEDED_MINISTRY_NAME, SEEDED_TARGETED_MINISTRIES.choir, SEEDED_TARGETED_MINISTRIES.youth]);
-      if (error) throw error;
-      const ministryIds = ((ministries ?? []) as { id: string }[]).map((row) => row.id);
-      if (ministryIds.length && await maybeSelect("member_ministries")) {
-        const { data, error: membershipError } = await supabase.from("member_ministries").select("id").in("ministry_id", ministryIds);
-        if (membershipError) throw membershipError;
-        await deleteByIds("member_ministries", ((data ?? []) as { id: string }[]).map((row) => row.id), "member_ministries");
-      }
-      if (ministryIds.length && await hasColumn("members", "ministry_id") && !isDryRun) {
-        const { error: memberUpdateError } = await supabase
-          .from("members")
-          .update({ ministry_id: null } as never)
-          .eq("church_id", churchId)
-          .in("email", SEEDED_MEMBER_EMAILS);
-        if (memberUpdateError) throw memberUpdateError;
-      }
-      await deleteByIds("ministries", ministryIds, "ministries");
-    }
-
-    if (await maybeSelect("communities")) {
-      const { data: communities, error } = await supabase.from("communities").select("id").eq("church_id", churchId).eq("name", SEEDED_COMMUNITY_NAME);
-      if (error) throw error;
-      const communityIds = ((communities ?? []) as { id: string }[]).map((row) => row.id);
-      if (communityIds.length && await maybeSelect("member_communities")) {
-        const { data, error: membershipError } = await supabase.from("member_communities").select("id").in("community_id", communityIds);
-        if (membershipError) throw membershipError;
-        await deleteByIds("member_communities", ((data ?? []) as { id: string }[]).map((row) => row.id), "member_communities");
-      }
-      await deleteByIds("communities", communityIds, "communities");
+    if (await maybeSelect("event_attendances")) {
+      const { data } = await supabase.from("event_attendances").select("id").eq("church_id", churchId);
+      await deleteByIds("event_attendances", ((data ?? []) as { id: string }[]).map((row) => row.id), "event_attendances");
     }
 
     if (await maybeSelect("events")) {
-      const { data } = await supabase
-        .from("events")
-        .select("id")
-        .eq("church_id", churchId)
-        .in("title", [...SEEDED_EVENT_TITLES, ...SEEDED_TARGETED_EVENT_TITLES]);
-      const eventIds = ((data ?? []) as { id: string }[]).map((row) => row.id);
-      if (eventIds.length && await maybeSelect("event_attendances")) {
-        const { data: attendances, error: attendanceError } = await supabase.from("event_attendances").select("id").in("event_id", eventIds);
-        if (attendanceError) throw attendanceError;
-        await deleteByIds("event_attendances", ((attendances ?? []) as { id: string }[]).map((row) => row.id), "event_attendances");
-      }
-      if (eventIds.length && await maybeSelect("event_audience_targets")) {
-        const { data: targets, error: targetError } = await supabase.from("event_audience_targets").select("id").in("event_id", eventIds);
-        if (targetError) throw targetError;
-        await deleteByIds("event_audience_targets", ((targets ?? []) as { id: string }[]).map((row) => row.id), "event_audience_targets");
-      }
-      await deleteByIds("events", eventIds, "events");
+      const { data } = await supabase.from("events").select("id").eq("church_id", churchId).in("title", SEEDED_EVENT_TITLES);
+      await deleteByIds("events", ((data ?? []) as { id: string }[]).map((row) => row.id), "events");
     }
 
     if (await maybeSelect("mass_responses") && await maybeSelect("mass_events")) {
@@ -1799,18 +992,6 @@ async function resetSeedData() {
     await deleteByIds("saints", ((data ?? []) as { id: string }[]).map((row) => row.id), "saints");
   }
 
-  if (await maybeSelect("content_prayers")) {
-    const { data, error } = await supabase.from("content_prayers").select("id").eq("slug", SEEDED_CMS_PRAYER_SLUG);
-    if (error) throw error;
-    await deleteByIds("content_prayers", ((data ?? []) as { id: string }[]).map((row) => row.id), "content_prayers");
-  }
-
-  if (await maybeSelect("content_daily_readings")) {
-    const { data, error } = await supabase.from("content_daily_readings").select("id").in("celebration", SEEDED_CMS_DAILY_READING_CELEBRATIONS);
-    if (error) throw error;
-    await deleteByIds("content_daily_readings", ((data ?? []) as { id: string }[]).map((row) => row.id), "content_daily_readings");
-  }
-
   const authUsers = await listUsers();
   for (const account of USERS) {
     const user = authUsers.find((candidate) => candidate.email?.toLowerCase() === account.email.toLowerCase());
@@ -1837,55 +1018,6 @@ async function health(name: string, fn: () => Promise<{ ok: boolean; message: st
   } catch (error) {
     healthChecks.push({ name, status: "FAIL", message: error instanceof Error ? error.message : String(error) });
   }
-}
-
-async function ministryIdByName(churchId: string, name: string) {
-  const row = await findOne("ministries", { church_id: churchId, name }, "id");
-  return row?.id as string | undefined;
-}
-
-async function memberIdByEmail(churchId: string, email: string) {
-  const row = await findOne("members", { church_id: churchId, email }, "id");
-  return row?.id as string | undefined;
-}
-
-async function memberRecordByEmail(churchId: string, email: string) {
-  return await findOne("members", { church_id: churchId, email }, "id, user_id, church_id, status");
-}
-
-async function profileRecordById(userId: string) {
-  return await findOne("profiles", { id: userId }, "id, role, church_id");
-}
-
-async function userRoleExists(userId: string | undefined, churchId: string | undefined, role: AppRole) {
-  if (!userId || !churchId || !(await maybeSelect("user_roles"))) return false;
-  return !!(await findOne("user_roles", { user_id: userId, church_id: churchId, role }, "id"));
-}
-
-async function memberHasMinistry(memberId: string | undefined, ministryId: string | undefined) {
-  if (!memberId || !ministryId) return false;
-  if (await maybeSelect("member_ministries")) {
-    return !!(await findOne("member_ministries", { member_id: memberId, ministry_id: ministryId }, "id"));
-  }
-  const member = await findOne("members", { id: memberId }, "ministry_id");
-  return member?.ministry_id === ministryId;
-}
-
-async function eventIdByTitle(churchId: string, title: string) {
-  const row = await findOne("events", { church_id: churchId, title }, "id");
-  return row?.id as string | undefined;
-}
-
-async function eventAudienceMode(churchId: string, title: string) {
-  const row = await findOne("events", { church_id: churchId, title }, "audience_mode");
-  return row?.audience_mode as string | undefined;
-}
-
-async function eventTargetsMinistries(eventId: string | undefined) {
-  if (!eventId || !(await maybeSelect("event_audience_targets"))) return [];
-  const { data, error } = await supabase.from("event_audience_targets").select("ministry_id").eq("event_id", eventId);
-  if (error) throw error;
-  return ((data ?? []) as { ministry_id: string | null }[]).map((row) => row.ministry_id).filter(Boolean) as string[];
 }
 
 async function runHealthChecks(churchId: string | undefined) {
@@ -1965,146 +1097,7 @@ async function runHealthChecks(churchId: string | undefined) {
     const total = ((data ?? []) as { amount: number }[]).reduce((sum, row) => sum + Number(row.amount || 0), 0);
     return { ok: total > 0, message: `TZS ${total}` };
   });
-  await health("Member UAT CMS prayer exists", async () => {
-    if (!(await maybeSelect("content_prayers"))) return { ok: true, message: "content_prayers table absent; optional check skipped" };
-    return { ok: !!(await findOne("content_prayers", { slug: SEEDED_CMS_PRAYER_SLUG })), message: SEEDED_CMS_PRAYER_SLUG };
-  });
-  await health("Member UAT CMS daily readings exist", async () => {
-    if (!(await maybeSelect("content_daily_readings"))) return { ok: true, message: "content_daily_readings table absent; optional check skipped" };
-    const { count, error } = await supabase
-      .from("content_daily_readings")
-      .select("id", { count: "exact", head: true })
-      .in("celebration", SEEDED_CMS_DAILY_READING_CELEBRATIONS);
-    if (error) throw error;
-    return { ok: (count ?? 0) >= 3, message: `${count ?? 0} CMS UAT readings` };
-  });
-  await health("Member UAT pledge exists", async () => {
-    if (!churchId || !(await maybeSelect("pledges"))) return { ok: true, message: "pledges table absent or missing church; optional check skipped" };
-    const { count, error } = await supabase
-      .from("pledges")
-      .select("id", { count: "exact", head: true })
-      .eq("church_id", churchId)
-      .eq("amount_pledged", 75000)
-      .eq("amount_paid", 25000);
-    if (error) throw error;
-    return { ok: (count ?? 0) > 0, message: `${count ?? 0} UAT pledge rows` };
-  });
-  await health("Member UAT channel exists", async () => {
-    if (!churchId || !(await maybeSelect("chat_channels"))) return { ok: true, message: "chat_channels table absent or missing church; optional check skipped" };
-    return { ok: !!(await findOne("chat_channels", { church_id: churchId, name: SEEDED_CHANNEL_NAME })), message: SEEDED_CHANNEL_NAME };
-  });
-  await health("Member UAT prayer request exists", async () => {
-    if (!churchId || !(await maybeSelect("prayer_requests"))) return { ok: true, message: "prayer_requests table absent or missing church; optional check skipped" };
-    return { ok: !!(await findOne("prayer_requests", { church_id: churchId, request_text: SEEDED_PRAYER_REQUEST_TEXT })), message: SEEDED_PRAYER_REQUEST_TEXT };
-  });
-  await health("Member UAT Mass intention exists", async () => {
-    if (!churchId || !(await maybeSelect("mass_intentions"))) return { ok: true, message: "mass_intentions table absent or missing church; optional check skipped" };
-    return { ok: !!(await findOne("mass_intentions", { church_id: churchId, message: SEEDED_MASS_INTENTION_MESSAGE })), message: SEEDED_MASS_INTENTION_MESSAGE };
-  });
   await health("Invitation token exists", async () => ({ ok: !!(await findOne("invitations", { token: INVITATION_TOKEN })), message: INVITATION_TOKEN }));
-
-  await health("Choir ministry exists", async () => {
-    if (!churchId || !(await maybeSelect("ministries"))) return { ok: false, message: "ministries unavailable" };
-    return { ok: !!(await ministryIdByName(churchId, SEEDED_TARGETED_MINISTRIES.choir)), message: SEEDED_TARGETED_MINISTRIES.choir };
-  });
-  await health("Youth Ministry exists", async () => {
-    if (!churchId || !(await maybeSelect("ministries"))) return { ok: false, message: "ministries unavailable" };
-    return { ok: !!(await ministryIdByName(churchId, SEEDED_TARGETED_MINISTRIES.youth)), message: SEEDED_TARGETED_MINISTRIES.youth };
-  });
-  for (const [label, email] of [
-    ["Choir Member", "uat.choir.member@kanisaconnect.test"],
-    ["Youth Member", "uat.youth.member@kanisaconnect.test"],
-    ["General Member", "uat.general.member@kanisaconnect.test"],
-    ["Multi-Group Member", "uat.multigroup.member@kanisaconnect.test"],
-  ] as const) {
-    await health(`${label} member row exists`, async () => {
-      if (!churchId) return { ok: false, message: "missing church id" };
-      return { ok: !!(await memberIdByEmail(churchId, email)), message: email };
-    });
-  }
-  for (const [label, email] of [
-    ["Choir Member", "uat.choir.member@kanisaconnect.test"],
-    ["Youth Member", "uat.youth.member@kanisaconnect.test"],
-    ["General Member", "uat.general.member@kanisaconnect.test"],
-    ["Multi-Group Member", "uat.multigroup.member@kanisaconnect.test"],
-  ] as const) {
-    await health(`${label} full account fixture is linked`, async () => {
-      if (!churchId) return { ok: false, message: "missing church id" };
-      const user = users.find((candidate) => candidate.email?.toLowerCase() === email.toLowerCase());
-      if (!user) return { ok: false, message: "auth user missing" };
-
-      const profile = await profileRecordById(user.id);
-      const member = await memberRecordByEmail(churchId, email);
-      const issues: string[] = [];
-      if (!profile) issues.push("profile missing");
-      if (profile && profile.role !== "member") issues.push(`profile role ${profile.role ?? "null"}`);
-      if (profile && profile.church_id !== churchId) issues.push("profile church mismatch");
-      if (!member) issues.push("member row missing");
-      if (member && member.user_id !== user.id) issues.push("member user_id mismatch");
-      if (member && member.church_id !== churchId) issues.push("member church mismatch");
-      if (member && (member.status ?? "active") !== "active") issues.push(`member status ${member.status ?? "null"}`);
-      if (!(await userRoleExists(user.id, churchId, "member"))) issues.push("member user_role missing");
-
-      return {
-        ok: issues.length === 0,
-        message: issues.length ? issues.join("; ") : "auth/profile/member/user_role/church active",
-      };
-    });
-  }
-  await health("Targeted ministry memberships are correct", async () => {
-    if (!churchId) return { ok: false, message: "missing church id" };
-    const choirId = await ministryIdByName(churchId, SEEDED_TARGETED_MINISTRIES.choir);
-    const youthId = await ministryIdByName(churchId, SEEDED_TARGETED_MINISTRIES.youth);
-    const choirMemberId = await memberIdByEmail(churchId, "uat.choir.member@kanisaconnect.test");
-    const youthMemberId = await memberIdByEmail(churchId, "uat.youth.member@kanisaconnect.test");
-    const generalMemberId = await memberIdByEmail(churchId, "uat.general.member@kanisaconnect.test");
-    const multiMemberId = await memberIdByEmail(churchId, "uat.multigroup.member@kanisaconnect.test");
-    const checks = [
-      ["choir=choir", await memberHasMinistry(choirMemberId, choirId)],
-      ["choir!=youth", !(await memberHasMinistry(choirMemberId, youthId))],
-      ["youth=youth", await memberHasMinistry(youthMemberId, youthId)],
-      ["youth!=choir", !(await memberHasMinistry(youthMemberId, choirId))],
-      ["general!=choir", !(await memberHasMinistry(generalMemberId, choirId))],
-      ["general!=youth", !(await memberHasMinistry(generalMemberId, youthId))],
-      ["multi=choir", await memberHasMinistry(multiMemberId, choirId)],
-      ["multi=youth", await memberHasMinistry(multiMemberId, youthId)],
-    ];
-    const failed = checks.filter(([, ok]) => !ok).map(([name]) => name);
-    return { ok: failed.length === 0, message: failed.length ? failed.join(", ") : "choir/youth/general/multi matrix ready" };
-  });
-  await health("Targeted event audience modes are correct", async () => {
-    if (!churchId || !(await hasColumn("events", "audience_mode"))) return { ok: false, message: "events.audience_mode unavailable" };
-    const expected = new Map([
-      [SEEDED_TARGETED_EVENT_TITLES[0], "specific_groups"],
-      [SEEDED_TARGETED_EVENT_TITLES[1], "specific_groups"],
-      [SEEDED_TARGETED_EVENT_TITLES[2], "specific_groups"],
-      [SEEDED_TARGETED_EVENT_TITLES[3], "all_members"],
-      [SEEDED_TARGETED_EVENT_TITLES[4], "everyone"],
-    ]);
-    const mismatches: string[] = [];
-    for (const [title, mode] of expected) {
-      const actual = await eventAudienceMode(churchId, title);
-      if (actual !== mode) mismatches.push(`${title}: ${actual ?? "missing"} != ${mode}`);
-    }
-    return { ok: mismatches.length === 0, message: mismatches.length ? mismatches.join("; ") : "five UAT event modes verified" };
-  });
-  await health("Targeted event ministry targets are correct", async () => {
-    if (!churchId || !(await maybeSelect("event_audience_targets"))) return { ok: false, message: "event_audience_targets unavailable" };
-    const choirId = await ministryIdByName(churchId, SEEDED_TARGETED_MINISTRIES.choir);
-    const youthId = await ministryIdByName(churchId, SEEDED_TARGETED_MINISTRIES.youth);
-    const choirTargets = await eventTargetsMinistries(await eventIdByTitle(churchId, SEEDED_TARGETED_EVENT_TITLES[0]));
-    const youthTargets = await eventTargetsMinistries(await eventIdByTitle(churchId, SEEDED_TARGETED_EVENT_TITLES[1]));
-    const combinedTargets = await eventTargetsMinistries(await eventIdByTitle(churchId, SEEDED_TARGETED_EVENT_TITLES[2]));
-    const ok =
-      choirTargets.length === 1 &&
-      choirTargets.includes(choirId ?? "") &&
-      youthTargets.length === 1 &&
-      youthTargets.includes(youthId ?? "") &&
-      combinedTargets.length === 2 &&
-      combinedTargets.includes(choirId ?? "") &&
-      combinedTargets.includes(youthId ?? "");
-    return { ok, message: ok ? "choir/youth/combined targets verified" : "target rows missing or mismatched" };
-  });
 }
 
 function writeReport() {
@@ -2137,17 +1130,9 @@ async function main() {
       const members = await seedMembers(churchId, usersByRole);
       await seedSaints();
       await seedDailyReadings();
-      await seedCmsPrayer(usersByRole);
-      await seedCmsDailyReadings(usersByRole);
-      const { communityId } = await seedCommunityAndMinistry(churchId, members);
-      await seedPledge(churchId, members, communityId);
-      await seedChannelAndMessage(churchId, members, usersByRole, communityId);
-      await seedPortalPrayerRequest(churchId, members);
-      await seedMemberMassIntention(churchId, members);
       await seedContributions(churchId, members, usersByRole);
       await seedMassRsvp(churchId, members, usersByRole);
       await seedEventAttendance(churchId, members, usersByRole);
-      await seedTargetedEventUatData(churchId, members, usersByRole);
       await seedAnnouncements(churchId, usersByRole);
       await seedNotifications(churchId, usersByRole);
       invitationPath = await seedInvitation(churchId, usersByRole);

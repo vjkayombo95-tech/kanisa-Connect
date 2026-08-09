@@ -1,6 +1,3 @@
-import type { AppLanguage } from "@/lib/localization";
-import { localeForLanguage } from "@/lib/localization";
-
 export type LibrarySaint = {
   id: string;
   slug: string;
@@ -67,10 +64,10 @@ export const SAINT_CATEGORIES: SaintCategory[] = [
   { id: "religious-orders", label: "Religious Orders", aliases: ["religious order", "religious orders", "monastic", "missionary"] },
 ];
 
-export function formatFeastDay(month?: number | null, day?: number | null, language: AppLanguage = "en") {
-  if (!month || !day) return null;
+export function formatFeastDay(month?: number | null, day?: number | null) {
+  if (!month || !day) return "Feast day not set";
 
-  return new Intl.DateTimeFormat(localeForLanguage(language), {
+  return new Intl.DateTimeFormat("en-TZ", {
     month: "long",
     day: "numeric",
   }).format(new Date(2026, month - 1, day));

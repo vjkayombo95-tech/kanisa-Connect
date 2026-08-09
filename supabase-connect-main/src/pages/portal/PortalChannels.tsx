@@ -3,10 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ChannelWorkspace } from "@/components/channels/ChannelWorkspace";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useTranslation } from "react-i18next";
 
 export default function PortalChannels() {
-  const { t } = useTranslation();
   const { user, churchId } = useAuth();
 
   const { data: member } = useQuery({
@@ -33,8 +31,8 @@ export default function PortalChannels() {
       churchId={churchId}
       userId={user.id}
       memberId={member?.id ?? null}
-      title={t("member_portal.parish_life.communities")}
-      description={t("member_portal.parish_life.communities_description")}
+      title="Channels"
+      description="Stay aligned with ministry, community, and leadership updates in one place."
     />
   );
 }

@@ -1,19 +1,15 @@
-import { FormEvent, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Church, Loader2, LogIn, ShieldAlert, UserPlus } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { fetchPublicJoinChurch, fetchPublicRegistrationChurch, isPublicRegistrationEnabled } from "@/lib/public-registration";
 
 export default function JoinChurchPage() {
   const { slug = "" } = useParams<{ slug: string }>();
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [enteredCode, setEnteredCode] = useState("");
 
   const churchQuery = useQuery({
     queryKey: ["public-join-church", slug],
@@ -25,13 +21,6 @@ export default function JoinChurchPage() {
     },
     enabled: Boolean(slug),
   });
-
-  const submitCode = (event: FormEvent) => {
-    event.preventDefault();
-    const code = enteredCode.trim();
-    if (!code) return;
-    navigate(`/join/${encodeURIComponent(code)}`);
-  };
 
   if (churchQuery.isLoading) {
     return (
@@ -50,50 +39,9 @@ export default function JoinChurchPage() {
   const registrationEnabled = isPublicRegistrationEnabled(church?.metadata);
   const registrationPath = church?.slug
     ? `/register?churchSlug=${encodeURIComponent(church.slug)}`
-    : church?.short_code
-      ? `/register/${church.short_code}`
-      : church?.church_code
-        ? `/register/${church.church_code}`
     : church?.code
       ? `/register/${church.code}`
       : "/register";
-
-  if (!slug.trim()) {
-    return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.14),_transparent_28%),linear-gradient(180deg,_hsl(var(--background)),_hsl(var(--muted)/0.2))] px-4 py-10">
-        <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-4xl items-center justify-center">
-          <Card className="w-full max-w-xl border-border/60 bg-card/95 shadow-xl">
-            <CardContent className="space-y-6 p-8">
-              <div className="space-y-2 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <Church className="h-7 w-7" />
-                </div>
-                <h1 className="text-2xl font-serif font-bold">Join Existing Church</h1>
-                <p className="text-sm text-muted-foreground">
-                  Enter your parish Church Code or Join Code. You can search by church name, full code, or short join code.
-                </p>
-              </div>
-              <form className="space-y-3" onSubmit={submitCode}>
-                <Input
-                  value={enteredCode}
-                  onChange={(event) => setEnteredCode(event.target.value.toUpperCase())}
-                  placeholder="STJ8472 or KC-DAR-STJ-001"
-                  autoFocus
-                />
-                <Button type="submit" className="w-full" disabled={!enteredCode.trim()}>
-                  Continue
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </form>
-              <p className="text-center text-sm text-muted-foreground">
-                Need an invitation? Ask your church office for the join code.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   if (!church) {
     return (
@@ -173,9 +121,6 @@ export default function JoinChurchPage() {
                 <div className="rounded-2xl border border-border/60 bg-background/80 p-5">
                   <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Welcome</p>
                   <p className="mt-2 text-lg font-semibold">{church.name}</p>
-                  <p className="mt-1 text-xs font-medium text-primary">
-                    Church Code: {church.church_code || church.code || "-"} · Join Code: {church.short_code || "-"}
-                  </p>
                   <p className="mt-3 text-sm text-muted-foreground">
                     Your membership will be securely connected to this church after registration.
                   </p>
