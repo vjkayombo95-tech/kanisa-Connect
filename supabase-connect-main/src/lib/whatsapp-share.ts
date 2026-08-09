@@ -61,7 +61,7 @@ export function buildAnnouncementShareMessage({
   return [
     clean(churchName) ? `Tangazo kutoka ${clean(churchName)}` : "Tangazo la Kanisa",
     clean(title),
-    shorten(announcementHtmlToPlainText(body)),
+    shorten(body),
     clean(link) || appLink("/portal/announcements"),
   ].filter(Boolean).join("\n\n");
 }
@@ -101,4 +101,3 @@ export function buildContributionShareMessage({
 export function buildRenderedChurchMessageShare(renderedMessage: string) {
   return clean(renderedMessage);
 }
-import { announcementHtmlToPlainText } from "@/lib/announcement-content";

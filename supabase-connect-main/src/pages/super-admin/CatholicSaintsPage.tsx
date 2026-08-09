@@ -274,8 +274,6 @@ function SaintImage({ saint }: { saint: Pick<Saint, "name" | "image_url"> }) {
       <img
         src={saint.image_url}
         alt={saint.name}
-        loading="lazy"
-        decoding="async"
         className="h-12 w-12 rounded-xl object-cover"
       />
     );
@@ -1940,13 +1938,7 @@ export default function CatholicSaintsPage() {
               <div className="space-y-5">
                 <div className="flex flex-col gap-4 sm:flex-row">
                   {previewSaint.image_url ? (
-                    <img
-                      src={previewSaint.image_url}
-                      alt={previewSaint.name}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-40 w-full rounded-2xl object-cover sm:w-48"
-                    />
+                    <img src={previewSaint.image_url} alt={previewSaint.name} className="h-40 w-full rounded-2xl object-cover sm:w-48" />
                   ) : (
                     <div className="flex h-40 w-full items-center justify-center rounded-2xl bg-primary/10 text-primary sm:w-48">
                       <BookOpen className="h-10 w-10" />

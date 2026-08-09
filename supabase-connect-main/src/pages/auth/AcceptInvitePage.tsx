@@ -22,8 +22,6 @@ export default function AcceptInvitePage() {
   const [state, setState] = useState<InviteState>("loading");
   const [invitation, setInvitation] = useState<any>(null);
   const [churchName, setChurchName] = useState("");
-  const [churchCode, setChurchCode] = useState("");
-  const [shortCode, setShortCode] = useState("");
   const [accepting, setAccepting] = useState(false);
 
   // Signup form for new users
@@ -41,7 +39,7 @@ export default function AcceptInvitePage() {
     const loadInvitation = async () => {
       const { data, error } = await supabase
         .from("invitations")
-        .select("*, churches(name, code, church_code, short_code)")
+        .select("*, churches(name)")
         .eq("token", token)
         .maybeSingle();
 
@@ -52,8 +50,6 @@ export default function AcceptInvitePage() {
 
       setInvitation(data);
       setChurchName((data as any).churches?.name || "Church");
-      setChurchCode((data as any).churches?.church_code || (data as any).churches?.code || "");
-      setShortCode((data as any).churches?.short_code || "");
       setEmail(data.email);
 
       if (data.status === "accepted") {
@@ -285,14 +281,6 @@ export default function AcceptInvitePage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Church</span>
                     <span className="font-medium">{churchName}</span>
-                  </div>
-                  <div className="flex justify-between gap-3 text-sm">
-                    <span className="text-muted-foreground">Church Code</span>
-                    <span className="font-mono text-primary">{churchCode || "-"}</span>
-                  </div>
-                  <div className="flex justify-between gap-3 text-sm">
-                    <span className="text-muted-foreground">Join Code</span>
-                    <span className="font-mono text-primary">{shortCode || "-"}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Role</span>
