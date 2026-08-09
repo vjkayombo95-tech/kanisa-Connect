@@ -30,4 +30,9 @@ describe("member mobile back navigation", () => {
     expect(getMemberBackFallback("/portal/bible/john/chapter/3")).toBe("/portal/bible/john");
     expect(getMemberBackFallback("/portal/prayers/our-father")).toBe("/portal/prayers");
   });
+
+  it("returns an in-app livestream viewer to the member home or its validated origin", () => {
+    expect(getMemberBackFallback("/portal/live/stream-1")).toBe("/portal");
+    expect(resolveMemberBackTarget("/portal/live/stream-1", "/portal/my-parish")).toBe("/portal/my-parish");
+  });
 });

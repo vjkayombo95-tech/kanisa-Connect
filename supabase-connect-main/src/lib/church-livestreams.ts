@@ -75,6 +75,17 @@ export async function fetchMemberLivestream(churchId: string, includeRecording =
     ?? null;
 }
 
+export async function fetchMemberLivestreamById(churchId: string, streamId: string) {
+  const { data, error } = await supabase
+    .from("church_livestreams")
+    .select("*")
+    .eq("church_id", churchId)
+    .eq("id", streamId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? normalizeChurchLivestream(data) : null;
+}
+
 export async function transitionChurchLivestream(id: string, status: "live" | "ended" | "cancelled") {
   const { data, error } = await supabase.rpc("transition_church_livestream" as never, { _livestream_id: id, _new_status: status } as never);
   if (error) throw error;
@@ -86,6 +97,10 @@ export function isSecureLivestreamUrl(value: string) {
 }
 
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
+
+export function isValidYouTubeVideoId(value: string | null | undefined): value is string {
+  return typeof value === "string" && YOUTUBE_ID.test(value);
+}
 
 export function extractYouTubeVideoId(value: string) {
   try {
@@ -104,4 +119,14 @@ export function extractYouTubeVideoId(value: string) {
   } catch {
     return null;
   }
+}
+
+export function getYouTubeEmbedUrl(stream: ChurchLivestream) {
+  if (stream.provider !== "youtube" || !isValidYouTubeVideoId(stream.providerExternalId)) return null;
+  return `https://www.youtube.com/embed/${stream.providerExternalId}`;
+}
+
+export function getValidatedYouTubeWatchUrl(stream: ChurchLivestream) {
+  if (stream.provider !== "youtube" || !isValidYouTubeVideoId(stream.providerExternalId)) return null;
+  return extractYouTubeVideoId(stream.watchUrl) === stream.providerExternalId ? stream.watchUrl : null;
 }

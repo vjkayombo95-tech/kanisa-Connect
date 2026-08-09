@@ -20,6 +20,7 @@ const titleByRoute: Record<string, string> = {
 };
 
 function getMemberPageTitle(pathname: string, fallbackTitle: string) {
+  if (/^\/portal\/live\/[^/]+$/.test(pathname)) return "Misa Moja kwa Moja";
   if (pathname.startsWith("/portal/contribution-receipt/")) return "Risiti ya Mchango";
   if (/^\/portal\/bible\/[^/]+\/chapter\//.test(pathname)) return "Sura ya Biblia";
   if (/^\/portal\/bible\/[^/]+$/.test(pathname)) return "Biblia";
