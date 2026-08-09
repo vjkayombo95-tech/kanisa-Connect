@@ -51,9 +51,19 @@ describe("LiveMassCard", () => {
     expect(markup).toContain("LIVE");
     expect(markup).toContain("Misa Inaendelea Sasa");
     expect(markup).toContain(liveStream.title);
-    expect(markup).toContain(`href="${liveStream.watchUrl.replaceAll("&", "&amp;")}"`);
+    expect(markup).toContain(`href="/portal/live/${liveStream.id}"`);
+    expect(markup).not.toContain('target="_blank"');
     expect(markup).not.toContain("<img");
     expect(markup).toContain("Tazama Moja kwa Moja");
+  });
+
+  it("preserves a safe external CTA for unsupported embed providers", () => {
+    const external = { ...liveStream, provider: "vimeo" as const, watchUrl: "https://vimeo.com/123456", providerExternalId: "123456" };
+    setHook(external);
+    const markup = renderCard();
+    expect(markup).toContain('href="https://vimeo.com/123456"');
+    expect(markup).toContain('target="_blank"');
+    expect(markup).toMatch(/rel="(?:noopener noreferrer|noreferrer noopener)"/);
   });
 
   it("renders a secure thumbnail without autoplay media", () => {

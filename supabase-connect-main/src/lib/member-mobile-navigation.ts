@@ -5,6 +5,7 @@ export function isPrimaryMemberRoute(pathname: string) {
 }
 
 export function getMemberBackFallback(pathname: string) {
+  if (/^\/portal\/live\/[^/]+$/.test(pathname)) return "/portal";
   if (pathname.startsWith("/portal/contribution-receipt/")) return "/portal/contribution-history";
   const bibleChapter = pathname.match(/^\/portal\/bible\/([^/]+)\/chapter\//);
   if (bibleChapter) return `/portal/bible/${bibleChapter[1]}`;

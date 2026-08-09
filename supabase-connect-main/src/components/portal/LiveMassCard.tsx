@@ -3,7 +3,7 @@ import { Clock3, Play, Radio } from "lucide-react";
 
 import { AppLink } from "@/components/AppLink";
 import { useChurchLivestream } from "@/hooks/use-church-livestream";
-import { getMemberLivestreamPresentation, isSecureLivestreamUrl } from "@/lib/church-livestreams";
+import { getMemberLivestreamPresentation, getYouTubeEmbedUrl, isSecureLivestreamUrl } from "@/lib/church-livestreams";
 import { logWarning } from "@/lib/error-logger";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +42,7 @@ export function LiveMassCard({ churchName }: LiveMassCardProps) {
   if (!presentation || !isSecureLivestreamUrl(stream.watchUrl)) return null;
 
   const isLive = presentation === "live";
+  const internalViewer = getYouTubeEmbedUrl(stream) ? `/portal/live/${stream.id}` : null;
   const thumbnail = stream.thumbnailUrl && isSecureLivestreamUrl(stream.thumbnailUrl)
     && failedThumbnail !== stream.thumbnailUrl
     ? stream.thumbnailUrl
@@ -87,9 +88,9 @@ export function LiveMassCard({ churchName }: LiveMassCardProps) {
         </div>
 
         <AppLink
-          to={stream.watchUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+          to={internalViewer ?? stream.watchUrl}
+          target={internalViewer ? undefined : "_blank"}
+          rel={internalViewer ? undefined : "noopener noreferrer"}
           aria-label={isLive ? `Tazama moja kwa moja: ${stream.title}` : `Angalia maelezo ya: ${stream.title}`}
           className={cn(
             "mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-4 text-sm font-bold outline-none transition-[transform,background-color] duration-200 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none",
