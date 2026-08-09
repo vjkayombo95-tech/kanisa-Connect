@@ -34,6 +34,20 @@ type ChurchFeature = {
 type LocalGlobal = { enabled: boolean; locked: boolean };
 type LocalChurch = { enabled: boolean; locked: boolean };
 
+async function setAuthoritativeLivestreamFeature(
+  churchId: string,
+  enabled: boolean,
+  locked: boolean,
+) {
+  const { error } = await supabase.rpc("set_super_admin_church_feature", {
+    _church_id: churchId,
+    _feature_key: "livestream",
+    _enabled: enabled,
+    _locked: locked,
+  });
+  if (error) throw error;
+}
+
 const DEFAULT_FEATURES = [
   { key: "members", name: "Members", description: "Member directory and member administration." },
   { key: "contributions", name: "Contributions", description: "Contribution records, receipts, and giving administration." },
@@ -189,6 +203,12 @@ export default function FeatureManagement() {
         const d = churchDraft[f.id];
         if (!d) continue;
         const existing = churchFeatures.find((c) => c.feature_id === f.id);
+        if (f.key === "livestream") {
+          if (!existing || existing.enabled !== d.enabled || existing.locked !== d.locked) {
+            await setAuthoritativeLivestreamFeature(selectedChurchId, d.enabled, d.locked);
+          }
+          continue;
+        }
         if (existing) {
           if (existing.enabled !== d.enabled || existing.locked !== d.locked) {
             const { error } = await supabase
@@ -221,8 +241,16 @@ export default function FeatureManagement() {
   const resetChurch = useMutation({
     mutationFn: async () => {
       if (!selectedChurchId) return;
+      const livestream = features.find((feature) => feature.key === "livestream");
+      if (livestream) {
+        await setAuthoritativeLivestreamFeature(
+          selectedChurchId,
+          livestream.globally_enabled,
+          livestream.globally_locked,
+        );
+      }
       const { error } = await supabase.from("church_features").upsert(
-        features.map((feature) => ({
+        features.filter((feature) => feature.key !== "livestream").map((feature) => ({
           church_id: selectedChurchId,
           feature_id: feature.id,
           enabled: feature.is_mandatory ? true : feature.globally_enabled,
@@ -256,6 +284,10 @@ export default function FeatureManagement() {
           if (gd.locked || !gd.enabled) continue; // global controls remain authoritative
           const desired = sourceSettings[f.id]?.enabled ?? gd.enabled;
           const locked = sourceSettings[f.id]?.locked ?? false;
+          if (f.key === "livestream") {
+            await setAuthoritativeLivestreamFeature(church.id, desired, locked);
+            continue;
+          }
           // Upsert for this church
           const { error } = await supabase.from("church_features").upsert(
             { church_id: church.id, feature_id: f.id, enabled: desired, locked, updated_at: new Date().toISOString() } as any,

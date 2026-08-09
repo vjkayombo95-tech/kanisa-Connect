@@ -405,6 +405,14 @@
     "error_update_blocked": "Event request update was blocked or the row was not found.",
     "error_multiple_rows": "Event request update returned multiple rows unexpectedly."
   },
+  "church_media": {
+    "livestreams_title": "Livestreams",
+    "livestreams_description": "Manage scheduled and live broadcasts.",
+    "sermons_title": "Sermons",
+    "sermons_description": "Manage recorded sermons and teachings.",
+    "livestreams_service_description": "Live broadcasts",
+    "sermons_service_description": "Recorded sermons"
+  },
   "workspace": {
     "navigation": "Workspace navigation",
     "item_count_one": "{{count}} item",
@@ -498,6 +506,7 @@
       "prayer-requests": "Prayer Requests",
       "event-requests": "Event Requests",
       "sermons": "Sermons",
+      "livestreams": "Livestreams",
       "reports": "Reports",
       "finance-dashboard": "Finance Dashboard",
       "contributions": "Contributions",

@@ -2073,6 +2073,92 @@ export type Database = {
           },
         ]
       }
+      church_livestreams: {
+        Row: {
+          actual_ended_at: string | null
+          actual_started_at: string | null
+          church_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          provider: string
+          provider_external_id: string | null
+          provider_failure_count: number
+          provider_last_checked_at: string | null
+          provider_last_error_category: string | null
+          provider_next_sync_at: string | null
+          provider_status: string | null
+          recording_url: string | null
+          scheduled_end: string | null
+          scheduled_start: string | null
+          status: string
+          status_source: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+          watch_url: string
+        }
+        Insert: {
+          actual_ended_at?: string | null
+          actual_started_at?: string | null
+          church_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          provider?: string
+          provider_external_id?: string | null
+          provider_failure_count?: number
+          provider_last_checked_at?: string | null
+          provider_last_error_category?: string | null
+          provider_next_sync_at?: string | null
+          provider_status?: string | null
+          recording_url?: string | null
+          scheduled_end?: string | null
+          scheduled_start?: string | null
+          status?: string
+          status_source?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+          watch_url: string
+        }
+        Update: {
+          actual_ended_at?: string | null
+          actual_started_at?: string | null
+          church_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          provider?: string
+          provider_external_id?: string | null
+          provider_failure_count?: number
+          provider_last_checked_at?: string | null
+          provider_last_error_category?: string | null
+          provider_next_sync_at?: string | null
+          provider_status?: string | null
+          recording_url?: string | null
+          scheduled_end?: string | null
+          scheduled_start?: string | null
+          status?: string
+          status_source?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          watch_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "church_livestreams_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       church_role_permissions: {
         Row: {
           can_approve: boolean
@@ -6429,6 +6515,7 @@ export type Database = {
           date: string | null
           id: string
           preacher: string | null
+          source_livestream_id: string | null
           title: string | null
           video_url: string | null
         }
@@ -6442,6 +6529,7 @@ export type Database = {
           date?: string | null
           id?: string
           preacher?: string | null
+          source_livestream_id?: string | null
           title?: string | null
           video_url?: string | null
         }
@@ -6455,10 +6543,19 @@ export type Database = {
           date?: string | null
           id?: string
           preacher?: string | null
+          source_livestream_id?: string | null
           title?: string | null
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sermons_source_livestream_same_church_fkey"
+            columns: ["source_livestream_id", "church_id"]
+            isOneToOne: false
+            referencedRelation: "church_livestreams"
+            referencedColumns: ["id", "church_id"]
+          },
+        ]
       }
       subscription_payments: {
         Row: {
@@ -7364,6 +7461,52 @@ export type Database = {
         Returns: number
       }
       accept_invitation: { Args: { _token: string }; Returns: Json }
+      apply_livestream_provider_check: {
+        Args: {
+          _actual_ended_at?: string
+          _actual_started_at?: string
+          _checked_at: string
+          _church_id: string
+          _error_category?: string
+          _livestream_id: string
+          _provider: string
+          _provider_external_id: string
+          _provider_status: string
+          _recording_url?: string
+          _thumbnail_url?: string
+        }
+        Returns: {
+          actual_ended_at: string | null
+          actual_started_at: string | null
+          church_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          provider: string
+          provider_external_id: string | null
+          provider_failure_count: number
+          provider_last_checked_at: string | null
+          provider_last_error_category: string | null
+          provider_next_sync_at: string | null
+          provider_status: string | null
+          recording_url: string | null
+          scheduled_end: string | null
+          scheduled_start: string | null
+          status: string
+          status_source: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+          watch_url: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "church_livestreams"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       apply_staging_prayer_import:
         | {
             Args: {
@@ -8374,6 +8517,16 @@ export type Database = {
         Returns: Json
       }
       notify_mass_rsvp_reminders: { Args: never; Returns: Json }
+      publish_livestream_as_sermon: {
+        Args: {
+          _content?: string | null
+          _livestream_id: string
+          _preacher?: string | null
+          _sermon_date?: string | null
+          _title: string
+        }
+        Returns: string
+      }
       publish_audio_version: {
         Args: { _version_id: string }
         Returns: {
@@ -8748,6 +8901,15 @@ export type Database = {
         Args: { _church_id: string; _enabled: boolean; _feature_key: string }
         Returns: undefined
       }
+      set_super_admin_church_feature: {
+        Args: {
+          _church_id: string
+          _enabled: boolean
+          _feature_key: string
+          _locked?: boolean
+        }
+        Returns: undefined
+      }
       submit_community_help_donation: {
         Args: {
           p_help_request_id: string
@@ -8857,6 +9019,40 @@ export type Database = {
       toggle_system_job: {
         Args: { p_enabled: boolean; p_job_id: string }
         Returns: undefined
+      }
+      transition_church_livestream: {
+        Args: { _livestream_id: string; _new_status: string }
+        Returns: {
+          actual_ended_at: string | null
+          actual_started_at: string | null
+          church_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          provider: string
+          provider_external_id: string | null
+          provider_failure_count: number
+          provider_last_checked_at: string | null
+          provider_last_error_category: string | null
+          provider_next_sync_at: string | null
+          provider_status: string | null
+          recording_url: string | null
+          scheduled_end: string | null
+          scheduled_start: string | null
+          status: string
+          status_source: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+          watch_url: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "church_livestreams"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       unpublish_audio_version: {
         Args: { _version_id: string }
@@ -9005,6 +9201,7 @@ export type Database = {
         }
         Returns: string
       }
+      youtube_video_id: { Args: { _url: string }; Returns: string }
     }
     Enums: {
       notification_type: "info" | "warning" | "success" | "error"
