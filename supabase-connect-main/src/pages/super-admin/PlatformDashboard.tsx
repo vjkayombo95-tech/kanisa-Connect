@@ -12,17 +12,15 @@ import {
   FileClock,
   HeartPulse,
   History,
+  Loader2,
   ShieldCheck,
   Stethoscope,
 } from "lucide-react";
 
-import { PersonalAssistantCard } from "@/components/assistant";
 import { StatCard } from "@/components/church-admin/StatCard";
-import { DashboardPriorityCards } from "@/components/portal/dashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ErrorState, LoadingState } from "@/components/ui/page-state";
 import { supabase } from "@/integrations/supabase/client";
 import { SystemJobActions, type SystemJobActionJob } from "./SystemJobActions";
 
@@ -55,8 +53,6 @@ type Church = {
   id: string;
   name: string | null;
   code: string | null;
-  church_code: string | null;
-  short_code: string | null;
   email: string | null;
   status?: string | null;
   created_at: string;
@@ -127,8 +123,8 @@ async function createApprovalAuditLog(church: Church) {
     p_action: "approve_church",
     p_entity_type: "church",
     p_entity_id: church.id,
-    p_description: `Approved church ${church.name || church.id}${church.church_code ? ` (${church.church_code})` : ""}.`,
-    p_metadata: { church_code: church.church_code, short_code: church.short_code },
+    p_description: `Approved church ${church.name || church.id}.`,
+    p_metadata: {},
   } as never);
 
   if (error) throw error;
@@ -142,6 +138,7 @@ export default function PlatformDashboard() {
     data,
     isLoading,
     isError,
+    error,
     refetch,
     isFetching,
   } = useQuery({
@@ -150,7 +147,7 @@ export default function PlatformDashboard() {
       const fetchPendingChurches = async () => {
         const result = await supabase
           .from("churches")
-          .select("id, name, code, church_code, short_code, email, status, created_at", { count: "exact" })
+          .select("id, name, code, email, status, created_at", { count: "exact" })
           .eq("status", "pending")
           .order("created_at", { ascending: false })
           .limit(5);
@@ -292,16 +289,24 @@ export default function PlatformDashboard() {
   }, [data?.automationRuns]);
 
   if (isLoading) {
-    return <LoadingState variant="dashboard" title="Loading platform operations overview" />;
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center rounded-xl border border-border bg-card/50 text-muted-foreground">
+        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+        Loading operations overview...
+      </div>
+    );
   }
 
   if (isError) {
     return (
-      <ErrorState
-        title="We could not load the platform dashboard."
-        description="Please retry. If this continues, check platform connectivity before reviewing parish activity."
-        onRetry={() => refetch()}
-      />
+      <Card className="border-destructive/30">
+        <CardContent className="flex min-h-56 flex-col items-center justify-center p-6 text-center">
+          <AlertTriangle className="mb-3 h-10 w-10 text-destructive" />
+          <h1 className="font-semibold">Dashboard could not be loaded</h1>
+          <p className="mt-1 max-w-lg text-sm text-muted-foreground">{(error as Error)?.message || "Unknown error"}</p>
+          <Button className="mt-4" variant="outline" onClick={() => refetch()}>Try again</Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -321,53 +326,9 @@ export default function PlatformDashboard() {
     dashboard.activeAlertCount > 0 ||
     dashboard.automationRuns.length > 0 ||
     dashboard.recentAudits.length > 0;
-  const priorityEvents = [
-    dashboard.activeAlertCount > 0
-      ? {
-          id: "platform-alerts",
-          dedupeKey: "platform-alerts",
-          title: `${dashboard.activeAlertCount} active platform alert${dashboard.activeAlertCount === 1 ? "" : "s"}`,
-          detail: "Review system health before onboarding or support work continues.",
-          priority: dashboard.recentAlerts.some((alert) => alert.severity === "critical") ? "critical" : "high",
-          category: "platform",
-          workspace: "super_admin",
-          to: "/super-admin/system-health",
-          actionLabel: "Review alerts",
-          createdAt: dashboard.recentAlerts[0]?.created_at ?? new Date().toISOString(),
-        }
-      : null,
-    dashboard.pendingChurchCount > 0
-      ? {
-          id: "pending-churches",
-          dedupeKey: "pending-churches",
-          title: `${dashboard.pendingChurchCount} church approval${dashboard.pendingChurchCount === 1 ? "" : "s"} pending`,
-          detail: "New parishes waiting for platform readiness review.",
-          priority: "medium",
-          category: "administration",
-          workspace: "super_admin",
-          to: "/super-admin/churches",
-          actionLabel: "Open churches",
-          createdAt: dashboard.pendingChurches[0]?.created_at ?? new Date().toISOString(),
-        }
-      : null,
-    automationSummary.latestRun?.status === "failed"
-      ? {
-          id: "automation-failed",
-          dedupeKey: "automation-failed",
-          title: "Latest automation run failed",
-          detail: "Inspect job history and rerun once the cause is resolved.",
-          priority: "high",
-          category: "platform",
-          workspace: "super_admin",
-          to: "/super-admin/job-history",
-          actionLabel: "View history",
-          createdAt: automationSummary.latestRun.started_at ?? new Date().toISOString(),
-        }
-      : null,
-  ].filter(Boolean) as any[];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold font-serif">Platform Dashboard</h1>
@@ -379,50 +340,6 @@ export default function PlatformDashboard() {
         </Button>
       </div>
 
-      <PersonalAssistantCard
-        workspace="super_admin"
-        role="super_admin"
-        displayName="Admin"
-        dashboardContext={dashboard}
-      />
-
-      <section className="space-y-3" aria-labelledby="platform-priorities-title">
-        <div>
-          <h2 id="platform-priorities-title" className="text-xl font-semibold">Today's Priorities</h2>
-          <p className="text-sm text-muted-foreground">Platform items that need attention before routine operations.</p>
-        </div>
-        <DashboardPriorityCards events={priorityEvents} />
-      </section>
-
-      <section className="space-y-3" aria-labelledby="platform-briefing-title">
-        <div>
-          <h2 id="platform-briefing-title" className="text-xl font-semibold">Assistant Daily Briefing</h2>
-          <p className="text-sm text-muted-foreground">Operational summary from existing platform data.</p>
-        </div>
-        <Card className="glass-card">
-          <CardContent className="grid gap-3 p-4 md:grid-cols-3">
-            <div className="rounded-lg border border-border/60 bg-background/50 p-3">
-              <p className="text-xs text-muted-foreground">Platform health</p>
-              <p className="mt-1 text-sm font-semibold">
-                {dashboard.activeAlertCount > 0 ? `${dashboard.activeAlertCount} alert${dashboard.activeAlertCount === 1 ? "" : "s"} active.` : "No active alerts."}
-              </p>
-            </div>
-            <div className="rounded-lg border border-border/60 bg-background/50 p-3">
-              <p className="text-xs text-muted-foreground">Tenant readiness</p>
-              <p className="mt-1 text-sm font-semibold">
-                {dashboard.pendingChurchCount > 0 ? `${dashboard.pendingChurchCount} church${dashboard.pendingChurchCount === 1 ? "" : "es"} awaiting approval.` : "No church approvals waiting."}
-              </p>
-            </div>
-            <div className="rounded-lg border border-border/60 bg-background/50 p-3">
-              <p className="text-xs text-muted-foreground">Automation</p>
-              <p className="mt-1 text-sm font-semibold">
-                Latest job status: {automationSummary.latestRun?.status ?? dashboard.dailyJob?.last_status ?? "Pending"}.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
       {!hasAnyData && (
         <Card className="glass-card">
           <CardContent className="py-8 text-center text-sm text-muted-foreground">
@@ -431,18 +348,12 @@ export default function PlatformDashboard() {
         </Card>
       )}
 
-      <section className="space-y-3" aria-labelledby="platform-snapshot-title">
-        <div>
-          <h2 id="platform-snapshot-title" className="text-xl font-semibold">Operational Snapshot</h2>
-          <p className="text-sm text-muted-foreground">Platform health, tenant readiness, automation, and administration.</p>
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard title="Total Churches" value={dashboard.totalChurches} icon={Building2} />
-          <StatCard title="Pending Approvals" value={dashboard.pendingChurchCount} icon={ClipboardList} />
-          <StatCard title="Active Alerts" value={dashboard.activeAlertCount} icon={AlertTriangle} />
-          <StatCard title="Successful Job Rate" value={automationSummary.successfulRate} icon={CheckCircle2} />
-        </div>
-      </section>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard title="Total Churches" value={dashboard.totalChurches} icon={Building2} />
+        <StatCard title="Pending Approvals" value={dashboard.pendingChurchCount} icon={ClipboardList} />
+        <StatCard title="Active Alerts" value={dashboard.activeAlertCount} icon={AlertTriangle} />
+        <StatCard title="Successful Job Rate" value={automationSummary.successfulRate} icon={CheckCircle2} />
+      </div>
 
       <Card className="glass-card">
         <CardHeader>
@@ -482,11 +393,6 @@ export default function PlatformDashboard() {
         </CardContent>
       </Card>
 
-      <section className="space-y-3" aria-labelledby="platform-timeline-title">
-        <div>
-          <h2 id="platform-timeline-title" className="text-xl font-semibold">Today's Activity Timeline</h2>
-          <p className="text-sm text-muted-foreground">Recent platform alerts, audit entries, and church approval activity.</p>
-        </div>
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between gap-3">
@@ -540,13 +446,7 @@ export default function PlatformDashboard() {
           </CardContent>
         </Card>
       </div>
-      </section>
 
-      <section className="space-y-3" aria-labelledby="platform-actions-title">
-        <div>
-          <h2 id="platform-actions-title" className="text-xl font-semibold">Quick Actions</h2>
-          <p className="text-sm text-muted-foreground">Common platform administration destinations.</p>
-        </div>
       <Card className="glass-card">
         <CardHeader className="flex flex-row items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 font-sans text-base">
@@ -565,9 +465,6 @@ export default function PlatformDashboard() {
                   <p className="font-medium">{church.name || "Unnamed church"}</p>
                   <p className="text-xs text-muted-foreground">
                     Created {new Date(church.created_at).toLocaleDateString()}
-                  </p>
-                  <p className="mt-1 text-xs font-medium text-primary">
-                    Church Code: {church.church_code || church.code || "-"} · Join Code: {church.short_code || "-"}
                   </p>
                 </div>
                 <Button
@@ -611,7 +508,6 @@ export default function PlatformDashboard() {
           </Button>
         </CardContent>
       </Card>
-      </section>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CalendarDays, ChevronLeft, ChevronRight, Search, Sparkles } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -18,10 +17,23 @@ import {
   saintMatchesSearch,
   type LibrarySaint,
 } from "@/lib/catholic-library";
-import { formatLocalizedDate, localeForLanguage, normalizeAppLanguage, type AppLanguage } from "@/lib/localization";
-import { dailyCatholicQueryOptions } from "@/lib/portal-performance";
 
-const MONTH_NUMBERS = Array.from({ length: 12 }, (_, index) => index + 1);
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function getCurrentMonth() {
   return new Date().getMonth() + 1;
@@ -53,15 +65,6 @@ function saintMatchesCalendarSearch(saint: LibrarySaint, search: string, monthLa
   );
 }
 
-function getMonthLabel(month: number, language: AppLanguage) {
-  return new Intl.DateTimeFormat(localeForLanguage(language), { month: "long" }).format(new Date(2026, month - 1, 1));
-}
-
-function getWeekdayLabels(language: AppLanguage) {
-  const formatter = new Intl.DateTimeFormat(localeForLanguage(language), { weekday: "short" });
-  return Array.from({ length: 7 }, (_, index) => formatter.format(new Date(2026, 1, index + 1)));
-}
-
 function SaintImage({ saint, className = "h-16 w-16" }: { saint: LibrarySaint; className?: string }) {
   if (saint.image_url) {
     return (
@@ -69,8 +72,6 @@ function SaintImage({ saint, className = "h-16 w-16" }: { saint: LibrarySaint; c
         src={saint.image_url}
         alt={getSaintImageAlt(saint)}
         loading="lazy"
-        decoding="async"
-        sizes="80px"
         className={`${className} rounded-2xl object-cover`}
       />
     );
@@ -84,8 +85,6 @@ function SaintImage({ saint, className = "h-16 w-16" }: { saint: LibrarySaint; c
 }
 
 function TodayFeast({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: boolean }) {
-  const { t } = useTranslation();
-
   if (isLoading) {
     return <Skeleton className="h-44 rounded-[28px]" />;
   }
@@ -100,10 +99,10 @@ function TodayFeast({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: 
             <div className="space-y-2">
               <p className="flex items-center gap-2 text-sm font-medium text-primary">
                 <CalendarDays className="h-4 w-4" aria-hidden="true" />
-                {t("member_portal.catholic_content.todays_feast")}
+                Today's Feast
               </p>
               <h2 id="today-feast-title" className="text-2xl font-bold tracking-tight">
-                {primarySaint ? primarySaint.name : t("member_portal.catholic_content.no_feast_today")}
+                {primarySaint ? primarySaint.name : "No universal feast is assigned today."}
               </h2>
               {primarySaint?.quote ? (
                 <p className="max-w-2xl text-sm italic leading-6 text-muted-foreground">"{primarySaint.quote}"</p>
@@ -111,7 +110,7 @@ function TodayFeast({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: 
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{primarySaint.biography_short}</p>
               ) : (
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  {t("member_portal.catholic_content.explore_month_feasts")}
+                  Explore this month's feast days below and continue growing through the lives of the saints.
                 </p>
               )}
             </div>
@@ -121,7 +120,7 @@ function TodayFeast({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: 
                 <SaintImage saint={primarySaint} className="h-20 w-20" />
                 <Button asChild className="rounded-2xl">
                   <Link to={saintDetailPath(primarySaint.slug)}>
-                    {t("member_portal.catholic_content.view_saint")}
+                    Read More
                     <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
@@ -130,7 +129,7 @@ function TodayFeast({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: 
           </div>
 
           {saints.length > 1 ? (
-            <div className="mt-4 flex flex-wrap gap-2" aria-label={t("member_portal.catholic_content.other_feasts_today")}>
+            <div className="mt-4 flex flex-wrap gap-2" aria-label="Other feasts today">
               {saints.slice(1).map((saint) => (
                 <Button key={saint.id} asChild variant="outline" size="sm" className="rounded-full">
                   <Link to={saintDetailPath(saint.slug)}>{saint.name}</Link>
@@ -147,39 +146,37 @@ function TodayFeast({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: 
 function MonthSelector({
   selectedMonth,
   onMonthChange,
-  language,
 }: {
   selectedMonth: number;
   onMonthChange: (month: number) => void;
-  language: AppLanguage;
 }) {
-  const { t } = useTranslation();
   const goToPrevious = () => onMonthChange(selectedMonth === 1 ? 12 : selectedMonth - 1);
   const goToNext = () => onMonthChange(selectedMonth === 12 ? 1 : selectedMonth + 1);
 
   return (
-    <section aria-label={t("member_portal.catholic_content.select_month")} className="space-y-3">
+    <section aria-label="Select month" className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <Button type="button" variant="outline" size="icon" className="rounded-2xl" onClick={goToPrevious} aria-label={t("member_portal.catholic_content.previous_month")}>
+        <Button type="button" variant="outline" size="icon" className="rounded-2xl" onClick={goToPrevious} aria-label="Previous month">
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         </Button>
-        <p className="text-lg font-semibold">{getMonthLabel(selectedMonth, language)}</p>
-        <Button type="button" variant="outline" size="icon" className="rounded-2xl" onClick={goToNext} aria-label={t("member_portal.catholic_content.next_month")}>
+        <p className="text-lg font-semibold">{MONTHS[selectedMonth - 1]}</p>
+        <Button type="button" variant="outline" size="icon" className="rounded-2xl" onClick={goToNext} aria-label="Next month">
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {MONTH_NUMBERS.map((monthNumber) => {
+        {MONTHS.map((month, index) => {
+          const monthNumber = index + 1;
           return (
             <Button
-              key={monthNumber}
+              key={month}
               type="button"
               variant={selectedMonth === monthNumber ? "default" : "outline"}
               className="h-10 shrink-0 rounded-full"
               onClick={() => onMonthChange(monthNumber)}
             >
-              {getMonthLabel(monthNumber, language)}
+              {month}
             </Button>
           );
         })}
@@ -188,9 +185,7 @@ function MonthSelector({
   );
 }
 
-function FeastAgenda({ saints, isLoading, language }: { saints: LibrarySaint[]; isLoading: boolean; language: AppLanguage }) {
-  const { t } = useTranslation();
-
+function FeastAgenda({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: boolean }) {
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -206,20 +201,20 @@ function FeastAgenda({ saints, isLoading, language }: { saints: LibrarySaint[]; 
       <Card className="rounded-[28px] border-border/70 bg-card/85">
         <CardContent className="flex flex-col items-center justify-center px-6 py-14 text-center">
           <CalendarDays className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
-          <p className="mt-4 text-lg font-semibold">{t("member_portal.catholic_content.no_saints_match")}</p>
+          <p className="mt-4 text-lg font-semibold">No saints match your search.</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <section aria-label={t("member_portal.catholic_content.feast_day_list")} className="space-y-3">
+    <section aria-label="Feast day list" className="space-y-3">
       {saints.map((saint) => (
         <Card key={saint.id} className="rounded-[24px] border-border/70 bg-card/85 transition-colors hover:border-primary/25">
           <CardContent className="p-4">
             <div className="grid gap-4 sm:grid-cols-[84px_1fr_auto] sm:items-center">
               <div className="text-sm font-semibold text-primary">
-                {formatFeastDay(saint.feast_month, saint.feast_day, language) ?? t("member_portal.catholic_content.feast_day_not_set")}
+                {formatFeastDay(saint.feast_month, saint.feast_day)}
               </div>
               <div className="flex min-w-0 gap-4">
                 <SaintImage saint={saint} className="h-16 w-16 shrink-0" />
@@ -231,7 +226,7 @@ function FeastAgenda({ saints, isLoading, language }: { saints: LibrarySaint[]; 
               </div>
               <Button asChild variant="outline" className="rounded-2xl">
                 <Link to={saintDetailPath(saint.slug)}>
-                  {t("member_portal.catholic_content.view_saint")}
+                  View
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Link>
               </Button>
@@ -243,8 +238,7 @@ function FeastAgenda({ saints, isLoading, language }: { saints: LibrarySaint[]; 
   );
 }
 
-function MonthlyCalendar({ saints, selectedMonth, language }: { saints: LibrarySaint[]; selectedMonth: number; language: AppLanguage }) {
-  const { t } = useTranslation();
+function MonthlyCalendar({ saints, selectedMonth }: { saints: LibrarySaint[]; selectedMonth: number }) {
   const year = new Date().getFullYear();
   const daysInMonth = new Date(year, selectedMonth, 0).getDate();
   const firstWeekday = new Date(year, selectedMonth - 1, 1).getDay();
@@ -260,21 +254,21 @@ function MonthlyCalendar({ saints, selectedMonth, language }: { saints: LibraryS
   ];
 
   return (
-    <section aria-label={t("member_portal.catholic_content.month_calendar", { month: getMonthLabel(selectedMonth, language) })}>
+    <section aria-label={`${MONTHS[selectedMonth - 1]} calendar`}>
       <Card className="rounded-[28px] border-border/70 bg-card/85">
         <CardContent className="p-4 sm:p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold">{t("member_portal.catholic_content.month_calendar", { month: getMonthLabel(selectedMonth, language) })}</h2>
-              <p className="text-sm text-muted-foreground">{t("member_portal.catholic_content.linked_saint_days")}</p>
+              <h2 className="text-xl font-bold">{MONTHS[selectedMonth - 1]} Calendar</h2>
+              <p className="text-sm text-muted-foreground">Days with published saints are linked below.</p>
             </div>
             <Badge variant="outline" className="rounded-full">
-              {t("member_portal.catholic_content.feasts_count", { count: saints.length })}
+              {saints.length} feast{saints.length === 1 ? "" : "s"}
             </Badge>
           </div>
 
           <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {getWeekdayLabels(language).map((day) => (
+            {WEEKDAYS.map((day) => (
               <div key={day} className="py-2">
                 {day}
               </div>
@@ -298,13 +292,13 @@ function MonthlyCalendar({ saints, selectedMonth, language }: { saints: LibraryS
                             key={saint.id}
                             to={saintDetailPath(saint.slug)}
                             className="block truncate rounded-lg px-1.5 py-1 text-[11px] text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                            aria-label={t("member_portal.catholic_content.open_saint", { name: saint.name })}
+                            aria-label={`Open ${saint.name}`}
                           >
                             &bull; {saint.name}
                           </Link>
                         ))}
                         {daySaints.length > 3 ? (
-                          <span className="block px-1.5 text-[11px] text-muted-foreground">{t("member_portal.catholic_content.more_count", { count: daySaints.length - 3 })}</span>
+                          <span className="block px-1.5 text-[11px] text-muted-foreground">+{daySaints.length - 3} more</span>
                         ) : null}
                       </div>
                     </>
@@ -320,12 +314,10 @@ function MonthlyCalendar({ saints, selectedMonth, language }: { saints: LibraryS
 }
 
 export default function LiturgicalCalendarPage() {
-  const { t, i18n } = useTranslation();
-  const appLanguage = (normalizeAppLanguage(i18n.language) ?? "en") as AppLanguage;
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth);
   const [search, setSearch] = useState("");
   const today = useMemo(() => getTodayParts(), []);
-  const selectedMonthLabel = getMonthLabel(selectedMonth, appLanguage);
+  const selectedMonthLabel = MONTHS[selectedMonth - 1];
 
   const {
     data: monthSaints = [],
@@ -346,7 +338,7 @@ export default function LiturgicalCalendarPage() {
       if (error) throw error;
       return (data ?? []) as unknown as LibrarySaint[];
     },
-    ...dailyCatholicQueryOptions,
+    staleTime: 10 * 60 * 1000,
   });
 
   const { data: todaySaints = [], isLoading: todayLoading } = useQuery({
@@ -364,7 +356,7 @@ export default function LiturgicalCalendarPage() {
       if (error) throw error;
       return (data ?? []) as unknown as LibrarySaint[];
     },
-    ...dailyCatholicQueryOptions,
+    staleTime: 10 * 60 * 1000,
   });
 
   const filteredSaints = useMemo(() => {
@@ -378,14 +370,11 @@ export default function LiturgicalCalendarPage() {
           <div className="max-w-3xl">
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
               <CalendarDays className="h-4 w-4" aria-hidden="true" />
-              {t("member_portal.catholic_content.library_title")}
+              Catholic Library
             </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">{t("member_portal.catholic_content.liturgical_calendar")}</h1>
+            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Liturgical Calendar</h1>
             <p className="mt-3 text-base text-muted-foreground">
-              {t("member_portal.catholic_content.liturgical_calendar_description")}
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {t("member_portal.catholic_content.today")}: {formatLocalizedDate(new Date(), appLanguage, { dateStyle: "full" })}
+              Follow the Church's celebration of saints throughout the year.
             </p>
           </div>
         </section>
@@ -396,11 +385,11 @@ export default function LiturgicalCalendarPage() {
           <aside className="space-y-5">
             <Card className="rounded-[28px] border-border/70 bg-card/85">
               <CardContent className="space-y-5 p-5">
-                <MonthSelector selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} language={appLanguage} />
+                <MonthSelector selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
 
                 <div>
                   <label htmlFor="feast-search" className="sr-only">
-                    {t("member_portal.catholic_content.search_feast_days")}
+                    Search feast days
                   </label>
                   <div className="relative">
                     <Search
@@ -411,7 +400,7 @@ export default function LiturgicalCalendarPage() {
                       id="feast-search"
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
-                      placeholder={t("member_portal.catholic_content.search_feast_placeholder")}
+                      placeholder="Search name, month, patron, country, or tags..."
                       className="h-12 rounded-2xl border-border/70 bg-background/70 pl-12"
                     />
                   </div>
@@ -419,11 +408,11 @@ export default function LiturgicalCalendarPage() {
 
                 <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground" aria-live="polite">
                   <span>
-                    {t("member_portal.catholic_content.results_count", { count: filteredSaints.length })}
+                    {filteredSaints.length} result{filteredSaints.length === 1 ? "" : "s"}
                   </span>
                   {search ? (
                     <Button type="button" variant="ghost" size="sm" className="rounded-xl" onClick={() => setSearch("")}>
-                      {t("member_portal.catholic_content.clear_filters")}
+                      Clear
                     </Button>
                   ) : null}
                 </div>
@@ -435,18 +424,18 @@ export default function LiturgicalCalendarPage() {
             {isError ? (
               <Card className="rounded-[28px] border-destructive/25 bg-destructive/5">
                 <CardContent className="p-6 text-sm text-destructive">
-                  {t("member_portal.catholic_content.unable_liturgical_calendar", { message: (error as Error)?.message || t("member_portal.common.please_try_again") })}
+                  Unable to load the liturgical calendar: {(error as Error)?.message || "Please try again."}
                 </CardContent>
               </Card>
             ) : (
               <>
                 <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
-                  <MonthlyCalendar saints={filteredSaints} selectedMonth={selectedMonth} language={appLanguage} />
+                  <MonthlyCalendar saints={filteredSaints} selectedMonth={selectedMonth} />
                   <div className="xl:hidden">
-                    <FeastAgenda saints={filteredSaints} isLoading={isLoading} language={appLanguage} />
+                    <FeastAgenda saints={filteredSaints} isLoading={isLoading} />
                   </div>
                   <div className="hidden xl:block">
-                    <FeastAgenda saints={filteredSaints} isLoading={isLoading} language={appLanguage} />
+                    <FeastAgenda saints={filteredSaints} isLoading={isLoading} />
                   </div>
                 </div>
               </>

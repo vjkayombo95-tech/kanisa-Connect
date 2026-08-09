@@ -31,15 +31,14 @@ export default function FamiliesPage() {
   const { data: families = [], isLoading } = useQuery({
     queryKey: ["families", churchId],
     queryFn: async () => {
-      if (!churchId) return [];
-      const { data, error } = await supabase.from("families").select("*").eq("church_id", churchId).order("name");
+      const { data, error } = await supabase.from("families").select("*").order("name");
       if (error) {
         console.error("Error fetching families:", error);
         return [];
       }
       return data ?? [];
     },
-    enabled: !!churchId,
+    enabled: true,
   });
 
   const { data: familyMembers = [] } = useQuery({
@@ -92,9 +91,7 @@ export default function FamiliesPage() {
 
   const create = useMutation({
     mutationFn: async () => {
-      if (!churchId) throw new Error("No active church workspace");
       const { error } = await supabase.from("families").insert({
-        church_id: churchId,
         name: name.trim(),
       });
       if (error) throw error;

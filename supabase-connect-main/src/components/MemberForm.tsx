@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Loader2, X, User } from "lucide-react";
 import { validateFile, optimizeImage, uploadFile } from "@/lib/file-upload";
-import { getUserFriendlyErrorMessage, logError, logSupabaseError, logWarning } from "@/lib/error-logger";
 
 type FamilyRole = "father" | "mother" | "child" | "guardian" | "other";
 
@@ -74,11 +73,7 @@ export function MemberForm({
     } = await supabase.auth.getUser();
 
     if (authError) {
-      logSupabaseError(authError, {
-        component: "MemberForm",
-        function: "getAuthenticatedContext",
-        operation: "auth.getUser",
-      });
+      console.error("Failed to get authenticated user:", authError);
       throw authError;
     }
 
@@ -95,13 +90,7 @@ export function MemberForm({
       .maybeSingle();
 
     if (memberError) {
-      logSupabaseError(memberError, {
-        component: "MemberForm",
-        function: "getAuthenticatedContext",
-        operation: "select",
-        table: "members",
-        church_id: churchId,
-      });
+      console.error("Failed to resolve member church context:", memberError);
       throw memberError;
     }
 
@@ -112,14 +101,9 @@ export function MemberForm({
     }
 
     if (currentMember?.church_id && churchId && currentMember.church_id !== churchId) {
-      logWarning("Provided churchId does not match authenticated member church.", {
-        component: "MemberForm",
-        function: "getAuthenticatedContext",
-        church_id: currentMember.church_id,
-        metadata: {
-          providedChurchId: churchId,
-          trustedChurchId: currentMember.church_id,
-        },
+      console.error("Provided churchId does not match authenticated member church.", {
+        providedChurchId: churchId,
+        trustedChurchId: currentMember.church_id,
       });
     }
 
@@ -247,13 +231,7 @@ export function MemberForm({
       } as never);
 
       if (error) {
-        logSupabaseError(error, {
-          component: "MemberForm",
-          function: "createMember",
-          operation: "rpc",
-          rpc: "create_member_with_relations",
-          church_id: trustedChurchId,
-        });
+        console.error("Failed to create member:", error);
         throw error;
       }
 
@@ -273,13 +251,7 @@ export function MemberForm({
             .eq("id", newMemberId);
 
           if (photoUpdateError) {
-            logSupabaseError(photoUpdateError, {
-              component: "MemberForm",
-              function: "createMember",
-              operation: "update",
-              table: "members",
-              church_id: trustedChurchId,
-            });
+            console.error("Failed to update member photo:", photoUpdateError);
             throw photoUpdateError;
           }
         }
@@ -303,12 +275,8 @@ export function MemberForm({
       onSuccess();
     },
     onError: (err: any) => {
-      logError(err, { component: "MemberForm", function: "createMember.onError" });
-      toast({
-        title: "Unable to add member",
-        description: getUserFriendlyErrorMessage(err, "The member could not be added. Please try again."),
-        variant: "destructive",
-      });
+      console.error("Member creation failed:", err);
+      toast({ title: "Error", description: err.message || "Failed to add member.", variant: "destructive" });
     },
     onSettled: () => setUploading(false),
   });
@@ -334,13 +302,7 @@ export function MemberForm({
       }).eq("id", member.id);
 
       if (updateError) {
-        logSupabaseError(updateError, {
-          component: "MemberForm",
-          function: "updateMember",
-          operation: "update",
-          table: "members",
-          church_id: churchId,
-        });
+        console.error("Failed to update member:", updateError);
         throw updateError;
       }
 
@@ -354,13 +316,7 @@ export function MemberForm({
             .eq("id", member.id);
 
           if (photoUpdateError) {
-            logSupabaseError(photoUpdateError, {
-              component: "MemberForm",
-              function: "updateMember",
-              operation: "update",
-              table: "members",
-              church_id: churchId,
-            });
+            console.error("Failed to update member photo:", photoUpdateError);
             throw photoUpdateError;
           }
         }
@@ -369,13 +325,7 @@ export function MemberForm({
       // Update community membership
       const { error: clearCommunityError } = await supabase.from("member_communities").delete().eq("member_id", member.id);
       if (clearCommunityError) {
-        logSupabaseError(clearCommunityError, {
-          component: "MemberForm",
-          function: "updateMember",
-          operation: "delete",
-          table: "member_communities",
-          church_id: churchId,
-        });
+        console.error("Failed to clear community memberships:", clearCommunityError);
         throw clearCommunityError;
       }
 
@@ -387,13 +337,7 @@ export function MemberForm({
           })),
         );
         if (communityInsertError) {
-          logSupabaseError(communityInsertError, {
-            component: "MemberForm",
-            function: "updateMember",
-            operation: "insert",
-            table: "member_communities",
-            church_id: churchId,
-          });
+          console.error("Failed to update community memberships:", communityInsertError);
           throw communityInsertError;
         }
       }
@@ -401,13 +345,7 @@ export function MemberForm({
       // Update ministry membership
       const { error: clearMinistryError } = await supabase.from("member_ministries").delete().eq("member_id", member.id);
       if (clearMinistryError) {
-        logSupabaseError(clearMinistryError, {
-          component: "MemberForm",
-          function: "updateMember",
-          operation: "delete",
-          table: "member_ministries",
-          church_id: churchId,
-        });
+        console.error("Failed to clear ministry memberships:", clearMinistryError);
         throw clearMinistryError;
       }
 
@@ -419,13 +357,7 @@ export function MemberForm({
           })),
         );
         if (ministryInsertError) {
-          logSupabaseError(ministryInsertError, {
-            component: "MemberForm",
-            function: "updateMember",
-            operation: "insert",
-            table: "member_ministries",
-            church_id: churchId,
-          });
+          console.error("Failed to update ministry memberships:", ministryInsertError);
           throw ministryInsertError;
         }
       }
@@ -443,12 +375,8 @@ export function MemberForm({
       onSuccess();
     },
     onError: (err: any) => {
-      logError(err, { component: "MemberForm", function: "updateMember.onError" });
-      toast({
-        title: "Unable to update member",
-        description: getUserFriendlyErrorMessage(err, "The member could not be updated. Please try again."),
-        variant: "destructive",
-      });
+      console.error("Member update failed:", err);
+      toast({ title: "Error", description: err.message || "Failed to update member.", variant: "destructive" });
     },
     onSettled: () => setUploading(false),
   });
@@ -486,16 +414,11 @@ export function MemberForm({
         <div className="relative">
           {photoPreview ? (
             <div className="relative">
-              <img
-                src={photoPreview}
-                alt={fullName ? `${fullName} photo preview` : "Member photo preview"}
-                className="h-20 w-20 rounded-full object-cover border border-border"
-              />
+              <img src={photoPreview} className="h-20 w-20 rounded-full object-cover border border-border" />
               <Button
                 type="button"
                 variant="destructive"
                 size="icon"
-                aria-label="Remove selected photo"
                 className="absolute -top-1 -right-1 h-5 w-5"
                 onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
               >

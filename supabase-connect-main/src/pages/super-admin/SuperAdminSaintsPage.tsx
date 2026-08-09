@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy, ExternalLink, Eye, ImagePlus, Loader2, Pencil, Search, Trash2, Upload } from "lucide-react";
+import { Copy, ExternalLink, Eye, Pencil, Search, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { formatFeastDay, getSaintImageAlt, saintMatchesSearch } from "@/lib/catholic-library";
-import { supabase } from "@/integrations/supabase/client";
 import { recordCatholicAuditEvent } from "@/lib/super-admin/catholic-audit-service";
 import {
   duplicateSaintRecord,
@@ -52,7 +51,6 @@ function toEditorForm(saint: AdminSaint): SaintEditorForm {
     quote: saint.quote,
     reflection: saint.reflection,
     prayer: saint.prayer,
-    image_url: saint.image_url,
     tags: saint.tags,
     tagsText: (saint.tags ?? []).join(", "),
     is_featured: saint.is_featured,
@@ -73,7 +71,6 @@ function formToPayload(form: SaintEditorForm): SaintEditorPayload {
     quote: toNullableText(form.quote ?? ""),
     reflection: form.reflection.trim(),
     prayer: form.prayer.trim(),
-    image_url: toNullableText(form.image_url ?? ""),
     tags: form.tagsText.split(",").map((tag) => tag.trim()).filter(Boolean),
     is_featured: form.is_featured,
     is_active: form.is_active,
@@ -91,13 +88,7 @@ function PreviewDialog({ saint, onClose }: { saint: AdminSaint | null; onClose: 
         {saint ? (
           <div className="space-y-5">
             {saint.image_url ? (
-              <img
-                src={saint.image_url}
-                alt={getSaintImageAlt(saint)}
-                loading="lazy"
-                decoding="async"
-                className="h-56 w-full rounded-2xl object-cover"
-              />
+              <img src={saint.image_url} alt={getSaintImageAlt(saint)} className="h-56 w-full rounded-2xl object-cover" />
             ) : null}
             <div className="grid gap-3 text-sm sm:grid-cols-2">
               <p><span className="font-medium text-foreground">Feast:</span> {formatFeastDay(saint.feast_month, saint.feast_day)}</p>
@@ -140,7 +131,6 @@ export default function SuperAdminSaintsPage() {
   const [editingSaint, setEditingSaint] = useState<AdminSaint | null>(null);
   const [editorForm, setEditorForm] = useState<SaintEditorForm | null>(null);
   const [imageValidation, setImageValidation] = useState<SaintImageValidation | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const queryClient = useQueryClient();
 
   const { data: saints = [], isLoading, isError, error } = useQuery({
@@ -158,59 +148,31 @@ export default function SuperAdminSaintsPage() {
     setEditingSaint(null);
     setEditorForm(null);
     setImageValidation(null);
-    setImageFile(null);
   };
 
   const openEditor = (saint: AdminSaint) => {
     setEditingSaint(saint);
     setEditorForm(toEditorForm(saint));
-    setImageFile(null);
   };
 
   useEffect(() => {
     let cancelled = false;
-    if (!editorForm) return undefined;
+    if (!editingSaint) return undefined;
 
     setImageValidation({ status: "warning", message: "Checking image..." });
-    validateSaintImage({ image_url: editorForm.image_url }).then((result) => {
+    validateSaintImage(editingSaint).then((result) => {
       if (!cancelled) setImageValidation(result);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [editorForm?.image_url]);
-
-  const uploadSaintImage = async (file: File, slug: string) => {
-    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const safeSlug = slug.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
-    const path = `saints/${safeSlug}-${Date.now()}.${extension}`;
-    const { error } = await supabase.storage.from("catholic-content").upload(path, file, {
-      upsert: true,
-      contentType: file.type || undefined,
-    });
-    if (error) throw error;
-    return supabase.storage.from("catholic-content").getPublicUrl(path).data.publicUrl;
-  };
-
-  const uploadEditorImage = useMutation({
-    mutationFn: async () => {
-      if (!editingSaint || !imageFile) throw new Error("Choose an image file first.");
-      return uploadSaintImage(imageFile, editingSaint.slug);
-    },
-    onSuccess: (publicUrl) => {
-      setEditorForm((current) => (current ? { ...current, image_url: publicUrl } : current));
-      setImageFile(null);
-      toast({ title: "Image uploaded", description: "The saint image URL has been updated. Click Save Saint to keep the change." });
-    },
-    onError: (err) => toast({ title: "Image upload failed", description: (err as Error).message, variant: "destructive" }),
-  });
+  }, [editingSaint]);
 
   const saveSaint = useMutation({
     mutationFn: async () => {
       if (!editingSaint || !editorForm) return;
-      const uploadedImageUrl = imageFile ? await uploadSaintImage(imageFile, editingSaint.slug) : null;
-      const payload = formToPayload(uploadedImageUrl ? { ...editorForm, image_url: uploadedImageUrl } : editorForm);
+      const payload = formToPayload(editorForm);
       await updateSaint(editingSaint.id, payload);
       await recordCatholicAuditEvent({
         action: editingSaint.is_active === false && payload.is_active === true ? "saint_restored" : "saint_updated",
@@ -225,7 +187,6 @@ export default function SuperAdminSaintsPage() {
       toast({ title: "Saint saved", description: "The saint record has been updated." });
       setEditingSaint(null);
       setEditorForm(null);
-      setImageFile(null);
     },
     onError: (err) => toast({ title: "Save failed", description: (err as Error).message, variant: "destructive" }),
   });
@@ -421,61 +382,6 @@ export default function SuperAdminSaintsPage() {
               <div><Label>Reflection</Label><Textarea value={editorForm.reflection} onChange={(event) => setEditorForm({ ...editorForm, reflection: event.target.value })} /></div>
               <div><Label>Prayer</Label><Textarea value={editorForm.prayer} onChange={(event) => setEditorForm({ ...editorForm, prayer: event.target.value })} /></div>
               <div><Label>Tags</Label><Input value={editorForm.tagsText} onChange={(event) => setEditorForm({ ...editorForm, tagsText: event.target.value })} placeholder="apostle, martyr, rome" /></div>
-              <div className="grid gap-4 rounded-2xl border border-border/70 bg-background/45 p-4 md:grid-cols-[160px_minmax(0,1fr)]">
-                <div className="overflow-hidden rounded-xl border border-border/70 bg-primary/10">
-                  {editorForm.image_url ? (
-                    <img
-                      src={editorForm.image_url}
-                      alt={getSaintImageAlt({ ...editingSaint, ...editorForm } as AdminSaint)}
-                      className="h-36 w-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="flex h-36 items-center justify-center text-primary">
-                      <ImagePlus className="h-8 w-8" aria-hidden="true" />
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="saint-editor-image-url">Saint Image URL</Label>
-                    <Input
-                      id="saint-editor-image-url"
-                      className="mt-2"
-                      value={editorForm.image_url ?? ""}
-                      onChange={(event) => setEditorForm({ ...editorForm, image_url: event.target.value })}
-                      placeholder="https://..."
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-                    <div className="flex-1">
-                      <Label htmlFor="saint-editor-image-file">Upload Picture</Label>
-                      <Input
-                        id="saint-editor-image-file"
-                        className="mt-2"
-                        type="file"
-                        accept="image/*"
-                        onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => uploadEditorImage.mutate()}
-                      disabled={!imageFile || uploadEditorImage.isPending}
-                      className="gap-2"
-                    >
-                      {uploadEditorImage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                      Upload Picture
-                    </Button>
-                  </div>
-                  {imageFile ? (
-                    <p className="text-xs text-muted-foreground">
-                      Selected: {imageFile.name}. You can upload now or Save Saint to upload and save together.
-                    </p>
-                  ) : null}
-                </div>
-              </div>
               <div className="rounded-2xl border border-border/70 bg-background/45 p-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>

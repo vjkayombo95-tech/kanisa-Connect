@@ -38,24 +38,14 @@ The script creates or updates:
 - Super Admin test account
 - Church Admin test account
 - Member test account
-- Targeted event UAT member accounts for Choir, Youth Ministry, General Member, and Multi-Group Member
 - Demo Catholic Parish
 - Profiles and user roles
 - Member records
 - Catholic saints from all Excel workbooks in `supabase/seed/saints/published`
 - Placeholder daily readings if a `daily_readings` table exists
-- One published CMS Prayer Library prayer
-- Three published CMS Daily Readings rows for yesterday, today, and tomorrow
-- One community and one ministry for the UAT member
-- Choir and Youth Ministry fixtures for targeted event authorization UAT
-- One member pledge with a partial payment state
-- One member-visible channel and starter message
-- One approved prayer request and comment
-- One pending member Mass intention
 - Contributions
 - Mass RSVP records
 - Event attendance records
-- Five targeted event UAT parent events covering Choir-only, Youth-only, combined group, all-member, and public visibility
 - Announcements
 - Notifications
 - One pending invitation
@@ -79,10 +69,7 @@ Reset mode deletes only bootstrap-owned staging records:
 - UAT auth users
 - Demo Catholic Parish records
 - Demo members, roles, contributions, announcements, notifications, invitations
-- CMS prayer and CMS Daily Readings rows owned by the UAT identifiers
-- UAT community, ministry, pledge, channel, prayer request, and Mass intention records
-- UAT Choir and Youth Ministry records, targeted event memberships, event targets, and targeted event parent rows
-- Seeded event attendance and Mass RSVP data owned by known bootstrap event titles
+- Seeded event attendance and Mass RSVP data
 - Saint records imported from the published Excel packs
 
 It does not delete unrelated staging data.
@@ -119,17 +106,9 @@ The report includes:
 - users
 - church
 - saint count
-- CMS prayer count
-- CMS daily reading count
 - contribution count
 - attendance count
-- pledge count
-- ministry count
-- channel count
-- prayer request count
-- Mass intention count
 - notification count
-- targeted event count
 - import summary
 - health checks
 
@@ -140,25 +119,12 @@ Seed mode verifies:
 - Super Admin exists
 - Church Admin exists
 - Member exists
-- Choir Member exists
-- Youth Member exists
-- General Member exists
-- Multi-Group Member exists
 - Church exists
 - Saints imported
 - Saint of the Day query runs
 - Catholic Library query returns active saints
 - Liturgical Calendar query can query current-month saints
 - Dashboard contribution totals are available
-- Member UAT CMS prayer exists
-- Member UAT CMS Daily Readings exist
-- Member UAT pledge exists
-- Member UAT channel exists
-- Member UAT prayer request exists
-- Member UAT Mass intention exists
-- Choir and Youth Ministry fixtures exist
-- Targeted event member-to-ministry assignments match the UAT matrix
-- Targeted event audience modes and target rows match the UAT matrix
 - Invitation token exists
 
 Each check is recorded as `PASS`, `FAIL`, or `SKIP`.
@@ -181,11 +147,11 @@ Set `SUPABASE_SERVICE_ROLE_KEY` only in your shell or CI secret store. Do not ad
 
 ### Daily readings skipped
 
-The script still seeds the legacy `daily_readings` table when it exists. It also seeds `content_daily_readings` when the CMS table exists. If either table is absent, the bootstrap logs a warning or skipped check and continues.
+The current app may use static Daily Readings placeholders. If staging does not have a `daily_readings` table, the bootstrap logs a warning and continues.
 
 ### Rerun creates duplicates
 
-The script is designed to be idempotent. It matches records by stable identifiers such as email, church code, saint slug, CMS prayer slug, CMS reading celebration/date, community name, ministry name, channel name, prayer request text, Mass intention message, payment reference, event title, event audience target `(event_id, ministry_id/community_id)`, Mass title/date/time, notification title, and invitation token.
+The script is designed to be idempotent. It matches records by stable identifiers such as email, church code, saint slug, payment reference, event title, Mass title/date/time, notification title, and invitation token.
 
 ### Reset did not remove something
 

@@ -59,11 +59,6 @@ function actionBadgeClass(action: string | null) {
   return "border-primary/30 bg-primary/10 text-primary";
 }
 
-function metadataText(log: AuditLog, key: string) {
-  const value = log.metadata?.[key];
-  return typeof value === "string" || typeof value === "number" ? String(value) : "";
-}
-
 function MetricCard({
   title,
   value,
@@ -209,8 +204,6 @@ export default function AuditLogsPage() {
               { header: "Action", value: (log) => formatAction(log.action) },
               { header: "Entity Type", value: (log) => log.entity_type || "" },
               { header: "Entity ID", value: (log) => log.entity_id || "" },
-              { header: "Church Code", value: (log) => metadataText(log, "church_code") },
-              { header: "Join Code", value: (log) => metadataText(log, "short_code") },
               { header: "Description", value: (log) => log.description || "" },
             ]}
           />

@@ -19,7 +19,6 @@ export type SaintEditorPayload = {
   quote: string | null;
   reflection: string;
   prayer: string;
-  image_url: string | null;
   tags: string[] | null;
   is_featured: boolean;
   is_active: boolean;

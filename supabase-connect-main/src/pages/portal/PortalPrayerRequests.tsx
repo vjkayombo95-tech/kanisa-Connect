@@ -6,17 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { PageToolbar, getWorkspacePageActions, useWorkspacePage } from "@/components/workspace";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, Loader2, MessageCircle, Star, User } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { formatTZSForLanguage } from "@/lib/currency";
-import { formatLocalizedDate, normalizeAppLanguage } from "@/lib/localization";
-import { EmptyState, LoadingState } from "@/components/ui/page-state";
-import { getFriendlyErrorMessage, pilotToast } from "@/lib/pilot-polish";
+import { Heart, Loader2, MessageCircle, Plus, Star, User } from "lucide-react";
+import { formatTZS } from "@/lib/currency";
+import { useToast } from "@/hooks/use-toast";
 import { PRAYER_REQUEST_SELECT, mapPrayerRequestRecord, submitPortalPrayerRequest, type PrayerRequestPrivacy, type PrayerRequestWithMember } from "@/lib/prayer-requests";
 import { clearOfflineDraft, readOfflineDraft, writeOfflineDraft } from "@/lib/offline-drafts";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
@@ -26,7 +22,6 @@ import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { CommentThread, type CommentReactionSummary, type ThreadComment } from "@/components/portal/CommentThread";
 import { assertClientRateLimit } from "@/lib/client-rate-limit";
 import { logSupabaseError } from "@/lib/error-logger";
-import { ScriptureText } from "@/components/bible";
 
 const QUICK_COMMENT_EMOJIS = ["🙏", "❤️", "🙌", "🕊️"];
 
@@ -67,8 +62,7 @@ function PrayerRequestCard({
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const { user } = useAuth();
-  const { t, i18n } = useTranslation();
-  const language = normalizeAppLanguage(i18n.language) ?? "en";
+  const { toast } = useToast();
 
   const { data: comments = [] } = useQuery({
     queryKey: ["prayer-request-comments", request.id, user?.id],
@@ -153,14 +147,7 @@ function PrayerRequestCard({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["prayer-request-prayers", churchId] });
-      pilotToast({
-        title: prayerStats.prayedByMe
-          ? t("member_portal.parish_life.prayer_mark_removed")
-          : t("member_portal.parish_life.marked_as_prayed"),
-        description: prayerStats.prayedByMe
-          ? t("member_portal.parish_life.prayer_mark_removed_description")
-          : t("member_portal.parish_life.marked_as_prayed_description"),
-      });
+      toast({ title: prayerStats.prayedByMe ? "Prayer mark removed" : "Marked as prayed" });
     },
     onError: (error: Error) => {
       logSupabaseError(error, {
@@ -172,11 +159,7 @@ function PrayerRequestCard({
         table: "prayer_requests",
         metadata: { member_id: member?.id, has_offering: Number(offeringAmount || 0) > 0 },
       });
-      pilotToast({
-        title: t("member_portal.parish_life.prayer_action_failed"),
-        description: getFriendlyErrorMessage(error),
-        intent: "error",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -197,19 +180,12 @@ function PrayerRequestCard({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["prayer-request-comments", request.id] });
-      pilotToast({
-        title: t("member_portal.parish_life.comment_posted"),
-        description: t("member_portal.parish_life.comment_posted_description"),
-      });
+      toast({ title: "Comment posted" });
       setCommentText("");
       setShowComments(true);
     },
     onError: (error: Error) => {
-      pilotToast({
-        title: t("member_portal.parish_life.comment_post_failed"),
-        description: getFriendlyErrorMessage(error),
-        intent: "error",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -248,11 +224,7 @@ function PrayerRequestCard({
       queryClient.invalidateQueries({ queryKey: ["prayer-request-comments", request.id] });
     },
     onError: (error: Error) => {
-      pilotToast({
-        title: t("member_portal.parish_life.reaction_save_failed"),
-        description: getFriendlyErrorMessage(error),
-        intent: "error",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -268,27 +240,23 @@ function PrayerRequestCard({
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="mb-1 flex items-center gap-2">
-              <p className="text-sm font-medium">{request.privacy === "anonymous_public" ? t("member_portal.parish_life.anonymous") : request.member_name}</p>
+              <p className="text-sm font-medium">{request.privacy === "anonymous_public" ? "Anonymous" : request.member_name}</p>
               <Badge variant="outline" className={statusColor(request.status)}>
-                {t(`member_portal.parish_life.prayer_status.${request.status}`, request.status)}
+                {request.status}
               </Badge>
               {Number(request.offering_amount) > 0 && (
                 <Badge variant="outline" className="border-primary/20 bg-primary/10 text-xs text-primary">
                   <Star className="mr-1 h-3 w-3" />
-                  {t("member_portal.parish_life.priority")}
+                  Priority
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">
-              <ScriptureText text={request.request_text} />
-            </p>
+            <p className="text-sm text-muted-foreground">{request.request_text}</p>
             {Number(request.offering_amount) > 0 && (
-              <p className="mt-1 text-xs text-primary">
-                {t("member_portal.parish_life.offering_amount", { amount: formatTZSForLanguage(request.offering_amount, language) })}
-              </p>
+              <p className="mt-1 text-xs text-primary">Offering: {formatTZS(request.offering_amount)}</p>
             )}
             <p className="mt-2 text-xs text-muted-foreground/60">
-              {formatLocalizedDate(request.created_at, language, { dateStyle: "medium" })}
+              {new Date(request.created_at).toLocaleDateString()}
             </p>
           </div>
         </div>
@@ -306,12 +274,12 @@ function PrayerRequestCard({
             ) : (
               <Heart className={`h-3.5 w-3.5 ${prayerStats.prayedByMe ? "fill-current" : ""}`} />
             )}
-            {prayerStats.prayedByMe ? t("member_portal.parish_life.prayed") : t("member_portal.parish_life.mark_as_prayed")} ({prayerStats.count})
+            {prayerStats.prayedByMe ? "Prayed" : "Mark as Prayed"} ({prayerStats.count})
           </Button>
 
           <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowComments((current) => !current)}>
             <MessageCircle className="h-3.5 w-3.5" />
-            {t("member_portal.parish_life.comments")} {comments.length > 0 ? `(${comments.length})` : ""}
+            Comments {comments.length > 0 ? `(${comments.length})` : ""}
           </Button>
         </div>
 
@@ -326,8 +294,8 @@ function PrayerRequestCard({
             reactionPending={toggleCommentReaction.isPending}
             quickEmojis={QUICK_COMMENT_EMOJIS}
             reactionEmojis={QUICK_COMMENT_EMOJIS}
-            draftPlaceholder={t("member_portal.parish_life.prayer_comment_placeholder")}
-            emptyState={t("member_portal.parish_life.no_prayer_comments")}
+            draftPlaceholder="Share encouragement or pray with them in words..."
+            emptyState="No comments yet. Leave a prayer or a word of encouragement."
             onToggleReaction={(commentId, emoji, reacted) =>
               toggleCommentReaction.mutate({ commentId, emoji, reacted })
             }
@@ -339,7 +307,6 @@ function PrayerRequestCard({
 }
 
 export default function PortalPrayerRequests() {
-  const page = useWorkspacePage();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [requestText, setRequestText] = useState("");
   const [offeringAmount, setOfferingAmount] = useState("");
@@ -347,10 +314,9 @@ export default function PortalPrayerRequests() {
   const [tab, setTab] = useState("community");
   const { churchId } = useAuth();
   const { isOnline } = useNetworkStatus();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: member } = useMemberRecord();
-  const { t, i18n } = useTranslation();
-  const language = normalizeAppLanguage(i18n.language) ?? "en";
   const offlineQueue = useOfflineSyncQueue();
   const prayerDraftKey = churchId ? `offline-draft:prayer-request:${churchId}:${member?.id || "member"}` : null;
   const communityPrayerCacheKey = churchId ? `offline-cache:portal-prayer-requests:${churchId}` : null;
@@ -534,19 +500,13 @@ export default function PortalPrayerRequests() {
       const offering = offeringAmount ? parseFloat(offeringAmount) : 0;
       const gross = offering > 0 ? Number((offering / (1 - PLATFORM_FEE_PERCENT / 100)).toFixed(2)) : 0;
       const fee = gross > 0 ? Number((gross - offering).toFixed(2)) : 0;
-      pilotToast({
-        title: result?.queuedOffline
-          ? t("member_portal.parish_life.prayer_request_queued")
-          : t("member_portal.parish_life.prayer_request_submitted"),
+      toast({
+        title: result?.queuedOffline ? "Prayer request queued" : "Prayer request submitted",
         description: result?.queuedOffline
-          ? t("member_portal.parish_life.prayer_request_queued_description")
+          ? "Your prayer request will sync automatically when internet returns."
           : offering > 0
-            ? t("member_portal.parish_life.prayer_request_offering_description", {
-                offering: formatTZSForLanguage(offering, language),
-                gross: formatTZSForLanguage(gross, language),
-                fee: formatTZSForLanguage(fee, language),
-              })
-            : t("member_portal.parish_life.prayer_request_shared_description"),
+            ? `${formatTZS(offering)} will go to the church. Total paid was ${formatTZS(gross)}, including a ${formatTZS(fee)} platform fee.`
+            : "Your prayer has been shared.",
       });
       setDialogOpen(false);
       setRequestText("");
@@ -554,31 +514,29 @@ export default function PortalPrayerRequests() {
       setPrivacy("public_to_church");
     },
     onError: (error: Error) => {
-      pilotToast({
-        title: t("member_portal.parish_life.prayer_request_submit_failed"),
-        description: getFriendlyErrorMessage(error),
-        intent: "error",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
-  const toolbarActions = useMemo(
-    () => getWorkspacePageActions("prayer_requests", page, { create: () => setDialogOpen(true) }),
-    [page],
-  );
 
   return (
     <div className="container mx-auto px-4 py-10 animate-fade-in">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <PageToolbar
-          title={t("member_portal.parish_life.prayer_requests")}
-          description={t("member_portal.parish_life.prayer_requests_description")}
-          actions={toolbarActions}
-        />
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="font-serif text-2xl font-bold md:text-3xl">Prayer Requests</h1>
+            <p className="mt-1 text-muted-foreground">Share your prayer needs with the community.</p>
+          </div>
 
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Submit Request
+              </Button>
+            </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="font-serif">{t("member_portal.parish_life.submit_prayer_request")}</DialogTitle>
+                <DialogTitle className="font-serif">Submit Prayer Request</DialogTitle>
               </DialogHeader>
 
               <form
@@ -596,11 +554,11 @@ export default function PortalPrayerRequests() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="request_text">{t("member_portal.parish_life.prayer_request_required")}</Label>
+                  <Label htmlFor="request_text">Prayer Request *</Label>
                   <Textarea
                     id="request_text"
                     rows={4}
-                    placeholder={t("member_portal.parish_life.prayer_request_placeholder")}
+                    placeholder="Share your prayer need..."
                     value={requestText}
                     onChange={(event) => setRequestText(event.target.value)}
                     required
@@ -608,82 +566,81 @@ export default function PortalPrayerRequests() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="prayer_privacy">{t("member_portal.parish_life.prayer_privacy_label")}</Label>
+                  <Label htmlFor="prayer_privacy">Who can see this request?</Label>
                   <select
                     id="prayer_privacy"
                     value={privacy}
                     onChange={(event) => setPrivacy(event.target.value as PrayerRequestPrivacy)}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
-                    <option value="public_to_church">{t("member_portal.parish_life.privacy_public_to_church")}</option>
-                    <option value="private_to_pastor_admin">{t("member_portal.parish_life.privacy_private_to_pastor_admin")}</option>
-                    <option value="anonymous_public">{t("member_portal.parish_life.privacy_anonymous_public")}</option>
+                    <option value="public_to_church">Share with church after pastor/admin approval</option>
+                    <option value="private_to_pastor_admin">Private to pastor and church admin</option>
+                    <option value="anonymous_public">Share anonymously after pastor/admin approval</option>
                   </select>
-                  <p className="text-xs text-muted-foreground">{t("member_portal.parish_life.prayer_privacy_hint")}</p>
+                  <p className="text-xs text-muted-foreground">All new requests are private while pending review.</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="offering_amount">{t("member_portal.parish_life.offering_amount_label")}</Label>
+                  <Label htmlFor="offering_amount">Offering Amount (TZS)</Label>
                   <Input
                     id="offering_amount"
                     type="number"
-                    placeholder={t("member_portal.parish_life.offering_amount_placeholder")}
+                    placeholder="Optional - amount church should receive"
                     value={offeringAmount}
                     onChange={(event) => setOfferingAmount(event.target.value)}
                   />
                   <p className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Star className="h-3 w-3 text-primary" />
-                    {t("member_portal.parish_life.offering_optional_hint")}
+                    Offering is optional. Paid requests receive higher priority with the pastor.
                   </p>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {t("member_portal.parish_life.draft_saved_hint")}
+                  This draft is saved on this device while you type.
                 </p>
 
                 {requestedChurchAmount > 0 && (
                   <div className="space-y-1 rounded-lg border border-border bg-muted/50 p-3">
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{t("member_portal.parish_life.church_receives")}</span>
-                      <span>{formatTZSForLanguage(requestedChurchAmount, language)}</span>
+                      <span>Church receives</span>
+                      <span>{formatTZS(requestedChurchAmount)}</span>
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{t("member_portal.parish_life.platform_fee", { percent: PLATFORM_FEE_PERCENT })}</span>
-                      <span>{formatTZSForLanguage(feeAmount, language)}</span>
+                      <span>Platform fee ({PLATFORM_FEE_PERCENT}%)</span>
+                      <span>{formatTZS(feeAmount)}</span>
                     </div>
                     <div className="flex justify-between border-t border-border pt-1 text-sm font-medium">
-                      <span>{t("member_portal.parish_life.you_pay")}</span>
-                      <span className="text-primary">{formatTZSForLanguage(grossOffering, language)}</span>
+                      <span>You pay</span>
+                      <span className="text-primary">{formatTZS(grossOffering)}</span>
                     </div>
                   </div>
                 )}
 
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
-                    {t("member_portal.common.cancel")}
+                    Cancel
                   </Button>
                   <Button type="submit" disabled={submit.isPending || !requestText.trim() || !member?.id}>
                     {submit.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {requestedChurchAmount > 0
-                      ? t("member_portal.parish_life.submit_and_pay", { amount: formatTZSForLanguage(grossOffering, language) })
-                      : t("member_portal.parish_life.submit")}
+                    {requestedChurchAmount > 0 ? `Submit & Pay ${formatTZS(grossOffering)}` : "Submit"}
                   </Button>
                 </div>
               </form>
             </DialogContent>
           </Dialog>
+        </div>
 
         {pendingPrayerRequests.length > 0 ? (
           <Card className="mb-6 border-primary/20 bg-primary/5">
             <CardContent className="space-y-3 p-5">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium">{t("member_portal.parish_life.pending_offline_prayer_requests")}</p>
+                  <p className="text-sm font-medium">Pending offline prayer requests</p>
                   <p className="text-sm text-muted-foreground">
-                    {t("member_portal.parish_life.pending_offline_prayer_description")}
+                    These will sync automatically when internet returns.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline">{t("member_portal.parish_life.pending_count", { count: pendingPrayerRequests.length })}</Badge>
+                  <Badge variant="outline">{pendingPrayerRequests.length} pending</Badge>
                   <Button
                     size="sm"
                     variant="outline"
@@ -693,16 +650,12 @@ export default function PortalPrayerRequests() {
                       const result = await processOfflineSyncQueue(queryClient);
                       setIsSyncingPending(false);
                       if (result.processedCount === 0 && result.error) {
-                        pilotToast({
-                          title: t("member_portal.parish_life.sync_failed"),
-                          description: getFriendlyErrorMessage(result.error),
-                          intent: "error",
-                        });
+                        toast({ title: "Sync failed", description: result.error.message, variant: "destructive" });
                       }
                     }}
                   >
                     {isSyncingPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
-                    {t("member_portal.parish_life.sync_now")}
+                    Sync now
                   </Button>
                 </div>
               </div>
@@ -711,13 +664,9 @@ export default function PortalPrayerRequests() {
                   <div key={item.id} className="rounded-lg border border-border/60 bg-background/70 p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm">
-                          <ScriptureText text={item.payload.requestText} />
-                        </p>
+                        <p className="text-sm">{item.payload.requestText}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {t("member_portal.parish_life.saved_at", {
-                            date: formatLocalizedDate(item.createdAt, language, { dateStyle: "medium", timeStyle: "short" }),
-                          })}
+                          Saved {new Date(item.createdAt).toLocaleString()}
                         </p>
                       </div>
                       <Button
@@ -726,7 +675,7 @@ export default function PortalPrayerRequests() {
                         className="text-destructive"
                         onClick={() => removeOfflineSyncAction(item.id)}
                       >
-                        {t("member_portal.parish_life.remove")}
+                        Remove
                       </Button>
                     </div>
                   </div>
@@ -738,20 +687,20 @@ export default function PortalPrayerRequests() {
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-4 bg-secondary">
-            <TabsTrigger value="community">{t("member_portal.parish_life.community_prayers")}</TabsTrigger>
-            <TabsTrigger value="mine">{t("member_portal.parish_life.my_requests", { count: myRequests.length })}</TabsTrigger>
+            <TabsTrigger value="community">Community Prayers</TabsTrigger>
+            <TabsTrigger value="mine">My Requests ({myRequests.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="community">
             {isLoading ? (
-              <LoadingState title={t("member_portal.parish_life.loading_community_prayers")} rows={3} />
+              <p className="text-muted-foreground">Loading...</p>
             ) : requests.length === 0 ? (
-              <EmptyState
-                icon={<MessageCircle className="h-6 w-6" aria-hidden="true" />}
-                title={t("member_portal.parish_life.no_prayer_requests")}
-                description={t("member_portal.parish_life.no_prayer_requests_description")}
-                action={<Button onClick={() => setDialogOpen(true)}>{t("member_portal.parish_life.submit_prayer_request")}</Button>}
-              />
+              <Card className="glass-card">
+                <CardContent className="py-16 text-center text-muted-foreground">
+                  <MessageCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
+                  No prayer requests yet.
+                </CardContent>
+              </Card>
             ) : (
               <div className="space-y-3">
                 {requests.map((request) => (
@@ -770,12 +719,12 @@ export default function PortalPrayerRequests() {
 
           <TabsContent value="mine">
             {myRequests.length === 0 ? (
-              <EmptyState
-                icon={<MessageCircle className="h-6 w-6" aria-hidden="true" />}
-                title={t("member_portal.parish_life.no_my_prayer_requests")}
-                description={t("member_portal.parish_life.no_my_prayer_requests_description")}
-                action={<Button onClick={() => setDialogOpen(true)}>{t("member_portal.parish_life.submit_prayer_request")}</Button>}
-              />
+              <Card className="glass-card">
+                <CardContent className="py-16 text-center text-muted-foreground">
+                  <MessageCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
+                  You haven't submitted any prayer requests yet.
+                </CardContent>
+              </Card>
             ) : (
               <div className="space-y-3">
                 {myRequests.map((request) => (

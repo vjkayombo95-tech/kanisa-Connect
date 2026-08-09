@@ -1,9 +1,0 @@
-cer,config,coverage,deletions,insertions,rank,runtime_seconds,substitutions,transcript_path,unresolved_verses,verse_resolution_rate,wer
-0.061507936507936505,medium_vad_tuned,0.6929869966634672,6,4,1,101.77527019998524,35,evaluation\speech_lab\model_outputs\faster-whisper-medium-psa23-optimization\medium_vad_tuned.json,,1.0,0.4891304347826087
-0.061507936507936505,medium_bible_prompt,0.6635752319575848,4,4,2,138.8261755000567,37,evaluation\speech_lab\model_outputs\faster-whisper-medium-psa23-optimization\medium_bible_prompt.json,,1.0,0.4891304347826087
-0.05357142857142857,baseline_medium,0.6484237168060697,4,7,3,111.75467460008804,36,evaluation\speech_lab\model_outputs\faster-whisper-medium\PSA_023.json,,1.0,0.5108695652173914
-0.05357142857142857,medium_beam5,0.6484237168060697,4,7,4,179.2719351000851,36,evaluation\speech_lab\model_outputs\faster-whisper-medium-psa23-optimization\medium_beam5.json,,1.0,0.5108695652173914
-0.051587301587301584,medium_bestof5,0.6543814845285434,7,6,5,76.19266689999495,35,evaluation\speech_lab\model_outputs\faster-whisper-medium-psa23-optimization\medium_bestof5.json,,1.0,0.5217391304347826
-0.051587301587301584,medium_bestof10,0.6543814845285434,7,6,6,75.04404760000762,35,evaluation\speech_lab\model_outputs\faster-whisper-medium-psa23-optimization\medium_bestof10.json,,1.0,0.5217391304347826
-0.051587301587301584,medium_no_previous_context,0.6373126056949586,5,8,7,106.90492889995221,35,evaluation\speech_lab\model_outputs\faster-whisper-medium-psa23-optimization\medium_no_previous_context.json,,1.0,0.5217391304347826
-0.057539682539682536,medium_beam10,0.6345348279171809,4,7,8,164.8666816999903,38,evaluation\speech_lab\model_outputs\faster-whisper-medium-psa23-optimization\medium_beam10.json,,1.0,0.532608695652174
