@@ -2,6 +2,7 @@ import { lazy, Suspense, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { LockedFeatureNotice } from "@/components/billing/LockedFeatureNotice";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart3, Building2, HandCoins } from "lucide-react";
 import { StatCard } from "@/components/church-admin/StatCard";
@@ -9,7 +10,6 @@ import { formatTZS } from "@/lib/currency";
 import { useBillingAccess } from "@/hooks/use-billing-access";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState, ErrorState, LoadingState } from "@/components/ui/page-state";
 import type { AnalyticsChartProps } from "./AnalyticsCharts";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { logSupabaseError } from "@/lib/error-logger";
@@ -48,7 +48,7 @@ export default function AnalyticsPage() {
   const [showCharts, setShowCharts] = useState(false);
   const snapshotCacheKey = churchId ? `offline-cache:analytics-snapshot:${churchId}` : null;
 
-  const { data: snapshot, isLoading, isError, refetch } = useQuery({
+  const { data: snapshot, isLoading } = useQuery({
     queryKey: ["analytics-snapshot", churchId],
     queryFn: async () => {
       if (!churchId) return null;
@@ -122,7 +122,7 @@ export default function AnalyticsPage() {
         ) : null}
         <div className="mt-4 flex flex-wrap gap-2">
           <Button asChild variant="outline">
-            <Link to="/church-admin/finance-intelligence">Open Finance Intelligence</Link>
+            <Link to="/church-admin/analytics-assistant">Open AI Analytics Assistant</Link>
           </Button>
           <Button onClick={() => generateSnapshot.mutate()} disabled={!churchId || generateSnapshot.isPending}>
             {hasSnapshot ? "Refresh analytics" : "Generate analytics"}
@@ -136,20 +136,15 @@ export default function AnalyticsPage() {
       </div>
 
       {isLoading ? (
-        <LoadingState variant="dashboard" title="Loading analytics summary" />
-      ) : isError ? (
-        <ErrorState kind="network" onRetry={() => void refetch()} />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[0, 1, 2, 3].map((item) => <Skeleton key={item} className="h-28 rounded-lg" />)}
+        </div>
       ) : !hasSnapshot ? (
-        <EmptyState
-          icon={<BarChart3 className="h-6 w-6" aria-hidden="true" />}
-          title="No analytics snapshot yet."
-          description="Generate analytics to calculate the latest finance summary for this church."
-          action={
-            <Button onClick={() => generateSnapshot.mutate()} disabled={!churchId || generateSnapshot.isPending}>
-              Generate analytics
-            </Button>
-          }
-        />
+        <Card className="glass-card">
+          <CardContent className="py-12 text-center text-muted-foreground">
+            No analytics snapshot is available yet. Generate analytics to calculate and store the latest summary.
+          </CardContent>
+        </Card>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

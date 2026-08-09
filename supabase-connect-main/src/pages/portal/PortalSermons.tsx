@@ -4,13 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BookMarked, Video, Headphones } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
-import { EmptyState, ErrorState, LoadingState } from "@/components/ui/page-state";
 
 export default function PortalSermons() {
   const { churchId } = useAuth();
   const { isFeatureEnabled } = useFeatureAccess();
 
-  const { data: sermons = [], isLoading, isError, refetch } = useQuery({
+  const { data: sermons = [], isLoading } = useQuery({
     queryKey: ["portal-sermons", churchId],
     queryFn: async () => {
       if (!churchId) return [];
@@ -31,16 +30,11 @@ export default function PortalSermons() {
         <h1 className="text-2xl md:text-3xl font-bold font-serif mb-2">Sermons</h1>
         <p className="text-muted-foreground mb-8">Listen to messages and teachings from our pastors.</p>
 
-        {isLoading ? (
-          <LoadingState title="Loading sermons" rows={3} />
-        ) : isError ? (
-          <ErrorState kind="network" onRetry={() => void refetch()} />
-        ) : sermons.length === 0 ? (
-          <EmptyState
-            icon={<BookMarked className="h-6 w-6" aria-hidden="true" />}
-            title="No sermons available yet."
-            description="Published sermons and teachings from your parish will appear here."
-          />
+        {isLoading ? <p className="text-muted-foreground">Loading...</p> : sermons.length === 0 ? (
+          <Card className="glass-card"><CardContent className="py-16 text-center text-muted-foreground">
+            <BookMarked className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
+            No sermons available yet.
+          </CardContent></Card>
         ) : (
           <div className="space-y-4">
             {sermons.map((s: any) => (

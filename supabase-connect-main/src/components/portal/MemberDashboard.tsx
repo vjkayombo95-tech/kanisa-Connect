@@ -1,52 +1,89 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
 import {
-  AnnouncementsCard,
-  DashboardStats,
-  GospelHighlightCard,
-  MyMinistriesCard,
-  MyGivingCard,
-  ParishFooter,
-  ParishHero,
-  ParishLifeCard,
-  PrayerFocusSection,
-  QuickActionsCard,
-  TodaysMinistryScheduleCard,
-  TodaysMassCard,
-  VolunteerOpportunitiesCard,
-  emptyMemberHome,
-  isDeadlinePassed,
-  type DashboardWidget,
-  type MemberHomeData,
-  type MemberJourneySummary,
-  type NextMassSummary,
-} from "@/components/portal/dashboard";
-import { WorkspaceResolver } from "@/components/workspace";
-import { Card, CardContent } from "@/components/ui/card";
+  BellRing,
+  BookOpen,
+  CalendarDays,
+  Church,
+  HandCoins,
+  HeartHandshake,
+  History,
+  Megaphone,
+  Sparkles,
+  UserRound,
+  Wallet,
+} from "lucide-react";
+
+import { AppLink } from "@/components/AppLink";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
-import { fetchMemberForUser } from "@/hooks/useMember";
 import { supabase } from "@/integrations/supabase/client";
-import { logWarning } from "@/lib/error-logger";
-import {
-  fetchTodayLiturgicalReadings,
-  getTodayDateKey,
-  getTodayLiturgicalReadingsQueryKey,
-} from "@/lib/liturgy";
-import { dailyCatholicQueryOptions, livePortalQueryOptions } from "@/lib/portal-performance";
+import { formatTZS } from "@/lib/currency";
 import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
-import { buildTodayPrayerFromReadings, getTodayPrayerQueryKey } from "@/lib/prayers";
-import { buildTodayReflectionFromReadings, getTodayReflectionQueryKey } from "@/lib/reflections";
-import { fetchSaintOfDayFromLiturgy, getSaintOfDayQueryKey } from "@/lib/saints";
+import { cn } from "@/lib/utils";
+import { getReadableReadingDate, getTodayReadingEntry } from "@/lib/daily-readings";
+import { logWarning } from "@/lib/error-logger";
 
-type ChurchHomeRow = {
-  name: string | null;
-  logo_url: string | null;
-  address: string | null;
-  phone: string | null;
-  email: string | null;
-  metadata: unknown;
+type MemberHomeData = {
+  memberId: string | null;
+  memberName: string;
+  churchName: string | null;
+  totalPaid: number;
+  pendingAmount: number;
+  lastPayment: {
+    amount: number;
+    date: string | null;
+    label: string;
+  } | null;
+  latestAnnouncement: {
+    title: string;
+    content: string | null;
+    date: string | null;
+  } | null;
+};
+
+type NextMassSummary = {
+  success?: boolean;
+  mass?: {
+    id: string;
+    title: string;
+    description: string | null;
+    mass_date: string;
+    start_time: string;
+    end_time: string | null;
+    response_deadline: string | null;
+    ask_for_rsvp: boolean;
+    my_member_id: string | null;
+    my_response: "yes" | "maybe" | "no" | null;
+  } | null;
+  yes_count?: number;
+  maybe_count?: number;
+  no_count?: number;
+  response_rate?: number;
+  error?: string;
+};
+
+type SaintOfDay = {
+  id: string;
+  slug: string;
+  name: string;
+  title: string | null;
+  feast_month: number;
+  feast_day: number;
+  patron_of: string | null;
+  birth_year: number | null;
+  death_year: number | null;
+  country: string | null;
+  biography_short: string;
+  biography_long: string;
+  quote: string | null;
+  reflection: string;
+  prayer: string;
+  image_url: string | null;
+  color_theme: string | null;
 };
 
 function readContributionTotal(rows: unknown) {
@@ -65,48 +102,53 @@ function readPendingPledgeBalance(rows: unknown) {
   }, 0);
 }
 
+const emptyMemberHome = (name: string): MemberHomeData => ({
+  memberId: null,
+  memberName: name,
+  churchName: null,
+  totalPaid: 0,
+  pendingAmount: 0,
+  lastPayment: null,
+  latestAnnouncement: null,
+});
+
+function formatDate(value: string | null) {
+  if (!value) return "Hakuna bado";
+
+  return new Date(value).toLocaleDateString("sw-TZ", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatMassTime(value: string | null) {
+  if (!value) return "";
+  const [hours = "0", minutes = "0"] = value.split(":");
+  const date = new Date();
+  date.setHours(Number(hours), Number(minutes), 0, 0);
+  return date.toLocaleTimeString("en-TZ", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatFeastDay(month: number, day: number) {
+  return new Intl.DateTimeFormat("en-TZ", {
+    month: "long",
+    day: "numeric",
+  }).format(new Date(2026, month - 1, day));
+}
+
+function isDeadlinePassed(value: string | null) {
+  return value ? new Date(value).getTime() < Date.now() : false;
+}
+
 function logMemberDashboardError(label: string, error: unknown) {
   logWarning(`[MemberDashboard] ${label} could not be loaded`, {
     component: "MemberDashboard",
     metadata: { error },
   });
-}
-
-function readMetadataString(metadata: unknown, keys: string[]) {
-  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return null;
-  const record = metadata as Record<string, unknown>;
-
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "string" && value.trim()) return value.trim();
-  }
-
-  return null;
-}
-
-function readSocialLinks(metadata: unknown): Array<{ label: string; url: string }> {
-  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return [];
-  const record = metadata as Record<string, unknown>;
-  const rawLinks = record.social_links ?? record.socialLinks;
-
-  if (Array.isArray(rawLinks)) {
-    return rawLinks
-      .map((item) => {
-        if (!item || typeof item !== "object" || Array.isArray(item)) return null;
-        const link = item as Record<string, unknown>;
-        const label = typeof link.label === "string" ? link.label : typeof link.name === "string" ? link.name : "Social";
-        const url = typeof link.url === "string" ? link.url : typeof link.href === "string" ? link.href : null;
-        return url ? { label, url } : null;
-      })
-      .filter((item): item is { label: string; url: string } => Boolean(item));
-  }
-
-  return ["facebook", "instagram", "youtube", "x", "website"]
-    .map((key) => {
-      const url = record[key];
-      return typeof url === "string" && url.trim() ? { label: key, url: url.trim() } : null;
-    })
-    .filter((item): item is { label: string; url: string } => Boolean(item));
 }
 
 function useSimpleMemberHomeData() {
@@ -120,53 +162,49 @@ function useSimpleMemberHomeData() {
 
       if (!user || !churchId) return emptyState;
 
-      let member: { id: string; full_name: string | null; church_id: string; email: string | null } | null = null;
+      const memberSelect = "id, full_name, church_id, email";
+      const { data: linkedMember, error: linkedMemberError } = await supabase
+        .from("members")
+        .select(memberSelect)
+        .eq("user_id", user.id)
+        .eq("church_id", churchId)
+        .limit(1)
+        .maybeSingle();
 
-      try {
-        member = await fetchMemberForUser({
-          user,
-          churchId,
-          select: "id, full_name, church_id, email",
-        });
-      } catch (error) {
-        logMemberDashboardError("member", error);
+      if (linkedMemberError) logMemberDashboardError("linked member", linkedMemberError);
+
+      let member = linkedMemberError ? null : linkedMember;
+      const normalizedEmail = user.email?.trim().toLowerCase();
+
+      if (!member && normalizedEmail) {
+        const { data: emailMember, error: emailMemberError } = await supabase
+          .from("members")
+          .select(memberSelect)
+          .ilike("email", normalizedEmail)
+          .eq("church_id", churchId)
+          .limit(1)
+          .maybeSingle();
+
+        if (emailMemberError) logMemberDashboardError("email member", emailMemberError);
+        member = emailMemberError ? null : emailMember;
       }
 
       if (!member) return emptyState;
 
-      const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
-      const [
-        churchResult,
-        latestContributionResult,
-        contributionTotalResult,
-        monthlyContributionTotalResult,
-        pledgeBalanceResult,
-        announcementRows,
-      ] = await Promise.all([
-        supabase
-          .from("churches")
-          .select("name, logo_url, address, phone, email, metadata")
-          .eq("id", member.church_id)
-          .maybeSingle(),
+      const [churchResult, latestContributionResult, contributionTotalResult, pledgeBalanceResult, announcementRows] = await Promise.all([
+        supabase.from("churches").select("name").eq("id", member.church_id).maybeSingle(),
         supabase
           .from("contributions")
-          .select("id, amount, date, category_id, notes, contribution_categories!contributions_category_id_fkey(name)")
+          .select("id, amount, date, category_id")
           .eq("church_id", member.church_id)
           .eq("member_id", member.id)
           .order("date", { ascending: false })
-          .order("created_at", { ascending: false })
           .limit(1),
         supabase
           .from("contributions")
           .select("total:amount.sum()")
           .eq("church_id", member.church_id)
           .eq("member_id", member.id),
-        supabase
-          .from("contributions")
-          .select("total:amount.sum()")
-          .eq("church_id", member.church_id)
-          .eq("member_id", member.id)
-          .gte("date", monthStart),
         supabase.rpc("get_member_pledges" as never, { _member_id: member.id } as never),
         fetchPortalAnnouncements(member.church_id, 1),
       ]);
@@ -174,56 +212,24 @@ function useSimpleMemberHomeData() {
       if (churchResult.error) logMemberDashboardError("church", churchResult.error);
       if (latestContributionResult.error) logMemberDashboardError("latest contribution", latestContributionResult.error);
       if (contributionTotalResult.error) logMemberDashboardError("contribution total", contributionTotalResult.error);
-      if (monthlyContributionTotalResult.error) {
-        logMemberDashboardError("monthly contribution total", monthlyContributionTotalResult.error);
-      }
       if (pledgeBalanceResult.error) logMemberDashboardError("pledge balance", pledgeBalanceResult.error);
 
       const latestContribution = (latestContributionResult.error ? null : latestContributionResult.data?.[0] ?? null) as any;
-      const church = (churchResult.error ? null : churchResult.data) as ChurchHomeRow | null;
       const latestAnnouncement = announcementRows[0] ?? null;
       const totalPaid = contributionTotalResult.error ? 0 : readContributionTotal(contributionTotalResult.data);
-      const totalThisMonth = monthlyContributionTotalResult.error
-        ? 0
-        : readContributionTotal(monthlyContributionTotalResult.data);
       const pendingAmount = pledgeBalanceResult.error ? 0 : readPendingPledgeBalance(pledgeBalanceResult.data);
-      const latestPurpose =
-        latestContribution?.contribution_categories?.name ||
-        latestContribution?.notes?.match(/^Quick Give:\s*([^|]+)/i)?.[1]?.trim() ||
-        latestContribution?.notes ||
-        "General";
 
       return {
         memberId: member.id,
         memberName: member.full_name || fallbackName,
-        churchName: church?.name ?? null,
-        churchLogoUrl: church?.logo_url ?? null,
-        churchAddress: church?.address ?? null,
-        churchPhone: church?.phone ?? null,
-        churchEmail: church?.email ?? null,
-        churchOfficeHours: readMetadataString(church?.metadata, ["office_hours", "officeHours", "office"]),
-        churchEmergencyContact: readMetadataString(church?.metadata, [
-          "emergency_contact",
-          "emergencyContact",
-          "emergency_phone",
-        ]),
-        churchLivestreamUrl: readMetadataString(church?.metadata, [
-          "livestream_url",
-          "livestreamUrl",
-          "live_stream_url",
-          "youtube_live_url",
-        ]),
-        churchSocialLinks: readSocialLinks(church?.metadata),
+        churchName: churchResult.error ? null : churchResult.data?.name ?? null,
         totalPaid,
-        totalThisMonth,
         pendingAmount,
         lastPayment: latestContribution
           ? {
               amount: Number(latestContribution.amount ?? 0),
               date: latestContribution.date ?? null,
-              label: "Contribution",
-              purpose: latestPurpose,
-              status: "Recorded",
+              label: "Malipo",
             }
           : null,
         latestAnnouncement: latestAnnouncement
@@ -241,54 +247,89 @@ function useSimpleMemberHomeData() {
   });
 }
 
-function DashboardHomeSkeleton() {
+function DashboardLoadingState() {
   return (
-    <div className="space-y-3">
-      <Skeleton className="h-52 rounded-[28px]" />
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Skeleton className="h-32 rounded-[28px] sm:col-span-2 lg:col-span-1" />
-        <Skeleton className="h-32 rounded-[28px]" />
-        <Skeleton className="h-32 rounded-[28px] sm:col-span-2 lg:col-span-2" />
+    <div className="min-h-full bg-background px-4 py-5">
+      <div className="mx-auto max-w-5xl space-y-4">
+        <Skeleton className="h-28 rounded-[28px]" />
+        <div className="grid grid-cols-2 gap-3">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-28 rounded-3xl" />
+          ))}
+        </div>
+        <Skeleton className="h-36 rounded-[28px]" />
       </div>
     </div>
   );
 }
 
-type MemberDashboardContext = {
-  announcementsVisible: boolean;
-  churchName: string | null;
-  deadlinePassed: boolean;
-  giveVisible: boolean;
-  home: MemberHomeData;
-  isError: boolean;
-  isLoading: boolean;
-  liturgyError: boolean;
-  liturgyLoading: boolean;
-  massIntentionsError: boolean;
-  massIntentionsLoading: boolean;
-  massIntentionsSummary: MemberJourneySummary | undefined;
-  massSummary: NextMassSummary | undefined;
-  massVisible: boolean;
-  prayerError: boolean;
-  prayerLoading: boolean;
-  prayerRequestsLoading: boolean;
-  prayerRequestsSummary: MemberJourneySummary | undefined;
-  prayerRequestsSummaryError: boolean;
-  prayerRequestsVisible: boolean;
-  reflectionError: boolean;
-  reflectionLoading: boolean;
-  rsvpDisabled: boolean;
-  saintError: boolean;
-  saintFeastTitle: string;
-  saintLoading: boolean;
-  saintOfDay: Awaited<ReturnType<typeof fetchSaintOfDayFromLiturgy>>["saint"] | null;
-  submitMassResponse: ReturnType<typeof useMutation<NextMassSummary, Error, "yes" | "maybe" | "no">>;
-  todayDate: string;
-  todayBooks: Awaited<ReturnType<typeof fetchTodayLiturgicalReadings>>["books"];
-  todayLiturgy: Awaited<ReturnType<typeof fetchTodayLiturgicalReadings>>["day"] | null;
-  todayPrayer: Awaited<ReturnType<typeof buildTodayPrayerFromReadings>> | undefined;
-  todayReflection: Awaited<ReturnType<typeof buildTodayReflectionFromReadings>> | undefined;
-};
+function SummaryTile({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  className,
+}: {
+  icon: typeof HandCoins;
+  label: string;
+  value: string;
+  hint: string;
+  className?: string;
+}) {
+  return (
+    <Card className={cn("rounded-[28px] border-border/70 bg-card/85 shadow-sm", className)}>
+      <CardContent className="p-4">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <Icon className="h-5 w-5" />
+        </div>
+        <p className="mt-4 text-sm text-muted-foreground">{label}</p>
+        <p className="mt-1 break-words text-2xl font-bold tracking-tight text-foreground">{value}</p>
+        <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function BigAction({
+  icon: Icon,
+  label,
+  hint,
+  to,
+  primary,
+}: {
+  icon: typeof HandCoins;
+  label: string;
+  hint: string;
+  to: string;
+  primary?: boolean;
+}) {
+  return (
+    <AppLink
+      to={to}
+      className={cn(
+        "flex min-h-24 items-center gap-4 rounded-[28px] border p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
+        primary
+          ? "border-primary/25 bg-primary text-primary-foreground"
+          : "border-border/70 bg-card/85 text-foreground hover:border-primary/30",
+      )}
+    >
+      <span
+        className={cn(
+          "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl",
+          primary ? "bg-primary-foreground/15" : "bg-primary/10 text-primary",
+        )}
+      >
+        <Icon className="h-7 w-7" />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-xl font-bold leading-tight">{label}</span>
+        <span className={cn("mt-1 block text-sm", primary ? "text-primary-foreground/80" : "text-muted-foreground")}>
+          {hint}
+        </span>
+      </span>
+    </AppLink>
+  );
+}
 
 export default function MemberDashboard() {
   const { data, isLoading, isError } = useSimpleMemberHomeData();
@@ -296,203 +337,26 @@ export default function MemberDashboard() {
   const { churchId } = useAuth();
   const queryClient = useQueryClient();
   const home = data ?? emptyMemberHome("Mshirika");
-  const todayDate = getTodayDateKey();
-  const giveVisible = getFeatureState("give").visible;
-  const massVisible = getFeatureState("mass_intentions").visible;
-  const prayerRequestsVisible = getFeatureState("prayer_requests").visible;
-  const announcementsVisible = getFeatureState("announcements").visible;
 
   const { data: massSummary } = useQuery({
     queryKey: ["next-mass-summary", churchId],
     queryFn: async () => {
-      const { data: summary, error } = await supabase.rpc("get_next_mass_summary" as never, {
-        p_church_id: churchId,
-      } as never);
+      const { data: summary, error } = await supabase.rpc("get_next_mass_summary" as never, { p_church_id: churchId } as never);
       if (error) throw error;
       return summary as NextMassSummary;
     },
     enabled: !!churchId,
-    ...livePortalQueryOptions,
+    staleTime: 60 * 1000,
   });
 
-  const {
-    data: saintOfDayData,
-    isLoading: saintLoading,
-    isError: saintError,
-  } = useQuery({
-    queryKey: getSaintOfDayQueryKey(todayDate),
-    queryFn: () => fetchSaintOfDayFromLiturgy(todayDate),
-    ...dailyCatholicQueryOptions,
-  });
-
-  const {
-    data: liturgyData,
-    isLoading: liturgyLoading,
-    isError: liturgyError,
-  } = useQuery({
-    queryKey: getTodayLiturgicalReadingsQueryKey(todayDate),
-    queryFn: () => fetchTodayLiturgicalReadings(todayDate),
-    ...dailyCatholicQueryOptions,
-  });
-
-  const {
-    data: todayPrayer,
-    isLoading: prayerLoading,
-    isError: prayerError,
-  } = useQuery({
-    queryKey: getTodayPrayerQueryKey(todayDate),
+  const { data: saintsOfDay = [], isLoading: saintLoading } = useQuery({
+    queryKey: ["saint-of-the-day"],
     queryFn: async () => {
-      const readings = await queryClient.ensureQueryData({
-        queryKey: getTodayLiturgicalReadingsQueryKey(todayDate),
-        queryFn: () => fetchTodayLiturgicalReadings(todayDate),
-        ...dailyCatholicQueryOptions,
-      });
-      return buildTodayPrayerFromReadings(readings, todayDate);
+      const { data: saints, error } = await supabase.rpc("get_saint_of_the_day" as never);
+      if (error) throw error;
+      return (saints ?? []) as unknown as SaintOfDay[];
     },
-    ...dailyCatholicQueryOptions,
-  });
-
-  const {
-    data: todayReflection,
-    isLoading: reflectionLoading,
-    isError: reflectionError,
-  } = useQuery({
-    queryKey: getTodayReflectionQueryKey(todayDate),
-    queryFn: async () => {
-      const readings = await queryClient.ensureQueryData({
-        queryKey: getTodayLiturgicalReadingsQueryKey(todayDate),
-        queryFn: () => fetchTodayLiturgicalReadings(todayDate),
-        ...dailyCatholicQueryOptions,
-      });
-      return buildTodayReflectionFromReadings(readings, todayDate);
-    },
-    ...dailyCatholicQueryOptions,
-  });
-
-  const {
-    data: massIntentionsSummary,
-    isLoading: massIntentionsLoading,
-    isError: massIntentionsError,
-  } = useQuery({
-    queryKey: ["my-mass-intentions-dashboard", home.memberId, churchId, "summary"],
-    queryFn: async (): Promise<MemberJourneySummary> => {
-      if (!churchId || !home.memberId) {
-        return {
-          activeCount: 0,
-          latestStatus: null,
-          latestDate: null,
-          title: null,
-          description: null,
-          scheduledDate: null,
-          scheduledTime: null,
-          location: null,
-        };
-      }
-
-      const [activeResult, latestResult] = await Promise.all([
-        supabase
-          .from("mass_intentions")
-          .select("id", { count: "exact", head: true })
-          .eq("church_id", churchId)
-          .eq("member_id", home.memberId)
-          .in("status", ["pending", "approved"]),
-        supabase
-          .from("mass_intentions")
-          .select("message, intention_type, status, created_at, mass_date, mass_time, mass_name")
-          .eq("church_id", churchId)
-          .eq("member_id", home.memberId)
-          .in("status", ["pending", "approved"])
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
-
-      if (activeResult.error) throw activeResult.error;
-      if (latestResult.error) throw latestResult.error;
-
-      const latest = latestResult.data as {
-        message: string | null;
-        intention_type: string | null;
-        status: string | null;
-        created_at: string | null;
-        mass_date?: string | null;
-        mass_time?: string | null;
-        mass_name?: string | null;
-      } | null;
-
-      return {
-        activeCount: activeResult.count ?? 0,
-        latestStatus: latest?.status ?? null,
-        latestDate: latest?.created_at ?? null,
-        title: latest?.mass_name || latest?.intention_type || null,
-        description: latest?.message ?? null,
-        scheduledDate: latest?.mass_date ?? null,
-        scheduledTime: latest?.mass_time ?? null,
-        location: null,
-      };
-    },
-    enabled: !!churchId && !!home.memberId && massVisible,
-    staleTime: 2 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-
-  const {
-    data: prayerRequestsSummary,
-    isLoading: prayerRequestsLoading,
-    isError: prayerRequestsSummaryError,
-  } = useQuery({
-    queryKey: ["my-prayers", home.memberId, "summary"],
-    queryFn: async (): Promise<MemberJourneySummary> => {
-      if (!churchId || !home.memberId) {
-        return {
-          activeCount: 0,
-          latestStatus: null,
-          latestDate: null,
-          title: null,
-          description: null,
-          scheduledDate: null,
-          scheduledTime: null,
-          location: null,
-        };
-      }
-
-      const [activeResult, latestResult] = await Promise.all([
-        supabase
-          .from("prayer_requests")
-          .select("id", { count: "exact", head: true })
-          .eq("church_id", churchId)
-          .eq("member_id", home.memberId)
-          .in("status", ["pending", "approved"]),
-        supabase
-          .from("prayer_requests")
-          .select("request_text, status, created_at")
-          .eq("church_id", churchId)
-          .eq("member_id", home.memberId)
-          .in("status", ["pending", "approved"])
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
-
-      if (activeResult.error) throw activeResult.error;
-      if (latestResult.error) throw latestResult.error;
-
-      const latest = latestResult.data as { request_text: string | null; status: string | null; created_at: string | null } | null;
-
-      return {
-        activeCount: activeResult.count ?? 0,
-        latestStatus: latest?.status ?? null,
-        latestDate: latest?.created_at ?? null,
-        title: latest?.request_text ?? null,
-        description: null,
-        scheduledDate: null,
-        scheduledTime: null,
-        location: null,
-      };
-    },
-    enabled: !!churchId && !!home.memberId && prayerRequestsVisible,
-    staleTime: 2 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 6 * 60 * 60 * 1000,
   });
 
   const submitMassResponse = useMutation({
@@ -518,209 +382,291 @@ export default function MemberDashboard() {
     },
   });
 
+  if (isLoading) return <DashboardLoadingState />;
+
+  const giveVisible = getFeatureState("give").visible;
+  const massVisible = getFeatureState("mass_intentions").visible;
+  const announcementsVisible = getFeatureState("announcements").visible;
   const nextMass = massSummary?.mass ?? null;
-  const saintOfDay = saintOfDayData?.saint ?? null;
-  const saintFeastTitle = saintOfDayData?.liturgicalDay?.celebration || "Saint of the Day";
-  const todayLiturgy = liturgyData?.day ?? null;
-  const todayBooks = liturgyData?.books ?? [];
+  const saintOfDay = saintsOfDay[0] ?? null;
+  const todayReading = getTodayReadingEntry();
+  const firstReading = todayReading.readings.find((reading) => reading.id === "first");
+  const psalmReading = todayReading.readings.find((reading) => reading.id === "psalm");
+  const secondReading = todayReading.readings.find((reading) => reading.id === "second");
+  const gospelReading = todayReading.readings.find((reading) => reading.id === "gospel");
   const deadlinePassed = isDeadlinePassed(nextMass?.response_deadline ?? null);
   const rsvpDisabled = !nextMass?.ask_for_rsvp || deadlinePassed || !home.memberId || submitMassResponse.isPending;
-  const context: MemberDashboardContext = {
-    announcementsVisible,
-    churchName: home.churchName,
-    deadlinePassed,
-    giveVisible,
-    home,
-    isError,
-    isLoading,
-    liturgyError,
-    liturgyLoading,
-    massSummary,
-    massIntentionsLoading,
-    massIntentionsSummary,
-    massIntentionsError,
-    massVisible,
-    prayerRequestsLoading,
-    prayerRequestsSummary,
-    prayerRequestsSummaryError,
-    prayerRequestsVisible,
-    prayerError,
-    prayerLoading,
-    reflectionError,
-    reflectionLoading,
-    rsvpDisabled,
-    saintError,
-    saintFeastTitle,
-    saintLoading,
-    saintOfDay,
-    submitMassResponse,
-    todayDate,
-    todayBooks,
-    todayLiturgy,
-    todayPrayer,
-    todayReflection,
-  };
 
-  const widgets: Record<string, DashboardWidget<MemberDashboardContext>> = {
-    hero: {
-      id: "hero",
-      render: ({ home, todayDate, todayLiturgy }) => (
-        <ParishHero home={home} todayDate={todayDate} todayLiturgy={todayLiturgy} />
-      ),
-    },
-    "member-error": {
-      id: "member-error",
-      render: ({ isError }) =>
-        isError ? (
+  return (
+    <div className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-5 pb-28 lg:px-8 lg:pb-8">
+      <div className="mx-auto max-w-5xl space-y-5">
+        <section className="overflow-hidden rounded-[32px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.15),hsl(var(--card))_58%,hsl(var(--card)))] p-5 shadow-sm sm:p-7">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+              <Church className="h-7 w-7" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-muted-foreground">Karibu</p>
+              <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{home.memberName}</h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {home.churchName ? home.churchName : "Huduma yako ya kanisa iko hapa kwa urahisi."}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {isError ? (
           <Card className="rounded-3xl border-destructive/25 bg-destructive/5">
             <CardContent className="p-4 text-sm text-destructive">
               Hatukuweza kupakia taarifa zako kwa sasa. Jaribu tena baada ya muda mfupi.
             </CardContent>
           </Card>
-        ) : null,
-    },
-    "giving-overview": {
-      id: "giving-overview",
-      render: ({
-        home,
-        isLoading,
-        massIntentionsLoading,
-        massIntentionsSummary,
-        massIntentionsError,
-        massSummary,
-        massVisible,
-        prayerRequestsLoading,
-        prayerRequestsSummary,
-        prayerRequestsSummaryError,
-        prayerRequestsVisible,
-      }) =>
-        isLoading ? (
-          <DashboardHomeSkeleton />
-        ) : (
-          <>
-            <MyGivingCard home={home} />
-            <DashboardStats
-              massVisible={massVisible}
-              churchId={churchId}
-              massIntentionsError={massIntentionsError}
-              massIntentionsSummary={massIntentionsSummary}
-              massIntentionsLoading={massIntentionsLoading}
-              prayerRequestsVisible={prayerRequestsVisible}
-              prayerRequestsError={prayerRequestsSummaryError}
-              prayerRequestsSummary={prayerRequestsSummary}
-              prayerRequestsLoading={prayerRequestsLoading}
-              massSummary={massSummary}
-            />
-          </>
-        ),
-    },
-    "todays-mass": {
-      id: "todays-mass",
-      render: ({ deadlinePassed, home, massSummary, rsvpDisabled, submitMassResponse, todayDate }) => (
-        <TodaysMassCard
-          home={home}
-          massSummary={massSummary}
-          submitMassResponse={submitMassResponse}
-          rsvpDisabled={rsvpDisabled}
-          deadlinePassed={deadlinePassed}
-          todayDate={todayDate}
-        />
-      ),
-    },
-    "gospel-highlight": {
-      id: "gospel-highlight",
-      render: ({ todayBooks, todayLiturgy }) => <GospelHighlightCard books={todayBooks} todayLiturgy={todayLiturgy} />,
-    },
-    "parish-life": {
-      id: "parish-life",
-      render: ({ home }) => <ParishLifeCard churchId={churchId} latestAnnouncement={home.latestAnnouncement} />,
-    },
-    "ministry-life": {
-      id: "ministry-life",
-      render: () => (
-        <section className="grid gap-3 lg:grid-cols-3">
-          <MyMinistriesCard churchId={churchId} />
-          <TodaysMinistryScheduleCard churchId={churchId} />
-          <VolunteerOpportunitiesCard churchId={churchId} />
-        </section>
-      ),
-    },
-    "prayer-focus": {
-      id: "prayer-focus",
-      render: ({
-        prayerError,
-        prayerLoading,
-        reflectionError,
-        reflectionLoading,
-        saintError,
-        saintFeastTitle,
-        saintLoading,
-        saintOfDay,
-        todayPrayer,
-        todayReflection,
-      }) => (
-        <PrayerFocusSection
-          prayerError={prayerError}
-          prayerLoading={prayerLoading}
-          reflectionError={reflectionError}
-          reflectionLoading={reflectionLoading}
-          saintError={saintError}
-          saintFeastTitle={saintFeastTitle}
-          saintLoading={saintLoading}
-          saintOfDay={saintOfDay}
-          todayPrayer={todayPrayer}
-          todayReflection={todayReflection}
-        />
-      ),
-    },
-    "daily-prayer-reflection": {
-      id: "daily-prayer-reflection",
-      render: ({ prayerError, prayerLoading, reflectionError, reflectionLoading, todayPrayer, todayReflection }) => (
-        <section className="grid gap-3 md:grid-cols-2">
-          <PrayerFocusSection
-            prayerError={prayerError}
-            prayerLoading={prayerLoading}
-            todayReflection={todayReflection}
-            reflectionLoading={reflectionLoading}
-            reflectionError={reflectionError}
-            saintError={false}
-            saintFeastTitle="Saint of the Day"
-            saintLoading={false}
-            saintOfDay={null}
-            todayPrayer={todayPrayer}
+        ) : null}
+
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <SummaryTile
+            icon={Wallet}
+            label="Jumla Uliyolipa"
+            value={formatTZS(home.totalPaid)}
+            hint="Michango iliyorekodiwa"
+            className="sm:col-span-2 lg:col-span-1"
+          />
+          <SummaryTile
+            icon={BellRing}
+            label="Kiasi Kinachosubiri"
+            value={formatTZS(home.pendingAmount)}
+            hint="Ahadi ambazo hazijakamilika"
+          />
+          <SummaryTile
+            icon={CalendarDays}
+            label="Malipo ya Mwisho"
+            value={home.lastPayment ? formatTZS(home.lastPayment.amount) : "Hakuna bado"}
+            hint={home.lastPayment ? `${home.lastPayment.label} - ${formatDate(home.lastPayment.date)}` : "Historia itaonekana ukilipa"}
+            className="sm:col-span-2 lg:col-span-2"
           />
         </section>
-      ),
-    },
-    "quick-actions": {
-      id: "quick-actions",
-      render: ({ giveVisible, massVisible, prayerRequestsVisible }) => (
-        <QuickActionsCard
-          giveVisible={giveVisible}
-          massVisible={massVisible}
-          prayerRequestsVisible={prayerRequestsVisible}
-        />
-      ),
-    },
-    footer: {
-      id: "footer",
-      render: ({ home }) => <ParishFooter home={home} />,
-    },
-    announcements: {
-      id: "announcements",
-      render: ({ announcementsVisible, home, isLoading }) =>
-        !isLoading ? (
-          <AnnouncementsCard latestAnnouncement={home.latestAnnouncement} announcementsVisible={announcementsVisible} />
-        ) : null,
-    },
-  };
 
-  return (
-    <WorkspaceResolver
-      workspaceId="member"
-      context={context}
-      widgets={widgets}
-      dashboardClassName="mx-auto max-w-7xl"
-    />
+        <Card className="rounded-[28px] border-border/70 bg-card/85 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-muted-foreground">Upcoming Mass</p>
+                {nextMass ? (
+                  <>
+                    <h2 className="mt-1 text-2xl font-bold text-foreground">{nextMass.title}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {formatDate(nextMass.mass_date)} · {formatMassTime(nextMass.start_time)}
+                    </p>
+                    {nextMass.response_deadline ? (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        RSVP deadline: {new Date(nextMass.response_deadline).toLocaleString("en-TZ")}
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm text-muted-foreground">No upcoming Mass scheduled.</p>
+                )}
+              </div>
+
+              {nextMass ? (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-foreground">Will you attend?</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(["yes", "maybe", "no"] as const).map((response) => (
+                      <Button
+                        key={response}
+                        variant={nextMass.my_response === response ? "default" : "outline"}
+                        className="min-w-24 capitalize"
+                        disabled={rsvpDisabled}
+                        onClick={() => submitMassResponse.mutate(response)}
+                      >
+                        {submitMassResponse.isPending && submitMassResponse.variables === response ? "Saving..." : response}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <span>Expected: {massSummary?.yes_count ?? 0}</span>
+                    <span>Maybe: {massSummary?.maybe_count ?? 0}</span>
+                    <span>Response rate: {Number(massSummary?.response_rate ?? 0).toFixed(0)}%</span>
+                  </div>
+                  {deadlinePassed ? <p className="text-xs text-muted-foreground">RSVP deadline has passed.</p> : null}
+                </div>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden rounded-[28px] border-primary/20 bg-card/85 shadow-sm">
+          <CardContent className="p-0">
+            {saintLoading ? (
+              <div className="p-5">
+                <Skeleton className="h-36 rounded-3xl" />
+              </div>
+            ) : saintOfDay ? (
+              <div className="grid gap-0 md:grid-cols-[220px_1fr]">
+                {saintOfDay.image_url ? (
+                  <img
+                    src={saintOfDay.image_url}
+                    alt={saintOfDay.name}
+                    className="h-56 w-full object-cover md:h-full"
+                  />
+                ) : (
+                  <div className="flex h-56 w-full items-center justify-center bg-primary/10 text-primary md:h-full">
+                    <Sparkles className="h-12 w-12" />
+                  </div>
+                )}
+                <div className="space-y-4 p-5">
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-medium text-primary">
+                      <span aria-hidden="true">🌟</span>
+                      Saint of the Day
+                    </p>
+                    <h2 className="mt-1 text-2xl font-bold text-foreground">{saintOfDay.name}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Feast Day: {formatFeastDay(saintOfDay.feast_month, saintOfDay.feast_day)}
+                    </p>
+                  </div>
+                  <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">{saintOfDay.biography_short}</p>
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    <div className="rounded-2xl bg-muted/50 p-3">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Reflection</p>
+                      <p className="mt-1 line-clamp-3 text-sm leading-6 text-foreground">{saintOfDay.reflection}</p>
+                    </div>
+                    <div className="rounded-2xl bg-muted/50 p-3">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Prayer</p>
+                      <p className="mt-1 line-clamp-3 text-sm leading-6 text-foreground">{saintOfDay.prayer}</p>
+                    </div>
+                  </div>
+                  {saintOfDay.quote ? (
+                    <blockquote className="rounded-2xl border-l-4 border-primary bg-primary/5 p-3 text-sm italic text-foreground">
+                      "{saintOfDay.quote}"
+                    </blockquote>
+                  ) : null}
+                  <Button asChild variant="outline" className="h-11 rounded-2xl">
+                    <Link to={`/member/library/${saintOfDay.slug}`}>Read More</Link>
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start gap-4 p-5">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-medium text-primary">
+                    <span aria-hidden="true">🌟</span>
+                    Saint of the Day
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">No saint has been configured for today.</p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[28px] border-border/70 bg-card/85 shadow-sm">
+          <CardContent className="space-y-4 p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="flex items-center gap-2 text-sm font-medium text-primary">
+                  <BookOpen className="h-4 w-4" />
+                  Today's Readings
+                </p>
+                <h2 className="mt-1 text-2xl font-bold text-foreground">{getReadableReadingDate(todayReading)}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {todayReading.liturgicalSeason || "Liturgical season pending"}
+                </p>
+              </div>
+              <Button asChild variant="outline" className="h-11 rounded-2xl">
+                <AppLink to="/portal/daily-readings">Read More</AppLink>
+              </Button>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              {[
+                firstReading,
+                psalmReading,
+                secondReading,
+                gospelReading,
+              ]
+                .filter(Boolean)
+                .map((reading) => (
+                  <div key={reading!.id} className="rounded-2xl border border-border/60 bg-background/50 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{reading!.title}</p>
+                    <p className="mt-1 text-sm font-medium text-foreground">{reading!.reference}</p>
+                  </div>
+                ))}
+            </div>
+
+            <div className="rounded-2xl bg-primary/5 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Reflection</p>
+              <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">{todayReading.reflection}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <section className="grid gap-3 md:grid-cols-2">
+          {giveVisible ? (
+            <BigAction icon={HandCoins} label="Lipa Sasa" hint="Toa mchango au sadaka" to="/portal/give" primary />
+          ) : null}
+          {massVisible ? (
+            <BigAction icon={HeartHandshake} label="Nia za Misa" hint="Wasilisha nia ya Misa na sadaka" to="/portal/mass-intentions" />
+          ) : null}
+          <BigAction icon={History} label="Historia Yangu" hint="Angalia malipo na wasifu" to="/portal/dashboard" />
+          {announcementsVisible ? (
+            <BigAction icon={Megaphone} label="Matangazo" hint="Soma taarifa mpya za kanisa" to="/portal/announcements" />
+          ) : null}
+          <BigAction icon={BookOpen} label="Daily Readings" hint="The Word of God for today" to="/portal/daily-readings" />
+          <BigAction icon={BookOpen} label="Catholic Library" hint="Lives of saints and prayers" to="/member/library" />
+        </section>
+
+        <Card className="rounded-[28px] border-border/70 bg-card/85 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-3 text-lg">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Megaphone className="h-5 w-5" />
+              </span>
+              Tangazo la Karibuni
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {home.latestAnnouncement ? (
+              <div>
+                <p className="text-xl font-bold text-foreground">{home.latestAnnouncement.title}</p>
+                {home.latestAnnouncement.content ? (
+                  <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                    {home.latestAnnouncement.content}
+                  </p>
+                ) : null}
+                <p className="mt-3 text-xs text-muted-foreground">{formatDate(home.latestAnnouncement.date)}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Hakuna tangazo jipya kwa sasa.</p>
+            )}
+            {announcementsVisible ? (
+              <Button asChild variant="outline" className="h-12 rounded-2xl px-5">
+                <AppLink to="/portal/announcements">Fungua Matangazo</AppLink>
+              </Button>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[28px] border-border/70 bg-card/85 shadow-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+              <UserRound className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-foreground">Wasifu na malipo yako</p>
+              <p className="mt-1 text-sm text-muted-foreground">Taarifa zaidi zipo kwenye Historia Yangu.</p>
+            </div>
+            <Button asChild size="sm" className="h-10 shrink-0 rounded-xl">
+              <AppLink to="/portal/dashboard">Fungua</AppLink>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+    </div>
   );
 }

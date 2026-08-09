@@ -1,10 +1,7 @@
 import { MessageCircle, Send, SmilePlus } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScriptureText } from "@/components/bible";
-import { formatLocalizedDate, normalizeAppLanguage } from "@/lib/localization";
 import { cn } from "@/lib/utils";
 
 export type CommentReactionSummary = {
@@ -52,9 +49,6 @@ export function CommentThread({
   reactionEmojis = [],
   onToggleReaction,
 }: CommentThreadProps) {
-  const { i18n, t } = useTranslation();
-  const language = normalizeAppLanguage(i18n.language) ?? "en";
-
   return (
     <div
       className={cn(
@@ -64,7 +58,7 @@ export function CommentThread({
     >
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
         <MessageCircle className="h-4 w-4 text-primary" />
-        <span>{t("member_portal.parish_life.comments")}</span>
+        <span>Comments</span>
         <span className="text-muted-foreground">({comments.length})</span>
       </div>
 
@@ -85,12 +79,10 @@ export function CommentThread({
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground">{comment.author_name}</p>
-                    <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-                      <ScriptureText text={comment.body} />
-                    </p>
+                    <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{comment.body}</p>
                   </div>
                   <p className="shrink-0 text-[11px] text-muted-foreground">
-                    {formatLocalizedDate(comment.created_at, language, { dateStyle: "medium", timeStyle: "short" })}
+                    {new Date(comment.created_at).toLocaleString()}
                   </p>
                 </div>
 
@@ -140,7 +132,7 @@ export function CommentThread({
       <div className="space-y-3 rounded-2xl border border-primary/10 bg-primary/[0.04] p-3">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.22em] text-primary/80">
           <SmilePlus className="h-3.5 w-3.5" />
-          {t("member_portal.parish_life.add_your_voice")}
+          Add Your Voice
         </div>
 
         {quickEmojis.length > 0 ? (
@@ -177,7 +169,7 @@ export function CommentThread({
           <div className="flex justify-end">
             <Button type="submit" disabled={submitDisabled} className="gap-2">
               <Send className="h-4 w-4" />
-              {submitPending ? t("member_portal.parish_life.posting") : t("member_portal.parish_life.post_comment")}
+              {submitPending ? "Posting..." : "Post Comment"}
             </Button>
           </div>
         </form>

@@ -13,11 +13,6 @@ const massIntentionKeyMap: Record<string, string> = {
 };
 
 const eventRequestKeyMap: Record<string, string> = {
-  parish_event: "event_request.types.parish_event",
-  ministry_group_event: "event_request.types.ministry_group_event",
-  special_mass_request: "event_request.types.special_mass_request",
-  venue_facility_request: "event_request.types.venue_facility_request",
-  prayer_formation_event: "event_request.types.prayer_formation_event",
   wedding: "event_request.wedding",
   baptism: "event_request.baptism",
   funeral: "event_request.funeral",
@@ -25,13 +20,6 @@ const eventRequestKeyMap: Record<string, string> = {
 };
 
 const statusKeyMap: Record<string, string> = {
-  draft: "event_request.status.draft",
-  submitted: "event_request.status.submitted",
-  under_review: "event_request.status.under_review",
-  changes_requested: "event_request.status.changes_requested",
-  converted: "event_request.status.converted",
-  scheduled: "event_request.status.scheduled",
-  cancelled: "event_request.status.cancelled",
   pending: "common.pending",
   approved: "common.approved",
   rejected: "common.rejected",

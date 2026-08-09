@@ -29,7 +29,7 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { assertPhoneIsAvailable, normalizeTanzanianPhone } from "@/lib/phone-auth";
 import { logSupabaseError } from "@/lib/error-logger";
 
-type ChurchRow = Pick<Tables<"churches">, "id" | "name" | "code" | "church_code" | "short_code" | "metadata"> & {
+type ChurchRow = Pick<Tables<"churches">, "id" | "name" | "code" | "metadata"> & {
   slug?: string | null;
   logo_url?: string | null;
 };
@@ -249,10 +249,6 @@ export default function RegisterPage() {
 
   const registrationPath = churchQuery.data?.slug
     ? `/register?churchSlug=${encodeURIComponent(churchQuery.data.slug)}`
-    : churchQuery.data?.short_code
-    ? `/register/${churchQuery.data.short_code}`
-    : churchQuery.data?.church_code
-    ? `/register/${churchQuery.data.church_code}`
     : churchQuery.data?.code
     ? `/register/${churchQuery.data.code}`
     : churchQuery.data?.id
@@ -311,8 +307,6 @@ export default function RegisterPage() {
       }
 
       let uploadedPhotoPath: string | null = null;
-      const publicChurchCode = church.church_code || church.code || "";
-      const publicJoinCode = church.short_code || "";
 
       try {
         let authUserId = user?.id ?? null;
@@ -333,8 +327,7 @@ export default function RegisterPage() {
                 emailRedirectTo: `${window.location.origin}/login?redirect=${encodeURIComponent(registrationPath)}&email=${encodeURIComponent(normalizedEmail)}`,
                 data: {
                   full_name: fullName.trim(),
-                  church_code: publicChurchCode,
-                  church_join_code: publicJoinCode,
+                  church_code: church.code,
                   phone: normalizedPhone.e164,
                   phone_verified: false,
                 },
@@ -348,7 +341,7 @@ export default function RegisterPage() {
                 function: "signUp",
                 church_id: church.id,
                 operation: "auth.signUp",
-                metadata: { church_code: publicChurchCode, short_code: publicJoinCode },
+                metadata: { church_code: church.code },
               });
               throw signUpError;
             }
@@ -416,7 +409,7 @@ export default function RegisterPage() {
             church_id: church.id,
             operation: "rpc",
             rpc: church.slug ? "join_church_workspace" : "complete_public_registration",
-            metadata: { church_code: publicChurchCode, short_code: publicJoinCode, has_photo: !!photoUrl },
+            metadata: { church_code: church.code, has_photo: !!photoUrl },
           });
           throw registrationError;
         }
@@ -431,8 +424,7 @@ export default function RegisterPage() {
             data: {
               full_name: fullName.trim(),
               church_id: church.id,
-              church_code: publicChurchCode,
-              church_join_code: publicJoinCode,
+              church_code: church.code,
             },
           });
 
@@ -443,8 +435,6 @@ export default function RegisterPage() {
           const { error: updateUserError } = await supabase.auth.updateUser({
             data: {
               church_id: church.id,
-              church_code: publicChurchCode,
-              church_join_code: publicJoinCode,
             },
           });
           if (updateUserError) {
