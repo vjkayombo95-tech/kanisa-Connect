@@ -593,9 +593,9 @@ export default function ChurchDashboard() {
       render: () => (
         <ChurchSettingsSummaryWidget
           title="Livestream Status"
-          description="Livestream controls are ready for the future workspace module."
-          statusLabel="Placeholder"
-          to="/church-admin/sermons"
+          description="Schedule broadcasts and explicitly control LIVE status."
+          statusLabel="Manage"
+          to="/church-admin/livestreams"
         />
       ),
     },

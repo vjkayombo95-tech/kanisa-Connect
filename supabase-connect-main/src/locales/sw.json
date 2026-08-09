@@ -405,6 +405,14 @@
     "error_update_blocked": "Usasishaji wa ombi la tukio umezuiwa au rekodi haikupatikana.",
     "error_multiple_rows": "Usasishaji wa ombi la tukio umerejesha rekodi nyingi bila kutarajiwa."
   },
+  "church_media": {
+    "livestreams_title": "Matangazo Mubashara",
+    "livestreams_description": "Simamia matangazo yanayoendelea moja kwa moja.",
+    "sermons_title": "Mahubiri",
+    "sermons_description": "Video na sauti za mahubiri yaliyorekodiwa.",
+    "livestreams_service_description": "Matangazo ya moja kwa moja",
+    "sermons_service_description": "Mahubiri yaliyorekodiwa"
+  },
   "workspace": {
     "navigation": "Urambazaji wa eneo la kazi",
     "item_count_one": "kipengee {{count}}",
@@ -498,6 +506,7 @@
       "prayer-requests": "Maombi ya Sala",
       "event-requests": "Maombi ya Matukio",
       "sermons": "Mahubiri",
+      "livestreams": "Matangazo Mubashara",
       "reports": "Ripoti",
       "finance-dashboard": "Dashibodi ya Fedha",
       "contributions": "Michango",
