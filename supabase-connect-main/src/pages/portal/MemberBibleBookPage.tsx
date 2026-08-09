@@ -143,7 +143,7 @@ export default function MemberBibleBookPage() {
   return (
     <main className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-6 pb-28 lg:px-8 lg:pb-10">
       <div className="mx-auto max-w-7xl space-y-5">
-        <Button asChild variant="ghost" className="h-10 rounded-lg px-3">
+        <Button asChild variant="ghost" className="hidden h-10 rounded-lg px-3 lg:inline-flex">
           <Link to={bibleRoot}>
             <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
             {t("member_portal.bible.title")}

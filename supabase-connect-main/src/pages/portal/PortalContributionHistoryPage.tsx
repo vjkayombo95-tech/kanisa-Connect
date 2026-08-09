@@ -182,7 +182,7 @@ export default function PortalContributionHistoryPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2 rounded-xl">
+          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2 hidden rounded-xl lg:inline-flex">
             <Link to="/portal">
               <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
               {t("member_portal.common.back")}

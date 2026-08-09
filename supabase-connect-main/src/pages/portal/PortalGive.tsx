@@ -228,7 +228,7 @@ export default function PortalGive() {
     <main className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-6 pb-28 lg:px-8 lg:pb-10">
     <div className="mx-auto max-w-3xl space-y-5">
       <div>
-        <Button type="button" variant="ghost" size="sm" className="-ml-2 rounded-xl" onClick={() => (step > 1 ? setStep(step - 1) : navigate("/portal"))}>
+        <Button type="button" variant="ghost" size="sm" className={step > 1 ? "-ml-2 rounded-xl" : "-ml-2 hidden rounded-xl lg:inline-flex"} onClick={() => (step > 1 ? setStep(step - 1) : navigate("/portal"))}>
           <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
           {t("member_portal.common.back")}
         </Button>
