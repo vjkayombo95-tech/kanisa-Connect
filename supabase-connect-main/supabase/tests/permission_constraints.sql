@@ -18,6 +18,17 @@ begin
     'Church Admin event creation must remain configurable';
   assert public.church_permission_constraint_rule('church_admin','reports','create')->>'classification' = 'SYSTEM_PROTECTED',
     'Non-applicable report creation must be protected';
+  assert public.church_permission_constraint_rule('church_admin','livestream','view')->>'classification' = 'CONFIGURABLE';
+  assert public.church_permission_constraint_rule('church_admin','livestream','create')->>'classification' = 'CONFIGURABLE';
+  assert public.church_permission_constraint_rule('church_admin','livestream','edit')->>'classification' = 'CONFIGURABLE';
+  assert public.church_permission_constraint_rule('church_admin','livestream','delete')->>'classification' = 'CONFIGURABLE';
+  assert public.church_permission_constraint_rule('church_admin','livestream','publish')->>'classification' = 'CONFIGURABLE';
+  assert public.church_permission_constraint_rule('church_admin','livestream','manage')->>'classification' = 'CONFIGURABLE';
+  assert public.church_permission_constraint_rule('member','livestream','view')->>'classification' = 'CONFIGURABLE';
+  assert public.church_permission_constraint_rule('member','livestream','create')->>'classification' = 'SYSTEM_PROTECTED';
+  assert public.church_permission_constraint_rule('church_admin','livestream','approve')->>'classification' = 'SYSTEM_PROTECTED';
+  assert public.church_permission_constraint_rule('church_admin','ministries','approve')->>'classification' = 'CONFIGURABLE';
+  assert public.church_permission_constraint_rule('secretary','ministries','approve')->>'classification' = 'SYSTEM_PROTECTED';
   assert public.church_permission_constraint_rule('member','contributions','create')->>'record_scope' = 'own',
     'Member contribution creation must expose only the enforced own-record scope';
   assert public.church_permission_constraint_rule('custom_ministry_role','events','edit')->>'classification' = 'SYSTEM_PROTECTED',
