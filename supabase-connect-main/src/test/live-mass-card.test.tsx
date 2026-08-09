@@ -45,6 +45,11 @@ describe("LiveMassCard", () => {
     expect(renderCard()).toBe("");
   });
 
+  it("renders nothing without church context", () => {
+    setHook(liveStream, { churchId: null });
+    expect(renderCard()).toBe("");
+  });
+
   it("shows confirmed LIVE content, authoritative URL, and a text-first layout", () => {
     setHook(liveStream);
     const markup = renderCard();
@@ -52,6 +57,8 @@ describe("LiveMassCard", () => {
     expect(markup).toContain("Misa Inaendelea Sasa");
     expect(markup).toContain(liveStream.title);
     expect(markup).toContain(`href="${liveStream.watchUrl.replaceAll("&", "&amp;")}"`);
+    expect(markup).toContain('target="_blank"');
+    expect(markup).toContain('rel="noopener noreferrer"');
     expect(markup).not.toContain("<img");
     expect(markup).toContain("Tazama Moja kwa Moja");
   });
@@ -86,6 +93,15 @@ describe("LiveMassCard", () => {
     expect(markup).toContain("Misa Inaanza Hivi Karibuni");
     expect(markup).toContain("Angalia Maelezo");
     expect(markup).not.toContain(">LIVE<");
+  });
+
+  it("renders nothing for a scheduled stream outside the upcoming window", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-08-08T10:00:00Z"));
+    setHook({ ...liveStream, status: "scheduled", scheduledStart: "2026-08-08T10:31:00Z", actualStartedAt: null });
+    const markup = renderCard();
+    vi.useRealTimers();
+    expect(markup).toBe("");
   });
 
   it("removes ended, failed, and previous-church streams", () => {
