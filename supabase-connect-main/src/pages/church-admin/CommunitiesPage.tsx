@@ -455,7 +455,17 @@ export default function CommunitiesPage() {
                     <TableRow key={cm.id}>
                       <TableCell className="font-medium">{cm.members?.full_name}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{cm.created_at ? new Date(cm.created_at).toLocaleDateString() : "—"}</TableCell>
-                      <TableCell className="w-10"><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeCommunityMember.mutate(cm.id)}><Trash2 className="h-3 w-3" /></Button></TableCell>
+                      <TableCell className="w-10">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive"
+                          aria-label={`Remove ${cm.members?.full_name || "member"} from community`}
+                          onClick={() => removeCommunityMember.mutate(cm.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

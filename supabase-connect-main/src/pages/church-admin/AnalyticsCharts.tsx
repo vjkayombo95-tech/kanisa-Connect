@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, TrendingDown, TrendingUp, Users } from "lucide-react";
 import { formatTZS } from "@/lib/currency";
+import { EmptyState } from "@/components/ui/page-state";
 
 export type AnalyticsChartProps = {
   trendData: Array<{ month: string; amount: number }>;
@@ -23,7 +24,13 @@ export default function AnalyticsCharts({ trendData, jumuiyaData, categoryCompar
         <Card className="glass-card">
           <CardHeader><CardTitle className="text-base font-sans flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Monthly Contribution Trend</CardTitle></CardHeader>
           <CardContent>
-            {trendData.length === 0 ? <p className="text-sm text-muted-foreground text-center py-8">No data</p> : (
+            {trendData.length === 0 ? (
+              <EmptyState
+                title="No contribution trend yet."
+                description="Monthly contribution totals will appear after finance activity is recorded."
+                className="border-0 bg-transparent"
+              />
+            ) : (
               <ResponsiveContainer width="100%" height={250}>
                 <AreaChart data={trendData}>
                   <defs><linearGradient id="aGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(40, 92%, 56%)" stopOpacity={0.3} /><stop offset="95%" stopColor="hsl(40, 92%, 56%)" stopOpacity={0} /></linearGradient></defs>
@@ -40,7 +47,13 @@ export default function AnalyticsCharts({ trendData, jumuiyaData, categoryCompar
         <Card className="glass-card">
           <CardHeader><CardTitle className="text-base font-sans flex items-center gap-2"><Users className="h-4 w-4 text-primary" /> Jumuiya Membership</CardTitle></CardHeader>
           <CardContent>
-            {jumuiyaData.length === 0 ? <p className="text-sm text-muted-foreground text-center py-8">No data</p> : (
+            {jumuiyaData.length === 0 ? (
+              <EmptyState
+                title="No Jumuiya membership data yet."
+                description="Community membership charts will appear once members are assigned to Jumuiya groups."
+                className="border-0 bg-transparent"
+              />
+            ) : (
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={jumuiyaData}>
                   <XAxis dataKey="name" stroke="hsl(220, 10%, 50%)" fontSize={11} tickLine={false} axisLine={false} />
@@ -57,7 +70,13 @@ export default function AnalyticsCharts({ trendData, jumuiyaData, categoryCompar
       <Card className="glass-card">
         <CardHeader><CardTitle className="text-base font-sans flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> Category Comparison (This Month vs Last Month)</CardTitle></CardHeader>
         <CardContent>
-          {categoryComparison.length === 0 ? <p className="text-sm text-muted-foreground text-center py-8">No data</p> : (
+          {categoryComparison.length === 0 ? (
+            <EmptyState
+              title="No category comparison yet."
+              description="Category comparisons will appear after contributions exist in the current and previous month."
+              className="border-0 bg-transparent"
+            />
+          ) : (
             <div className="space-y-3">
               {categoryComparison.map((category) => (
                 <div key={category.name} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">

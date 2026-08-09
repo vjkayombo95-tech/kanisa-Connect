@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
-import { Lock, Unlock, Globe, Building2, Loader2, RotateCcw, Search } from "lucide-react";
+import { Eye, EyeOff, Lock, Unlock, Globe, Building2, Loader2, RotateCcw, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -20,6 +20,7 @@ type Feature = {
   description: string | null;
   globally_enabled: boolean;
   globally_locked: boolean;
+  is_mandatory: boolean;
 };
 
 type ChurchFeature = {
@@ -27,10 +28,54 @@ type ChurchFeature = {
   church_id: string;
   feature_id: string;
   enabled: boolean;
+  locked?: boolean | null;
 };
 
 type LocalGlobal = { enabled: boolean; locked: boolean };
-type LocalChurch = { enabled: boolean };
+type LocalChurch = { enabled: boolean; locked: boolean };
+
+async function setAuthoritativeLivestreamFeature(
+  churchId: string,
+  enabled: boolean,
+  locked: boolean,
+) {
+  const { error } = await supabase.rpc("set_super_admin_church_feature", {
+    _church_id: churchId,
+    _feature_key: "livestream",
+    _enabled: enabled,
+    _locked: locked,
+  });
+  if (error) throw error;
+}
+
+const DEFAULT_FEATURES = [
+  { key: "members", name: "Members", description: "Member directory and member administration." },
+  { key: "contributions", name: "Contributions", description: "Contribution records, receipts, and giving administration." },
+  { key: "give", name: "Giving", description: "Member giving and payment entry points." },
+  { key: "pledges", name: "Pledges", description: "Pledge creation, tracking, and fulfilment." },
+  { key: "communities", name: "Communities", description: "Small Christian communities and groups." },
+  { key: "ministries", name: "Ministries", description: "Ministry teams, requests, and leadership." },
+  { key: "families", name: "Families", description: "Family grouping and household records." },
+  { key: "events", name: "Events & Calendar", description: "Parish events, calendar, and Mass schedule surfaces." },
+  { key: "event_requests", name: "Event Requests", description: "Member event request submission and review." },
+  { key: "announcements", name: "Announcements", description: "Parish announcement publishing and viewing." },
+  { key: "sermons", name: "Sermons", description: "Sermon and homily content." },
+  { key: "bible_verses", name: "Bible", description: "Bible reading and scripture surfaces." },
+  { key: "bible_audio", name: "Bible Audio", description: "AI-assisted Bible chapter narration, cache, and member playback controls.", globallyEnabled: false },
+  { key: "operations", name: "Operations", description: "Parish operations health, queue telemetry, worker signals, and production events." },
+  { key: "audio_processing", name: "Audio Processing", description: "Audio upload, processing jobs, review workflow, and audio publishing operations." },
+  { key: "prayer_requests", name: "Prayer Requests", description: "Prayer request submission, review, and tracking." },
+  { key: "mass_intentions", name: "Mass Intentions", description: "Mass intention requests and scheduling." },
+  { key: "sacraments", name: "Sacraments", description: "Sacramental records and pastoral sacrament workflows." },
+  { key: "community_help", name: "Community Help", description: "Assistance requests and community support." },
+  { key: "reports", name: "Reports", description: "Operational and financial reports." },
+  { key: "channels", name: "Channels", description: "Community and parish communication channels." },
+  { key: "notifications", name: "Notifications", description: "Notification inbox and messaging surfaces." },
+  { key: "roles", name: "Invitations & Roles", description: "Role assignment and parish invitations." },
+  { key: "finance_intelligence", name: "Finance Intelligence", description: "Finance intelligence, trends, and insights." },
+  { key: "kanisa_ai", name: "Kanisa AI", description: "Kanisa AI command center and assistant surfaces." },
+  { key: "catholic_content", name: "Catholic Content", description: "Saints, daily readings, liturgical calendar, and prayer library." },
+];
 
 export default function FeatureManagement() {
   const qc = useQueryClient();
@@ -49,7 +94,8 @@ export default function FeatureManagement() {
   const { data: features = [], isLoading: featuresLoading } = useQuery({
     queryKey: ["sa-features"],
     queryFn: async () => {
-      const { data } = await supabase.from("platform_features").select("*").order("name");
+      const { data, error } = await supabase.from("platform_features").select("*").order("name");
+      if (error) throw error;
       return (data ?? []) as Feature[];
     },
   });
@@ -57,7 +103,8 @@ export default function FeatureManagement() {
   const { data: churches = [] } = useQuery({
     queryKey: ["sa-churches-list"],
     queryFn: async () => {
-      const { data } = await supabase.from("churches").select("id, name, code").order("name");
+      const { data, error } = await supabase.from("churches").select("id, name, code").order("name");
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -66,10 +113,11 @@ export default function FeatureManagement() {
     queryKey: ["sa-church-features", selectedChurchId],
     queryFn: async () => {
       if (!selectedChurchId) return [];
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("church_features")
         .select("*")
         .eq("church_id", selectedChurchId);
+      if (error) throw error;
       return (data ?? []) as ChurchFeature[];
     },
     enabled: !!selectedChurchId,
@@ -93,7 +141,7 @@ export default function FeatureManagement() {
       const draft: Record<string, LocalChurch> = {};
       features.forEach((f) => {
         const cf = churchFeatures.find((c) => c.feature_id === f.id);
-        draft[f.id] = { enabled: cf ? cf.enabled : f.globally_enabled };
+        draft[f.id] = { enabled: cf?.enabled === true, locked: cf?.locked === true };
       });
       setChurchDraft(draft);
       setChurchDirty(false);
@@ -125,6 +173,28 @@ export default function FeatureManagement() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const initializeDefaults = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("platform_features").upsert(
+        DEFAULT_FEATURES.map((feature) => ({
+          key: feature.key,
+          name: feature.name,
+          description: feature.description,
+          globally_enabled: feature.globallyEnabled ?? true,
+          globally_locked: false,
+        })) as any,
+        { onConflict: "key" },
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sa-features"] });
+      qc.invalidateQueries({ queryKey: ["portal-platform-features"] });
+      toast.success("Feature controls initialized");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   // ---- Church mutations ----
   const churchApply = useMutation({
     mutationFn: async () => {
@@ -133,11 +203,17 @@ export default function FeatureManagement() {
         const d = churchDraft[f.id];
         if (!d) continue;
         const existing = churchFeatures.find((c) => c.feature_id === f.id);
+        if (f.key === "livestream") {
+          if (!existing || existing.enabled !== d.enabled || existing.locked !== d.locked) {
+            await setAuthoritativeLivestreamFeature(selectedChurchId, d.enabled, d.locked);
+          }
+          continue;
+        }
         if (existing) {
-          if (existing.enabled !== d.enabled) {
+          if (existing.enabled !== d.enabled || existing.locked !== d.locked) {
             const { error } = await supabase
               .from("church_features")
-              .update({ enabled: d.enabled, updated_at: new Date().toISOString() } as any)
+              .update({ enabled: d.enabled, locked: d.locked, updated_at: new Date().toISOString() } as any)
               .eq("id", existing.id);
             if (error) throw error;
           }
@@ -146,6 +222,7 @@ export default function FeatureManagement() {
             church_id: selectedChurchId,
             feature_id: f.id,
             enabled: d.enabled,
+            locked: d.locked,
           } as any);
           if (error) throw error;
         }
@@ -164,9 +241,25 @@ export default function FeatureManagement() {
   const resetChurch = useMutation({
     mutationFn: async () => {
       if (!selectedChurchId) return;
-      for (const cf of churchFeatures) {
-        await supabase.from("church_features").delete().eq("id", cf.id);
+      const livestream = features.find((feature) => feature.key === "livestream");
+      if (livestream) {
+        await setAuthoritativeLivestreamFeature(
+          selectedChurchId,
+          livestream.globally_enabled,
+          livestream.globally_locked,
+        );
       }
+      const { error } = await supabase.from("church_features").upsert(
+        features.filter((feature) => feature.key !== "livestream").map((feature) => ({
+          church_id: selectedChurchId,
+          feature_id: feature.id,
+          enabled: feature.is_mandatory ? true : feature.globally_enabled,
+          locked: feature.is_mandatory ? true : feature.globally_locked,
+          updated_at: new Date().toISOString(),
+        })),
+        { onConflict: "church_id,feature_id" },
+      );
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["sa-church-features", selectedChurchId] });
@@ -188,11 +281,16 @@ export default function FeatureManagement() {
         if (church.id === selectedChurchId) continue; // skip source church
         for (const f of features) {
           const gd = globalDraft[f.id] ?? { enabled: f.globally_enabled, locked: f.globally_locked };
-          if (gd.locked) continue; // skip locked features
+          if (gd.locked || !gd.enabled) continue; // global controls remain authoritative
           const desired = sourceSettings[f.id]?.enabled ?? gd.enabled;
+          const locked = sourceSettings[f.id]?.locked ?? false;
+          if (f.key === "livestream") {
+            await setAuthoritativeLivestreamFeature(church.id, desired, locked);
+            continue;
+          }
           // Upsert for this church
           const { error } = await supabase.from("church_features").upsert(
-            { church_id: church.id, feature_id: f.id, enabled: desired, updated_at: new Date().toISOString() } as any,
+            { church_id: church.id, feature_id: f.id, enabled: desired, locked, updated_at: new Date().toISOString() } as any,
             { onConflict: "church_id,feature_id" }
           );
           if (error) throw error;
@@ -208,12 +306,25 @@ export default function FeatureManagement() {
   });
 
   const updateGlobal = useCallback((featureId: string, field: "enabled" | "locked", value: boolean) => {
-    setGlobalDraft((prev) => ({ ...prev, [featureId]: { ...prev[featureId], [field]: value } }));
+    setGlobalDraft((prev) => {
+      const current = prev[featureId] ?? { enabled: true, locked: false };
+      const next = { ...current, [field]: value };
+      if (field === "enabled" && !value) next.locked = false;
+      return { ...prev, [featureId]: next };
+    });
     setGlobalDirty(true);
   }, []);
 
-  const updateChurch = useCallback((featureId: string, value: boolean) => {
-    setChurchDraft((prev) => ({ ...prev, [featureId]: { enabled: value } }));
+  const updateChurch = useCallback((featureId: string, field: "enabled" | "locked", value: boolean) => {
+    setChurchDraft((prev) => {
+      const current = {
+        enabled: prev[featureId]?.enabled ?? true,
+        locked: prev[featureId]?.locked ?? false,
+      };
+      const next = { ...current, [field]: value };
+      if (field === "enabled" && !value) next.locked = false;
+      return { ...prev, [featureId]: next };
+    });
     setChurchDirty(true);
   }, []);
 
@@ -231,10 +342,14 @@ export default function FeatureManagement() {
 
   const getChurchEffective = (f: Feature) => {
     const gd = globalDraft[f.id] ?? { enabled: f.globally_enabled, locked: f.globally_locked };
-    if (gd.locked) return { enabled: gd.enabled, locked: true };
-    if (!gd.enabled) return { enabled: false, locked: true };
+    if (!gd.enabled) return { enabled: false, locked: true, source: "Global Hidden" };
+    if (gd.locked) return { enabled: gd.enabled, locked: true, source: "Global Locked" };
     const cd = churchDraft[f.id];
-    return { enabled: cd ? cd.enabled : gd.enabled, locked: false };
+    return {
+      enabled: cd?.enabled === true,
+      locked: cd?.locked === true,
+      source: cd?.locked ? "Church Locked" : cd?.enabled === false ? "Church Hidden" : "Active",
+    };
   };
 
   return (
@@ -243,7 +358,8 @@ export default function FeatureManagement() {
         <div>
           <h1 className="text-2xl font-bold font-serif">Feature Management</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Control features globally or per church. Changes only apply when you click Apply.
+            Hide or lock features globally, then override visible and locked states per church when allowed.
+            Changes only apply when you click Apply.
           </p>
         </div>
 
@@ -276,13 +392,32 @@ export default function FeatureManagement() {
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
+                ) : features.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+                    <Globe className="h-10 w-10 text-muted-foreground/60" />
+                    <div>
+                      <p className="font-semibold">No feature controls are registered yet.</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Initialize the default Kanisa feature catalog to begin hiding or locking modules.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={() => initializeDefaults.mutate()}
+                      disabled={initializeDefaults.isPending}
+                      className="gap-2"
+                    >
+                      {initializeDefaults.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                      Initialize Default Features
+                    </Button>
+                  </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent border-border">
                         <TableHead>Feature</TableHead>
                         <TableHead>Description</TableHead>
-                        <TableHead className="text-center">Enabled</TableHead>
+                        <TableHead className="text-center">Visible</TableHead>
                         <TableHead className="text-center">Locked</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>
@@ -298,27 +433,31 @@ export default function FeatureManagement() {
                               <Switch
                                 checked={s.enabled}
                                 onCheckedChange={(v) => updateGlobal(f.id, "enabled", v)}
+                                disabled={f.is_mandatory}
+                                aria-label={`Set ${f.name} global visibility`}
                               />
                             </TableCell>
                             <TableCell className="text-center">
                               <Switch
                                 checked={s.locked}
                                 onCheckedChange={(v) => updateGlobal(f.id, "locked", v)}
+                                disabled={f.is_mandatory || !s.enabled}
+                                aria-label={`Lock ${f.name} globally`}
                               />
                             </TableCell>
                             <TableCell>
                               <Badge
                                 variant="outline"
                                 className={
-                                  s.locked
+                                  !s.enabled
+                                    ? "bg-muted text-muted-foreground"
+                                    : s.locked
                                     ? "bg-destructive/20 text-destructive border-destructive/30"
-                                    : s.enabled
-                                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                                    : "bg-muted text-muted-foreground"
+                                    : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                                 }
                               >
-                                {s.locked && <Lock className="h-3 w-3 mr-1" />}
-                                {s.locked ? "Locked" : s.enabled ? "Active" : "Disabled"}
+                                {!s.enabled ? <EyeOff className="h-3 w-3 mr-1" /> : s.locked ? <Lock className="h-3 w-3 mr-1" /> : <Eye className="h-3 w-3 mr-1" />}
+                                {!s.enabled ? "Hidden for All" : s.locked ? "Visible + Locked" : "Visible"}
                               </Badge>
                             </TableCell>
                           </TableRow>
@@ -392,34 +531,50 @@ export default function FeatureManagement() {
                         <TableRow className="hover:bg-transparent border-border">
                           <TableHead>Feature</TableHead>
                           <TableHead>Description</TableHead>
-                          <TableHead className="text-center">Enabled</TableHead>
+                          <TableHead className="text-center">Visible</TableHead>
+                          <TableHead className="text-center">Locked</TableHead>
                           <TableHead>Effective Status</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filtered.map((f) => {
                           const ce = getChurchEffective(f);
+                          const globallyControlled = ce.source === "Global Hidden" || ce.source === "Global Locked";
                           return (
                             <TableRow key={f.id} className="border-border">
                               <TableCell className="font-medium">{f.name}</TableCell>
                               <TableCell className="text-muted-foreground text-sm">{f.description}</TableCell>
                               <TableCell className="text-center">
-                                {ce.locked ? (
+                                {globallyControlled ? (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <div className="inline-flex items-center gap-1.5 text-muted-foreground">
-                                        <Lock className="h-4 w-4" />
-                                        <span className="text-xs">Locked by platform</span>
+                                        {ce.enabled ? <Lock className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                                        <span className="text-xs">{ce.source}</span>
                                       </div>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      This feature is controlled globally and cannot be overridden.
+                                      This feature is controlled globally and cannot be overridden for one church.
                                     </TooltipContent>
                                   </Tooltip>
                                 ) : (
                                   <Switch
                                     checked={ce.enabled}
-                                    onCheckedChange={(v) => updateChurch(f.id, v)}
+                                    onCheckedChange={(v) => updateChurch(f.id, "enabled", v)}
+                                    disabled={f.is_mandatory}
+                                    aria-label={`Set ${f.name} visibility for selected church`}
+                                  />
+                                )}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                {globallyControlled ? (
+                                  <span className="text-xs text-muted-foreground">Global</span>
+                                ) : (
+                                  <Switch
+                                    checked={ce.locked}
+                                    disabled={f.is_mandatory || !ce.enabled}
+                                    onCheckedChange={(v) => updateChurch(f.id, "locked", v)}
+                                    aria-label={`Lock ${f.name} for selected church`}
                                   />
                                 )}
                               </TableCell>
@@ -434,14 +589,8 @@ export default function FeatureManagement() {
                                       : "bg-muted text-muted-foreground"
                                   }
                                 >
-                                  {ce.locked && <Lock className="h-3 w-3 mr-1" />}
-                                  {ce.locked
-                                    ? ce.enabled
-                                      ? "Global On"
-                                      : "Global Off"
-                                    : ce.enabled
-                                    ? "Active"
-                                    : "Disabled"}
+                                  {ce.locked ? <Lock className="h-3 w-3 mr-1" /> : ce.enabled ? <Unlock className="h-3 w-3 mr-1" /> : <EyeOff className="h-3 w-3 mr-1" />}
+                                  {ce.source}
                                 </Badge>
                               </TableCell>
                             </TableRow>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatTZS } from "@/lib/currency";
+import { formatTZSForLanguage } from "@/lib/currency";
+import { normalizeAppLanguage } from "@/lib/localization";
 
 interface Props {
   open: boolean;
@@ -42,6 +44,8 @@ export function PledgePaymentDialog({
   isSubmitting,
   feePercentage = 1,
 }: Props) {
+  const { t, i18n } = useTranslation();
+  const language = normalizeAppLanguage(i18n.language) ?? "en";
   const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("mobile_money");
   const [transactionId, setTransactionId] = useState("");
@@ -69,43 +73,46 @@ export function PledgePaymentDialog({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Remaining balance: {formatTZS(maxAmount)}. Enter the amount the church should receive and the {feePercentage}% platform fee will be added on top.
+            {t("member_portal.giving_account.pledge_payment_description", {
+              balance: formatTZSForLanguage(maxAmount, language),
+              fee: feePercentage,
+            })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Amount For Church (TZS)</Label>
+            <Label>{t("member_portal.giving_account.amount_for_church_tzs")}</Label>
             <Input
               type="number"
               min="1"
               max={Math.max(maxAmount, 0)}
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
-              placeholder="Enter amount church should receive"
+              placeholder={t("member_portal.giving_account.enter_amount_church_receives")}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Transaction ID</Label>
-            <Input value={transactionId} onChange={(event) => setTransactionId(event.target.value)} placeholder="e.g. mobile-money reference" />
+            <Label>{t("member_portal.giving_account.transaction_id")}</Label>
+            <Input value={transactionId} onChange={(event) => setTransactionId(event.target.value)} placeholder={t("member_portal.giving_account.transaction_id_placeholder")} />
           </div>
           <div className="space-y-2">
-            <Label>Proof image path (if no transaction ID)</Label>
-            <Input value={proofUrl} onChange={(event) => setProofUrl(event.target.value)} placeholder="Uploaded receipt path or URL" />
-            <p className="text-xs text-muted-foreground">A church admin or pastor must approve this payment before the pledge balance changes.</p>
+            <Label>{t("member_portal.giving_account.proof_image_path")}</Label>
+            <Input value={proofUrl} onChange={(event) => setProofUrl(event.target.value)} placeholder={t("member_portal.giving_account.proof_image_placeholder")} />
+            <p className="text-xs text-muted-foreground">{t("member_portal.giving_account.payment_approval_note")}</p>
           </div>
 
           <div className="space-y-2">
-            <Label>Payment Method</Label>
+            <Label>{t("member_portal.giving_account.payment_method")}</Label>
             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose payment method" />
+                <SelectValue placeholder={t("member_portal.giving_account.choose_payment_method")} />
               </SelectTrigger>
               <SelectContent>
                 {PAYMENT_METHODS.map((method) => (
                   <SelectItem key={method.value} value={method.value}>
-                    {method.label}
+                    {t(`member_portal.giving_account.payment_methods.${method.value}`, method.label)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -115,16 +122,16 @@ export function PledgePaymentDialog({
           {numericAmount > 0 ? (
             <div className="space-y-1 rounded-lg border border-border bg-muted/50 p-3">
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Church receives</span>
-                <span>{formatTZS(numericAmount)}</span>
+                <span>{t("member_portal.giving_account.church_receives")}</span>
+                <span>{formatTZSForLanguage(numericAmount, language)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Platform fee ({feePercentage}%)</span>
-                <span>{formatTZS(feeAmount)}</span>
+                <span>{t("member_portal.giving_account.platform_fee", { fee: feePercentage })}</span>
+                <span>{formatTZSForLanguage(feeAmount, language)}</span>
               </div>
               <div className="flex justify-between border-t border-border pt-1 text-sm font-medium">
-                <span>You pay</span>
-                <span className="text-primary">{formatTZS(grossAmount)}</span>
+                <span>{t("member_portal.giving_account.you_pay")}</span>
+                <span className="text-primary">{formatTZSForLanguage(grossAmount, language)}</span>
               </div>
             </div>
           ) : null}
@@ -132,7 +139,7 @@ export function PledgePaymentDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)} disabled={!!isSubmitting}>
-            Cancel
+            {t("member_portal.common.cancel")}
           </Button>
           <Button
             disabled={!!isSubmitting || invalidAmount || missingEvidence}
@@ -142,7 +149,7 @@ export function PledgePaymentDialog({
             }}
           >
             {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Submit for Approval
+            {t("member_portal.giving_account.submit_for_approval")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { PageToolbar, getWorkspacePageActions, useWorkspacePage } from "@/components/workspace";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { PaginationFooter } from "@/components/ui/pagination-footer";
 
 export default function PrayerRequestsPage() {
+  const page = useWorkspacePage();
   const { churchId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -102,6 +104,7 @@ export default function PrayerRequestsPage() {
     });
 
   const reviewedRequests = requests.filter((request) => request.status === "approved" || request.status === "rejected");
+  const toolbarActions = useMemo(() => getWorkspacePageActions("prayer_requests", page), [page]);
 
   const statusColor = (status: string) => {
     if (status === "approved") return "bg-success/20 text-success border-success/30";
@@ -171,12 +174,11 @@ export default function PrayerRequestsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="font-serif text-2xl font-bold">Prayer Requests</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          View and manage prayer requests. Paid requests appear first with higher priority.
-        </p>
-      </div>
+      <PageToolbar
+        title="Prayer Requests"
+        description="Review prayer needs through the active workspace without changing the underlying request flow."
+        actions={toolbarActions}
+      />
 
       {isLoading ? (
         <p className="text-muted-foreground">Loading...</p>

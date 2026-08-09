@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-06-28T17:27:43.397Z",
+  "timestamp": "2026-07-05T19:13:02.645Z",
   "environment": "staging",
   "mode": "seed",
-  "duration_ms": 9243,
-  "created": 5,
-  "updated": 4,
+  "duration_ms": 18408,
+  "created": 8,
+  "updated": 21,
   "skipped": 0,
   "failed": 1,
   "warnings": [
@@ -13,7 +13,7 @@
     "church: Skipping optional churches.updated_at; column does not exist in this staging schema"
   ],
   "errors": [
-    "bootstrap: Code: PGRST204 | Message: Could not find the 'user_id' column of 'super_admins' in the schema cache"
+    "bootstrap: Message: XLSX.readFile is not a function"
   ],
   "users": [
     {
@@ -36,6 +36,34 @@
       "role": "member",
       "id": "721d65fa-0282-49be-8bf3-5a43c16574a3",
       "action": "updated"
+    },
+    {
+      "label": "Choir Member",
+      "email": "uat.choir.member@kanisaconnect.test",
+      "role": "member",
+      "id": "669ad16f-2365-418a-bdf9-d83a965ff48a",
+      "action": "updated"
+    },
+    {
+      "label": "Youth Member",
+      "email": "uat.youth.member@kanisaconnect.test",
+      "role": "member",
+      "id": "9c59b9fc-9101-4b21-a7aa-c9a3dbc4f3f1",
+      "action": "updated"
+    },
+    {
+      "label": "General Member",
+      "email": "uat.general.member@kanisaconnect.test",
+      "role": "member",
+      "id": "c893717b-d0f4-46b8-87e6-ef6022b46970",
+      "action": "updated"
+    },
+    {
+      "label": "Multi-Group Member",
+      "email": "uat.multigroup.member@kanisaconnect.test",
+      "role": "member",
+      "id": "6e1304dc-424e-4ea7-9034-d83c46311b82",
+      "action": "updated"
     }
   ],
   "church": {
@@ -45,9 +73,17 @@
     "action": "updated"
   },
   "saint_count": 0,
+  "cms_prayer_count": 0,
+  "cms_daily_reading_count": 0,
   "contribution_count": 0,
   "attendance_count": 0,
+  "pledge_count": 0,
+  "ministry_count": 0,
+  "channel_count": 0,
+  "prayer_request_count": 0,
+  "mass_intention_count": 0,
   "notification_count": 0,
+  "targeted_event_count": 0,
   "import_summary": {},
   "health_checks": []
 }

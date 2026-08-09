@@ -1,0 +1,16 @@
+{
+  "source_name": "biblica_open_kiswahili",
+  "reference_source_version": "rev2-release",
+  "archive": "C:\\Users\\HP\\Downloads\\0cd52ddc726e2ee6-rev2-release.zip",
+  "format": "DBL/USX 3.0",
+  "extracted_files": [
+    "metadata.xml",
+    "release/USX_1/GEN.usx",
+    "release/USX_1/MAT.usx",
+    "release/USX_1/PSA.usx",
+    "release/USX_1/ROM.usx",
+    "release/styles.xml",
+    "release/swh.ldml",
+    "release/versification.vrs"
+  ]
+}

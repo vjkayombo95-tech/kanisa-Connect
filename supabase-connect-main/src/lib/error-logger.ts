@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { captureSentryException, captureSentryMessage } from "./sentry";
 
 export type ErrorLogLevel = "error" | "warning" | "info";
+type PrintableLogLevel = ErrorLogLevel | "debug";
 
 export type ErrorLogContext = {
   component?: string;
@@ -14,11 +15,16 @@ export type ErrorLogContext = {
 };
 
 type NormalizedLog = {
-  level: ErrorLogLevel;
+  level: PrintableLogLevel;
   message: string;
   stack: string | null;
   context: ErrorLogContext;
 };
+
+export const DEFAULT_ERROR_MESSAGE = "Something went wrong. Please try again.";
+export const NETWORK_ERROR_MESSAGE = "We could not reach the server. Check your internet connection and try again.";
+export const PERMISSION_ERROR_MESSAGE = "You do not have permission to perform this action.";
+export const SESSION_ERROR_MESSAGE = "Your session may have expired. Please sign in again.";
 
 const MAX_MESSAGE_LENGTH = 1_000;
 const MAX_STACK_LENGTH = 8_000;
@@ -134,10 +140,17 @@ function printDevelopmentLog(log: NormalizedLog) {
     return;
   }
 
+  if (log.level === "debug") {
+    console.debug(details);
+    return;
+  }
+
   console.info(details);
 }
 
 async function writeLog(log: NormalizedLog) {
+  if (log.level === "debug") return;
+
   try {
     const { data: authData } = await supabase.auth.getUser();
     const userId = log.context.user_id ?? authData.user?.id ?? null;
@@ -194,6 +207,17 @@ export function logInfo(message: string, context?: ErrorLogContext) {
   });
 }
 
+export function logDebug(message: string, context?: ErrorLogContext) {
+  if (!import.meta.env.DEV) return;
+
+  printDevelopmentLog({
+    level: "debug",
+    message: truncateText(message, MAX_MESSAGE_LENGTH) ?? "Debug",
+    stack: null,
+    context: context ?? {},
+  });
+}
+
 export function captureException(error: unknown, context?: ErrorLogContext) {
   logError(error, context);
 }
@@ -212,4 +236,61 @@ export function logSupabaseError(
       bucket: context?.bucket,
     },
   });
+}
+
+function readErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object") {
+    const record = error as Record<string, unknown>;
+    if (typeof record.message === "string") return record.message;
+    if (typeof record.error_description === "string") return record.error_description;
+    if (typeof record.details === "string") return record.details;
+  }
+  return "";
+}
+
+function isUserSafeValidationMessage(message: string) {
+  return /\b(required|must|please|already exists|not found|invalid|too large|smaller|sign in)\b/i.test(message);
+}
+
+export function getUserFriendlyErrorMessage(error: unknown, fallback = DEFAULT_ERROR_MESSAGE) {
+  const message = readErrorMessage(error).trim();
+  if (!message) return fallback;
+
+  const lowerMessage = message.toLowerCase();
+
+  if (
+    lowerMessage.includes("failed to fetch") ||
+    lowerMessage.includes("networkerror") ||
+    lowerMessage.includes("network request failed") ||
+    lowerMessage.includes("connection")
+  ) {
+    return NETWORK_ERROR_MESSAGE;
+  }
+
+  if (
+    lowerMessage.includes("jwt") ||
+    lowerMessage.includes("session") ||
+    lowerMessage.includes("auth session") ||
+    lowerMessage.includes("refresh token")
+  ) {
+    return SESSION_ERROR_MESSAGE;
+  }
+
+  if (
+    lowerMessage.includes("permission denied") ||
+    lowerMessage.includes("not authorized") ||
+    lowerMessage.includes("unauthorized") ||
+    lowerMessage.includes("forbidden") ||
+    lowerMessage.includes("row-level security")
+  ) {
+    return PERMISSION_ERROR_MESSAGE;
+  }
+
+  if (isUserSafeValidationMessage(message)) {
+    return message;
+  }
+
+  return fallback;
 }
