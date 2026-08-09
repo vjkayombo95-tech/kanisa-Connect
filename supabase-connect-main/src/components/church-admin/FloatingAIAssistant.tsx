@@ -140,7 +140,7 @@ export function FloatingAIAssistant() {
   const openFullAI = (prompt?: string) => {
     const search = prompt?.trim() ? `?q=${encodeURIComponent(prompt.trim())}` : "";
     setPanelOpen(false);
-    navigate(`/church-admin/analytics-assistant${search}`);
+    navigate(`/church-admin/finance-intelligence${search}`);
   };
 
   const handleFabClick = () => {
@@ -164,7 +164,7 @@ export function FloatingAIAssistant() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">Ask AI</p>
-                  <h3 className="mt-1 text-lg font-semibold text-foreground">Analytics Copilot</h3>
+                  <h3 className="mt-1 text-lg font-semibold text-foreground">Finance Intelligence</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Ask about giving, contributors, or category trends.
                   </p>
@@ -211,7 +211,7 @@ export function FloatingAIAssistant() {
                 </div>
                 <Button className="rounded-2xl" onClick={() => openFullAI(draftQuery)}>
                   <MessageSquareText className="h-4 w-4" />
-                  Open full AI
+                  Open Finance Intelligence
                   <ArrowUpRight className="h-4 w-4" />
                 </Button>
               </div>

@@ -29,6 +29,7 @@ import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { PaginationFooter } from "@/components/ui/pagination-footer";
 import { fetchChurchMessageTemplate, renderChurchMessageTemplate } from "@/lib/church-message-templates";
 import { openWhatsAppShare } from "@/lib/whatsapp-share";
+import { buildSacramentalTimeline, sacramentStatusLabel, type SacramentalRecord } from "@/lib/sacraments";
 
 type MemberRow = Tables<"members">;
 type InviteInsert = TablesInsert<"invitations">;
@@ -381,6 +382,23 @@ export default function MembersPage() {
     enabled: canAccessMemberData && !!detailMember,
   });
 
+  const { data: memberSacraments = [] } = useQuery({
+    queryKey: ["member-sacraments", trustedChurchId, detailMember?.id],
+    queryFn: async () => {
+      if (!canAccessMemberData || !detailMember) return [];
+      const { data, error } = await supabase.rpc("get_sacramental_records" as never, {
+        _church_id: trustedChurchId,
+        _search: detailMember.full_name ?? null,
+      } as never);
+      if (error) {
+        console.warn("Sacramental timeline unavailable on members page.", error);
+        return [];
+      }
+      return ((data ?? []) as unknown as SacramentalRecord[]).filter((record) => record.member_id === detailMember.id);
+    },
+    enabled: canAccessMemberData && !!detailMember,
+  });
+
   useEffect(() => {
     if (membersError) {
       toast({
@@ -599,6 +617,31 @@ export default function MembersPage() {
               </div>
 
               {/* Recent contributions */}
+              {memberSacraments.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3">Sacramental Timeline</h4>
+                    <ol className="space-y-3 border-l border-border pl-4">
+                      {buildSacramentalTimeline(memberSacraments).map((item) => (
+                        <li key={item.id} className="text-sm">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium">{item.year ?? "Future"}</span>
+                            <span>{item.title}</span>
+                            <Badge variant="outline">{sacramentStatusLabel(item.status)}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {item.date ? new Date(item.date).toLocaleDateString() : "Date pending"}
+                            {item.certificateNumber ? ` - Certificate ${item.certificateNumber}` : ""}
+                          </p>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                </>
+              )}
+
+              {/* Recent contributions */}
               {contribs.length > 0 && (
                 <>
                   <Separator />
@@ -626,7 +669,7 @@ export default function MembersPage() {
         </Dialog>
       );
     };
-  }, [detailMember, getMemberCommunity, getMemberMinistry, getMemberFamily, getCommunityName, getMinistryName, getFamilyName, getMemberContribs, invitedMemberIds, statusColor, openEdit, sendInvite, sendingInviteId, setDetailMember, setDeleteConfirm, shareMemberMessage]);
+  }, [detailMember, getMemberCommunity, getMemberMinistry, getMemberFamily, getCommunityName, getMinistryName, getFamilyName, getMemberContribs, invitedMemberIds, memberSacraments, statusColor, openEdit, sendInvite, sendingInviteId, setDetailMember, setDeleteConfirm, shareMemberMessage]);
 
   if (authLoading || memberContextLoading) {
     return (

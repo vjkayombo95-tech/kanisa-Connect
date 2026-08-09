@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Building2, FileText, Loader2, MessageSquare, Paperclip, Plus, Send, Shield, SmilePlus, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { resolveChannelRecipients, type ChannelAudienceType, type ChannelRecord, getChannelAudienceLabel } from "@/lib/channels";
+import { ScriptureText } from "@/components/bible";
+import { resolveChannelRecipients, type ChannelAudienceType, type ChannelRecord } from "@/lib/channels";
 import { formatBytes, uploadFile, validateFile } from "@/lib/file-upload";
 import { useToast } from "@/hooks/use-toast";
+import { formatLocalizedDate, normalizeAppLanguage } from "@/lib/localization";
 
 type WorkspaceScope = "church_admin" | "community_leader" | "member";
 
@@ -27,16 +30,16 @@ interface ChannelWorkspaceProps {
   description: string;
 }
 
-const ADMIN_AUDIENCE_OPTIONS: Array<{ value: ChannelAudienceType; label: string }> = [
-  { value: "ministry", label: "One ministry" },
-  { value: "community_leaders", label: "Leaders from one community" },
-  { value: "all_community_leaders", label: "Leaders from all communities" },
-  { value: "admin_roles", label: "Administrative roles" },
+const ADMIN_AUDIENCE_OPTIONS: Array<{ value: ChannelAudienceType; label: string; labelKey: string }> = [
+  { value: "ministry", label: "One ministry", labelKey: "member_portal.parish_life.channel_audience.ministry" },
+  { value: "community_leaders", label: "Leaders from one community", labelKey: "member_portal.parish_life.channel_audience.community_leaders" },
+  { value: "all_community_leaders", label: "Leaders from all communities", labelKey: "member_portal.parish_life.channel_audience.all_community_leaders" },
+  { value: "admin_roles", label: "Administrative roles", labelKey: "member_portal.parish_life.channel_audience.admin_roles" },
 ];
 
-const COMMUNITY_AUDIENCE_OPTIONS: Array<{ value: ChannelAudienceType; label: string }> = [
-  { value: "community_leaders", label: "Leaders in this community" },
-  { value: "community_members", label: "All people in this community" },
+const COMMUNITY_AUDIENCE_OPTIONS: Array<{ value: ChannelAudienceType; label: string; labelKey: string }> = [
+  { value: "community_leaders", label: "Leaders in this community", labelKey: "member_portal.parish_life.channel_audience.community_leaders_local" },
+  { value: "community_members", label: "All people in this community", labelKey: "member_portal.parish_life.channel_audience.community_members" },
 ];
 
 const ADMIN_ROLE_OPTIONS = [
@@ -50,6 +53,11 @@ const CHAT_REACTION_EMOJIS = ["👍", "❤️", "🙏", "🎉", "🔥", "😊"] 
 
 const MESSAGE_PAGE_SIZE = 50;
 
+function getChannelAudienceLabelText(channel: Pick<ChannelRecord, "audience_type">, t: (key: string, fallback?: string) => string) {
+  const fallback = String(channel.audience_type ?? "").replace(/_/g, " ") || "Channel";
+  return t(`member_portal.parish_life.channel_audience_badge.${channel.audience_type}`, fallback);
+}
+
 export function ChannelWorkspace({
   scope,
   churchId,
@@ -59,6 +67,8 @@ export function ChannelWorkspace({
   title,
   description,
 }: ChannelWorkspaceProps) {
+  const { i18n, t } = useTranslation();
+  const language = normalizeAppLanguage(i18n.language) ?? "en";
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedChannelId, setSelectedChannelId] = useState<string>("");
@@ -76,8 +86,8 @@ export function ChannelWorkspace({
   const attachmentInputRef = useRef<HTMLInputElement>(null);
   const canUploadAttachments = scope !== "member";
   const composerPlaceholder = canUploadAttachments
-    ? "Type an update, report, or discussion message..."
-    : "Type your message...";
+    ? t("member_portal.parish_life.channel_composer_leader")
+    : t("member_portal.parish_life.channel_composer_member");
 
   const audienceOptions = scope === "church_admin" ? ADMIN_AUDIENCE_OPTIONS : COMMUNITY_AUDIENCE_OPTIONS;
 
@@ -208,7 +218,7 @@ export function ChannelWorkspace({
         ? await supabase.from("profiles").select("id, full_name").in("id", senderIds)
         : { data: [] };
 
-      const profileMap = new Map((profiles ?? []).map((profile: any) => [profile.id, profile.full_name || "User"]));
+      const profileMap = new Map((profiles ?? []).map((profile: any) => [profile.id, profile.full_name || t("member_portal.parish_life.user")]));
       const { data: reactions, error: reactionsError } = messageIds.length
         ? await supabase
             .from("chat_message_reactions" as never)
@@ -248,7 +258,7 @@ export function ChannelWorkspace({
       return {
         messages: rows.map((message) => ({
           ...message,
-          sender_name: profileMap.get(message.sender_user_id) || "User",
+          sender_name: profileMap.get(message.sender_user_id) || t("member_portal.parish_life.user"),
           reactions: reactionMap.get(message.id) ?? [],
         })),
         nextCursor: rows.length === MESSAGE_PAGE_SIZE ? rows[rows.length - 1]?.created_at : undefined,
@@ -300,7 +310,7 @@ export function ChannelWorkspace({
 
   const createChannel = useMutation({
     mutationFn: async () => {
-      if (!channelName.trim()) throw new Error("Channel name is required.");
+      if (!channelName.trim()) throw new Error(t("member_portal.parish_life.channel_name_required"));
 
       const resolvedCommunityId = scope === "community_leader" ? communityId || selectedCommunityId : selectedCommunityId;
 
@@ -313,7 +323,7 @@ export function ChannelWorkspace({
       });
 
       if (recipients.length === 0) {
-        throw new Error("No registered recipients were found for this channel.");
+        throw new Error(t("member_portal.parish_life.no_channel_recipients"));
       }
 
       const payload = {
@@ -370,7 +380,7 @@ export function ChannelWorkspace({
     onSuccess: (channel) => {
       queryClient.invalidateQueries({ queryKey: ["chat-channels"] });
       queryClient.invalidateQueries({ queryKey: ["chat-memberships"] });
-      toast({ title: "Channel created", description: `${channel.name} is ready for updates.` });
+      toast({ title: t("member_portal.parish_life.channel_created"), description: t("member_portal.parish_life.channel_ready", { name: channel.name }) });
       setCreateOpen(false);
       setSelectedChannelId(channel.id);
       setChannelName("");
@@ -380,15 +390,15 @@ export function ChannelWorkspace({
       setSelectedAdminRoles(["pastor", "treasurer"]);
     },
     onError: (error: any) => {
-      toast({ title: "Unable to create channel", description: error.message, variant: "destructive" });
+      toast({ title: t("member_portal.parish_life.unable_create_channel"), description: error.message, variant: "destructive" });
     },
   });
 
   const sendMessage = useMutation({
     mutationFn: async () => {
-      if (!selectedChannelId) throw new Error("Choose a channel first.");
-      if (!newMessage.trim() && !attachmentFile) throw new Error("Add a message or attach a PDF first.");
-      if (attachmentFile && !canUploadAttachments) throw new Error("Only leaders can upload files in channels.");
+      if (!selectedChannelId) throw new Error(t("member_portal.parish_life.choose_channel_first"));
+      if (!newMessage.trim() && !attachmentFile) throw new Error(t("member_portal.parish_life.add_message_or_pdf"));
+      if (attachmentFile && !canUploadAttachments) throw new Error(t("member_portal.parish_life.leaders_upload_only"));
 
       let attachmentPayload: Record<string, any> = {};
 
@@ -432,7 +442,7 @@ export function ChannelWorkspace({
       setAttachmentFile(null);
     },
     onError: (error: any) => {
-      toast({ title: "Unable to send message", description: error.message, variant: "destructive" });
+      toast({ title: t("member_portal.parish_life.unable_send_message"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -463,7 +473,7 @@ export function ChannelWorkspace({
       queryClient.invalidateQueries({ queryKey: messageQueryKey });
     },
     onError: (error: any) => {
-      toast({ title: "Unable to save reaction", description: error.message, variant: "destructive" });
+      toast({ title: t("member_portal.parish_life.unable_save_reaction"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -471,48 +481,48 @@ export function ChannelWorkspace({
   const EmptyIcon = emptyIcon;
 
   const selectedAudienceSummary = useMemo(() => {
-    if (audienceType === "ministry") return ministries.find((row: any) => row.id === selectedMinistryId)?.name || "Choose a ministry";
-    if (audienceType === "community_leaders") return communities.find((row: any) => row.id === (communityId || selectedCommunityId))?.name || "Choose a community";
+    if (audienceType === "ministry") return ministries.find((row: any) => row.id === selectedMinistryId)?.name || t("member_portal.parish_life.choose_ministry");
+    if (audienceType === "community_leaders") return communities.find((row: any) => row.id === (communityId || selectedCommunityId))?.name || t("member_portal.parish_life.choose_community");
     if (audienceType === "admin_roles") {
       return selectedAdminRoles.length > 0
         ? selectedAdminRoles.map((role) => ADMIN_ROLE_OPTIONS.find((item) => item.value === role)?.label || role).join(", ")
-        : "Choose roles";
+        : t("member_portal.parish_life.choose_roles");
     }
-    if (audienceType === "community_members") return communities.find((row: any) => row.id === (communityId || selectedCommunityId))?.name || "Current community";
-    return "All communities";
-  }, [audienceType, communities, communityId, ministries, selectedAdminRoles, selectedCommunityId, selectedMinistryId]);
+    if (audienceType === "community_members") return communities.find((row: any) => row.id === (communityId || selectedCommunityId))?.name || t("member_portal.parish_life.current_community");
+    return t("member_portal.parish_life.all_communities");
+  }, [audienceType, communities, communityId, ministries, selectedAdminRoles, selectedCommunityId, selectedMinistryId, t]);
 
   const createChannelButton = scope !== "member" ? (
     <Dialog open={createOpen} onOpenChange={setCreateOpen}>
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="mr-2 h-4 w-4" />
-          Create Channel
+          {t("member_portal.parish_life.create_channel")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Create Channel</DialogTitle>
+          <DialogTitle>{t("member_portal.parish_life.create_channel")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Channel name</Label>
-            <Input value={channelName} onChange={(event) => setChannelName(event.target.value)} placeholder="Monthly reports" />
+            <Label>{t("member_portal.parish_life.channel_name")}</Label>
+            <Input value={channelName} onChange={(event) => setChannelName(event.target.value)} placeholder={t("member_portal.parish_life.channel_name_placeholder")} />
           </div>
           <div className="space-y-2">
-            <Label>Description</Label>
-            <Textarea value={channelDescription} onChange={(event) => setChannelDescription(event.target.value)} rows={3} placeholder="Purpose of this channel..." />
+            <Label>{t("member_portal.parish_life.description")}</Label>
+            <Textarea value={channelDescription} onChange={(event) => setChannelDescription(event.target.value)} rows={3} placeholder={t("member_portal.parish_life.channel_description_placeholder")} />
           </div>
           <div className="space-y-2">
-            <Label>Audience</Label>
+            <Label>{t("member_portal.parish_life.audience")}</Label>
             <Select value={audienceType} onValueChange={(value: ChannelAudienceType) => setAudienceType(value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose audience" />
+                <SelectValue placeholder={t("member_portal.parish_life.choose_audience")} />
               </SelectTrigger>
               <SelectContent>
                 {audienceOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey, option.label)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -521,10 +531,10 @@ export function ChannelWorkspace({
 
           {scope === "church_admin" && audienceType === "ministry" && (
             <div className="space-y-2">
-              <Label>Ministry</Label>
+              <Label>{t("member_portal.parish_life.ministry")}</Label>
               <Select value={selectedMinistryId} onValueChange={setSelectedMinistryId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select ministry" />
+                  <SelectValue placeholder={t("member_portal.parish_life.select_ministry")} />
                 </SelectTrigger>
                 <SelectContent>
                   {ministries.map((ministry: any) => (
@@ -539,10 +549,10 @@ export function ChannelWorkspace({
 
           {scope === "church_admin" && audienceType === "community_leaders" && (
             <div className="space-y-2">
-              <Label>Community</Label>
+              <Label>{t("member_portal.parish_life.community")}</Label>
               <Select value={selectedCommunityId} onValueChange={setSelectedCommunityId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select community" />
+                  <SelectValue placeholder={t("member_portal.parish_life.select_community")} />
                 </SelectTrigger>
                 <SelectContent>
                   {communities.map((community: any) => (
@@ -557,7 +567,7 @@ export function ChannelWorkspace({
 
           {scope === "church_admin" && audienceType === "admin_roles" && (
             <div className="space-y-2">
-              <Label>Administrative roles</Label>
+              <Label>{t("member_portal.parish_life.administrative_roles")}</Label>
               <div className="grid grid-cols-2 gap-2">
                 {ADMIN_ROLE_OPTIONS.map((role) => {
                   const checked = selectedAdminRoles.includes(role.value);
@@ -583,14 +593,14 @@ export function ChannelWorkspace({
           )}
 
           <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Recipients</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t("member_portal.parish_life.recipients")}</p>
             <p className="mt-2 text-sm font-medium">{selectedAudienceSummary}</p>
           </div>
 
           <div className="flex justify-end">
             <Button onClick={() => createChannel.mutate()} disabled={createChannel.isPending || !channelName.trim()}>
               {createChannel.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Channel
+              {t("member_portal.parish_life.create_channel")}
             </Button>
           </div>
         </div>
@@ -604,7 +614,7 @@ export function ChannelWorkspace({
 
     const validation = validateFile(file, "channel-attachment");
     if (!validation.valid) {
-      toast({ title: "Invalid attachment", description: validation.error, variant: "destructive" });
+      toast({ title: t("member_portal.parish_life.invalid_attachment"), description: validation.error, variant: "destructive" });
       event.target.value = "";
       return;
     }
@@ -628,7 +638,7 @@ export function ChannelWorkspace({
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-primary" />
-              Channels
+              {t("member_portal.parish_life.channels")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -639,13 +649,13 @@ export function ChannelWorkspace({
             ) : channelsError ? (
               <div className="py-8 text-center text-muted-foreground">
                 <EmptyIcon className="h-10 w-10 mx-auto mb-3 text-destructive/50" />
-                <p className="text-sm font-medium text-foreground">We could not load channels.</p>
-                <p className="mt-1 text-xs">{channelsError instanceof Error ? channelsError.message : "Please refresh and try again."}</p>
+                <p className="text-sm font-medium text-foreground">{t("member_portal.parish_life.channels_load_error")}</p>
+                <p className="mt-1 text-xs">{channelsError instanceof Error ? channelsError.message : t("member_portal.common.please_try_again")}</p>
               </div>
             ) : channels.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground">
                 <EmptyIcon className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-                <p className="text-sm">No channels yet.</p>
+                <p className="text-sm">{t("member_portal.parish_life.no_channels")}</p>
                 {scope !== "member" && (
                   <div className="mt-4 flex justify-center">
                     {createChannelButton}
@@ -666,10 +676,10 @@ export function ChannelWorkspace({
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate">{channel.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{channel.description || "No description yet."}</p>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{channel.description || t("member_portal.parish_life.no_description")}</p>
                     </div>
                     <Badge variant="outline" className="text-[10px] shrink-0">
-                      {getChannelAudienceLabel(channel)}
+                      {getChannelAudienceLabelText(channel, t)}
                     </Badge>
                   </div>
                 </button>
@@ -681,11 +691,11 @@ export function ChannelWorkspace({
         <Card className="glass-card min-h-[520px]">
           <CardHeader className="border-b border-border/50">
             <CardTitle className="text-base">
-              {selectedChannel ? selectedChannel.name : "Channel conversation"}
+              {selectedChannel ? selectedChannel.name : t("member_portal.parish_life.channel_conversation")}
             </CardTitle>
             {selectedChannel && (
               <p className="text-sm text-muted-foreground">
-                {selectedChannel.description || getChannelAudienceLabel(selectedChannel)}
+                {selectedChannel.description || getChannelAudienceLabelText(selectedChannel, t)}
               </p>
             )}
           </CardHeader>
@@ -694,7 +704,7 @@ export function ChannelWorkspace({
               <div className="flex min-h-[420px] items-center justify-center text-center text-muted-foreground">
                 <div>
                   <MessageSquare className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
-                  <p>Select a channel to start reading updates.</p>
+                  <p>{t("member_portal.parish_life.select_channel")}</p>
                 </div>
               </div>
             ) : (
@@ -707,7 +717,7 @@ export function ChannelWorkspace({
                   ) : messages.length === 0 ? (
                     <div className="py-12 text-center text-muted-foreground">
                       <Bell className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-                      <p>No messages yet. Start this channel with a message.</p>
+                      <p>{t("member_portal.parish_life.no_messages")}</p>
                     </div>
                   ) : (
                     <>
@@ -721,7 +731,7 @@ export function ChannelWorkspace({
                             disabled={isFetchingNextPage}
                           >
                             {isFetchingNextPage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Load earlier messages
+                            {t("member_portal.parish_life.load_earlier_messages")}
                           </Button>
                         </div>
                       )}
@@ -731,9 +741,13 @@ export function ChannelWorkspace({
                         <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                           <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${mine ? "bg-primary text-primary-foreground" : "bg-muted/40"}`}>
                             <div className={`text-xs font-medium ${mine ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                              {mine ? "You" : message.sender_name}
+                              {mine ? t("member_portal.parish_life.you") : message.sender_name}
                             </div>
-                            {message.body && <p className="mt-1 whitespace-pre-wrap text-sm">{message.body}</p>}
+                            {message.body && (
+                              <p className="mt-1 whitespace-pre-wrap text-sm">
+                                <ScriptureText text={message.body} />
+                              </p>
+                            )}
                             {message.attachment_url && (
                               <a
                                 href={message.attachment_url}
@@ -749,15 +763,15 @@ export function ChannelWorkspace({
                                   <FileText className={`h-4 w-4 ${mine ? "text-primary-foreground" : "text-primary"}`} />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <p className="truncate font-medium">{message.attachment_name || "Attached PDF"}</p>
+                                  <p className="truncate font-medium">{message.attachment_name || t("member_portal.parish_life.attached_pdf")}</p>
                                   <p className={`text-xs ${mine ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
-                                    {message.attachment_size ? formatBytes(Number(message.attachment_size)) : "PDF document"}
+                                    {message.attachment_size ? formatBytes(Number(message.attachment_size)) : t("member_portal.parish_life.pdf_document")}
                                   </p>
                                 </div>
                               </a>
                             )}
                             <p className={`mt-2 text-[11px] ${mine ? "text-primary-foreground/70" : "text-muted-foreground/70"}`}>
-                              {new Date(message.created_at).toLocaleString()}
+                              {formatLocalizedDate(message.created_at, language, { dateStyle: "medium", timeStyle: "short" })}
                             </p>
                             <div className="mt-3 flex flex-wrap items-center gap-2">
                               {message.reactions?.map((reaction: any) => (
@@ -833,14 +847,14 @@ export function ChannelWorkspace({
                         <p className="text-xs text-muted-foreground">{formatBytes(attachmentFile.size)}</p>
                       </div>
                       <Button type="button" variant="ghost" size="sm" onClick={() => setAttachmentFile(null)}>
-                        Remove
+                        {t("common.remove")}
                       </Button>
                     </div>
                   )}
                   <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
                     <SmilePlus className="h-3.5 w-3.5" />
-                    React with emojis on any message.
-                    {!canUploadAttachments && <span>Members can chat only.</span>}
+                    {t("member_portal.parish_life.react_with_emojis")}
+                    {!canUploadAttachments && <span>{t("member_portal.parish_life.members_chat_only")}</span>}
                   </div>
                   <div className="flex gap-3">
                     <Textarea

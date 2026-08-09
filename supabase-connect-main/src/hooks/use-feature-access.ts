@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,11 +9,18 @@ type PlatformFeatureRow = {
   name: string;
   globally_enabled: boolean;
   globally_locked: boolean;
+  available_plans?: string[];
 };
 
 type ChurchFeatureRow = {
   feature_id: string;
   enabled: boolean;
+  locked?: boolean | null;
+};
+
+type RolePermissionRow = {
+  feature_id: string;
+  can_view: boolean;
 };
 
 const FEATURE_KEY_ALIASES: Record<string, string[]> = {
@@ -32,26 +39,61 @@ export type FeatureState = {
 const DEFAULT_FEATURE_STATE = (key: string): FeatureState => ({
   key,
   exists: false,
-  enabled: true,
-  visible: true,
+  enabled: false,
+  visible: false,
   locked: false,
 });
 
 export function useFeatureAccess() {
-  const { churchId } = useAuth();
+  const { churchId, isSuperAdmin, user, userRoles } = useAuth();
 
   const { data: platformFeatures = [], isLoading: platformLoading } = useQuery({
     queryKey: ["portal-platform-features"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("platform_features")
-        .select("id, key, name, globally_enabled, globally_locked");
+        .select("id, key, name, globally_enabled, globally_locked, available_plans");
 
       if (error) throw error;
       return (data ?? []) as PlatformFeatureRow[];
     },
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
+  });
+
+  const { data: subscriptionPlan = null, isLoading: subscriptionLoading } = useQuery({
+    queryKey: ["feature-subscription-plan", churchId],
+    queryFn: async () => {
+      if (!churchId) return null;
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("plan")
+        .eq("church_id", churchId)
+        .in("status", ["active", "trial"])
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.plan ?? null;
+    },
+    enabled: !!churchId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: rolePermissions = [], isLoading: permissionsLoading } = useQuery({
+    queryKey: ["church-role-permissions", churchId, user?.id, [...userRoles].sort().join(",")],
+    queryFn: async () => {
+      if (!churchId || userRoles.length === 0 || isSuperAdmin) return [];
+      const { data, error } = await supabase
+        .from("church_role_permissions")
+        .select("feature_id, can_view")
+        .eq("church_id", churchId)
+        .in("role", userRoles);
+      if (error) throw error;
+      return (data ?? []) as RolePermissionRow[];
+    },
+    enabled: !!churchId && userRoles.length > 0 && !isSuperAdmin,
+    staleTime: 60 * 1000,
   });
 
   const { data: churchFeatures = [], isLoading: churchLoading } = useQuery({
@@ -61,7 +103,7 @@ export function useFeatureAccess() {
 
       const { data, error } = await supabase
         .from("church_features")
-        .select("feature_id, enabled")
+        .select("feature_id, enabled, locked")
         .eq("church_id", churchId);
 
       if (error) throw error;
@@ -73,18 +115,24 @@ export function useFeatureAccess() {
   });
 
   const featureMap = useMemo(() => {
-    const churchOverrides = new Map(churchFeatures.map((feature) => [feature.feature_id, feature.enabled]));
+    const churchOverrides = new Map(churchFeatures.map((feature) => [feature.feature_id, feature]));
+    const permissionMap = new Map<string, boolean>();
+    rolePermissions.forEach((permission) => {
+      if (permission.can_view) permissionMap.set(permission.feature_id, true);
+    });
     const result = new Map<string, FeatureState>();
 
     for (const feature of platformFeatures) {
       const globalEnabled = feature.globally_enabled;
       const globalLocked = feature.globally_locked;
-      const churchEnabled = churchOverrides.has(feature.id)
-        ? churchOverrides.get(feature.id) ?? globalEnabled
-        : globalEnabled;
+      const subscriptionAvailable = subscriptionPlan !== null && feature.available_plans?.includes(subscriptionPlan) === true;
+      const churchOverride = churchOverrides.get(feature.id);
+      const churchEnabled = churchOverride?.enabled === true;
+      const churchLocked = churchOverride?.locked === true;
 
-      const visible = globalEnabled && (globalLocked || churchEnabled);
-      const locked = globalEnabled && globalLocked;
+      const roleCanView = isSuperAdmin || permissionMap.get(feature.id) === true;
+      const visible = globalEnabled && subscriptionAvailable && churchEnabled && roleCanView;
+      const locked = visible && (globalLocked || churchLocked);
 
       result.set(feature.key, {
         key: feature.key,
@@ -96,9 +144,9 @@ export function useFeatureAccess() {
     }
 
     return result;
-  }, [churchFeatures, platformFeatures]);
+  }, [churchFeatures, isSuperAdmin, platformFeatures, rolePermissions, subscriptionPlan]);
 
-  const getFeatureState = (key: string): FeatureState => {
+  const getFeatureState = useCallback((key: string): FeatureState => {
     const directState = featureMap.get(key);
     if (directState) return directState;
 
@@ -114,15 +162,19 @@ export function useFeatureAccess() {
     }
 
     return DEFAULT_FEATURE_STATE(key);
-  };
+  }, [featureMap]);
+
+  const isFeatureVisible = useCallback((key: string) => getFeatureState(key).visible, [getFeatureState]);
+  const isFeatureLocked = useCallback((key: string) => getFeatureState(key).locked, [getFeatureState]);
+  const isFeatureEnabled = useCallback((key: string) => getFeatureState(key).enabled, [getFeatureState]);
 
   return {
-    isLoading: platformLoading || churchLoading,
+    isLoading: platformLoading || churchLoading || subscriptionLoading || permissionsLoading,
     platformFeatures,
     churchFeatures,
     getFeatureState,
-    isFeatureVisible: (key: string) => getFeatureState(key).visible,
-    isFeatureLocked: (key: string) => getFeatureState(key).locked,
-    isFeatureEnabled: (key: string) => getFeatureState(key).enabled,
+    isFeatureVisible,
+    isFeatureLocked,
+    isFeatureEnabled,
   };
 }

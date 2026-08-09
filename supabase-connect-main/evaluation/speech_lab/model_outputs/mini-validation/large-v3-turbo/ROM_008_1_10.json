@@ -1,0 +1,1699 @@
+{
+  "chapter_id": "ROM_008_1_10",
+  "text": "Kwa sasa hakuna hukumu ya athabu kwa wale waliondania almasihi isa. Kwa sababu, sheria ya roho wa uzima karika almasihi isa imeniweka huru mbali na sheria ya dhambi na mauti. Kwa maana, kile ambacho torati haikuwa na uwezo wa kufanya kwa vile ilivyo kwa zaifu katika mwili. Mungu kwa kumtuma mwanawe mwenyewe kwa mfano wa mwanadamu mwenye mwili ulio wa dhambi na kwa ajili ya dhambi. Yeye alihukumu dhambi katika mwili. Ili haki ipatikanayo kwa torati, itimizu ndani yetu sisi. Ambao hatuenendi kwa kufuata mwili, bali kwa kufuata roho wa mungu. Kwa maana, wale wanawishi kwa kufuata mwili huziweka niya zao katika vitu vya mwili. Lakini wale wanawishi kwa kufuata roho wa mungu huziweka niya zao katika mambo ya huyo roho. Kwa maana, kwa nania ya mwili ni mauti. Bali, kwa nania inayongozo na roho wa mungu ni uzima na amani. Kwa kuwa, ile nia ya mwili ni uadui na mungu. Kwa maana, haiti ito rati ya mungu. Wala haiwezi kuiti. Wale wanautawaliwa na mwili, hawawezi kumpendeza mungu. Lakini nini hamtawaliwi na mwili. Bali na roho. Ikiwa roho wa mungu anakanda nienu. Mtu wambaihana roho wa almasihi, huyo siwa almasihi. Lakini kama almasihi anakanda nienu, milienu imekufa kwa sababu ya dhambi. Lakini roho zenu zihai kwa sababu ya haa.",
+  "words": [
+    {
+      "word": "Kwa",
+      "start_ms": 10000,
+      "end_ms": 10000,
+      "confidence": 0.5625093504786491,
+      "verse": null
+    },
+    {
+      "word": "sasa",
+      "start_ms": 10000,
+      "end_ms": 10320,
+      "confidence": 0.7727387249469757,
+      "verse": null
+    },
+    {
+      "word": "hakuna",
+      "start_ms": 10320,
+      "end_ms": 10900,
+      "confidence": 0.9405079782009125,
+      "verse": null
+    },
+    {
+      "word": "hukumu",
+      "start_ms": 10900,
+      "end_ms": 11360,
+      "confidence": 0.9992849628130595,
+      "verse": null
+    },
+    {
+      "word": "ya",
+      "start_ms": 11360,
+      "end_ms": 11520,
+      "confidence": 0.9994322657585144,
+      "verse": null
+    },
+    {
+      "word": "athabu",
+      "start_ms": 11520,
+      "end_ms": 12040,
+      "confidence": 0.8590160012245178,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 12040,
+      "end_ms": 12940,
+      "confidence": 0.9553465247154236,
+      "verse": null
+    },
+    {
+      "word": "wale",
+      "start_ms": 12940,
+      "end_ms": 13220,
+      "confidence": 0.8525186479091644,
+      "verse": null
+    },
+    {
+      "word": "waliondania",
+      "start_ms": 13220,
+      "end_ms": 13900,
+      "confidence": 0.8769956231117249,
+      "verse": null
+    },
+    {
+      "word": "almasihi",
+      "start_ms": 13900,
+      "end_ms": 14660,
+      "confidence": 0.8523585200309753,
+      "verse": null
+    },
+    {
+      "word": "isa.",
+      "start_ms": 14660,
+      "end_ms": 15100,
+      "confidence": 0.7309650927782059,
+      "verse": null
+    },
+    {
+      "word": "Kwa",
+      "start_ms": 15900,
+      "end_ms": 16280,
+      "confidence": 0.9906755685806274,
+      "verse": null
+    },
+    {
+      "word": "sababu,",
+      "start_ms": 16280,
+      "end_ms": 16820,
+      "confidence": 0.9995721975962321,
+      "verse": null
+    },
+    {
+      "word": "sheria",
+      "start_ms": 17480,
+      "end_ms": 17800,
+      "confidence": 0.9576771557331085,
+      "verse": null
+    },
+    {
+      "word": "ya",
+      "start_ms": 17800,
+      "end_ms": 17940,
+      "confidence": 0.9975969195365906,
+      "verse": null
+    },
+    {
+      "word": "roho",
+      "start_ms": 17940,
+      "end_ms": 18320,
+      "confidence": 0.994401216506958,
+      "verse": null
+    },
+    {
+      "word": "wa",
+      "start_ms": 18320,
+      "end_ms": 18440,
+      "confidence": 0.5491588115692139,
+      "verse": null
+    },
+    {
+      "word": "uzima",
+      "start_ms": 18440,
+      "end_ms": 18880,
+      "confidence": 0.9754157066345215,
+      "verse": null
+    },
+    {
+      "word": "karika",
+      "start_ms": 18880,
+      "end_ms": 19240,
+      "confidence": 0.9739794135093689,
+      "verse": null
+    },
+    {
+      "word": "almasihi",
+      "start_ms": 19240,
+      "end_ms": 19860,
+      "confidence": 0.9997659722963969,
+      "verse": null
+    },
+    {
+      "word": "isa",
+      "start_ms": 19860,
+      "end_ms": 20360,
+      "confidence": 0.9997565746307373,
+      "verse": null
+    },
+    {
+      "word": "imeniweka",
+      "start_ms": 20360,
+      "end_ms": 21540,
+      "confidence": 0.8355226516723633,
+      "verse": null
+    },
+    {
+      "word": "huru",
+      "start_ms": 21540,
+      "end_ms": 21900,
+      "confidence": 0.9910302460193634,
+      "verse": null
+    },
+    {
+      "word": "mbali",
+      "start_ms": 21900,
+      "end_ms": 22320,
+      "confidence": 0.9950311382611593,
+      "verse": null
+    },
+    {
+      "word": "na",
+      "start_ms": 22320,
+      "end_ms": 22400,
+      "confidence": 0.9962618947029114,
+      "verse": null
+    },
+    {
+      "word": "sheria",
+      "start_ms": 22400,
+      "end_ms": 22740,
+      "confidence": 0.9968775510787964,
+      "verse": null
+    },
+    {
+      "word": "ya",
+      "start_ms": 22740,
+      "end_ms": 22880,
+      "confidence": 0.9981359243392944,
+      "verse": null
+    },
+    {
+      "word": "dhambi",
+      "start_ms": 22880,
+      "end_ms": 23260,
+      "confidence": 0.8061968609690666,
+      "verse": null
+    },
+    {
+      "word": "na",
+      "start_ms": 23260,
+      "end_ms": 23380,
+      "confidence": 0.9998149275779724,
+      "verse": null
+    },
+    {
+      "word": "mauti.",
+      "start_ms": 23380,
+      "end_ms": 23760,
+      "confidence": 0.9939431846141815,
+      "verse": null
+    },
+    {
+      "word": "Kwa",
+      "start_ms": 24660,
+      "end_ms": 25040,
+      "confidence": 0.9885168671607971,
+      "verse": null
+    },
+    {
+      "word": "maana,",
+      "start_ms": 25040,
+      "end_ms": 25460,
+      "confidence": 0.9874433279037476,
+      "verse": null
+    },
+    {
+      "word": "kile",
+      "start_ms": 25880,
+      "end_ms": 26140,
+      "confidence": 0.9765103757381439,
+      "verse": null
+    },
+    {
+      "word": "ambacho",
+      "start_ms": 26140,
+      "end_ms": 26520,
+      "confidence": 0.9718568027019501,
+      "verse": null
+    },
+    {
+      "word": "torati",
+      "start_ms": 26520,
+      "end_ms": 27140,
+      "confidence": 0.8187858164310455,
+      "verse": null
+    },
+    {
+      "word": "haikuwa",
+      "start_ms": 27140,
+      "end_ms": 27640,
+      "confidence": 0.9897817174593607,
+      "verse": null
+    },
+    {
+      "word": "na",
+      "start_ms": 27640,
+      "end_ms": 27760,
+      "confidence": 0.9987469911575317,
+      "verse": null
+    },
+    {
+      "word": "uwezo",
+      "start_ms": 27760,
+      "end_ms": 28280,
+      "confidence": 0.8616445660591125,
+      "verse": null
+    },
+    {
+      "word": "wa",
+      "start_ms": 28280,
+      "end_ms": 28380,
+      "confidence": 0.7557176351547241,
+      "verse": null
+    },
+    {
+      "word": "kufanya",
+      "start_ms": 28380,
+      "end_ms": 28920,
+      "confidence": 0.9985303084055582,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 28920,
+      "end_ms": 29660,
+      "confidence": 0.7956019639968872,
+      "verse": null
+    },
+    {
+      "word": "vile",
+      "start_ms": 29660,
+      "end_ms": 30060,
+      "confidence": 0.9710798561573029,
+      "verse": null
+    },
+    {
+      "word": "ilivyo",
+      "start_ms": 30060,
+      "end_ms": 30460,
+      "confidence": 0.9301287333170573,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 30460,
+      "end_ms": 30640,
+      "confidence": 0.7833355963230133,
+      "verse": null
+    },
+    {
+      "word": "zaifu",
+      "start_ms": 30640,
+      "end_ms": 31140,
+      "confidence": 0.9501343568166097,
+      "verse": null
+    },
+    {
+      "word": "katika",
+      "start_ms": 31140,
+      "end_ms": 31500,
+      "confidence": 0.9995304942131042,
+      "verse": null
+    },
+    {
+      "word": "mwili.",
+      "start_ms": 31500,
+      "end_ms": 31860,
+      "confidence": 0.9368771910667419,
+      "verse": null
+    },
+    {
+      "word": "Mungu",
+      "start_ms": 32220,
+      "end_ms": 32980,
+      "confidence": 0.9935702880223592,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 32980,
+      "end_ms": 33200,
+      "confidence": 0.9858971834182739,
+      "verse": null
+    },
+    {
+      "word": "kumtuma",
+      "start_ms": 33200,
+      "end_ms": 33640,
+      "confidence": 0.9349994212388992,
+      "verse": null
+    },
+    {
+      "word": "mwanawe",
+      "start_ms": 33640,
+      "end_ms": 34220,
+      "confidence": 0.8349827527999878,
+      "verse": null
+    },
+    {
+      "word": "mwenyewe",
+      "start_ms": 34220,
+      "end_ms": 34720,
+      "confidence": 0.8834814429283142,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 34720,
+      "end_ms": 34960,
+      "confidence": 0.9856394231319427,
+      "verse": null
+    },
+    {
+      "word": "mfano",
+      "start_ms": 34960,
+      "end_ms": 35320,
+      "confidence": 0.8196606238683065,
+      "verse": null
+    },
+    {
+      "word": "wa",
+      "start_ms": 35320,
+      "end_ms": 35440,
+      "confidence": 0.9654350280761719,
+      "verse": null
+    },
+    {
+      "word": "mwanadamu",
+      "start_ms": 35440,
+      "end_ms": 36060,
+      "confidence": 0.9140983700752259,
+      "verse": null
+    },
+    {
+      "word": "mwenye",
+      "start_ms": 36060,
+      "end_ms": 36360,
+      "confidence": 0.968167801698049,
+      "verse": null
+    },
+    {
+      "word": "mwili",
+      "start_ms": 36360,
+      "end_ms": 36700,
+      "confidence": 0.9977651437123617,
+      "verse": null
+    },
+    {
+      "word": "ulio",
+      "start_ms": 36700,
+      "end_ms": 37020,
+      "confidence": 0.7275676131248474,
+      "verse": null
+    },
+    {
+      "word": "wa",
+      "start_ms": 37020,
+      "end_ms": 37220,
+      "confidence": 0.8712654113769531,
+      "verse": null
+    },
+    {
+      "word": "dhambi",
+      "start_ms": 37220,
+      "end_ms": 37660,
+      "confidence": 0.9635061472654343,
+      "verse": null
+    },
+    {
+      "word": "na",
+      "start_ms": 37660,
+      "end_ms": 38080,
+      "confidence": 0.9860644340515137,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 38080,
+      "end_ms": 38260,
+      "confidence": 0.9477994441986084,
+      "verse": null
+    },
+    {
+      "word": "ajili",
+      "start_ms": 38260,
+      "end_ms": 38560,
+      "confidence": 0.9861776530742645,
+      "verse": null
+    },
+    {
+      "word": "ya",
+      "start_ms": 38560,
+      "end_ms": 38720,
+      "confidence": 0.9970059990882874,
+      "verse": null
+    },
+    {
+      "word": "dhambi.",
+      "start_ms": 38720,
+      "end_ms": 39140,
+      "confidence": 0.9978615641593933,
+      "verse": null
+    },
+    {
+      "word": "Yeye",
+      "start_ms": 39140,
+      "end_ms": 40040,
+      "confidence": 0.6557503044605255,
+      "verse": null
+    },
+    {
+      "word": "alihukumu",
+      "start_ms": 40040,
+      "end_ms": 40880,
+      "confidence": 0.8580603152513504,
+      "verse": null
+    },
+    {
+      "word": "dhambi",
+      "start_ms": 40880,
+      "end_ms": 41340,
+      "confidence": 0.811332643032074,
+      "verse": null
+    },
+    {
+      "word": "katika",
+      "start_ms": 41340,
+      "end_ms": 41680,
+      "confidence": 0.9962181448936462,
+      "verse": null
+    },
+    {
+      "word": "mwili.",
+      "start_ms": 41680,
+      "end_ms": 42040,
+      "confidence": 0.926939864953359,
+      "verse": null
+    },
+    {
+      "word": "Ili",
+      "start_ms": 42420,
+      "end_ms": 43140,
+      "confidence": 0.864960253238678,
+      "verse": null
+    },
+    {
+      "word": "haki",
+      "start_ms": 43140,
+      "end_ms": 43480,
+      "confidence": 0.8872172236442566,
+      "verse": null
+    },
+    {
+      "word": "ipatikanayo",
+      "start_ms": 43480,
+      "end_ms": 44180,
+      "confidence": 0.7484471276402473,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 44180,
+      "end_ms": 44380,
+      "confidence": 0.9937847852706909,
+      "verse": null
+    },
+    {
+      "word": "torati,",
+      "start_ms": 44380,
+      "end_ms": 44880,
+      "confidence": 0.758720874786377,
+      "verse": null
+    },
+    {
+      "word": "itimizu",
+      "start_ms": 45340,
+      "end_ms": 46280,
+      "confidence": 0.9061069091161092,
+      "verse": null
+    },
+    {
+      "word": "ndani",
+      "start_ms": 46280,
+      "end_ms": 46520,
+      "confidence": 0.8282232085863749,
+      "verse": null
+    },
+    {
+      "word": "yetu",
+      "start_ms": 46520,
+      "end_ms": 46800,
+      "confidence": 0.804392009973526,
+      "verse": null
+    },
+    {
+      "word": "sisi.",
+      "start_ms": 46800,
+      "end_ms": 47180,
+      "confidence": 0.9978185892105103,
+      "verse": null
+    },
+    {
+      "word": "Ambao",
+      "start_ms": 47960,
+      "end_ms": 48340,
+      "confidence": 0.8447745641072592,
+      "verse": null
+    },
+    {
+      "word": "hatuenendi",
+      "start_ms": 48340,
+      "end_ms": 49060,
+      "confidence": 0.8652188380559286,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 49060,
+      "end_ms": 49320,
+      "confidence": 0.9934419095516205,
+      "verse": null
+    },
+    {
+      "word": "kufuata",
+      "start_ms": 49320,
+      "end_ms": 49800,
+      "confidence": 0.9336534887552261,
+      "verse": null
+    },
+    {
+      "word": "mwili,",
+      "start_ms": 49800,
+      "end_ms": 50280,
+      "confidence": 0.9994198679924011,
+      "verse": null
+    },
+    {
+      "word": "bali",
+      "start_ms": 50700,
+      "end_ms": 51540,
+      "confidence": 0.9879318177700043,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 51540,
+      "end_ms": 51680,
+      "confidence": 0.9999196529388428,
+      "verse": null
+    },
+    {
+      "word": "kufuata",
+      "start_ms": 51680,
+      "end_ms": 52100,
+      "confidence": 0.9992807954549789,
+      "verse": null
+    },
+    {
+      "word": "roho",
+      "start_ms": 52100,
+      "end_ms": 52460,
+      "confidence": 0.9069529473781586,
+      "verse": null
+    },
+    {
+      "word": "wa",
+      "start_ms": 52460,
+      "end_ms": 52620,
+      "confidence": 0.9931772947311401,
+      "verse": null
+    },
+    {
+      "word": "mungu.",
+      "start_ms": 52620,
+      "end_ms": 52960,
+      "confidence": 0.965932826201121,
+      "verse": null
+    },
+    {
+      "word": "Kwa",
+      "start_ms": 53580,
+      "end_ms": 54200,
+      "confidence": 0.8577718436717987,
+      "verse": null
+    },
+    {
+      "word": "maana,",
+      "start_ms": 54200,
+      "end_ms": 54540,
+      "confidence": 0.7769340872764587,
+      "verse": null
+    },
+    {
+      "word": "wale",
+      "start_ms": 54740,
+      "end_ms": 55060,
+      "confidence": 0.9792250394821167,
+      "verse": null
+    },
+    {
+      "word": "wanawishi",
+      "start_ms": 55060,
+      "end_ms": 55720,
+      "confidence": 0.75952676932017,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 55720,
+      "end_ms": 56040,
+      "confidence": 0.999847024679184,
+      "verse": null
+    },
+    {
+      "word": "kufuata",
+      "start_ms": 56040,
+      "end_ms": 56560,
+      "confidence": 0.9992938190698624,
+      "verse": null
+    },
+    {
+      "word": "mwili",
+      "start_ms": 56560,
+      "end_ms": 57100,
+      "confidence": 0.9995191693305969,
+      "verse": null
+    },
+    {
+      "word": "huziweka",
+      "start_ms": 57100,
+      "end_ms": 58380,
+      "confidence": 0.77826377004385,
+      "verse": null
+    },
+    {
+      "word": "niya",
+      "start_ms": 58380,
+      "end_ms": 58680,
+      "confidence": 0.6206633448600769,
+      "verse": null
+    },
+    {
+      "word": "zao",
+      "start_ms": 58680,
+      "end_ms": 59000,
+      "confidence": 0.9802972078323364,
+      "verse": null
+    },
+    {
+      "word": "katika",
+      "start_ms": 59000,
+      "end_ms": 59360,
+      "confidence": 0.9994679391384125,
+      "verse": null
+    },
+    {
+      "word": "vitu",
+      "start_ms": 59360,
+      "end_ms": 59660,
+      "confidence": 0.9970179796218872,
+      "verse": null
+    },
+    {
+      "word": "vya",
+      "start_ms": 59660,
+      "end_ms": 59860,
+      "confidence": 0.9151345491409302,
+      "verse": null
+    },
+    {
+      "word": "mwili.",
+      "start_ms": 59860,
+      "end_ms": 60200,
+      "confidence": 0.9995400706926981,
+      "verse": null
+    },
+    {
+      "word": "Lakini",
+      "start_ms": 60640,
+      "end_ms": 61360,
+      "confidence": 0.9969482421875,
+      "verse": null
+    },
+    {
+      "word": "wale",
+      "start_ms": 61360,
+      "end_ms": 61720,
+      "confidence": 0.9939192235469818,
+      "verse": null
+    },
+    {
+      "word": "wanawishi",
+      "start_ms": 61720,
+      "end_ms": 62380,
+      "confidence": 0.9515136480331421,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 62380,
+      "end_ms": 62740,
+      "confidence": 0.9999003410339355,
+      "verse": null
+    },
+    {
+      "word": "kufuata",
+      "start_ms": 62740,
+      "end_ms": 63160,
+      "confidence": 0.999680370092392,
+      "verse": null
+    },
+    {
+      "word": "roho",
+      "start_ms": 63160,
+      "end_ms": 63500,
+      "confidence": 0.9996414482593536,
+      "verse": null
+    },
+    {
+      "word": "wa",
+      "start_ms": 63500,
+      "end_ms": 63680,
+      "confidence": 0.9998214840888977,
+      "verse": null
+    },
+    {
+      "word": "mungu",
+      "start_ms": 63680,
+      "end_ms": 64020,
+      "confidence": 0.9998587767283121,
+      "verse": null
+    },
+    {
+      "word": "huziweka",
+      "start_ms": 64020,
+      "end_ms": 65240,
+      "confidence": 0.9781878292560577,
+      "verse": null
+    },
+    {
+      "word": "niya",
+      "start_ms": 65240,
+      "end_ms": 65520,
+      "confidence": 0.9996001422405243,
+      "verse": null
+    },
+    {
+      "word": "zao",
+      "start_ms": 65520,
+      "end_ms": 65920,
+      "confidence": 0.9996755421161652,
+      "verse": null
+    },
+    {
+      "word": "katika",
+      "start_ms": 65920,
+      "end_ms": 66320,
+      "confidence": 0.9997090697288513,
+      "verse": null
+    },
+    {
+      "word": "mambo",
+      "start_ms": 66320,
+      "end_ms": 66720,
+      "confidence": 0.9768711626529694,
+      "verse": null
+    },
+    {
+      "word": "ya",
+      "start_ms": 66720,
+      "end_ms": 66820,
+      "confidence": 0.9973011612892151,
+      "verse": null
+    },
+    {
+      "word": "huyo",
+      "start_ms": 66820,
+      "end_ms": 67100,
+      "confidence": 0.971683919429779,
+      "verse": null
+    },
+    {
+      "word": "roho.",
+      "start_ms": 67100,
+      "end_ms": 67400,
+      "confidence": 0.9995459020137787,
+      "verse": null
+    },
+    {
+      "word": "Kwa",
+      "start_ms": 67400,
+      "end_ms": 68660,
+      "confidence": 0.9114225208759308,
+      "verse": null
+    },
+    {
+      "word": "maana,",
+      "start_ms": 68660,
+      "end_ms": 69020,
+      "confidence": 0.8582064509391785,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 69240,
+      "end_ms": 69340,
+      "confidence": 0.43242695927619934,
+      "verse": null
+    },
+    {
+      "word": "nania",
+      "start_ms": 69340,
+      "end_ms": 69740,
+      "confidence": 0.7142506241798401,
+      "verse": null
+    },
+    {
+      "word": "ya",
+      "start_ms": 69740,
+      "end_ms": 69880,
+      "confidence": 0.9588298797607422,
+      "verse": null
+    },
+    {
+      "word": "mwili",
+      "start_ms": 69880,
+      "end_ms": 70220,
+      "confidence": 0.9023300806681315,
+      "verse": null
+    },
+    {
+      "word": "ni",
+      "start_ms": 70220,
+      "end_ms": 70360,
+      "confidence": 0.9981884360313416,
+      "verse": null
+    },
+    {
+      "word": "mauti.",
+      "start_ms": 70360,
+      "end_ms": 70780,
+      "confidence": 0.9946781694889069,
+      "verse": null
+    },
+    {
+      "word": "Bali,",
+      "start_ms": 71280,
+      "end_ms": 72080,
+      "confidence": 0.4781365692615509,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 72480,
+      "end_ms": 72920,
+      "confidence": 0.9920323491096497,
+      "verse": null
+    },
+    {
+      "word": "nania",
+      "start_ms": 72920,
+      "end_ms": 73300,
+      "confidence": 0.9987960755825043,
+      "verse": null
+    },
+    {
+      "word": "inayongozo",
+      "start_ms": 73300,
+      "end_ms": 74120,
+      "confidence": 0.8979645073413849,
+      "verse": null
+    },
+    {
+      "word": "na",
+      "start_ms": 74120,
+      "end_ms": 74260,
+      "confidence": 0.9905282258987427,
+      "verse": null
+    },
+    {
+      "word": "roho",
+      "start_ms": 74260,
+      "end_ms": 74620,
+      "confidence": 0.9980918169021606,
+      "verse": null
+    },
+    {
+      "word": "wa",
+      "start_ms": 74620,
+      "end_ms": 74760,
+      "confidence": 0.9898589253425598,
+      "verse": null
+    },
+    {
+      "word": "mungu",
+      "start_ms": 74760,
+      "end_ms": 75140,
+      "confidence": 0.9686413606007894,
+      "verse": null
+    },
+    {
+      "word": "ni",
+      "start_ms": 75140,
+      "end_ms": 75840,
+      "confidence": 0.8954673409461975,
+      "verse": null
+    },
+    {
+      "word": "uzima",
+      "start_ms": 75840,
+      "end_ms": 76340,
+      "confidence": 0.9912728071212769,
+      "verse": null
+    },
+    {
+      "word": "na",
+      "start_ms": 76340,
+      "end_ms": 76540,
+      "confidence": 0.9987044334411621,
+      "verse": null
+    },
+    {
+      "word": "amani.",
+      "start_ms": 76540,
+      "end_ms": 76960,
+      "confidence": 0.9858924150466919,
+      "verse": null
+    },
+    {
+      "word": "Kwa",
+      "start_ms": 77820,
+      "end_ms": 78220,
+      "confidence": 0.9741016924381256,
+      "verse": null
+    },
+    {
+      "word": "kuwa,",
+      "start_ms": 78220,
+      "end_ms": 78540,
+      "confidence": 0.9914408624172211,
+      "verse": null
+    },
+    {
+      "word": "ile",
+      "start_ms": 78680,
+      "end_ms": 78820,
+      "confidence": 0.7459283471107483,
+      "verse": null
+    },
+    {
+      "word": "nia",
+      "start_ms": 78820,
+      "end_ms": 79100,
+      "confidence": 0.8604286313056946,
+      "verse": null
+    },
+    {
+      "word": "ya",
+      "start_ms": 79100,
+      "end_ms": 79220,
+      "confidence": 0.9990480542182922,
+      "verse": null
+    },
+    {
+      "word": "mwili",
+      "start_ms": 79220,
+      "end_ms": 79580,
+      "confidence": 0.9998302459716797,
+      "verse": null
+    },
+    {
+      "word": "ni",
+      "start_ms": 79580,
+      "end_ms": 79880,
+      "confidence": 0.999705970287323,
+      "verse": null
+    },
+    {
+      "word": "uadui",
+      "start_ms": 79880,
+      "end_ms": 80360,
+      "confidence": 0.8051265279452006,
+      "verse": null
+    },
+    {
+      "word": "na",
+      "start_ms": 80360,
+      "end_ms": 80540,
+      "confidence": 0.9992274045944214,
+      "verse": null
+    },
+    {
+      "word": "mungu.",
+      "start_ms": 80540,
+      "end_ms": 80960,
+      "confidence": 0.99973064661026,
+      "verse": null
+    },
+    {
+      "word": "Kwa",
+      "start_ms": 81460,
+      "end_ms": 81860,
+      "confidence": 0.9974445402622223,
+      "verse": null
+    },
+    {
+      "word": "maana,",
+      "start_ms": 81860,
+      "end_ms": 82240,
+      "confidence": 0.999457985162735,
+      "verse": null
+    },
+    {
+      "word": "haiti",
+      "start_ms": 82420,
+      "end_ms": 82900,
+      "confidence": 0.7083714008331299,
+      "verse": null
+    },
+    {
+      "word": "ito",
+      "start_ms": 82900,
+      "end_ms": 83300,
+      "confidence": 0.7113367915153503,
+      "verse": null
+    },
+    {
+      "word": "rati",
+      "start_ms": 83300,
+      "end_ms": 83660,
+      "confidence": 0.9314490556716919,
+      "verse": null
+    },
+    {
+      "word": "ya",
+      "start_ms": 83660,
+      "end_ms": 83760,
+      "confidence": 0.999411940574646,
+      "verse": null
+    },
+    {
+      "word": "mungu.",
+      "start_ms": 83760,
+      "end_ms": 84140,
+      "confidence": 0.9998658100763956,
+      "verse": null
+    },
+    {
+      "word": "Wala",
+      "start_ms": 84600,
+      "end_ms": 85320,
+      "confidence": 0.9275773465633392,
+      "verse": null
+    },
+    {
+      "word": "haiwezi",
+      "start_ms": 85320,
+      "end_ms": 85840,
+      "confidence": 0.9366732438405355,
+      "verse": null
+    },
+    {
+      "word": "kuiti.",
+      "start_ms": 85840,
+      "end_ms": 86300,
+      "confidence": 0.8523058493932089,
+      "verse": null
+    },
+    {
+      "word": "Wale",
+      "start_ms": 87020,
+      "end_ms": 87820,
+      "confidence": 0.9686773717403412,
+      "verse": null
+    },
+    {
+      "word": "wanautawaliwa",
+      "start_ms": 87820,
+      "end_ms": 88620,
+      "confidence": 0.9560746908187866,
+      "verse": null
+    },
+    {
+      "word": "na",
+      "start_ms": 88620,
+      "end_ms": 88720,
+      "confidence": 0.9985851049423218,
+      "verse": null
+    },
+    {
+      "word": "mwili,",
+      "start_ms": 88720,
+      "end_ms": 89140,
+      "confidence": 0.9997075796127319,
+      "verse": null
+    },
+    {
+      "word": "hawawezi",
+      "start_ms": 90020,
+      "end_ms": 90560,
+      "confidence": 0.9800571799278259,
+      "verse": null
+    },
+    {
+      "word": "kumpendeza",
+      "start_ms": 90560,
+      "end_ms": 91180,
+      "confidence": 0.981360912322998,
+      "verse": null
+    },
+    {
+      "word": "mungu.",
+      "start_ms": 91180,
+      "end_ms": 91620,
+      "confidence": 0.9992248217264811,
+      "verse": null
+    },
+    {
+      "word": "Lakini",
+      "start_ms": 91620,
+      "end_ms": 92960,
+      "confidence": 0.9885287880897522,
+      "verse": null
+    },
+    {
+      "word": "nini",
+      "start_ms": 92960,
+      "end_ms": 93320,
+      "confidence": 0.8693446516990662,
+      "verse": null
+    },
+    {
+      "word": "hamtawaliwi",
+      "start_ms": 93320,
+      "end_ms": 94120,
+      "confidence": 0.8878035694360733,
+      "verse": null
+    },
+    {
+      "word": "na",
+      "start_ms": 94120,
+      "end_ms": 94260,
+      "confidence": 0.9601719975471497,
+      "verse": null
+    },
+    {
+      "word": "mwili.",
+      "start_ms": 94260,
+      "end_ms": 94620,
+      "confidence": 0.9444897174835205,
+      "verse": null
+    },
+    {
+      "word": "Bali",
+      "start_ms": 95060,
+      "end_ms": 95900,
+      "confidence": 0.42061810567975044,
+      "verse": null
+    },
+    {
+      "word": "na",
+      "start_ms": 95900,
+      "end_ms": 96120,
+      "confidence": 0.9878541827201843,
+      "verse": null
+    },
+    {
+      "word": "roho.",
+      "start_ms": 96120,
+      "end_ms": 96520,
+      "confidence": 0.9982713162899017,
+      "verse": null
+    },
+    {
+      "word": "Ikiwa",
+      "start_ms": 96820,
+      "end_ms": 97540,
+      "confidence": 0.954546054204305,
+      "verse": null
+    },
+    {
+      "word": "roho",
+      "start_ms": 97540,
+      "end_ms": 97900,
+      "confidence": 0.9998314678668976,
+      "verse": null
+    },
+    {
+      "word": "wa",
+      "start_ms": 97900,
+      "end_ms": 98060,
+      "confidence": 0.9960149526596069,
+      "verse": null
+    },
+    {
+      "word": "mungu",
+      "start_ms": 98060,
+      "end_ms": 98440,
+      "confidence": 0.9305321375528971,
+      "verse": null
+    },
+    {
+      "word": "anakanda",
+      "start_ms": 98440,
+      "end_ms": 99020,
+      "confidence": 0.7278708517551422,
+      "verse": null
+    },
+    {
+      "word": "nienu.",
+      "start_ms": 99020,
+      "end_ms": 99460,
+      "confidence": 0.9687762459119161,
+      "verse": null
+    },
+    {
+      "word": "Mtu",
+      "start_ms": 100100,
+      "end_ms": 100760,
+      "confidence": 0.9818963408470154,
+      "verse": null
+    },
+    {
+      "word": "wambaihana",
+      "start_ms": 100760,
+      "end_ms": 101320,
+      "confidence": 0.601454958319664,
+      "verse": null
+    },
+    {
+      "word": "roho",
+      "start_ms": 101320,
+      "end_ms": 101740,
+      "confidence": 0.9997060000896454,
+      "verse": null
+    },
+    {
+      "word": "wa",
+      "start_ms": 101740,
+      "end_ms": 101900,
+      "confidence": 0.9935413599014282,
+      "verse": null
+    },
+    {
+      "word": "almasihi,",
+      "start_ms": 101900,
+      "end_ms": 102540,
+      "confidence": 0.9324649175008138,
+      "verse": null
+    },
+    {
+      "word": "huyo",
+      "start_ms": 103380,
+      "end_ms": 103780,
+      "confidence": 0.9935991168022156,
+      "verse": null
+    },
+    {
+      "word": "siwa",
+      "start_ms": 103780,
+      "end_ms": 104320,
+      "confidence": 0.9978283047676086,
+      "verse": null
+    },
+    {
+      "word": "almasihi.",
+      "start_ms": 104320,
+      "end_ms": 105100,
+      "confidence": 0.9997438192367554,
+      "verse": null
+    },
+    {
+      "word": "Lakini",
+      "start_ms": 105740,
+      "end_ms": 106540,
+      "confidence": 0.9996340274810791,
+      "verse": null
+    },
+    {
+      "word": "kama",
+      "start_ms": 106540,
+      "end_ms": 106940,
+      "confidence": 0.99875208735466,
+      "verse": null
+    },
+    {
+      "word": "almasihi",
+      "start_ms": 106940,
+      "end_ms": 107700,
+      "confidence": 0.999822735786438,
+      "verse": null
+    },
+    {
+      "word": "anakanda",
+      "start_ms": 107700,
+      "end_ms": 108320,
+      "confidence": 0.9879430532455444,
+      "verse": null
+    },
+    {
+      "word": "nienu,",
+      "start_ms": 108320,
+      "end_ms": 108820,
+      "confidence": 0.99976513783137,
+      "verse": null
+    },
+    {
+      "word": "milienu",
+      "start_ms": 109600,
+      "end_ms": 110220,
+      "confidence": 0.7815378308296204,
+      "verse": null
+    },
+    {
+      "word": "imekufa",
+      "start_ms": 110220,
+      "end_ms": 110840,
+      "confidence": 0.9983951449394226,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 110840,
+      "end_ms": 111040,
+      "confidence": 0.9876685440540314,
+      "verse": null
+    },
+    {
+      "word": "sababu",
+      "start_ms": 111040,
+      "end_ms": 111440,
+      "confidence": 0.9993162552515665,
+      "verse": null
+    },
+    {
+      "word": "ya",
+      "start_ms": 111440,
+      "end_ms": 111540,
+      "confidence": 0.9988787770271301,
+      "verse": null
+    },
+    {
+      "word": "dhambi.",
+      "start_ms": 111540,
+      "end_ms": 111960,
+      "confidence": 0.88683220744133,
+      "verse": null
+    },
+    {
+      "word": "Lakini",
+      "start_ms": 112220,
+      "end_ms": 112960,
+      "confidence": 0.9997139871120453,
+      "verse": null
+    },
+    {
+      "word": "roho",
+      "start_ms": 112960,
+      "end_ms": 113300,
+      "confidence": 0.999295711517334,
+      "verse": null
+    },
+    {
+      "word": "zenu",
+      "start_ms": 113300,
+      "end_ms": 113700,
+      "confidence": 0.8752076625823975,
+      "verse": null
+    },
+    {
+      "word": "zihai",
+      "start_ms": 113700,
+      "end_ms": 114220,
+      "confidence": 0.9365505576133728,
+      "verse": null
+    },
+    {
+      "word": "kwa",
+      "start_ms": 114220,
+      "end_ms": 114420,
+      "confidence": 0.9997974932193756,
+      "verse": null
+    },
+    {
+      "word": "sababu",
+      "start_ms": 114420,
+      "end_ms": 114800,
+      "confidence": 0.999955415725708,
+      "verse": null
+    },
+    {
+      "word": "ya",
+      "start_ms": 114800,
+      "end_ms": 114920,
+      "confidence": 0.999390721321106,
+      "verse": null
+    },
+    {
+      "word": "haa.",
+      "start_ms": 114920,
+      "end_ms": 114980,
+      "confidence": 0.43699606508016586,
+      "verse": null
+    }
+  ],
+  "verse_boundaries": [],
+  "verses": [],
+  "introductions": [],
+  "metadata": {
+    "provider": "faster-whisper",
+    "model_name": "evaluation\\speech_lab\\model_cache\\large-v3-turbo",
+    "resolved_model_name": "evaluation\\speech_lab\\model_cache\\large-v3-turbo",
+    "device": "cpu",
+    "compute_type": "int8",
+    "language": "sw",
+    "model_cached_before_run": false,
+    "audio_path": "supabase\\seed\\bible\\audio1\\open bible\\extracted\\ROM\\ROM_008.mp3",
+    "transcription_runtime_seconds": 187.77284690004308,
+    "detected_language": "sw",
+    "detected_language_probability": 1,
+    "duration_seconds": 454.848,
+    "segments": [
+      {
+        "id": 1,
+        "start_ms": 10000,
+        "end_ms": 15100,
+        "text": "Kwa sasa hakuna hukumu ya athabu kwa wale waliondania almasihi isa.",
+        "avg_logprob": -0.15879221373172694,
+        "no_speech_prob": 1.6797025992332237e-08
+      },
+      {
+        "id": 2,
+        "start_ms": 16120,
+        "end_ms": 23760,
+        "text": "Kwa sababu, sheria ya roho wa uzima karika almasihi isa imeniweka huru mbali na sheria ya dhambi na mauti.",
+        "avg_logprob": -0.15879221373172694,
+        "no_speech_prob": 1.6797025992332237e-08
+      },
+      {
+        "id": 3,
+        "start_ms": 24900,
+        "end_ms": 31860,
+        "text": "Kwa maana, kile ambacho torati haikuwa na uwezo wa kufanya kwa vile ilivyo kwa zaifu katika mwili.",
+        "avg_logprob": -0.15879221373172694,
+        "no_speech_prob": 1.6797025992332237e-08
+      },
+      {
+        "id": 4,
+        "start_ms": 32220,
+        "end_ms": 39140,
+        "text": "Mungu kwa kumtuma mwanawe mwenyewe kwa mfano wa mwanadamu mwenye mwili ulio wa dhambi na kwa ajili ya dhambi.",
+        "avg_logprob": -0.15879221373172694,
+        "no_speech_prob": 1.6797025992332237e-08
+      },
+      {
+        "id": 5,
+        "start_ms": 39140,
+        "end_ms": 42040,
+        "text": "Yeye alihukumu dhambi katika mwili.",
+        "avg_logprob": -0.13488864784787416,
+        "no_speech_prob": 2.3474807875345505e-08
+      },
+      {
+        "id": 6,
+        "start_ms": 42420,
+        "end_ms": 47180,
+        "text": "Ili haki ipatikanayo kwa torati, itimizu ndani yetu sisi.",
+        "avg_logprob": -0.13488864784787416,
+        "no_speech_prob": 2.3474807875345505e-08
+      },
+      {
+        "id": 7,
+        "start_ms": 47960,
+        "end_ms": 52960,
+        "text": "Ambao hatuenendi kwa kufuata mwili, bali kwa kufuata roho wa mungu.",
+        "avg_logprob": -0.13488864784787416,
+        "no_speech_prob": 2.3474807875345505e-08
+      },
+      {
+        "id": 8,
+        "start_ms": 53580,
+        "end_ms": 60200,
+        "text": "Kwa maana, wale wanawishi kwa kufuata mwili huziweka niya zao katika vitu vya mwili.",
+        "avg_logprob": -0.13488864784787416,
+        "no_speech_prob": 2.3474807875345505e-08
+      },
+      {
+        "id": 9,
+        "start_ms": 60640,
+        "end_ms": 67400,
+        "text": "Lakini wale wanawishi kwa kufuata roho wa mungu huziweka niya zao katika mambo ya huyo roho.",
+        "avg_logprob": -0.13488864784787416,
+        "no_speech_prob": 2.3474807875345505e-08
+      },
+      {
+        "id": 10,
+        "start_ms": 67400,
+        "end_ms": 70780,
+        "text": "Kwa maana, kwa nania ya mwili ni mauti.",
+        "avg_logprob": -0.1871484730924879,
+        "no_speech_prob": 2.5470692222029356e-08
+      },
+      {
+        "id": 11,
+        "start_ms": 71280,
+        "end_ms": 76960,
+        "text": "Bali, kwa nania inayongozo na roho wa mungu ni uzima na amani.",
+        "avg_logprob": -0.1871484730924879,
+        "no_speech_prob": 2.5470692222029356e-08
+      },
+      {
+        "id": 12,
+        "start_ms": 78060,
+        "end_ms": 80960,
+        "text": "Kwa kuwa, ile nia ya mwili ni uadui na mungu.",
+        "avg_logprob": -0.1871484730924879,
+        "no_speech_prob": 2.5470692222029356e-08
+      },
+      {
+        "id": 13,
+        "start_ms": 81700,
+        "end_ms": 84140,
+        "text": "Kwa maana, haiti ito rati ya mungu.",
+        "avg_logprob": -0.1871484730924879,
+        "no_speech_prob": 2.5470692222029356e-08
+      },
+      {
+        "id": 14,
+        "start_ms": 84600,
+        "end_ms": 86300,
+        "text": "Wala haiwezi kuiti.",
+        "avg_logprob": -0.1871484730924879,
+        "no_speech_prob": 2.5470692222029356e-08
+      },
+      {
+        "id": 15,
+        "start_ms": 87020,
+        "end_ms": 91620,
+        "text": "Wale wanautawaliwa na mwili, hawawezi kumpendeza mungu.",
+        "avg_logprob": -0.1871484730924879,
+        "no_speech_prob": 2.5470692222029356e-08
+      },
+      {
+        "id": 16,
+        "start_ms": 91620,
+        "end_ms": 94620,
+        "text": "Lakini nini hamtawaliwi na mwili.",
+        "avg_logprob": -0.2327103069672982,
+        "no_speech_prob": 3.25180025129157e-08
+      },
+      {
+        "id": 17,
+        "start_ms": 95060,
+        "end_ms": 96520,
+        "text": "Bali na roho.",
+        "avg_logprob": -0.2327103069672982,
+        "no_speech_prob": 3.25180025129157e-08
+      },
+      {
+        "id": 18,
+        "start_ms": 96820,
+        "end_ms": 99460,
+        "text": "Ikiwa roho wa mungu anakanda nienu.",
+        "avg_logprob": -0.2327103069672982,
+        "no_speech_prob": 3.25180025129157e-08
+      },
+      {
+        "id": 19,
+        "start_ms": 100100,
+        "end_ms": 105100,
+        "text": "Mtu wambaihana roho wa almasihi, huyo siwa almasihi.",
+        "avg_logprob": -0.2327103069672982,
+        "no_speech_prob": 3.25180025129157e-08
+      },
+      {
+        "id": 20,
+        "start_ms": 105740,
+        "end_ms": 108820,
+        "text": "Lakini kama almasihi anakanda nienu,",
+        "avg_logprob": -0.2327103069672982,
+        "no_speech_prob": 3.25180025129157e-08
+      },
+      {
+        "id": 21,
+        "start_ms": 109600,
+        "end_ms": 111960,
+        "text": "milienu imekufa kwa sababu ya dhambi.",
+        "avg_logprob": -0.2327103069672982,
+        "no_speech_prob": 3.25180025129157e-08
+      },
+      {
+        "id": 22,
+        "start_ms": 112220,
+        "end_ms": 114980,
+        "text": "Lakini roho zenu zihai kwa sababu ya haa.",
+        "avg_logprob": -0.2327103069672982,
+        "no_speech_prob": 3.25180025129157e-08
+      }
+    ],
+    "transcription_options": {
+      "vad_filter": true,
+      "vad_parameters": {
+        "min_silence_duration_ms": 500,
+        "speech_pad_ms": 200
+      },
+      "clip_timestamps": [
+        10.0,
+        115.0
+      ]
+    },
+    "sample_id": "ROM_008_1_10",
+    "source_chapter_id": "ROM_008",
+    "verse_range": [
+      1,
+      10
+    ],
+    "model_key": "large-v3-turbo",
+    "model_id": "deepdml/faster-whisper-large-v3-turbo-ct2",
+    "model_label": "Faster Whisper Large-v3 Turbo CT2",
+    "reference_type": "biblica_candidate",
+    "generated_at": "2026-07-10T22:00:20Z",
+    "effective_transcription_options": {
+      "vad_filter": true,
+      "vad_parameters": {
+        "min_silence_duration_ms": 500,
+        "speech_pad_ms": 200
+      },
+      "clip_timestamps": [
+        10.0,
+        115.0
+      ]
+    },
+    "word_timestamps": true,
+    "no_download": true
+  }
+}

@@ -2,6 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { getUserFriendlyErrorMessage, logSupabaseError } from "@/lib/error-logger";
 
 /**
  * Hook for church-scoped data queries.
@@ -44,7 +45,12 @@ export function useChurchQuery<T = any>(
 
       const { data, error } = await query;
       if (error) {
-        console.error(`Error fetching ${table}:`, error);
+        logSupabaseError(error, {
+          function: "useChurchQuery",
+          operation: "select",
+          table,
+          church_id: churchId,
+        });
         return [] as T[];
       }
       return (data ?? []) as T[];
@@ -108,7 +114,12 @@ export function useChurchInsert(table: string) {
       queryClient.invalidateQueries({ queryKey: [`church-${table}`] });
     },
     onError: (err: any) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      logSupabaseError(err, { function: "useChurchInsert", operation: "insert", table, church_id: churchId });
+      toast({
+        title: "Unable to save",
+        description: getUserFriendlyErrorMessage(err, "The record could not be saved. Please try again."),
+        variant: "destructive",
+      });
     },
   });
 }
@@ -135,7 +146,12 @@ export function useChurchUpdate(table: string) {
       queryClient.invalidateQueries({ queryKey: [`church-${table}`] });
     },
     onError: (err: any) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      logSupabaseError(err, { function: "useChurchUpdate", operation: "update", table });
+      toast({
+        title: "Unable to update",
+        description: getUserFriendlyErrorMessage(err, "The record could not be updated. Please try again."),
+        variant: "destructive",
+      });
     },
   });
 }
@@ -159,7 +175,12 @@ export function useChurchDelete(table: string) {
       queryClient.invalidateQueries({ queryKey: [`church-${table}`] });
     },
     onError: (err: any) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      logSupabaseError(err, { function: "useChurchDelete", operation: "delete", table });
+      toast({
+        title: "Unable to delete",
+        description: getUserFriendlyErrorMessage(err, "The record could not be deleted. Please try again."),
+        variant: "destructive",
+      });
     },
   });
 }

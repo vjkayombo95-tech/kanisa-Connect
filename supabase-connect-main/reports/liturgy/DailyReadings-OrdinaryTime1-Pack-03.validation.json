@@ -1,0 +1,38 @@
+{
+  "workbook": "supabase\\seed\\liturgy\\published\\DailyReadings-OrdinaryTime1-Pack-03.xlsx",
+  "liturgicalYear": "A",
+  "weekdayCycle": "II",
+  "dateRange": "2026-01-12 to 2026-02-17",
+  "rows": 37,
+  "coverageSummary": {
+    "start": "2026-01-12",
+    "end": "2026-02-17",
+    "weekdays": 32,
+    "sundays": 5,
+    "requiredMemorials": 8,
+    "feasts": 1
+  },
+  "majorFeastsIncluded": [
+    "Memorial of Saint Anthony, Abbot",
+    "Memorial of Saint Agnes, Virgin and Martyr",
+    "Memorial of Saint Francis de Sales, Bishop and Doctor of the Church",
+    "Memorial of Saints Timothy and Titus, Bishops",
+    "Memorial of Saint Thomas Aquinas, Priest and Doctor of the Church",
+    "Memorial of Saint John Bosco, Priest",
+    "Feast of the Presentation of the Lord",
+    "Memorial of Saint Agatha, Virgin and Martyr",
+    "Memorial of Saint Paul Miki and Companions, Martyrs",
+    "Memorial of Saint Scholastica, Virgin",
+    "Memorial of Saints Cyril, Monk, and Methodius, Bishop"
+  ],
+  "uniqueDates": 37,
+  "valid": true,
+  "errors": [],
+  "notes": [
+    "2026-02-06: Sirach 47:2-11 is official for the day but requires a Catholic/deuterocanonical Bible import.",
+    "2026-02-15: Sirach 15:15-20 is official for the day but requires a Catholic/deuterocanonical Bible import.",
+    "Ordinary Time I begins on Monday after the Baptism of the Lord and ends the day before Ash Wednesday.",
+    "Weekday readings use Cycle II because this pack falls in calendar year 2026.",
+    "Only Scripture references are stored; Bible text is intentionally not duplicated."
+  ]
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>WhisperX Baseline Report</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; color: #171717; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #d4d4d4; padding: 0.5rem; text-align: left; vertical-align: top; }
+    th { background: #f5f5f5; }
+    code { background: #f5f5f5; padding: 0.1rem 0.25rem; }
+  </style>
+</head>
+<body>
+  <h1>WhisperX Baseline Report</h1>
+  <p>Generated: <code>2026-07-09T10:10:12.290168+00:00</code></p>
+  <h2>Configuration</h2>
+  <pre>{
+  &quot;provider&quot;: &quot;WhisperX&quot;,
+  &quot;model&quot;: &quot;base&quot;,
+  &quot;language&quot;: &quot;sw&quot;,
+  &quot;alignment&quot;: &quot;en&quot;,
+  &quot;translation&quot;: &quot;sw-biblica&quot;,
+  &quot;batch_size&quot;: 8,
+  &quot;compute_type&quot;: &quot;float32&quot;
+}</pre>
+  <h2>Chapter Results</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Chapter</th><th>WER</th><th>CER</th><th>Boundary Accuracy</th>
+        <th>Verse Confidence</th><th>Processing Time</th><th>Peak RAM</th><th>Warnings</th>
+      </tr>
+    </thead>
+    <tbody><tr><td>Genesis 1</td><td>0.808</td><td>0.260</td><td>0.258</td><td>0.189</td><td>156.90s</td><td>347.88 MB</td><td>repeated_phrases:1, extremely_short_spans:17, long_silence_gaps:3, missing_verse_boundaries:23</td></tr><tr><td>Psalm 23</td><td>0.895</td><td>0.289</td><td>0.667</td><td>0.490</td><td>23.34s</td><td>9.17 MB</td><td>long_silence_gaps:2, missing_verse_boundaries:2</td></tr><tr><td>Matthew 5</td><td>0.950</td><td>0.325</td><td>0.417</td><td>0.269</td><td>174.75s</td><td>72.16 MB</td><td>repeated_phrases:3, extremely_short_spans:22, long_silence_gaps:20, missing_verse_boundaries:28</td></tr><tr><td>John 3</td><td>0.987</td><td>0.331</td><td>0.444</td><td>0.277</td><td>135.30s</td><td>57.83 MB</td><td>repeated_phrases:5, extremely_short_spans:2, long_silence_gaps:6, missing_verse_boundaries:20</td></tr><tr><td>Romans 8</td><td>1.001</td><td>0.381</td><td>0.128</td><td>0.070</td><td>162.30s</td><td>69.44 MB</td><td>repeated_phrases:3, extremely_short_spans:11, long_silence_gaps:8, missing_verse_boundaries:34</td></tr></tbody>
+  </table>
+  <h2>Engineering Assessment</h2>
+  <pre>{
+  &quot;strengths&quot;: [
+    &quot;The service-role runtime successfully retrieves the fixed sw-biblica benchmark corpus under RLS.&quot;,
+    &quot;WhisperX completed transcription and alignment for all five benchmark chapters.&quot;,
+    &quot;Processing time, RAM usage, confidence, boundary, WER, CER, and audit signals are now captured per chapter.&quot;
+  ],
+  &quot;weaknesses&quot;: [
+    &quot;Boundary accuracy and verse confidence are below production acceptance targets.&quot;,
+    &quot;WER and CER are above the minimum production target for the fixed corpus.&quot;,
+    &quot;Several chapters show missing boundary events and quality-audit warnings.&quot;
+  ],
+  &quot;known_blockers&quot;: [
+    &quot;The baseline is not production-ready for synchronized Swahili Bible indexing under the stated acceptance thresholds.&quot;,
+    &quot;Matthew 5, John 3, and Romans 8 remain challenging for verse boundary recovery with the current configuration.&quot;
+  ],
+  &quot;recommendations&quot;: [
+    &quot;Keep this result as the objective WhisperX base baseline.&quot;,
+    &quot;Do not change production configuration based on this round alone.&quot;,
+    &quot;Use these artifacts as the fixed comparison point before evaluating any future provider.&quot;
+  ]
+}</pre>
+</body>
+</html>

@@ -2,7 +2,7 @@
 -- Creates normalized Bible content tables and upgrades the existing legacy
 -- bible_verses table in place for forward-compatible imports.
 
-create extension if not exists pg_trgm;
+create extension if not exists pg_trgm with schema extensions;
 
 create table if not exists public.bible_translations (
   id uuid primary key default gen_random_uuid(),
@@ -180,7 +180,7 @@ end $$;
 
 create index if not exists idx_bible_verses_text_trgm
   on public.bible_verses
-  using gin (verse_text gin_trgm_ops);
+  using gin (verse_text extensions.gin_trgm_ops);
 
 alter table public.bible_translations enable row level security;
 alter table public.bible_books enable row level security;
@@ -190,12 +190,14 @@ alter table public.bible_verses enable row level security;
 drop policy if exists "Security hardening: users view global or church bible verses" on public.bible_verses;
 drop policy if exists "Security hardening: managers manage church bible verses" on public.bible_verses;
 
+drop policy if exists "Authenticated users can read bible translations" on public.bible_translations;
 create policy "Authenticated users can read bible translations"
 on public.bible_translations
 for select
 to authenticated
 using (true);
 
+drop policy if exists "Super admins can manage bible translations" on public.bible_translations;
 create policy "Super admins can manage bible translations"
 on public.bible_translations
 for all
@@ -203,12 +205,14 @@ to authenticated
 using (public.is_super_admin())
 with check (public.is_super_admin());
 
+drop policy if exists "Authenticated users can read bible books" on public.bible_books;
 create policy "Authenticated users can read bible books"
 on public.bible_books
 for select
 to authenticated
 using (true);
 
+drop policy if exists "Super admins can manage bible books" on public.bible_books;
 create policy "Super admins can manage bible books"
 on public.bible_books
 for all
@@ -216,12 +220,14 @@ to authenticated
 using (public.is_super_admin())
 with check (public.is_super_admin());
 
+drop policy if exists "Authenticated users can read bible chapters" on public.bible_chapters;
 create policy "Authenticated users can read bible chapters"
 on public.bible_chapters
 for select
 to authenticated
 using (true);
 
+drop policy if exists "Super admins can manage bible chapters" on public.bible_chapters;
 create policy "Super admins can manage bible chapters"
 on public.bible_chapters
 for all
@@ -229,12 +235,14 @@ to authenticated
 using (public.is_super_admin())
 with check (public.is_super_admin());
 
+drop policy if exists "Authenticated users can read bible verses" on public.bible_verses;
 create policy "Authenticated users can read bible verses"
 on public.bible_verses
 for select
 to authenticated
 using (true);
 
+drop policy if exists "Super admins can manage bible verses" on public.bible_verses;
 create policy "Super admins can manage bible verses"
 on public.bible_verses
 for all

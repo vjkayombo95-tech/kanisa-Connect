@@ -115,6 +115,8 @@ type AnalyticsResponse = {
 
 export type AnalyticsReportBranding = {
   churchName: string;
+  churchCode?: string | null;
+  shortCode?: string | null;
   churchLocation?: string | null;
   churchLogoUrl?: string | null;
 };
@@ -164,6 +166,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
     textTransform: "uppercase",
     lineHeight: 1.2,
+  },
+  churchCode: {
+    marginTop: 3,
+    color: "#92400e",
+    fontSize: 8,
+    fontWeight: 700,
+    letterSpacing: 0.6,
   },
   churchLocation: {
     marginTop: 6,
@@ -459,6 +468,8 @@ function getFileName(churchName: string, generatedAt: string) {
 
 export function AnalyticsReportPdf({
   churchName,
+  churchCode,
+  shortCode,
   churchLocation,
   churchLogoUrl,
   report,
@@ -470,6 +481,7 @@ export function AnalyticsReportPdf({
           <View style={styles.headerTop}>
             <View style={styles.brandBlock}>
               <Text style={styles.churchName}>{churchName.toUpperCase()}</Text>
+              {churchCode ? <Text style={styles.churchCode}>CHURCH CODE: {churchCode}{shortCode ? `   JOIN CODE: ${shortCode}` : ""}</Text> : null}
               {churchLocation ? <Text style={styles.churchLocation}>{churchLocation}</Text> : null}
             </View>
 
@@ -481,7 +493,7 @@ export function AnalyticsReportPdf({
           </View>
 
           <View style={styles.titleWrap}>
-            <Text style={styles.reportTitle}>{report.reportTitle || "AI Analytics Report"}</Text>
+            <Text style={styles.reportTitle}>{report.reportTitle || "Finance Intelligence Report"}</Text>
           </View>
 
           <View style={styles.divider} />
@@ -680,6 +692,8 @@ export async function downloadAnalyticsReportPdf(
 ) {
   const resolvedBranding = {
     churchName: branding.churchName || "Church Analytics",
+    churchCode: branding.churchCode || null,
+    shortCode: branding.shortCode || null,
     churchLocation: branding.churchLocation || null,
     churchLogoUrl: branding.churchLogoUrl || null,
   };

@@ -1,0 +1,6 @@
+provider,book,chapter,status,processing_time_seconds,peak_memory_mb,transcript_language,word_count,average_word_confidence,boundary_success_rate,boundary_failures,average_verse_confidence,qa_score,import_success,weighted_score,error
+whisperx,Genesis,1,completed,244.355,347.711,sw,480,0.829569,0.258065,23,0.18936887096774194,30.478,True,55.629,
+whisperx,Psalm,23,completed,32.228,9.852,sw,66,0.799076,0.666667,2,0.4896838333333333,62.921,True,74.883,
+whisperx,Matthew,5,completed,255.008,72.827,sw,810,0.675211,0.416667,28,0.26901691666666666,31.594,False,46.714,
+whisperx,John,3,completed,192.388,58.505,sw,644,0.727016,0.444444,20,0.27704358333333334,43.304,True,60.185,
+whisperx,Romans,8,completed,205.783,70.109,sw,863,0.651645,0.128205,34,0.06951876923076923,19.191,True,45.63,
