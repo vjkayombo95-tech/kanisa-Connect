@@ -22,6 +22,7 @@ import { enqueueOfflineSyncAction, processOfflineSyncQueue, removeOfflineSyncAct
 import { useOfflineSyncQueue } from "@/hooks/useOfflineSyncQueue";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { CommentThread, type CommentReactionSummary, type ThreadComment } from "@/components/portal/CommentThread";
+import { ScriptureText } from "@/components/bible";
 
 const helpCategories = ["Medical", "Education", "Housing", "Food", "Emergency", "Funeral", "Other"];
 const HELP_COMMENT_EMOJIS = ["🙏", "❤️", "🙌", "🤝", "💛"] as const;
@@ -283,7 +284,9 @@ export default function PortalCommunityHelp() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-medium">{item.payload.category}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">{item.payload.description}</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          <ScriptureText text={item.payload.description} />
+                        </p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           Saved {new Date(item.createdAt).toLocaleString()}
                         </p>
@@ -340,7 +343,9 @@ export default function PortalCommunityHelp() {
                           <Badge variant="outline" className={`${statusColor(request.status)} mt-1`}>{request.status}</Badge>
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">{request.description}</p>
+                      <p className="text-sm text-muted-foreground">
+                        <ScriptureText text={request.description} />
+                      </p>
                       {request.target_amount && (
                         <div className="space-y-1.5">
                           <div className="flex justify-between text-xs text-muted-foreground">
@@ -446,45 +451,25 @@ function HelpCardWithActions({
     mutationFn: async () => {
       const net = parseFloat(donateAmount);
       if (!net || net <= 0) throw new Error("Enter a valid amount");
-      const amount = Number((net / (1 - PLATFORM_FEE_PERCENT / 100)).toFixed(2));
-      const fee = Number((amount - net).toFixed(2));
+      if (!member?.id) throw new Error("Member record is required");
 
-      const { error } = await supabase.from("help_donations").insert({
-        help_request_id: request.id,
-        amount,
-        donor_name: member?.full_name || "Anonymous",
-        is_anonymous: false,
-      });
+      const idempotencyKey =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+      const { data, error } = await supabase.rpc("submit_community_help_donation" as never, {
+        p_help_request_id: request.id,
+        p_member_id: member.id,
+        p_net_amount: net,
+        p_idempotency_key: idempotencyKey,
+      } as never);
+
       if (error) throw error;
 
-      if (churchId) {
-        const { error: feeError } = await supabase.from("platform_fees").insert({
-          church_id: churchId,
-          source_type: "community_help",
-          source_id: request.id,
-          gross_amount: amount,
-          fee_percentage: PLATFORM_FEE_PERCENT,
-          fee_amount: fee,
-          net_amount: net,
-          member_id: member?.id ?? null,
-        });
-
-        if (feeError) throw feeError;
-      }
-
-      await supabase.from("community_help_requests").update({
-        current_amount: (request.current_amount || 0) + net,
-      }).eq("id", request.id);
-
-      if (member?.id && churchId) {
-        await supabase.from("contributions").insert({
-          church_id: churchId,
-          amount: net,
-          donor_name: member.full_name,
-          member_id: member.id,
-          created_by: user?.id || null,
-          notes: `Community Help Donation - ${request.category}: ${request.description?.slice(0, 60)} (${formatTZS(fee)} platform fee)`,
-        });
+      const result = data as { success?: boolean; error?: string } | null;
+      if (!result?.success) {
+        throw new Error(result?.error || "Donation was not recorded.");
       }
     },
     onSuccess: () => {
@@ -574,7 +559,9 @@ function HelpCardWithActions({
           </div>
           <Badge variant="outline" className="bg-primary/20 text-primary border-primary/30">{request.category}</Badge>
         </div>
-        <p className="text-sm text-muted-foreground">{request.description}</p>
+        <p className="text-sm text-muted-foreground">
+          <ScriptureText text={request.description} />
+        </p>
         {request.target_amount && (
           <div className="space-y-1.5">
             <div className="flex justify-between text-xs text-muted-foreground">

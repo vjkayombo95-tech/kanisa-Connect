@@ -1,0 +1,13 @@
+{
+  "book": "Genesis",
+  "chapter": 1,
+  "content_type": "bible",
+  "audio_path": "C:\\Users\\HP\\Church final version\\supabase-connect-main\\supabase\\seed\\bible\\audio1\\open bible\\extracted\\GEN\\GEN_001.mp3",
+  "status": "imported",
+  "metadata": true,
+  "transcription": true,
+  "alignment": true,
+  "verse_index": true,
+  "imported": true,
+  "updated_at": "2026-07-08T19:26:15.782590+00:00"
+}

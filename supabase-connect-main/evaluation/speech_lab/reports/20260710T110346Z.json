@@ -1,0 +1,47 @@
+{
+  "run_id": "20260710T110346Z",
+  "results": [
+    {
+      "model_id": "faster-whisper-small",
+      "model_name": "Faster Whisper Small",
+      "chapter_id": "GEN_001",
+      "metrics": {
+        "wer": 0.7770154373927959,
+        "cer": 0.1426056338028169,
+        "boundary_accuracy": 0.0,
+        "alignment_accuracy": 0.0,
+        "average_word_confidence": 0.6904774525880621,
+        "verse_confidence": null,
+        "output_stability": null
+      },
+      "resources": {
+        "processing_time_seconds": 0,
+        "peak_ram_mb": null,
+        "peak_vram_mb": null,
+        "gpu_utilization_percent": null,
+        "cpu_utilization_percent": null
+      },
+      "accepted": false,
+      "notes": [
+        "WER target missed: 0.7770 >= 0.0500",
+        "Boundary target missed: 0.0000 <= 0.9900",
+        "Verse confidence not reported"
+      ]
+    }
+  ],
+  "leaderboard": [
+    {
+      "model_id": "faster-whisper-small",
+      "model_name": "Faster Whisper Small",
+      "chapters": 1,
+      "accepted_chapters": 0,
+      "avg_wer": 0.7770154373927959,
+      "avg_cer": 0.1426056338028169,
+      "avg_boundary_accuracy": 0.0,
+      "avg_alignment_accuracy": 0.0,
+      "avg_processing_time_seconds": 0.0,
+      "avg_peak_ram_mb": null,
+      "avg_peak_vram_mb": null
+    }
+  ]
+}

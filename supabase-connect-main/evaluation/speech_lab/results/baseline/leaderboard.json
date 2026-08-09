@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-07-09T10:10:12.290168+00:00",
+  "entries": [
+    {
+      "provider": "WhisperX",
+      "status": "Baseline",
+      "model": "base",
+      "language": "sw",
+      "alignment": "en",
+      "translation": "sw-biblica",
+      "chapters_completed": 5,
+      "average_wer": 0.9282800015725254,
+      "average_cer": 0.31701725638992084,
+      "average_boundary_accuracy": 0.3828094844223876,
+      "average_verse_confidence": 0.2589263947063689,
+      "average_processing_time_seconds": 130.51760121998376,
+      "peak_ram_mb": 347.8847818374634
+    }
+  ]
+}
