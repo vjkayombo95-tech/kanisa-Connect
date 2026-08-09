@@ -21,7 +21,6 @@ import {
 import { AppLink } from "@/components/AppLink";
 import { emptyParishCalendarFilters, formatCalendarDate, formatCalendarTime, addDays, startOfDay, endOfDay } from "@/components/calendar/calendarUtils";
 import type { ParishCalendarEvent } from "@/components/calendar/types";
-import { LiveMassCard } from "@/components/portal/LiveMassCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -563,8 +562,6 @@ export default function MyParishPage() {
           continueReading={continueReading}
           continueListening={listening.data ?? null}
         />
-
-        {churchId ? <LiveMassCard churchName={contact.data?.name} /> : null}
 
         <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
           <TodaysMassWidget masses={todaysMasses.length ? todaysMasses : masses.slice(0, 1)} />
