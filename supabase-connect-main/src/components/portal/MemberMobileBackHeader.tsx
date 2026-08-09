@@ -17,6 +17,7 @@ const titleByRoute: Record<string, string> = {
   "/portal/library": "Watakatifu",
   "/portal/liturgical-calendar": "Kalenda ya Liturujia",
   "/portal/daily-readings": "Masomo ya Leo",
+  "/portal/radio": "Radio Live",
 };
 
 function getMemberPageTitle(pathname: string, fallbackTitle: string) {

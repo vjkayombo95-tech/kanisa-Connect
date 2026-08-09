@@ -54,6 +54,7 @@ const presentationById: Record<string, ServicePresentation> = {
   channels: { label: "Jumuiya", description: "Ungana na jumuiya yako", section: "parish", icon: Users },
   ministries: { label: "Huduma za Kanisa", description: "Vikundi na huduma za parokia", section: "parish", icon: Church },
   "kanisa-ai": { label: "Uliza Kanisa", description: "Pata msaada wa huduma za parokia", section: "parish", icon: MessageCircle },
+  radio: { label: "Radio Live", description: "Sikiliza radio ya parokia moja kwa moja", section: "parish", icon: Megaphone },
   events: { label: "Matukio", description: "Matukio yajayo ya parokia", section: "more", icon: CalendarDays },
   "event-requests": { label: "Omba Tukio", description: "Wasilisha ombi la tukio", section: "more", icon: Bell },
   pledges: { label: "Ahadi za Michango", description: "Angalia ahadi zako", section: "more", icon: HandCoins },

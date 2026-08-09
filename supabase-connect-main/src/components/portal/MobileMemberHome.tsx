@@ -4,6 +4,7 @@ import { AnnouncementContent } from "@/components/announcements/AnnouncementCont
 import { AppLink } from "@/components/AppLink";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LiveMassCard } from "@/components/portal/LiveMassCard";
+import { RadioLiveCard } from "@/components/portal/RadioLiveCard";
 import { cn } from "@/lib/utils";
 
 import type { MemberHomeData, NextMassSummary } from "./dashboard";
@@ -67,6 +68,7 @@ export function MobileMemberHome({
       </section>
 
       <LiveMassCard churchName={home.churchName} />
+      <RadioLiveCard />
 
       <section aria-labelledby="member-actions-title">
         <div className="flex items-end justify-between gap-3">

@@ -52,6 +52,7 @@ export const workspaceRegistry = {
           { id: "dashboard", label: "Dashboard", to: "/portal", icon: Church },
           { id: "my-parish", label: "My Parish", to: "/portal/my-parish", icon: Church },
           { id: "kanisa-ai", label: "Kanisa AI", to: "/portal/kanisa-ai", icon: Sparkles, featureFlag: "kanisa_ai" },
+          { id: "radio", label: "Radio Live", to: "/portal/radio", icon: Radio, featureFlag: "radio", requireFeatureEnabled: true },
         ],
       },
       {
@@ -200,6 +201,7 @@ export const workspaceRegistry = {
           { id: "mass-intentions", label: "Mass Intentions", to: "/church-admin/mass-intentions", icon: ClipboardList, featureFlag: "mass_intentions" },
           { id: "mass-timetable", label: "Mass Timetable", to: "/church-admin/mass-timetable", icon: CalendarDays, featureFlag: "mass_intentions" },
           { id: "livestreams", label: "Livestreams", to: "/church-admin/livestreams", icon: Radio, featureFlag: "livestream", requireFeatureEnabled: true, keywords: ["live", "broadcast", "stream", "matangazo mubashara"] },
+          { id: "radio", label: "Radio Live", to: "/church-admin/radio", icon: Radio, featureFlag: "radio", requireFeatureEnabled: true, keywords: ["radio", "audio", "hewani", "live"] },
         ],
       },
       {
