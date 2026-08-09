@@ -14,7 +14,6 @@ import {
   Navigation,
   Phone,
   PlayCircle,
-  Radio,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -258,7 +257,7 @@ export function TodaysMassWidget({ masses }: { masses: ParishCalendarEvent[] }) 
           <div className="flex flex-wrap gap-2">
             <Button asChild size="sm" className="h-9 rounded-lg"><AppLink to="/portal/calendar"><Clock3 className="mr-1.5 h-4 w-4" />Add reminder</AppLink></Button>
             <Button asChild size="sm" variant="outline" className="h-9 rounded-lg"><AppLink to="/portal/calendar"><Navigation className="mr-1.5 h-4 w-4" />Navigate</AppLink></Button>
-            <Button asChild size="sm" variant="outline" className="h-9 rounded-lg"><AppLink to="/portal/sermons"><Radio className="mr-1.5 h-4 w-4" />Livestream</AppLink></Button>
+            <Button asChild size="sm" variant="outline" className="h-9 rounded-lg"><AppLink to="/portal/sermons"><BookOpen className="mr-1.5 h-4 w-4" />Recorded sermons</AppLink></Button>
           </div>
         </div>
       ) : (
@@ -369,27 +368,27 @@ export function MassIntentionsWidget({ intentions }: { intentions: Awaited<Retur
   );
 }
 
-export function LiveStreamWidget({ sermons }: { sermons: SermonRecord[] }) {
-  const live = sermons.find((item) => item.video_url || item.audio_url) ?? null;
+export function RecordedSermonsWidget({ sermons }: { sermons: SermonRecord[] }) {
+  const recorded = sermons.find((item) => item.video_url || item.audio_url) ?? null;
 
   return (
-    <SectionCard label="Live Mass">
-      <WidgetTitle icon={Radio} title="Live Mass" action={<Button asChild variant="ghost" size="sm"><AppLink to="/portal/sermons">Archive</AppLink></Button>} />
-      {live ? (
+    <SectionCard label="Recorded sermons">
+      <WidgetTitle icon={BookOpen} title="Recorded Sermons" action={<Button asChild variant="ghost" size="sm"><AppLink to="/portal/sermons">All sermons</AppLink></Button>} />
+      {recorded ? (
         <div className="mt-4 space-y-3">
-          <p className="font-semibold">{live.title}</p>
-          <p className="text-sm text-muted-foreground">{live.preacher || "Parish livestream and homily archive"}</p>
+          <p className="font-semibold">{recorded.title}</p>
+          <p className="text-sm text-muted-foreground">{recorded.preacher || "Recorded parish teaching"}</p>
           <div className="flex flex-wrap gap-2">
-            {live.video_url ? (
-              <Button asChild size="sm" className="h-9 rounded-lg"><a href={live.video_url} target="_blank" rel="noreferrer"><PlayCircle className="mr-1.5 h-4 w-4" />Watch</a></Button>
+            {recorded.video_url ? (
+              <Button asChild size="sm" variant="outline" className="h-9 rounded-lg border-amber-500/30 text-amber-800 dark:text-amber-300"><a href={recorded.video_url} target="_blank" rel="noreferrer"><PlayCircle className="mr-1.5 h-4 w-4" />Watch recording</a></Button>
             ) : null}
-            {live.audio_url ? (
-              <Button asChild size="sm" variant="outline" className="h-9 rounded-lg"><a href={live.audio_url} target="_blank" rel="noreferrer">Listen</a></Button>
+            {recorded.audio_url ? (
+              <Button asChild size="sm" variant="outline" className="h-9 rounded-lg"><a href={recorded.audio_url} target="_blank" rel="noreferrer">Listen</a></Button>
             ) : null}
           </div>
         </div>
       ) : (
-        <p className="mt-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">Current livestream, upcoming livestreams, and Mass archives will appear here.</p>
+        <p className="mt-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">Published recorded sermons will appear here.</p>
       )}
     </SectionCard>
   );
@@ -566,7 +565,7 @@ export default function MyParishPage() {
 
         <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
           <TodaysMassWidget masses={todaysMasses.length ? todaysMasses : masses.slice(0, 1)} />
-          <LiveStreamWidget sermons={sermons.data ?? []} />
+          <RecordedSermonsWidget sermons={sermons.data ?? []} />
         </section>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
