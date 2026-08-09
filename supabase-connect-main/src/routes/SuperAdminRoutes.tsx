@@ -30,6 +30,7 @@ const SuperAdminLiturgicalCalendarPage = lazy(() => import("@/pages/super-admin/
 const SuperAdminImportCenter = lazy(() => import("@/pages/super-admin/SuperAdminImportCenter"));
 const BibleTranslationManagerPage = lazy(() => import("@/pages/super-admin/BibleTranslationManagerPage"));
 const KanisaAIHome = lazy(() => import("@/pages/ai/KanisaAIHome"));
+const RoleServicesPage = lazy(() => import("@/pages/RoleServicesPage"));
 
 function SectionFallback() {
   return (
@@ -45,6 +46,7 @@ export default function SuperAdminRoutes() {
       <Routes>
         <Route element={<WorkspaceRouteLayout workspaceId="super_admin" />}>
           <Route index element={<PlatformDashboard />} />
+          <Route path="services" element={<RoleServicesPage />} />
           <Route path="churches" element={<ChurchManagement />} />
           <Route path="subscriptions" element={<SASubscriptionsPage />} />
           <Route path="billing-verification" element={<BillingVerificationPage />} />

@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
 const CommunityLeaderLayout = lazy(() =>
@@ -12,6 +12,12 @@ const CommunityPledgesPage = lazy(() => import("@/pages/community-leader/Communi
 const CommunityReportsPage = lazy(() => import("@/pages/community-leader/CommunityReportsPage"));
 const CommunityLeadershipPage = lazy(() => import("@/pages/community-leader/CommunityLeadershipPage"));
 const CommunityChannelsPage = lazy(() => import("@/pages/community-leader/CommunityChannelsPage"));
+const CommunityMobileServices = lazy(() => import("@/components/community-leader/CommunityMobileExperience").then((module) => ({ default: module.CommunityMobileServices })));
+
+function CommunityServicesRoute() {
+  const { communityId = "" } = useParams<{ communityId: string }>();
+  return <CommunityMobileServices base={`/community/${communityId}`} />;
+}
 
 function SectionFallback() {
   return (
@@ -34,6 +40,7 @@ export default function StaffRoutes() {
           <Route path="reports" element={<CommunityReportsPage />} />
           <Route path="leadership" element={<CommunityLeadershipPage />} />
           <Route path="channels" element={<CommunityChannelsPage />} />
+          <Route path="services" element={<CommunityServicesRoute />} />
         </Route>
       </Routes>
     </Suspense>

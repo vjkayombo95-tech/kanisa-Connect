@@ -20,6 +20,7 @@ const MemberSaintDetailsPage = lazy(() => import("@/pages/portal/MemberSaintDeta
 const MemberBibleHomePage = lazy(() => import("@/pages/portal/MemberBibleHomePage"));
 const MemberBibleBookPage = lazy(() => import("@/pages/portal/MemberBibleBookPage"));
 const MemberBibleChapterPage = lazy(() => import("@/pages/portal/MemberBibleChapterPage"));
+const RoleServicesPage = lazy(() => import("@/pages/RoleServicesPage"));
 
 function SectionFallback() {
   return (
@@ -36,6 +37,7 @@ export default function FinanceRoutes() {
       <Routes>
         <Route element={<WorkspaceRouteLayout workspaceId="finance" />}>
           <Route index element={<FinanceDashboard />} />
+          <Route path="services" element={<RoleServicesPage />} />
           <Route path="dashboard" element={<FinanceDashboard />} />
           <Route path="contributions" element={<ContributionsPage />} />
           <Route path="receipts" element={<ContributionsPage />} />

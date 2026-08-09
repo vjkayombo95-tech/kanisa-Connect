@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLedCommunities } from "@/hooks/use-community-leader";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CommunityMobileBottomNav } from "./CommunityMobileExperience";
 
 export interface CommunityOutletContext {
   communityId: string;
@@ -101,9 +102,10 @@ export function CommunityLeaderLayout() {
                 </DropdownMenu>
               </div>
             </header>
-            <main className="flex-1 p-6 overflow-auto">
+            <main className="flex-1 overflow-auto p-4 pb-24 lg:p-6">
               <Outlet context={context} />
             </main>
+            <CommunityMobileBottomNav base={`/community/${communityId}`} />
           </div>
         </div>
       </SidebarProvider>

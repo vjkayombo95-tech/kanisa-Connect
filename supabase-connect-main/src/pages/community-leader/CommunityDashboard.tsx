@@ -15,6 +15,7 @@ import {
 import { formatTZS } from "@/lib/currency";
 import { format, startOfMonth, isAfter } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CommunityMobileHome } from "@/components/community-leader/CommunityMobileExperience";
 
 export default function CommunityDashboard() {
   const { communityId, community, leadershipRole } = useOutletContext<CommunityOutletContext>();
@@ -34,7 +35,9 @@ export default function CommunityDashboard() {
   const base = `/community/${communityId}`;
 
   return (
-    <div className="space-y-6">
+    <>
+    <CommunityMobileHome base={base} name={community?.name || "Jumuiya"} role={leadershipRole} />
+    <div className="hidden space-y-6 lg:block">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold font-serif">{community?.name || "Community"}</h1>
@@ -152,5 +155,6 @@ export default function CommunityDashboard() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }
