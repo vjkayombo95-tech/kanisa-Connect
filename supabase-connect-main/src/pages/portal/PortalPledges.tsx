@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleDollarSign, HandCoins, Loader2, Plus, Target, Wallet } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,8 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatTZSForLanguage } from "@/lib/currency";
-import { normalizeAppLanguage } from "@/lib/localization";
+import { formatTZS } from "@/lib/currency";
 import { getPledgeProgress, useCreatePledge, useMakePledgePayment, useMemberPledges, usePledgeRealtime } from "@/lib/pledges";
 import { PledgePaymentDialog } from "@/components/pledges/PledgePaymentDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -21,8 +19,6 @@ import { useToast } from "@/hooks/use-toast";
 const PLEDGE_PLATFORM_FEE_PERCENT = 1;
 
 export default function PortalPledges() {
-  const { t, i18n } = useTranslation();
-  const language = normalizeAppLanguage(i18n.language) ?? "en";
   const { user, churchId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -140,19 +136,19 @@ export default function PortalPledges() {
     <div className="container mx-auto px-4 py-10 space-y-6 animate-fade-in">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-serif">{t("member_portal.giving_account.my_pledges")}</h1>
-          <p className="text-muted-foreground mt-2">{t("member_portal.giving_account.my_pledges_description")}</p>
+          <h1 className="text-2xl md:text-3xl font-bold font-serif">My Pledges</h1>
+          <p className="text-muted-foreground mt-2">Track your church commitments and add a personal pledge to your community.</p>
         </div>
         <Dialog open={createOpen} onOpenChange={handleCreateDialogChange}>
           <DialogTrigger asChild>
             <Button disabled={!canOpenCreateDialog}>
               <Plus className="mr-2 h-4 w-4" />
-              {t("member_portal.giving_account.add_pledge")}
+              Add Pledge
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="font-serif">{t("member_portal.giving_account.add_my_pledge")}</DialogTitle>
+              <DialogTitle className="font-serif">Add My Pledge</DialogTitle>
             </DialogHeader>
             <form
               className="space-y-4"
@@ -172,56 +168,53 @@ export default function PortalPledges() {
                   queryClient.invalidateQueries({ queryKey: ["church-pledges-summary", churchId] });
                   queryClient.invalidateQueries({ queryKey: ["community-pledges", memberCommunity.id] });
                   toast({
-                    title: t("member_portal.giving_account.pledge_added"),
-                    description: t("member_portal.giving_account.pledge_added_description", {
-                      amount: formatTZSForLanguage(numericPledgeAmount, language),
-                      community: memberCommunity.name,
-                    }),
+                    title: "Pledge added",
+                    description: `${formatTZS(numericPledgeAmount)} has been added to ${memberCommunity.name}.`,
                   });
                   handleCreateDialogChange(false);
                 } catch (error: any) {
                   toast({
-                    title: t("member_portal.giving_account.unable_add_pledge"),
-                    description: error?.message || t("member_portal.giving_account.pledge_create_error"),
+                    title: "Unable to add pledge",
+                    description: error?.message || "Something went wrong while creating the pledge.",
                     variant: "destructive",
                   });
                 }
               }}
             >
               <div className="rounded-lg border border-primary/10 bg-primary/5 p-3 text-sm">
-                <p className="font-medium">{member?.full_name || t("member_portal.common.member")}</p>
+                <p className="font-medium">{member?.full_name || "Member"}</p>
                 <p className="mt-1 text-muted-foreground">
-                  {t("member_portal.giving_account.community")}: {isCommunityLoading ? t("member_portal.common.loading") : memberCommunity?.name || t("member_portal.giving_account.no_community_assigned")}
+                  Community: {isCommunityLoading ? "Loading..." : memberCommunity?.name || "No community assigned"}
                 </p>
               </div>
               {cannotCreatePledge && (
                 <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-muted-foreground">
                   {isMemberLoading || isCommunityLoading
-                    ? t("member_portal.giving_account.checking_community")
-                    : t("member_portal.giving_account.community_required")}
+                    ? "Checking your community assignment..."
+                    : "You need to be assigned to a community before this pledge can be created."}
                 </div>
               )}
               <div className="space-y-2">
-                <Label>{t("member_portal.giving_account.amount_pledged_tzs")}</Label>
+                <Label>Amount Pledged (TZS)</Label>
                 <Input
                   type="number"
                   min="1"
                   value={amountPledged}
                   onChange={(event) => setAmountPledged(event.target.value)}
-                  placeholder={t("member_portal.giving_account.enter_pledge_amount")}
+                  placeholder="Enter pledge amount"
                   required
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                {t("member_portal.giving_account.pledge_rollup_note")}
+                This pledge will be counted under your community and will update the church admin pledge summary.
               </p>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" type="button" onClick={() => handleCreateDialogChange(false)}>
-                  {t("member_portal.common.cancel")}
+                  Cancel
                 </Button>
                 <Button type="submit" disabled={createPledge.isPending || numericPledgeAmount <= 0 || !memberCommunity?.id || !member?.id || !churchId}>
                   {createPledge.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {t("member_portal.giving_account.add_pledge")}
+                  Add Pledge
                 </Button>
               </div>
             </form>
@@ -233,41 +226,41 @@ export default function PortalPledges() {
         <Card className="glass-card border-primary/20">
           <CardContent className="p-4 text-sm text-muted-foreground">
             {isMemberLoading || isCommunityLoading
-              ? t("member_portal.giving_account.checking_community")
-              : t("member_portal.giving_account.community_required_summary")}
+              ? "Checking your community assignment..."
+              : "You need to be assigned to a community before you can add a pledge that rolls up into community totals."}
           </CardContent>
         </Card>
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <SummaryCard icon={Target} label={t("member_portal.giving_account.total_pledged")} value={formatTZSForLanguage(totals.pledged, language)} />
-        <SummaryCard icon={HandCoins} label={t("member_portal.giving_account.paid_so_far")} value={formatTZSForLanguage(totals.paid, language)} />
-        <SummaryCard icon={Wallet} label={t("member_portal.giving_account.balance")} value={formatTZSForLanguage(totals.balance, language)} />
-        <SummaryCard icon={CircleDollarSign} label={t("member_portal.giving_account.progress")} value={`${overallProgress.toFixed(0)}%`} />
+        <SummaryCard icon={Target} label="Total Pledged" value={formatTZS(totals.pledged)} />
+        <SummaryCard icon={HandCoins} label="Paid So Far" value={formatTZS(totals.paid)} />
+        <SummaryCard icon={Wallet} label="Balance" value={formatTZS(totals.balance)} />
+        <SummaryCard icon={CircleDollarSign} label="Progress" value={`${overallProgress.toFixed(0)}%`} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{t("member_portal.giving_account.commitment_overview")}</CardTitle>
+          <CardTitle className="text-base">Commitment Overview</CardTitle>
         </CardHeader>
         <CardContent>
           <Progress value={overallProgress} className="h-3" />
           <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-            <span>{t("member_portal.giving_account.paid_amount", { amount: formatTZSForLanguage(totals.paid, language) })}</span>
-            <span>{t("member_portal.giving_account.pledged_amount", { amount: formatTZSForLanguage(totals.pledged, language) })}</span>
+            <span>{formatTZS(totals.paid)} paid</span>
+            <span>{formatTZS(totals.pledged)} pledged</span>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{t("member_portal.giving_account.my_active_pledges")}</CardTitle>
+          <CardTitle className="text-base">My Active Pledges</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">{t("member_portal.giving_account.loading_pledges")}</p>
+            <p className="text-sm text-muted-foreground">Loading pledges...</p>
           ) : pledges.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("member_portal.giving_account.no_pledges")}</p>
+            <p className="text-sm text-muted-foreground">No pledges recorded yet.</p>
           ) : (
             pledges.map((pledge) => {
               const progress = getPledgeProgress(pledge);
@@ -278,27 +271,27 @@ export default function PortalPledges() {
                     <div className="space-y-2 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-semibold">
-                          {pledge.community_name || t("member_portal.giving_account.church_pledge")}
+                          {pledge.community_name || "Church Pledge"}
                         </p>
                         <Badge variant={pledge.status === "completed" ? "default" : "secondary"}>
-                          {t(`member_portal.giving_account.pledge_status.${pledge.status}`, pledge.status)}
+                          {pledge.status}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-muted-foreground">
-                        <span>{t("member_portal.giving_account.pledged")}: <strong className="text-foreground">{formatTZSForLanguage(pledge.amount_pledged, language)}</strong></span>
-                        <span>{t("member_portal.giving_account.paid")}: <strong className="text-foreground">{formatTZSForLanguage(pledge.amount_paid, language)}</strong></span>
-                        <span>{t("member_portal.giving_account.balance")}: <strong className="text-foreground">{formatTZSForLanguage(pledge.balance, language)}</strong></span>
+                        <span>Pledged: <strong className="text-foreground">{formatTZS(pledge.amount_pledged)}</strong></span>
+                        <span>Paid: <strong className="text-foreground">{formatTZS(pledge.amount_paid)}</strong></span>
+                        <span>Balance: <strong className="text-foreground">{formatTZS(pledge.balance)}</strong></span>
                       </div>
                       <div className="space-y-2">
                         <Progress value={progress} className="h-2" />
-                        <p className="text-xs text-muted-foreground">{t("member_portal.giving_account.progress_complete", { progress: progress.toFixed(0) })}</p>
+                        <p className="text-xs text-muted-foreground">{progress.toFixed(0)}% complete</p>
                       </div>
                     </div>
                     <Button
                       onClick={() => setActivePledge(pledge)}
                       disabled={pledge.balance <= 0}
                     >
-                      {t("member_portal.giving_account.pay_now")}
+                      Pay Now
                     </Button>
                   </div>
                 </div>
@@ -313,7 +306,7 @@ export default function PortalPledges() {
         onOpenChange={(open) => {
           if (!open) setActivePledge(null);
         }}
-        title={activePledge ? t("member_portal.giving_account.pay_pledge_title", { pledge: activePledge.community_name || t("member_portal.giving_account.pledge") }) : t("member_portal.giving_account.pay_pledge")}
+        title={activePledge ? `Pay ${activePledge.community_name || "Pledge"}` : "Pay Pledge"}
         maxAmount={activePledge?.balance ?? 0}
         feePercentage={PLEDGE_PLATFORM_FEE_PERCENT}
         isSubmitting={paymentMutation.isPending}
@@ -333,8 +326,8 @@ export default function PortalPledges() {
           const net = Number((result as any)?.net_amount ?? 0);
           const gross = Number((result as any)?.gross_amount ?? amount);
           toast({
-            title: t("member_portal.giving_account.payment_submitted"),
-            description: t("member_portal.giving_account.payment_submitted_description"),
+            title: "Payment submitted for approval",
+            description: "Your pledge balance will update after a church admin or pastor verifies the payment.",
           });
         }}
       />

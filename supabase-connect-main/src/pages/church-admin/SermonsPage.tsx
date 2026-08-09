@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,7 +24,6 @@ type SermonRecord = {
   created_at: string;
   updated_at: string;
   archived_at: string | null;
-  source_livestream_id: string | null;
 };
 
 const EMPTY_FORM = {
@@ -39,7 +37,6 @@ const EMPTY_FORM = {
 };
 
 export default function SermonsPage() {
-  const { t } = useTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const { churchId } = useAuth();
@@ -229,8 +226,8 @@ export default function SermonsPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-serif">{t("church_media.sermons_title")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{t("church_media.sermons_description")}</p>
+          <h1 className="text-2xl font-bold font-serif">Sermons</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage sermons and messages</p>
         </div>
         <Dialog
           open={dialogOpen}

@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { useChurchPermission } from "@/hooks/use-church-permission";
 import { supabase } from "@/integrations/supabase/client";
 import type {
   AnalyticsContext,
@@ -114,7 +113,6 @@ function shouldShowSection(report: AnalyticsResponse, section: AnalyticsReportSe
 
 export default function AnalyticsAssistantPage() {
   const { churchId, session, user, userRole } = useAuth();
-  const analyticsPermission = useChurchPermission("finance_intelligence", "view");
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,8 +123,6 @@ export default function AnalyticsAssistantPage() {
   const [isDashboardLoading, setIsDashboardLoading] = useState(false);
   const [churchBranding, setChurchBranding] = useState({
     churchName: "Church Analytics",
-    churchCode: "",
-    shortCode: "",
     churchLocation: "",
     churchLogoUrl: "",
   });
@@ -134,19 +130,15 @@ export default function AnalyticsAssistantPage() {
     {
       id: "intro",
       role: "assistant",
-      text: "Ask Finance Intelligence about giving trends, top contributors, monthly summaries, pledges, or announcement drafts. I will read live Supabase records and turn them into a structured church insight.",
+      text: "Ask about giving trends, top contributors, monthly summaries, pledges, or announcement drafts. I will read live Supabase records and turn them into a structured church insight.",
     },
   ]);
-  const exportPermission = useChurchPermission("finance_intelligence", "manage");
 
-  const latestReport = useMemo(() => {
-    for (const message of [...messages].reverse()) {
-      if (message.role === "assistant" && message.report) return message.report;
-    }
-    return null;
-  }, [messages]);
+  const latestReport = useMemo(
+    () => [...messages].reverse().find((message) => message.role === "assistant" && message.report)?.report ?? null,
+    [messages],
+  );
   const exportReport = async (report: AnalyticsResponse) => {
-    if (!exportPermission.allowed) return;
     const { exportAnalyticsPdf } = await import("@/lib/analytics-assistant");
     await exportAnalyticsPdf({ ...report, proactiveDashboard: dashboard }, churchBranding);
   };
@@ -159,7 +151,7 @@ export default function AnalyticsAssistantPage() {
     const loadChurchBranding = async () => {
       const { data, error: churchError } = await supabase
         .from("churches")
-        .select("name, address, logo_url, code, church_code, short_code")
+        .select("name, address, logo_url")
         .eq("id", churchId)
         .maybeSingle();
 
@@ -172,8 +164,6 @@ export default function AnalyticsAssistantPage() {
 
       setChurchBranding({
         churchName: data.name || "Church Analytics",
-        churchCode: data.church_code || data.code || "",
-        shortCode: data.short_code || "",
         churchLocation: data.address || "",
         churchLogoUrl: data.logo_url || "",
       });
@@ -198,7 +188,7 @@ export default function AnalyticsAssistantPage() {
     let isActive = true;
     setIsDashboardLoading(true);
     import("@/lib/analytics-assistant")
-      .then(({ fetchAnalyticsDashboard }) => fetchAnalyticsDashboard({ churchId, userRole, userId: user?.id, hasStaffAccess: analyticsPermission.allowed }))
+      .then(({ fetchAnalyticsDashboard }) => fetchAnalyticsDashboard({ churchId, userRole, userId: user?.id }))
       .then((snapshot) => {
         if (!isActive) return;
         dashboardCache.set(cacheKey, snapshot);
@@ -214,7 +204,7 @@ export default function AnalyticsAssistantPage() {
     return () => {
       isActive = false;
     };
-  }, [analyticsPermission.allowed, churchId, session?.access_token, user?.id, userRole]);
+  }, [churchId, session?.access_token, user?.id, userRole]);
 
   const handleSubmit = useCallback(async (event?: FormEvent, overrideQuery?: string) => {
     event?.preventDefault();
@@ -247,7 +237,6 @@ export default function AnalyticsAssistantPage() {
         accessToken: session.access_token,
         userId: user?.id,
         userRole,
-        hasStaffAccess: analyticsPermission.allowed,
         previousContext: assistantContext,
       });
       const assistantMessage: ChatMessage = {
@@ -268,7 +257,7 @@ export default function AnalyticsAssistantPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [analyticsPermission.allowed, assistantContext, churchId, query, session?.access_token, user?.id, userRole]);
+  }, [assistantContext, churchId, query, session?.access_token, user?.id, userRole]);
 
   useEffect(() => {
     const queuedPrompt = searchParams.get("q")?.trim() || "";
@@ -296,8 +285,8 @@ export default function AnalyticsAssistantPage() {
         className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between"
       >
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">Kanisa AI Domain</p>
-          <h1 className="mt-2 text-3xl font-semibold text-foreground">Finance Intelligence</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">AI Analytics</p>
+          <h1 className="mt-2 text-3xl font-semibold text-foreground">Analytics Assistant</h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
             Explore church giving with local intent detection, live Supabase records, instant summaries, and downloadable PDF reports.
           </p>
@@ -419,7 +408,7 @@ export default function AnalyticsAssistantPage() {
 
                       <p className="text-sm leading-6 text-foreground">{message.text}</p>
 
-                      {message.role === "assistant" && message.report ? (() => {
+                      {message.report ? (() => {
                         const report = message.report;
                         const reportArrays = getReportArrays(report);
                         const comparison = report.comparison;
@@ -455,7 +444,7 @@ export default function AnalyticsAssistantPage() {
                           <div className="grid gap-2 rounded-2xl border border-white/8 bg-background/50 p-4 text-xs text-muted-foreground sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                               <p className="uppercase tracking-[0.18em] text-muted-foreground/80">Intent</p>
-                              <p className="mt-1 text-foreground">{report.intent?.type?.split("_").join(" ") || "Unknown"}</p>
+                              <p className="mt-1 text-foreground">{report.intent?.type?.replaceAll("_", " ") || "Unknown"}</p>
                             </div>
                             <div>
                               <p className="uppercase tracking-[0.18em] text-muted-foreground/80">Date Range</p>

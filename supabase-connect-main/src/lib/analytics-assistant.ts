@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { logInfo } from "@/lib/error-logger";
-import type { AppRole } from "@/lib/role-utils";
 
 export type AnalyticsReportBranding = {
   churchName: string;
@@ -205,6 +204,8 @@ export type AnalyticsResponse = {
   privacyMode: "admin" | "member";
   warning?: string | null;
 };
+
+type AppRole = "super_admin" | "church_admin" | "pastor" | "secretary" | "treasurer" | "member";
 
 type AnalyticsRow = {
   amount: number;
@@ -704,10 +705,6 @@ function isAuthorizedRole(role?: AppRole | null) {
   return role ? AUTHORIZED_ROLES.has(role) : false;
 }
 
-function hasStaffAnalyticsAccess(input: { userRole?: AppRole | null; hasStaffAccess?: boolean }) {
-  return input.hasStaffAccess ?? isAuthorizedRole(input.userRole);
-}
-
 async function getMemberIdForUser(churchId: string, userId?: string | null) {
   if (!userId) return null;
 
@@ -727,11 +724,10 @@ async function fetchContributionRows(input: {
   intent: AnalyticsIntent;
   filters?: AnalyticsExtractedFilters;
   userRole?: AppRole | null;
-  hasStaffAccess?: boolean;
   userId?: string | null;
   bounds?: { start: Date; end: Date } | null;
 }) {
-  const memberOnly = !hasStaffAnalyticsAccess(input);
+  const memberOnly = !isAuthorizedRole(input.userRole);
   const memberId = memberOnly ? await getMemberIdForUser(input.churchId, input.userId) : null;
 
   if (memberOnly && !memberId) return [];
@@ -788,7 +784,7 @@ async function fetchContributionRows(input: {
   const category = input.filters?.category || input.intent.category;
   const memberName = input.filters?.memberName?.toLowerCase().trim();
   return normalized
-    .filter((row) => (category === "all" ? true : row.categoryName.toLowerCase().includes(category.split("_").join(" "))))
+    .filter((row) => (category === "all" ? true : row.categoryName.toLowerCase().includes(category.replaceAll("_", " "))))
     .filter((row) => (memberName ? row.memberName.toLowerCase().includes(memberName) : true));
 }
 
@@ -915,8 +911,8 @@ function buildComparison(currentRows: AnalyticsRow[], previousRows: AnalyticsRow
   };
 }
 
-async function fetchInactiveContributors(input: { churchId: string; userRole?: AppRole | null; userId?: string | null; hasStaffAccess?: boolean }) {
-  if (!hasStaffAnalyticsAccess(input)) return [];
+async function fetchInactiveContributors(input: { churchId: string; userRole?: AppRole | null; userId?: string | null }) {
+  if (!isAuthorizedRole(input.userRole)) return [];
 
   const { current, previous } = getMonthComparisonBounds();
   const intent: AnalyticsIntent = { type: "inactive_contributors", dateRange: "all_time", category: "all" };
@@ -925,7 +921,7 @@ async function fetchInactiveContributors(input: { churchId: string; userRole?: A
   return getLapsedContributors(currentRows, previousRows);
 }
 
-async function fetchPledgeReport(input: { churchId: string; userRole?: AppRole | null; userId?: string | null; filters?: AnalyticsExtractedFilters; hasStaffAccess?: boolean }) {
+async function fetchPledgeReport(input: { churchId: string; userRole?: AppRole | null; userId?: string | null; filters?: AnalyticsExtractedFilters }) {
   const empty = {
     pledgeFollowUps: [] as ContributorSummary[],
     pledgeSummary: {
@@ -938,7 +934,7 @@ async function fetchPledgeReport(input: { churchId: string; userRole?: AppRole |
     },
   };
 
-  if (!hasStaffAnalyticsAccess(input)) return empty;
+  if (!isAuthorizedRole(input.userRole)) return empty;
 
   const pledgeBounds =
     input.filters?.startDate && input.filters?.endDate
@@ -1364,9 +1360,8 @@ export async function fetchAnalyticsDashboard(input: {
   churchId: string;
   userRole?: AppRole | null;
   userId?: string | null;
-  hasStaffAccess?: boolean;
 }): Promise<AnalyticsDashboardSnapshot> {
-  const privacyMode = hasStaffAnalyticsAccess(input) ? "admin" : "member";
+  const privacyMode = isAuthorizedRole(input.userRole) ? "admin" : "member";
   const baseIntent: AnalyticsIntent = { type: "church_summary", dateRange: "all_time", category: "all" };
   const { current, previous } = getMonthComparisonBounds();
   const recentBounds = { start: addDays(startOfDay(new Date()), -210), end: addDays(startOfDay(new Date()), 1) };
@@ -1451,7 +1446,6 @@ export async function fetchAnalyticsAssistant(input: {
   accessToken: string;
   userRole?: AppRole | null;
   userId?: string | null;
-  hasStaffAccess?: boolean;
   previousContext?: AnalyticsContext | null;
 }): Promise<AnalyticsResponse> {
   const parsed = parseAnalyticsIntent(input.query, input.previousContext);
@@ -1462,7 +1456,7 @@ export async function fetchAnalyticsAssistant(input: {
     user_id: input.userId,
     metadata: { intent: intent.type, confidence },
   });
-  const privacyMode = hasStaffAnalyticsAccess(input) ? "admin" : "member";
+  const privacyMode = isAuthorizedRole(input.userRole) ? "admin" : "member";
   if (needsClarification) {
     logInfo("Analytics forecast skipped while awaiting clarification.", {
       function: "fetchAnalyticsAssistant",

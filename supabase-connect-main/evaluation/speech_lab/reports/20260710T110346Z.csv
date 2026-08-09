@@ -1,2 +1,0 @@
-model_id,model_name,chapter_id,wer,cer,boundary_accuracy,alignment_accuracy,average_word_confidence,verse_confidence,processing_time_seconds,peak_ram_mb,peak_vram_mb,gpu_utilization_percent,cpu_utilization_percent,accepted,notes
-faster-whisper-small,Faster Whisper Small,GEN_001,0.7770154373927959,0.1426056338028169,0.0,0.0,0.6904774525880621,,0,,,,,False,WER target missed: 0.7770 >= 0.0500; Boundary target missed: 0.0000 <= 0.9900; Verse confidence not reported

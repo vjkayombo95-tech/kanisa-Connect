@@ -12,11 +12,6 @@ export type MassIntention = {
   status: MassIntentionStatus;
   created_at: string;
   church_id: string | null;
-  mass_occurrence_id?: string | null;
-  mass_date?: string | null;
-  mass_time?: string | null;
-  mass_name?: string | null;
-  mass_location?: string | null;
 };
 
 export type CommunityHelpRequest = {
@@ -38,8 +33,6 @@ type MemberJoin = {
   } | null;
 };
 
-type CommunityMemberLookup = { id: string; full_name: string | null; email: string | null };
-
 export type MassIntentionWithMember = MassIntention & MemberJoin & {
   member_name: string;
 };
@@ -58,11 +51,6 @@ export const MASS_INTENTION_SELECT = `
   created_at,
   member_id,
   church_id,
-  mass_occurrence_id,
-  mass_date,
-  mass_time,
-  mass_name,
-  mass_location,
   members(full_name, email)
 `;
 
@@ -110,7 +98,7 @@ export async function enrichCommunityHelpRequests(rows: CommunityHelpRequest[]):
     }
 
     membersById = new Map(
-      ((data ?? []) as CommunityMemberLookup[]).map((member) => [
+      (data ?? []).map((member: any) => [
         member.id,
         { full_name: member.full_name ?? null, email: member.email ?? null },
       ]),
@@ -173,7 +161,6 @@ export async function submitPortalMassIntention(payload: {
   member_id: string;
   church_id: string;
   requested_mass_date: string;
-  mass_occurrence_id: string;
   idempotency_key: string;
 }) {
   const message = payload.message.trim();
@@ -193,21 +180,17 @@ export async function submitPortalMassIntention(payload: {
     throw new Error("Please select the Mass date.");
   }
 
-  if (!payload.mass_occurrence_id) {
-    throw new Error("Please select an available Mass.");
-  }
-
   if (!idempotency_key) {
     throw new Error("Submission key is required.");
   }
 
-  const { data, error } = await supabase.rpc("submit_portal_mass_intention_for_occurrence" as never, {
+  const { data, error } = await supabase.rpc("submit_portal_mass_intention" as never, {
     p_church_id: church_id,
     p_member_id: member_id,
     p_intention_type: payload.intention_type,
     p_message: message,
     p_offering_amount: payload.offering_amount,
-    p_mass_occurrence_id: payload.mass_occurrence_id,
+    p_requested_mass_date: payload.requested_mass_date,
     p_idempotency_key: idempotency_key,
   } as never);
 

@@ -20,8 +20,6 @@ type Church = {
   id: string;
   name: string | null;
   code: string | null;
-  church_code: string | null;
-  short_code: string | null;
   email: string | null;
   status: string | null;
   created_at: string;
@@ -30,13 +28,11 @@ type Church = {
 type ChurchStatusUpdate = {
   churchId: string;
   churchName?: string | null;
-  churchCode?: string | null;
-  shortCode?: string | null;
   status: ChurchStatus;
   action: AuditAction;
 };
 
-async function createChurchAuditLog({ churchId, churchName, churchCode, shortCode, status, action }: ChurchStatusUpdate) {
+async function createChurchAuditLog({ churchId, churchName, status, action }: ChurchStatusUpdate) {
   const actionDescriptions: Record<AuditAction, string> = {
     approve_church: `Approved church ${churchName || churchId}.`,
     reject_church: `Rejected church ${churchName || churchId}.`,
@@ -48,7 +44,7 @@ async function createChurchAuditLog({ churchId, churchName, churchCode, shortCod
     p_entity_type: "church",
     p_entity_id: churchId,
     p_description: actionDescriptions[action],
-    p_metadata: { church_name: churchName, church_code: churchCode, short_code: shortCode, status },
+    p_metadata: {},
   } as never);
 
   if (error) {
@@ -122,8 +118,6 @@ export default function ChurchManagement() {
       (approvalFilter === "all" || approvalState === approvalFilter) &&
       (!term ||
         church.name?.toLowerCase().includes(term) ||
-        church.church_code?.toLowerCase().includes(term) ||
-        church.short_code?.toLowerCase().includes(term) ||
         church.code?.toLowerCase().includes(term) ||
         church.email?.toLowerCase().includes(term))
     );
@@ -150,7 +144,7 @@ export default function ChurchManagement() {
             className="mt-2"
             value={search}
             onChange={(value) => updateFilter("search", value)}
-            placeholder="Search name, church code, or join code..."
+            placeholder="Search churches..."
           />
         </div>
         <div>
@@ -187,8 +181,7 @@ export default function ChurchManagement() {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-border">
                 <TableHead>Church</TableHead>
-                <TableHead>Church Code</TableHead>
-                <TableHead>Join Code</TableHead>
+                <TableHead>Code</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
@@ -199,21 +192,20 @@ export default function ChurchManagement() {
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, index) => (
                   <TableRow key={index}>
-                    <TableCell colSpan={7} className="py-3">
+                    <TableCell colSpan={6} className="py-3">
                       <div className="h-8 animate-pulse rounded-md bg-secondary" />
                     </TableCell>
                   </TableRow>
                 ))
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                   <Building2 className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
                   {churches.length === 0 ? "No churches registered yet." : "No results match the current filters."}
                 </TableCell></TableRow>
               ) : filtered.map((c) => (
                 <TableRow key={c.id} className="border-border">
                   <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell className="font-mono text-xs text-primary">{c.church_code || c.code}</TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{c.short_code || "-"}</TableCell>
+                  <TableCell className="font-mono text-xs text-primary">{c.code}</TableCell>
                   <TableCell className="text-muted-foreground">{c.email}</TableCell>
                   <TableCell><Badge variant="outline" className={statusColor(c.status)}>{c.status}</Badge></TableCell>
                   <TableCell className="text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</TableCell>
@@ -229,8 +221,6 @@ export default function ChurchManagement() {
                           onClick={() => updateChurchStatus.mutate({
                             churchId: c.id,
                             churchName: c.name,
-                            churchCode: c.church_code || c.code,
-                            shortCode: c.short_code,
                             status: "active",
                             action: "approve_church",
                           })}
@@ -242,8 +232,6 @@ export default function ChurchManagement() {
                           onClick={() => updateChurchStatus.mutate({
                             churchId: c.id,
                             churchName: c.name,
-                            churchCode: c.church_code || c.code,
-                            shortCode: c.short_code,
                             status: "inactive",
                             action: "reject_church",
                           })}
@@ -256,8 +244,6 @@ export default function ChurchManagement() {
                           onClick={() => updateChurchStatus.mutate({
                             churchId: c.id,
                             churchName: c.name,
-                            churchCode: c.church_code || c.code,
-                            shortCode: c.short_code,
                             status: "active",
                             action: "update_church_status",
                           })}
@@ -269,8 +255,6 @@ export default function ChurchManagement() {
                           onClick={() => updateChurchStatus.mutate({
                             churchId: c.id,
                             churchName: c.name,
-                            churchCode: c.church_code || c.code,
-                            shortCode: c.short_code,
                             status: "inactive",
                             action: "update_church_status",
                           })}
@@ -282,8 +266,6 @@ export default function ChurchManagement() {
                           onClick={() => updateChurchStatus.mutate({
                             churchId: c.id,
                             churchName: c.name,
-                            churchCode: c.church_code || c.code,
-                            shortCode: c.short_code,
                             status: "suspended",
                             action: "update_church_status",
                           })}
