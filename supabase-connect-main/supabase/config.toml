@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.whatsapp-dispatch]
 verify_jwt = false
+
+[functions.sync-livestream-status]
+verify_jwt = true
