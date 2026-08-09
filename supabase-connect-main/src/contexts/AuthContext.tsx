@@ -1,14 +1,30 @@
-import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { clearSensitiveOfflineData, readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
+import { clearSensitiveOfflineData, readOfflineCache, writeOfflineCache } from "@/lib/offline-cache";
+import {
+  AUTHORIZATION_REALTIME_DEPENDENCIES,
+  invalidateAuthorizationQueries,
+  removeAuthorizationQueries,
+  type AuthorizationRealtimeSource,
+} from "@/lib/authorization-realtime";
 import { captureException, logSupabaseError } from "@/lib/error-logger";
-
-type AppRole = "super_admin" | "church_admin" | "pastor" | "secretary" | "treasurer" | "member";
+import { getDefaultRouteForRoles, type AppRole } from "@/lib/role-utils";
+import { markStartupEvent } from "@/lib/startup-diagnostics";
+import {
+  createAnonymousAuthorizationState,
+  createAuthorizationErrorState,
+  createLoadingAuthorizationState,
+  createResolvedAuthorizationState,
+  isAuthorizationReady,
+  type AuthorizationResolutionState,
+} from "@/lib/authorization-readiness";
 
 type CurrentUserContext = {
   profile: any | null;
   role: AppRole | null;
+  roles?: AppRole[];
   church_id: string | null;
   church: any | null;
   member: any | null;
@@ -27,7 +43,11 @@ interface AuthContextType {
   isSuperAdmin: boolean;
   churchId: string | null;
   userRole: AppRole | null;
+  userRoles: AppRole[];
   isLoading: boolean;
+  authorizationReady: boolean;
+  authorizationError: Error | null;
+  authorizationResolution: AuthorizationResolutionState;
   signOut: () => Promise<void>;
   refreshUserData: () => Promise<void>;
 }
@@ -39,21 +59,68 @@ const AuthContext = createContext<AuthContextType>({
   isSuperAdmin: false,
   churchId: null,
   userRole: null,
+  userRoles: [],
   isLoading: true,
+  authorizationReady: false,
+  authorizationError: null,
+  authorizationResolution: createLoadingAuthorizationState(),
   signOut: async () => {},
   refreshUserData: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
+const DEV_AUTH_TIMEOUT_MS = 6000;
+
+function withDevTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+  if (!import.meta.env.DEV) return promise;
+
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      window.setTimeout(() => reject(new Error(`${label} timed out after ${DEV_AUTH_TIMEOUT_MS}ms`)), DEV_AUTH_TIMEOUT_MS);
+    }),
+  ]);
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [churchId, setChurchId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<AppRole | null>(null);
+  const [userRoles, setUserRoles] = useState<AppRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [authorizationError, setAuthorizationError] = useState<Error | null>(null);
+  const [authorizationResolution, setAuthorizationResolution] = useState<AuthorizationResolutionState>(
+    createLoadingAuthorizationState,
+  );
+  const loadSequenceRef = useRef(0);
+  const authorizationScopeRef = useRef<{ userId: string | null; churchId: string | null }>({
+    userId: null,
+    churchId: null,
+  });
+  const authorizationReady = isAuthorizationReady(authorizationResolution);
+
+  const clearAuthorizationOfflineCache = useCallback((userId: string) => {
+    if (typeof window === "undefined") return;
+    window.localStorage.removeItem(`offline-cache:auth-context:v2:${userId}`);
+    window.localStorage.removeItem(`offline-cache:current-user-context:v2:${userId}`);
+  }, []);
+
+  const failClosedAuthorization = useCallback((userId: string, currentChurchId: string | null, error?: unknown) => {
+    clearAuthorizationOfflineCache(userId);
+    removeAuthorizationQueries(queryClient, { userId, churchId: currentChurchId });
+    setProfile(null);
+    setIsSuperAdmin(false);
+    setChurchId(null);
+    setUserRole(null);
+    setUserRoles([]);
+    setAuthorizationResolution(createAuthorizationErrorState());
+    setAuthorizationError(error instanceof Error ? error : new Error("Authorization data could not be loaded."));
+    setIsLoading(false);
+  }, [clearAuthorizationOfflineCache, queryClient]);
 
   const shouldAutoNavigate = useCallback(() => {
     const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
@@ -67,6 +134,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetUserData = useCallback(() => {
+    const previousScope = authorizationScopeRef.current;
+    if (previousScope.userId) {
+      removeAuthorizationQueries(queryClient, { userId: previousScope.userId, churchId: previousScope.churchId });
+    }
+    authorizationScopeRef.current = { userId: null, churchId: null };
     clearSensitiveOfflineData();
     setSession(null);
     setUser(null);
@@ -74,8 +146,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsSuperAdmin(false);
     setChurchId(null);
     setUserRole(null);
+    setUserRoles([]);
+    setAuthorizationError(null);
+    setAuthorizationResolution(createAnonymousAuthorizationState());
     setIsLoading(false);
-  }, []);
+  }, [queryClient]);
 
   const isInvalidRefreshTokenError = useCallback((error: unknown) => {
     const message = String((error as { message?: string } | null)?.message || "").toLowerCase();
@@ -88,19 +163,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.replace(`/login?reason=session_expired&redirect=${redirect}`);
   }, []);
 
-  const loadUserData = useCallback(async (currentUser: User | null) => {
+  const loadUserData = useCallback(async (
+    currentUser: User | null,
+    options: { authoritative?: boolean; previousChurchId?: string | null } = {},
+  ) => {
+    const loadSequence = loadSequenceRef.current + 1;
+    loadSequenceRef.current = loadSequence;
+
     if (!currentUser) {
+      markStartupEvent("auth_user_context_skipped", { reason: "no_user" });
       resetUserData();
       return;
     }
 
+    setIsLoading(true);
+    setAuthorizationError(null);
+    setAuthorizationResolution(createLoadingAuthorizationState("found"));
+
     try {
-      const authCacheKey = `offline-cache:auth-context:${currentUser.id}`;
+      markStartupEvent("auth_user_context_started");
+      // v2 requires the multi-role context shape. Reusing a legacy scalar-only
+      // cache can redirect a Church Admin + Pastor away from pastoral routes
+      // before get_current_user_context() returns the authoritative roles[].
+      const authCacheKey = `offline-cache:auth-context:v2:${currentUser.id}`;
       const cachedContext = readOfflineCache<{
         profile: any | null;
         isSuperAdmin: boolean;
         churchId: string | null;
         userRole: AppRole | null;
+        userRoles?: AppRole[];
       } | null>(authCacheKey, null);
 
       if (cachedContext) {
@@ -108,63 +199,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsSuperAdmin(cachedContext.isSuperAdmin);
         setChurchId(cachedContext.churchId);
         setUserRole(cachedContext.userRole);
+        setUserRoles(cachedContext.userRoles ?? (cachedContext.userRole ? [cachedContext.userRole] : []));
+        markStartupEvent("auth_context_cache_used", {
+          role: cachedContext.userRole,
+          hasChurch: Boolean(cachedContext.churchId),
+        });
       }
 
-      const contextData = await withOfflineCache<CurrentUserContext | null>(
-        `offline-cache:current-user-context:${currentUser.id}`,
-        async () => {
+      const contextCacheKey = `offline-cache:current-user-context:v2:${currentUser.id}`;
+      const fetchContext = () => withDevTimeout((async () => {
           const { data, error: contextError } = await supabase.rpc("get_current_user_context" as never);
 
           if (contextError) throw contextError;
           return data as unknown as CurrentUserContext;
-        },
-        cachedContext
-          ? {
-              profile: cachedContext.profile,
-              role: cachedContext.userRole,
-              church_id: cachedContext.churchId,
-              church: null,
-              member: null,
-              is_super_admin: cachedContext.isSuperAdmin,
-              permissions: {
-                is_super_admin: cachedContext.isSuperAdmin,
-                can_view_church_workspace: !!cachedContext.churchId,
-                can_manage_church_workspace: cachedContext.userRole
-                  ? ["super_admin", "church_admin", "pastor", "secretary", "treasurer"].includes(cachedContext.userRole)
-                  : false,
-              },
-            }
-          : null,
-      );
+        })(), "get_current_user_context");
+      // Cached authorization may paint a shell, but it must never resolve a
+      // routing decision. Every startup and refresh waits for the database
+      // context so stale null membership cannot be mistaken for onboarding.
+      const contextData = await fetchContext();
+      writeOfflineCache(contextCacheKey, contextData);
 
       if (!contextData) {
         throw new Error("Unable to load user context.");
       }
+      if (loadSequence !== loadSequenceRef.current) return;
 
       const profileData = contextData.profile;
       const isUserSuperAdmin = !!contextData.is_super_admin || profileData?.role === "super_admin";
       const resolvedChurchId = contextData.church_id ?? null;
       const resolvedRole = (isUserSuperAdmin ? "super_admin" : contextData.role) as AppRole | null;
+      const resolvedRoles = (isUserSuperAdmin
+        ? ["super_admin"]
+        : (contextData.roles ?? (resolvedRole ? [resolvedRole] : []))) as AppRole[];
 
       setProfile(profileData);
       setIsSuperAdmin(isUserSuperAdmin);
       setChurchId(resolvedChurchId);
       setUserRole(resolvedRole);
+      setUserRoles(resolvedRoles);
+      authorizationScopeRef.current = { userId: currentUser.id, churchId: resolvedChurchId };
+      setAuthorizationResolution(createResolvedAuthorizationState({
+        profile: profileData,
+        membership: contextData.member,
+        roles: resolvedRoles,
+        permissions: contextData.permissions,
+        churchId: resolvedChurchId,
+      }));
+      setAuthorizationError(null);
+      markStartupEvent("auth_user_context_completed", {
+        role: resolvedRole,
+        hasChurch: Boolean(resolvedChurchId),
+        isSuperAdmin: isUserSuperAdmin,
+      });
 
-      window.localStorage.setItem(authCacheKey, JSON.stringify({
+      writeOfflineCache(authCacheKey, {
         profile: profileData,
         isSuperAdmin: isUserSuperAdmin,
         churchId: resolvedChurchId,
         userRole: resolvedRole,
-      }));
+        userRoles: resolvedRoles,
+      });
 
       if (shouldAutoNavigate()) {
-        if (isUserSuperAdmin) {
-          redirectTo("/super-admin");
-        } else if (resolvedRole === "church_admin") {
-          redirectTo("/church-admin");
-        } else if (resolvedChurchId) {
-          redirectTo("/portal");
+        if (isUserSuperAdmin || resolvedChurchId) {
+          redirectTo(getDefaultRouteForRoles(resolvedRoles, isUserSuperAdmin));
         }
       }
     } catch (err) {
@@ -174,30 +272,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         function: "loadUserData",
         user_id: currentUser.id,
       });
-      setProfile(null);
-      setIsSuperAdmin(false);
-      setChurchId(null);
-      setUserRole(null);
+      failClosedAuthorization(currentUser.id, options.previousChurchId ?? null, err);
     } finally {
-      setIsLoading(false);
+      if (loadSequence === loadSequenceRef.current) {
+        setIsLoading(false);
+        markStartupEvent("auth_loading_resolved");
+      }
     }
-  }, [redirectTo, resetUserData, shouldAutoNavigate]);
+  }, [failClosedAuthorization, redirectTo, resetUserData, shouldAutoNavigate]);
 
   useEffect(() => {
+    markStartupEvent("auth_initialization_started");
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (event === "INITIAL_SESSION") return;
+      markStartupEvent("auth_state_changed", { event });
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
       if (newSession?.user) {
+        const previousScope = authorizationScopeRef.current;
+        if (previousScope.userId && previousScope.userId !== newSession.user.id) {
+          clearAuthorizationOfflineCache(previousScope.userId);
+          removeAuthorizationQueries(queryClient, { userId: previousScope.userId, churchId: previousScope.churchId });
+          setProfile(null);
+          setIsSuperAdmin(false);
+          setChurchId(null);
+          setUserRole(null);
+          setUserRoles([]);
+        }
         setIsLoading(true);
+        setAuthorizationError(null);
+        setAuthorizationResolution(createLoadingAuthorizationState("found"));
       }
 
       setTimeout(() => loadUserData(newSession?.user ?? null), 0);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session: existingSession }, error }) => {
+    withDevTimeout(supabase.auth.getSession(), "auth.getSession").then(async ({ data: { session: existingSession }, error }) => {
+      markStartupEvent("auth_get_session_completed", { hasSession: Boolean(existingSession), hasError: Boolean(error) });
       if (error) {
         if (isInvalidRefreshTokenError(error)) {
           logSupabaseError(error, {
@@ -226,10 +340,99 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
       loadUserData(existingSession?.user ?? null);
+    }).catch((error) => {
+      captureException(error, {
+        page: "Authentication",
+        component: "AuthProvider",
+        function: "restoreSession",
+        metadata: { reason: "auth_initialization_timeout" },
+      });
+      resetUserData();
+      markStartupEvent("auth_get_session_failed", { error: error instanceof Error ? error.message : "unknown" });
     });
 
     return () => subscription.unsubscribe();
-  }, [isInvalidRefreshTokenError, loadUserData, resetUserData, returnToLoginAfterExpiredSession]);
+  }, [clearAuthorizationOfflineCache, isInvalidRefreshTokenError, loadUserData, queryClient, resetUserData, returnToLoginAfterExpiredSession]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const refreshOnFocus = () => {
+      if (document.visibilityState === "visible") {
+        loadUserData(user, { authoritative: true, previousChurchId: churchId });
+      }
+    };
+
+    window.addEventListener("focus", refreshOnFocus);
+    document.addEventListener("visibilitychange", refreshOnFocus);
+
+    return () => {
+      window.removeEventListener("focus", refreshOnFocus);
+      document.removeEventListener("visibilitychange", refreshOnFocus);
+    };
+  }, [churchId, loadUserData, user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let active = true;
+    const scope = { userId: user.id, churchId };
+    const channels: ReturnType<typeof supabase.channel>[] = [];
+    const handleChange = (allowedSources: readonly AuthorizationRealtimeSource[]) => (
+      message: { payload?: { source?: unknown } },
+    ) => {
+      const source = message.payload?.source;
+      if (!active || typeof source !== "string" || !allowedSources.includes(source as AuthorizationRealtimeSource)) return;
+      const authorizationSource = source as AuthorizationRealtimeSource;
+      void invalidateAuthorizationQueries(queryClient, authorizationSource, scope);
+      if (AUTHORIZATION_REALTIME_DEPENDENCIES[authorizationSource].refreshUserContext) {
+        setIsLoading(true);
+        void loadUserData(user, { authoritative: true, previousChurchId: churchId });
+      }
+    };
+
+    const subscribe = (
+      topic: string,
+      allowedSources: readonly AuthorizationRealtimeSource[],
+      refreshContextOnSubscribe = false,
+    ) => {
+      const channel = supabase
+        .channel(topic, { config: { private: true } })
+        .on("broadcast", { event: "authorization_changed" }, handleChange(allowedSources))
+        .subscribe((status) => {
+          if (!active) return;
+          if (status === "SUBSCRIBED") {
+            for (const source of allowedSources) void invalidateAuthorizationQueries(queryClient, source, scope);
+            if (refreshContextOnSubscribe) {
+              // Close the fetch/subscription race and replace offline startup data.
+              setIsLoading(true);
+              void loadUserData(user, { authoritative: true, previousChurchId: churchId });
+            }
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            failClosedAuthorization(user.id, churchId);
+          }
+        });
+      channels.push(channel);
+    };
+
+    void supabase.realtime.setAuth().then(() => {
+      if (!active) return;
+      subscribe(`authorization:user:${user.id}`, ["user_roles", "members", "profiles"], true);
+      if (churchId) {
+        subscribe(`authorization:church:${churchId}`, [
+          "church_role_permissions", "church_features", "subscriptions",
+        ]);
+      }
+      subscribe("authorization:platform", ["platform_features"]);
+    }).catch(() => {
+      if (active) failClosedAuthorization(user.id, churchId);
+    });
+
+    return () => {
+      active = false;
+      for (const channel of channels) void supabase.removeChannel(channel);
+    };
+  }, [churchId, failClosedAuthorization, loadUserData, queryClient, user]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -239,13 +442,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUserData = async () => {
     if (user) {
       setIsLoading(true);
-      await loadUserData(user);
+      await loadUserData(user, { authoritative: true, previousChurchId: churchId });
     }
   };
 
   return (
     <AuthContext.Provider
-      value={{ session, user, profile, isSuperAdmin, churchId, userRole, isLoading, signOut, refreshUserData }}
+      value={{
+        session,
+        user,
+        profile,
+        isSuperAdmin,
+        churchId,
+        userRole,
+        userRoles,
+        isLoading,
+        authorizationReady,
+        authorizationError,
+        authorizationResolution,
+        signOut,
+        refreshUserData,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-07-10T17:45:42Z",
+  "preflight": [
+    {
+      "candidate": "medium_vad_tuned",
+      "model_id": "Systran/faster-whisper-medium",
+      "model_label": "Faster Whisper Medium VAD Tuned",
+      "cached": true,
+      "estimated_download_bytes": 1600000000,
+      "required_download_bytes": 0,
+      "free_disk_bytes": 10200166400,
+      "remaining_after_download_bytes": 10200166400,
+      "hf_cache_dir": "C:\\Users\\HP\\.cache\\huggingface",
+      "hf_cache_size_bytes": 2016784187,
+      "available_memory_bytes": 6456315904,
+      "device": "cpu",
+      "compute_type": "int8",
+      "allow_download": true,
+      "skip_download": false,
+      "safe_to_run": true,
+      "skip_reason": ""
+    },
+    {
+      "candidate": "large-v3-turbo",
+      "model_id": "deepdml/faster-whisper-large-v3-turbo-ct2",
+      "model_label": "Faster Whisper Large-v3 Turbo CT2",
+      "cached": false,
+      "estimated_download_bytes": 1700000000,
+      "required_download_bytes": 1700000000,
+      "free_disk_bytes": 10200166400,
+      "remaining_after_download_bytes": 8500166400,
+      "hf_cache_dir": "C:\\Users\\HP\\.cache\\huggingface",
+      "hf_cache_size_bytes": 2016784187,
+      "available_memory_bytes": 6456315904,
+      "device": "cpu",
+      "compute_type": "int8",
+      "allow_download": true,
+      "skip_download": false,
+      "safe_to_run": true,
+      "skip_reason": ""
+    }
+  ]
+}

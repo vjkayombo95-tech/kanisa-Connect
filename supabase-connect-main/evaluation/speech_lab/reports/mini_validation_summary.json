@@ -1,0 +1,999 @@
+{
+  "preflight": {
+    "generated_at": "2026-07-10T21:08:43Z",
+    "chapters": [
+      "GEN_001",
+      "MAT_005",
+      "ROM_008"
+    ],
+    "verse_range": [
+      1,
+      10
+    ],
+    "sample_count": 3,
+    "model_count": 3,
+    "total_audio_seconds": 237.0,
+    "estimated_runtime_seconds": 1564.2,
+    "expected_cpu_load": "high_single_process_cpu_int8",
+    "expected_new_disk_bytes": 18000000,
+    "free_disk_bytes": 156495872,
+    "device": "cpu",
+    "compute_type": "int8",
+    "candidates": [
+      {
+        "model": "medium_vad_tuned",
+        "model_id": "Systran/faster-whisper-medium",
+        "cached": true,
+        "safe_to_run": true,
+        "skip_reason": ""
+      },
+      {
+        "model": "large-v3",
+        "model_id": "Systran/faster-whisper-large-v3",
+        "cached": true,
+        "safe_to_run": true,
+        "skip_reason": ""
+      },
+      {
+        "model": "large-v3-turbo",
+        "model_id": "deepdml/faster-whisper-large-v3-turbo-ct2",
+        "cached": true,
+        "safe_to_run": true,
+        "skip_reason": ""
+      }
+    ]
+  },
+  "confidence": {
+    "overall": "strong_generalization",
+    "sample_classes": {
+      "GEN_001_1_10": "strong_generalization",
+      "MAT_005_1_10": "strong_generalization",
+      "ROM_008_1_10": "moderate_generalization"
+    },
+    "large_beats_medium_count": 3,
+    "turbo_close_count": 3
+  },
+  "rows": [
+    {
+      "sample": "GEN_001_1_10",
+      "source_chapter_id": "GEN_001",
+      "model": "large-v3",
+      "reference_type": "biblica_candidate",
+      "wer": 0.3706293706293706,
+      "cer": 0.044733044733044736,
+      "coverage": 0.7820330175500454,
+      "verse_resolution": 1.0,
+      "unresolved_verses": "",
+      "runtime_seconds": 1024.9540217999602,
+      "transcript_path": "evaluation\\speech_lab\\model_outputs\\mini-validation\\large-v3\\GEN_001_1_10.json",
+      "wer_improvement_vs_medium": 0.19580419580419584,
+      "cer_improvement_vs_medium": 0.0057720057720057685
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "source_chapter_id": "GEN_001",
+      "model": "large-v3-turbo",
+      "reference_type": "biblica_candidate",
+      "wer": 0.3776223776223776,
+      "cer": 0.03463203463203463,
+      "coverage": 0.7637580005134186,
+      "verse_resolution": 1.0,
+      "unresolved_verses": "",
+      "runtime_seconds": 141.1318081000354,
+      "transcript_path": "evaluation\\speech_lab\\model_outputs\\mini-validation\\large-v3-turbo\\GEN_001_1_10.json",
+      "wer_delta_vs_large_v3": 0.006993006993006978,
+      "relative_wer_delta_vs_large_v3": 0.018867924528301848
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "source_chapter_id": "GEN_001",
+      "model": "medium_vad_tuned",
+      "reference_type": "biblica_candidate",
+      "wer": 0.5664335664335665,
+      "cer": 0.050505050505050504,
+      "coverage": 0.6851265823959323,
+      "verse_resolution": 1.0,
+      "unresolved_verses": "",
+      "runtime_seconds": 170.2000876000384,
+      "transcript_path": "evaluation\\speech_lab\\model_outputs\\mini-validation\\medium-vad-tuned\\GEN_001_1_10.json"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "source_chapter_id": "MAT_005",
+      "model": "large-v3-turbo",
+      "reference_type": "biblica_candidate",
+      "wer": 0.2247191011235955,
+      "cer": 0.05844155844155844,
+      "coverage": 0.8969696969696971,
+      "verse_resolution": 1.0,
+      "unresolved_verses": "",
+      "runtime_seconds": 70.12246999994386,
+      "transcript_path": "evaluation\\speech_lab\\model_outputs\\mini-validation\\large-v3-turbo\\MAT_005_1_10.json",
+      "wer_delta_vs_large_v3": -0.0898876404494382,
+      "relative_wer_delta_vs_large_v3": -0.2857142857142857
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "source_chapter_id": "MAT_005",
+      "model": "large-v3",
+      "reference_type": "biblica_candidate",
+      "wer": 0.3146067415730337,
+      "cer": 0.06277056277056277,
+      "coverage": 0.8480086580086581,
+      "verse_resolution": 1.0,
+      "unresolved_verses": "",
+      "runtime_seconds": 710.9380358000053,
+      "transcript_path": "evaluation\\speech_lab\\model_outputs\\mini-validation\\large-v3\\MAT_005_1_10.json",
+      "wer_improvement_vs_medium": 0.3595505617977528,
+      "cer_improvement_vs_medium": 0.03896103896103896
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "source_chapter_id": "MAT_005",
+      "model": "medium_vad_tuned",
+      "reference_type": "biblica_candidate",
+      "wer": 0.6741573033707865,
+      "cer": 0.10173160173160173,
+      "coverage": 0.6509940676607343,
+      "verse_resolution": 0.9,
+      "unresolved_verses": "1",
+      "runtime_seconds": 125.60488769994117,
+      "transcript_path": "evaluation\\speech_lab\\model_outputs\\mini-validation\\medium-vad-tuned\\MAT_005_1_10.json"
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "source_chapter_id": "ROM_008",
+      "model": "large-v3-turbo",
+      "reference_type": "biblica_candidate",
+      "wer": 0.24663677130044842,
+      "cer": 0.03823529411764706,
+      "coverage": 0.8635462943700929,
+      "verse_resolution": 1.0,
+      "unresolved_verses": "",
+      "runtime_seconds": 187.77284690004308,
+      "transcript_path": "evaluation\\speech_lab\\model_outputs\\mini-validation\\large-v3-turbo\\ROM_008_1_10.json",
+      "wer_delta_vs_large_v3": -0.13004484304932734,
+      "relative_wer_delta_vs_large_v3": -0.34523809523809523
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "source_chapter_id": "ROM_008",
+      "model": "large-v3",
+      "reference_type": "biblica_candidate",
+      "wer": 0.37668161434977576,
+      "cer": 0.23137254901960785,
+      "coverage": 0.8691729323308272,
+      "verse_resolution": 0.7,
+      "unresolved_verses": "8,9,10",
+      "runtime_seconds": 392.7956407000311,
+      "transcript_path": "evaluation\\speech_lab\\model_outputs\\mini-validation\\large-v3\\ROM_008_1_10.json",
+      "wer_improvement_vs_medium": 0.04035874439461884,
+      "cer_improvement_vs_medium": -0.1568627450980392
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "source_chapter_id": "ROM_008",
+      "model": "medium_vad_tuned",
+      "reference_type": "biblica_candidate",
+      "wer": 0.4170403587443946,
+      "cer": 0.07450980392156863,
+      "coverage": 0.7432619097149991,
+      "verse_resolution": 1.0,
+      "unresolved_verses": "",
+      "runtime_seconds": 261.28788800002076,
+      "transcript_path": "evaluation\\speech_lab\\model_outputs\\mini-validation\\medium-vad-tuned\\ROM_008_1_10.json"
+    }
+  ],
+  "verse_rows": [
+    {
+      "sample": "GEN_001_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 1,
+      "wer": 0.2857142857142857,
+      "cer": 0.37142857142857144,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Hapo mwanzo mungu na dunia,"
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 2,
+      "wer": 0.44,
+      "cer": 0.3391304347826087,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "wakati dunia ilikuwa haina umbo, tena ilikuwa tupu. Giza lilikwa juu maji, metulia juu ya maji."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 3,
+      "wer": 0.42857142857142855,
+      "cer": 0.4166666666666667,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu iwepo nuru ikawepo."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 4,
+      "wer": 0.46153846153846156,
+      "cer": 0.21311475409836064,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu wakaona ya kua nuru Dipo mungu tenganisha nuru na giza."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 5,
+      "wer": 0.2,
+      "cer": 0.21333333333333335,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu nuru mchana na giza usiku. Ikawa jioni. Ikawa subuhi. Siku ya kwanza."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 6,
+      "wer": 0.36363636363636365,
+      "cer": 0.3958333333333333,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu iwepo maji. Igawe maji na maji."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 7,
+      "wer": 0.47368421052631576,
+      "cer": 0.43157894736842106,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa hyo mungu tenganisha maji chini ya hyo na maji juu Ikawa hivyo."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 8,
+      "wer": 0.3333333333333333,
+      "cer": 0.25862068965517243,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu hyo anga. Ikawa jioni. Ikawa subuhi. Siku ya pili."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 9,
+      "wer": 0.47058823529411764,
+      "cer": 0.3953488372093023,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu maji chini ya anga na kusanyike mahali pamuja Ikawa hivyo."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 10,
+      "wer": 0.8235294117647058,
+      "cer": 0.5357142857142857,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu ardi kusanyikola bahari. Mungu wakaona kua"
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3",
+      "verse": 1,
+      "wer": 0.2857142857142857,
+      "cer": 0.37142857142857144,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Hapo mwanzo, mungu na dunia."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3",
+      "verse": 2,
+      "wer": 0.12,
+      "cer": 0.034782608695652174,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Wakati huu, dunia ilikuwa haina umbo. Tena ilikuwa tupu. Giza lilikuwa juu ya vilindi vya maji eroho wa mungu alikuwa metulia juu ya maji."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3",
+      "verse": 3,
+      "wer": 0.42857142857142855,
+      "cer": 0.4166666666666667,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu iwepo nuru ikawepo."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3",
+      "verse": 4,
+      "wer": 0.38461538461538464,
+      "cer": 0.2459016393442623,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu ya kuwa nuru Dipo mungu akatinganisha nuru na giza."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3",
+      "verse": 5,
+      "wer": 0.4,
+      "cer": 0.32,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu akaita nuru mchana na giza akalita usiku. siku ya kwanza."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3",
+      "verse": 6,
+      "wer": 0.36363636363636365,
+      "cer": 0.1875,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu iwepo nafasi katia maji, igewe maji na maji."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3",
+      "verse": 7,
+      "wer": 0.21052631578947367,
+      "cer": 0.22105263157894736,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa hiyo mungu nafasi, akatinganisha. maji chini ya hiyo nafasi na maji juu yake. Ikawa hivyo."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3",
+      "verse": 8,
+      "wer": 0.16666666666666666,
+      "cer": 0.034482758620689655,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu akaita hiyo nafasi anga. Ikawa jioni. Ikawa subuhi. Siku ya pili."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3",
+      "verse": 9,
+      "wer": 0.23529411764705882,
+      "cer": 0.20930232558139536,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu akasema maji chini ya anga na kusanyike mahali pamoja pawepo na Ikawa hivyo."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3",
+      "verse": 10,
+      "wer": 0.6470588235294118,
+      "cer": 0.30952380952380953,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu akaita ardi kusanyikola maji. Akaliita bahari. Mungu hakaona kuwa"
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3-turbo",
+      "verse": 1,
+      "wer": 0.14285714285714285,
+      "cer": 0.02857142857142857,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Hapo muanzo, mungu aliumba mbingu na dunia."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3-turbo",
+      "verse": 2,
+      "wer": 0.12,
+      "cer": 0.034782608695652174,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Wakati huu, dunia ilikuwa haina umbo. Tena ilikuwa tupu. Giza lilikuwa juu ya vilindi vya maji eroho wa mungu alikuwa metulia juu ya maji."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3-turbo",
+      "verse": 3,
+      "wer": 0.42857142857142855,
+      "cer": 0.25,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu wakasema, iwepo nuru ikawepo."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3-turbo",
+      "verse": 4,
+      "wer": 0.3076923076923077,
+      "cer": 0.14754098360655737,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu wakaona ya kuwa nuru Dipo mungu akatenganisha nuru na giza."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3-turbo",
+      "verse": 5,
+      "wer": 0.4,
+      "cer": 0.32,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu akaita nuru mchana na giza akalita usiku. siku ya kwanza."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3-turbo",
+      "verse": 6,
+      "wer": 0.2727272727272727,
+      "cer": 0.041666666666666664,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu akasema, iwepo nafasi katia maji. Igewe maji na maji."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3-turbo",
+      "verse": 7,
+      "wer": 0.3684210526315789,
+      "cer": 0.35789473684210527,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa hiyo mungu akafanya nafasi, akatenganisha maji ya hiyo nafasi na maji"
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3-turbo",
+      "verse": 8,
+      "wer": 0.4166666666666667,
+      "cer": 0.39655172413793105,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu akaita hiyo nafasi anga. siku ya pili."
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3-turbo",
+      "verse": 9,
+      "wer": 0.47058823529411764,
+      "cer": 0.32558139534883723,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu akasema, maji chini ya anga na kusanyike mahali pamoja. Pawepona"
+    },
+    {
+      "sample": "GEN_001_1_10",
+      "model": "large-v3-turbo",
+      "verse": 10,
+      "wer": 0.7058823529411765,
+      "cer": 0.38095238095238093,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Mungu akaita ardi kusanyikola maji. Akalita bahari. Mungu kuwa"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 1,
+      "wer": 1.0,
+      "cer": 1.0,
+      "alignment_status": "low_confidence",
+      "assigned_asr_text": ""
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 2,
+      "wer": 0.75,
+      "cer": 0.2903225806451613,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Ndipo akanza kwafundisha"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 3,
+      "wer": 0.7272727272727273,
+      "cer": 0.4375,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "hiri walio masikini maana ufalmo wao,"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 4,
+      "wer": 0.5,
+      "cer": 0.6341463414634146,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "hiri wale maana hao"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 5,
+      "wer": 0.42857142857142855,
+      "cer": 0.40540540540540543,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "hiri walio wapole maana hao"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 6,
+      "wer": 0.6,
+      "cer": 0.6304347826086957,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "hiri ya haki maana hao"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 7,
+      "wer": 0.5714285714285714,
+      "cer": 0.5405405405405406,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "hiri huruma maana hao"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 8,
+      "wer": 0.2222222222222222,
+      "cer": 0.24390243902439024,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "hiri walio na moyo safi maana hao mungu,"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 9,
+      "wer": 0.5555555555555556,
+      "cer": 0.425531914893617,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "hiri walio wapatanishi maana hao"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 10,
+      "wer": 0.5,
+      "cer": 0.43636363636363634,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "hiri kwa sababu ya haki maana ufalmo wao."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3",
+      "verse": 1,
+      "wer": 0.42857142857142855,
+      "cer": 0.21518987341772153,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Basi Isa alipona makundia watu, alipanda mlimani, wanafunzi wake wakamjia."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3",
+      "verse": 2,
+      "wer": 0.5,
+      "cer": 0.06451612903225806,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Ndipo akanza kuafundisha akisema,"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3",
+      "verse": 3,
+      "wer": 0.2727272727272727,
+      "cer": 0.14583333333333334,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "heri walio masikini maana ufalme wa mbinguni ni wao."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3",
+      "verse": 4,
+      "wer": 0.16666666666666666,
+      "cer": 0.024390243902439025,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri wale wanauhuzunika maana hao watafarijiwa."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3",
+      "verse": 5,
+      "wer": 0.0,
+      "cer": 0.0,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri walio wapole maana hao watairithi nchi."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3",
+      "verse": 6,
+      "wer": 0.2,
+      "cer": 0.021739130434782608,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri wenye njana kiu ya haki maana hao watatoshelezwa."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3",
+      "verse": 7,
+      "wer": 0.2857142857142857,
+      "cer": 0.3783783783783784,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri wenye huruma maana hao"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3",
+      "verse": 8,
+      "wer": 0.4444444444444444,
+      "cer": 0.2682926829268293,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri walio maana hao watamuona mungu."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3",
+      "verse": 9,
+      "wer": 0.4444444444444444,
+      "cer": 0.23404255319148937,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri walio wapatanishi maana hao wataituwa"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3",
+      "verse": 10,
+      "wer": 0.08333333333333333,
+      "cer": 0.01818181818181818,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri wanauteswa kwa sababu ya haki maana ufalme wa mbinguni ni wao."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3-turbo",
+      "verse": 1,
+      "wer": 0.2857142857142857,
+      "cer": 0.20253164556962025,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Basi Isa alipona makundi ya watu, alipanda mlimani wanafunzi wake wakamjia."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3-turbo",
+      "verse": 2,
+      "wer": 0.25,
+      "cer": 0.03225806451612903,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Ndipo akaanza kuafundisha akisema,"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3-turbo",
+      "verse": 3,
+      "wer": 0.45454545454545453,
+      "cer": 0.3125,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "heri walio masikini maana mbinguni ni wao."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3-turbo",
+      "verse": 4,
+      "wer": 0.16666666666666666,
+      "cer": 0.024390243902439025,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri wale wanauhuzunika maana hao watafarijiwa."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3-turbo",
+      "verse": 5,
+      "wer": 0.0,
+      "cer": 0.0,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri walio wapole maana hao watairithi nchi."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3-turbo",
+      "verse": 6,
+      "wer": 0.0,
+      "cer": 0.0,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri wenye njaa na kiu ya haki maana hao watatoshelezwa."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3-turbo",
+      "verse": 7,
+      "wer": 0.2857142857142857,
+      "cer": 0.3783783783783784,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri wenye huruma maana hao"
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3-turbo",
+      "verse": 8,
+      "wer": 0.1111111111111111,
+      "cer": 0.024390243902439025,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri walio na moyo safi maana hao watamuona mungu."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3-turbo",
+      "verse": 9,
+      "wer": 0.1111111111111111,
+      "cer": 0.02127659574468085,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri walio wapatanishi maana hao wataituwa wana wa mungu."
+    },
+    {
+      "sample": "MAT_005_1_10",
+      "model": "large-v3-turbo",
+      "verse": 10,
+      "wer": 0.16666666666666666,
+      "cer": 0.14545454545454545,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Heri wanaoteswa kwa sababu ya haki maana mbinguni ni wao."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 1,
+      "wer": 0.5333333333333333,
+      "cer": 0.3114754098360656,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Hakuna hukumu ya adhabu kwa wale wali almasihi isa"
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 2,
+      "wer": 0.5,
+      "cer": 0.3372093023255814,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "kwa sababu roho wa uzima karika almasihi isa imeniwe mbali na na mauti."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 3,
+      "wer": 0.35,
+      "cer": 0.3399014778325123,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa mana kili ambacho torati haikuwa na uwezu wa kufanya kwa vile katika mwili Mungu kwa mwenyewe kwa mwanadamu mwenye mwili ulio wa na kwa jili ya Yeye katika mwili."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 4,
+      "wer": 0.3,
+      "cer": 0.25,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Ili haki ipatikanayo kwa torati itimizu sisi. Ambau hatuenendi kwa mwili bali kwa roho wa mungu."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 5,
+      "wer": 0.36666666666666664,
+      "cer": 0.2013888888888889,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa mana wale wanauishi kwa mwili huziweka niya zao katika vitu mwili. Lakini wale wanauishi kwa roho wa mungu huziweka niya zao katika mambu roho."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 6,
+      "wer": 0.36363636363636365,
+      "cer": 0.37349397590361444,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa mana ya mwili ni mauti. Bali na roho wa mungu ni uzima na amani."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 7,
+      "wer": 0.21052631578947367,
+      "cer": 0.17721518987341772,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa kuwa ya mwili ni uadui na mungu. Kwa mana torati ya mungu. Wala haiwezi kuitii."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 8,
+      "wer": 0.14285714285714285,
+      "cer": 0.02127659574468085,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Wale wanautawaliwa na mwili hawawezi kumpendeza mungu."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 9,
+      "wer": 0.48148148148148145,
+      "cer": 0.24778761061946902,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Lakini nini hamtawaliwi na mwili. Bali na roho. Ikiwa roho wa mungu anaka roho wa almasihi huyo almasihi."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "medium_vad_tuned",
+      "verse": 10,
+      "wer": 0.4782608695652174,
+      "cer": 0.34,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Lakini kama almasihi anaka imekufa kwa sababu ya Lakini roho zenu kwa sababu ya"
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3",
+      "verse": 1,
+      "wer": 0.5333333333333333,
+      "cer": 0.32786885245901637,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "sasa hakuna hukumu ya athabu kwa wale almasihi isa."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3",
+      "verse": 2,
+      "wer": 0.25,
+      "cer": 0.09302325581395349,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa sababu, sheria ya roho karika almasihi isa imeniweka huru mbali na sheria ya dhambi na mauti."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3",
+      "verse": 3,
+      "wer": 0.075,
+      "cer": 0.08374384236453201,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa maana, kile ambacho torati haikuwa na uwezo wa kufanya kwa vile katika mwili, mungu kwa kumtuma mwanawe mwenyewe kwa mfano wa mwanadamu mwenye mwili ulio wa dhambi na kwa ajili ya dhambi, yeye alihukumu dhambi katika mwili."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3",
+      "verse": 4,
+      "wer": 0.15,
+      "cer": 0.019230769230769232,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Ili haki ipatikanayo kwa torati, itimizu endani yetu sisi, ambao hatuenendi kwa kufuata mwili, bali kwa kufuata roho wa mungu."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3",
+      "verse": 5,
+      "wer": 0.1,
+      "cer": 0.020833333333333332,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa maana, wale wanaoishi kwa kufuata mwili, huziweka niya zao katika vitu vya mwili, lakini wale wanaoishi kwa kufuata roho wa mungu, huziweka niya zao katika mambo ya huyo roho."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3",
+      "verse": 6,
+      "wer": 0.13636363636363635,
+      "cer": 0.060240963855421686,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa maana, kuwa na niya ya mwili ni mauti, bali kuwa na niya inayongozo na roho wa mungu ni uzima na amani."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3",
+      "verse": 7,
+      "wer": 0.42105263157894735,
+      "cer": 0.3924050632911392,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa kuwa, ile niya ya mwili ni uadui na mungu. Kwa maana, itorati."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3",
+      "verse": 8,
+      "wer": 1.0,
+      "cer": 1.0,
+      "alignment_status": "low_confidence",
+      "assigned_asr_text": ""
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3",
+      "verse": 9,
+      "wer": 1.0,
+      "cer": 1.0,
+      "alignment_status": "low_confidence",
+      "assigned_asr_text": ""
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3",
+      "verse": 10,
+      "wer": 1.0,
+      "cer": 1.0,
+      "alignment_status": "low_confidence",
+      "assigned_asr_text": ""
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3-turbo",
+      "verse": 1,
+      "wer": 0.4666666666666667,
+      "cer": 0.2786885245901639,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa sasa hakuna hukumu ya athabu kwa wale almasihi isa."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3-turbo",
+      "verse": 2,
+      "wer": 0.15,
+      "cer": 0.011627906976744186,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa sababu, sheria ya roho wa uzima karika almasihi isa imeniweka huru mbali na sheria ya dhambi na mauti."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3-turbo",
+      "verse": 3,
+      "wer": 0.075,
+      "cer": 0.08374384236453201,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa maana, kile ambacho torati haikuwa na uwezo wa kufanya kwa vile katika mwili. Mungu kwa kumtuma mwanawe mwenyewe kwa mfano wa mwanadamu mwenye mwili ulio wa dhambi na kwa ajili ya dhambi. Yeye alihukumu dhambi katika mwili."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3-turbo",
+      "verse": 4,
+      "wer": 0.1,
+      "cer": 0.028846153846153848,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Ili haki ipatikanayo kwa torati, itimizu ndani yetu sisi. Ambao hatuenendi kwa kufuata mwili, bali kwa kufuata roho wa mungu."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3-turbo",
+      "verse": 5,
+      "wer": 0.16666666666666666,
+      "cer": 0.034722222222222224,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa maana, wale wanawishi kwa kufuata mwili huziweka niya zao katika vitu vya mwili. Lakini wale wanawishi kwa kufuata roho wa mungu huziweka niya zao katika mambo ya huyo roho."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3-turbo",
+      "verse": 6,
+      "wer": 0.3181818181818182,
+      "cer": 0.18072289156626506,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa maana, kwa ya mwili ni mauti. Bali, kwa inayongozo na roho wa mungu ni uzima na amani."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3-turbo",
+      "verse": 7,
+      "wer": 0.15789473684210525,
+      "cer": 0.17721518987341772,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Kwa kuwa, ile nia ya mwili ni uadui na mungu. Kwa maana, ya mungu. Wala haiwezi kuiti."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3-turbo",
+      "verse": 8,
+      "wer": 0.14285714285714285,
+      "cer": 0.02127659574468085,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Wale wanautawaliwa na mwili, hawawezi kumpendeza mungu."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3-turbo",
+      "verse": 9,
+      "wer": 0.4444444444444444,
+      "cer": 0.19469026548672566,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Lakini nini hamtawaliwi na mwili. Bali na roho. Ikiwa roho wa mungu anakanda Mtu roho wa almasihi, huyo almasihi."
+    },
+    {
+      "sample": "ROM_008_1_10",
+      "model": "large-v3-turbo",
+      "verse": 10,
+      "wer": 0.43478260869565216,
+      "cer": 0.25,
+      "alignment_status": "aligned",
+      "assigned_asr_text": "Lakini kama almasihi anakanda imekufa kwa sababu ya dhambi. Lakini roho zenu kwa sababu ya"
+    }
+  ]
+}

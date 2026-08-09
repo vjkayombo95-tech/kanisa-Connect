@@ -1,14 +1,17 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, BookOpen, Copy, MapPin, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScriptureLink, ScriptureText } from "@/components/bible";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useWorkspacePage } from "@/components/workspace/useWorkspacePage";
 import {
   SAINT_SELECT,
   formatFeastDay,
@@ -16,40 +19,60 @@ import {
   normalizeTags,
   type LibrarySaint,
 } from "@/lib/catholic-library";
+import { normalizeAppLanguage, type AppLanguage } from "@/lib/localization";
+import { dailyCatholicQueryOptions } from "@/lib/portal-performance";
 
 function DetailSkeleton() {
   return (
     <div className="mx-auto max-w-6xl space-y-5 px-4 py-6 lg:px-8">
-      <Skeleton className="h-80 rounded-[32px]" />
+      <Skeleton className="h-80 rounded-2xl" />
       <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
-        <Skeleton className="h-96 rounded-[28px]" />
-        <Skeleton className="h-96 rounded-[28px]" />
+        <Skeleton className="h-96 rounded-2xl" />
+        <Skeleton className="h-96 rounded-2xl" />
       </div>
     </div>
   );
 }
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function getSaintsRoot(workspaceId: string) {
+  if (workspaceId === "pastoral") return "/pastoral/saints";
+  if (workspaceId === "church_admin") return "/church-admin/saints";
+  if (workspaceId === "finance") return "/finance/saints";
+  if (workspaceId === "super_admin") return "/super-admin/catholic-content/saints";
+  return "/portal/library";
+}
+
 export default function MemberSaintDetailsPage() {
-  const { slug } = useParams();
+  const { slug, saintId } = useParams();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
+  const appLanguage = (normalizeAppLanguage(i18n.language) ?? "en") as AppLanguage;
+  const page = useWorkspacePage();
+  const saintIdentifier = saintId ?? slug;
+  const lookupMode = saintId && UUID_PATTERN.test(saintId) ? "id" : "slug";
+  const saintsRoot = getSaintsRoot(page.workspaceId);
 
-  const { data: saint, isLoading, isError, error } = useQuery({
-    queryKey: ["member-catholic-library-saint", slug],
+  const { data: saint, isLoading, isError } = useQuery({
+    queryKey: ["member-catholic-library-saint", lookupMode, saintIdentifier],
     queryFn: async () => {
-      if (!slug) throw new Error("Saint slug is required.");
+      if (!saintIdentifier) throw new Error("Saint identifier is required.");
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("saints" as never)
         .select(SAINT_SELECT)
-        .eq("slug", slug)
-        .eq("is_active", true)
-        .maybeSingle();
+        .eq("is_active", true);
+
+      query = lookupMode === "id" ? query.eq("id", saintIdentifier) : query.eq("slug", saintIdentifier);
+
+      const { data, error } = await query.maybeSingle();
 
       if (error) throw error;
       return (data ?? null) as unknown as LibrarySaint | null;
     },
-    enabled: !!slug,
-    staleTime: 10 * 60 * 1000,
+    enabled: !!saintIdentifier,
+    ...dailyCatholicQueryOptions,
   });
 
   const { data: activeSaints = [] } = useQuery({
@@ -66,7 +89,7 @@ export default function MemberSaintDetailsPage() {
       if (error) throw error;
       return (data ?? []) as unknown as LibrarySaint[];
     },
-    staleTime: 10 * 60 * 1000,
+    ...dailyCatholicQueryOptions,
   });
 
   const relatedSaints = useMemo(() => {
@@ -95,14 +118,14 @@ export default function MemberSaintDetailsPage() {
     if (navigator.share) {
       await navigator.share({
         title: saint.name,
-        text: `Read about ${saint.name} in the Kanisa Connect Catholic Library.`,
+        text: t("member_portal.catholic_content.share_saint_text", { name: saint.name }),
         url,
       });
       return;
     }
 
     await navigator.clipboard.writeText(url);
-    toast({ title: "Link copied", description: `${saint.name} can now be shared.` });
+    toast({ title: t("member_portal.catholic_content.link_copied"), description: t("member_portal.catholic_content.saint_share_ready", { name: saint.name }) });
   };
 
   if (isLoading) return <DetailSkeleton />;
@@ -110,9 +133,9 @@ export default function MemberSaintDetailsPage() {
   if (isError) {
     return (
       <main className="min-h-full px-4 py-10 lg:px-8">
-        <Card className="mx-auto max-w-3xl rounded-[28px] border-destructive/25 bg-destructive/5">
+        <Card className="mx-auto max-w-3xl rounded-2xl border-destructive/25 bg-destructive/5">
           <CardContent className="p-6 text-sm text-destructive">
-            Unable to load this saint: {(error as Error)?.message || "Please try again."}
+            {t("member_portal.catholic_content.unable_saint")}
           </CardContent>
         </Card>
       </main>
@@ -122,12 +145,13 @@ export default function MemberSaintDetailsPage() {
   if (!saint) {
     return (
       <main className="min-h-full px-4 py-10 lg:px-8">
-        <Card className="mx-auto max-w-3xl rounded-[28px] border-border/70 bg-card/85">
+        <Card className="mx-auto max-w-3xl rounded-2xl border-border/70 bg-card/95 shadow-sm">
           <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
             <BookOpen className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
-            <p className="mt-4 text-lg font-semibold">Saint not found.</p>
-            <Button asChild className="mt-5 rounded-2xl">
-              <Link to="/member/library">Back to Catholic Library</Link>
+            <p className="mt-4 text-lg font-semibold">{t("member_portal.catholic_content.saint_not_found")}</p>
+            <p className="mt-2 max-w-sm text-sm text-muted-foreground">{t("member_portal.catholic_content.saint_not_found_description")}</p>
+            <Button asChild className="mt-5 rounded-xl">
+              <Link to={saintsRoot}>{t("member_portal.catholic_content.back_to_library")}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -140,24 +164,27 @@ export default function MemberSaintDetailsPage() {
       <div className="mx-auto max-w-6xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button asChild variant="ghost" className="rounded-xl">
-            <Link to="/member/library">
+            <Link to={saintsRoot}>
               <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
-              Back
+              {t("member_portal.catholic_content.back_to_saints")}
             </Link>
           </Button>
-          <Button type="button" variant="outline" className="rounded-xl" onClick={shareSaint}>
+          <Button type="button" variant="outline" className="rounded-xl" onClick={shareSaint} aria-label={t("member_portal.catholic_content.share_saint", { name: saint.name })}>
             <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
-            Share
+            {t("member_portal.common.share")}
           </Button>
         </div>
 
-        <section className="overflow-hidden rounded-[32px] border border-primary/15 bg-card shadow-sm">
+        <section className="overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-sm">
           <div className="grid lg:grid-cols-[420px_1fr]">
             <div className="min-h-80 bg-primary/10">
               {saint.image_url ? (
                 <img
                   src={saint.image_url}
                   alt={getSaintImageAlt(saint)}
+                  loading="lazy"
+                  decoding="async"
+                  sizes="(min-width: 1024px) 420px, 100vw"
                   className="h-full min-h-80 w-full object-cover"
                 />
               ) : (
@@ -168,30 +195,32 @@ export default function MemberSaintDetailsPage() {
             </div>
             <div className="space-y-5 p-6 sm:p-8">
               <div className="space-y-2">
-                <Badge className="rounded-full">Today's saint and Catholic library</Badge>
+                <Badge className="rounded-full">{t("member_portal.catholic_content.today_saint_library")}</Badge>
                 <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{saint.name}</h1>
                 {saint.title ? <p className="text-lg text-muted-foreground">{saint.title}</p> : null}
               </div>
               <p className="text-base leading-7 text-muted-foreground">{saint.biography_short}</p>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Feast Day</p>
-                  <p className="mt-1 font-semibold">{formatFeastDay(saint.feast_month, saint.feast_day)}</p>
+                <div className="rounded-xl border border-border/60 bg-background/55 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("member_portal.catholic_content.feast_day")}</p>
+                  <p className="mt-1 font-semibold">{formatFeastDay(saint.feast_month, saint.feast_day, appLanguage) ?? t("member_portal.catholic_content.feast_day_not_set")}</p>
                 </div>
-                <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Patron Of</p>
-                  <p className="mt-1 font-semibold">{saint.patron_of || "Not listed"}</p>
+                <div className="rounded-xl border border-border/60 bg-background/55 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("member_portal.catholic_content.patronage")}</p>
+                  <p className="mt-1 font-semibold">{saint.patron_of || t("member_portal.catholic_content.not_listed")}</p>
                 </div>
-                <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Country</p>
+                <div className="rounded-xl border border-border/60 bg-background/55 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("member_portal.catholic_content.country")}</p>
                   <p className="mt-1 flex items-center gap-2 font-semibold">
                     <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
-                    {saint.country || "Not listed"}
+                    {saint.country || t("member_portal.catholic_content.not_listed")}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Scripture</p>
-                  <p className="mt-1 font-semibold">{saint.scripture_reference || "Not listed"}</p>
+                <div className="rounded-xl border border-border/60 bg-background/55 p-4">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("member_portal.catholic_content.scripture")}</p>
+                  <p className="mt-1 font-semibold">
+                    {saint.scripture_reference ? <ScriptureLink reference={saint.scripture_reference} /> : t("member_portal.catholic_content.not_listed")}
+                  </p>
                 </div>
               </div>
             </div>
@@ -200,44 +229,50 @@ export default function MemberSaintDetailsPage() {
 
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
           <div className="space-y-6">
-            <Card className="rounded-[28px] border-border/70 bg-card/85">
+            <Card className="rounded-2xl border-border/70 bg-card/95 shadow-sm">
               <CardHeader>
-                <CardTitle>Long Biography</CardTitle>
+                <CardTitle>{t("member_portal.catholic_content.biography")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{saint.biography_long}</p>
+                <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
+                  <ScriptureText text={saint.biography_long} />
+                </p>
               </CardContent>
             </Card>
 
             {saint.quote ? (
-              <blockquote className="rounded-[28px] border-l-4 border-primary bg-primary/8 p-6 text-base italic leading-7 text-foreground">
+              <blockquote className="rounded-2xl border-l-4 border-primary bg-primary/8 p-6 text-base italic leading-7 text-foreground">
                 "{saint.quote}"
               </blockquote>
             ) : null}
 
-            <Card className="rounded-[28px] border-border/70 bg-card/85">
+            <Card className="rounded-2xl border-border/70 bg-card/95 shadow-sm">
               <CardHeader>
-                <CardTitle>Reflection</CardTitle>
+                <CardTitle>{t("member_portal.catholic_content.reflection")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{saint.reflection}</p>
+                <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
+                  <ScriptureText text={saint.reflection} />
+                </p>
               </CardContent>
             </Card>
 
-            <Card className="rounded-[28px] border-primary/20 bg-primary/5">
+            <Card className="rounded-2xl border-primary/20 bg-primary/5 shadow-sm">
               <CardHeader>
-                <CardTitle>Prayer</CardTitle>
+                <CardTitle>{t("member_portal.catholic_content.prayer")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{saint.prayer}</p>
+                <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
+                  <ScriptureText text={saint.prayer} />
+                </p>
               </CardContent>
             </Card>
           </div>
 
           <aside className="space-y-6">
-            <Card className="rounded-[28px] border-border/70 bg-card/85">
+            <Card className="rounded-2xl border-border/70 bg-card/95 shadow-sm">
               <CardHeader>
-                <CardTitle>Tags</CardTitle>
+                <CardTitle>{t("member_portal.prayer_detail.tags")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {saint.tags?.length ? (
@@ -249,29 +284,29 @@ export default function MemberSaintDetailsPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No tags listed.</p>
+                  <p className="text-sm text-muted-foreground">{t("member_portal.catholic_content.no_tags")}</p>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="rounded-[28px] border-border/70 bg-card/85">
+            <Card className="rounded-2xl border-border/70 bg-card/95 shadow-sm">
               <CardHeader>
-                <CardTitle>Related Saints</CardTitle>
+                <CardTitle>{t("member_portal.catholic_content.related_saints")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {relatedSaints.length ? (
                   relatedSaints.map((item) => (
                     <Link
                       key={item.id}
-                      to={`/member/library/${item.slug}`}
+                      to={`${saintsRoot}/${item.slug || item.id}`}
                       className="block rounded-2xl border border-border/60 bg-background/50 p-3 transition-colors hover:border-primary/25 hover:bg-primary/5"
                     >
                       <p className="font-medium">{item.name}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{formatFeastDay(item.feast_month, item.feast_day)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{formatFeastDay(item.feast_month, item.feast_day, appLanguage) ?? t("member_portal.catholic_content.feast_day_not_set")}</p>
                     </Link>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">Related saints will appear as the library grows.</p>
+                  <p className="text-sm text-muted-foreground">{t("member_portal.catholic_content.related_saints_empty")}</p>
                 )}
               </CardContent>
             </Card>

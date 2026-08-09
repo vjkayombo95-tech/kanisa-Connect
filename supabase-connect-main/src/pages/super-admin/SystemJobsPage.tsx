@@ -1,11 +1,12 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Activity, AlertCircle, CheckCircle2, Clock3, Loader2, PauseCircle, PlayCircle, RefreshCw } from "lucide-react";
+import { Activity, CheckCircle2, Clock3, Loader2, PauseCircle, PlayCircle, RefreshCw } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { LoadingState } from "@/components/ui/page-state";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { SystemJobActions } from "./SystemJobActions";
@@ -82,7 +83,7 @@ function MetricCard({
 
 export default function SystemJobsPage() {
   const navigate = useNavigate();
-  const { data: jobs = [], isLoading, isError, error, refetch, isFetching } = useQuery({
+  const { data: jobs = [], isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["super-admin-system-jobs"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -154,22 +155,28 @@ export default function SystemJobsPage() {
                 {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
-                      <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-primary" />
-                      Loading scheduled jobs...
+                      <LoadingState variant="table" rows={4} title="Loading scheduled jobs" />
                     </TableCell>
                   </TableRow>
                 ) : isError ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-12 text-center text-destructive">
-                      <AlertCircle className="mx-auto mb-3 h-8 w-8" />
-                      Unable to load scheduled jobs: {(error as Error)?.message || "Unknown error"}
+                    <TableCell colSpan={8} className="py-12 text-center">
+                      <div className="mx-auto max-w-md space-y-3 text-muted-foreground">
+                        <p className="font-medium text-foreground">We could not load scheduled jobs.</p>
+                        <p className="text-sm">Please retry before reviewing automation health.</p>
+                        <Button type="button" variant="outline" size="sm" onClick={() => refetch()}>
+                          <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                          Retry
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : jobs.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
                       <Clock3 className="mx-auto mb-3 h-10 w-10 text-muted-foreground/30" />
-                      No scheduled jobs found
+                      <p className="font-medium text-foreground">No scheduled jobs are configured.</p>
+                      <p className="mt-1 text-sm">Platform automation jobs will appear here when they are registered.</p>
                     </TableCell>
                   </TableRow>
                 ) : (

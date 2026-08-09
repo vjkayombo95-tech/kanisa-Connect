@@ -1,7 +1,8 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { captureException } from "@/lib/error-logger";
+import { captureException, getUserFriendlyErrorMessage } from "@/lib/error-logger";
+import { logger } from "@/lib/monitoring";
 
 interface AppErrorBoundaryProps {
   children: ReactNode;
@@ -24,11 +25,19 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
   static getDerivedStateFromError(error: unknown): AppErrorBoundaryState {
     return {
       hasError: true,
-      errorMessage: error instanceof Error ? error.message : "An unexpected error occurred.",
+      errorMessage: getUserFriendlyErrorMessage(error, "Something went wrong while loading this page."),
     };
   }
 
   componentDidCatch(error: unknown, errorInfo: ErrorInfo) {
+    logger.fatal("Unhandled React render error", error, {
+      component: "AppErrorBoundary",
+      route: typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : null,
+      metadata: {
+        componentStack: errorInfo.componentStack,
+      },
+    });
+
     captureException(error, {
       component: "AppErrorBoundary",
       page: "Application",

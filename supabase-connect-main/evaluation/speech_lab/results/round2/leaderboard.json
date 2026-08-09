@@ -1,0 +1,36 @@
+{
+  "generated_at": "2026-07-09T16:29:20.210812+00:00",
+  "entries": [
+    {
+      "provider": "WhisperX",
+      "status": "Baseline",
+      "model": "base",
+      "average_wer": 0.9282800015725254,
+      "average_cer": 0.31701725638992084,
+      "average_boundary_accuracy": 0.3828094844223876,
+      "average_verse_confidence": 0.2589263947063689
+    },
+    {
+      "provider": "WhisperX large-v3",
+      "status": "Round 2",
+      "model": "large-v3",
+      "average_wer": 0.3691556174998502,
+      "average_cer": 0.15451229815739903,
+      "average_boundary_accuracy": 0.7482768127929418,
+      "average_verse_confidence": 0.5443747151468156,
+      "import_success_rate": 1.0,
+      "qa_pass_rate": 0.0
+    },
+    {
+      "provider": "Faster-Whisper large-v3",
+      "status": "Round 2",
+      "model": "large-v3",
+      "average_wer": 0.3776776957859254,
+      "average_cer": 0.16944184794816772,
+      "average_boundary_accuracy": 0.5900365315687897,
+      "average_verse_confidence": 0.41122696674937964,
+      "import_success_rate": 1.0,
+      "qa_pass_rate": 0.0
+    }
+  ]
+}

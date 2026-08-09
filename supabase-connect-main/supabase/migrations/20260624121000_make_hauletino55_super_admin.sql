@@ -14,7 +14,8 @@ begin
   limit 1;
 
   if v_user_id is null then
-    raise exception 'Cannot promote hauletino55@gmail.com: auth user not found';
+    raise notice 'Legacy Super Admin bootstrap user hauletino55@gmail.com not found; skipping obsolete promotion.';
+    return;
   end if;
 
   select exists (

@@ -1,0 +1,942 @@
+{
+  "book": "John",
+  "chapter": 3,
+  "audio_path": "C:\\Users\\HP\\Church final version\\supabase-connect-main\\supabase\\seed\\bible\\audio1\\open bible\\extracted\\JHN\\JHN_003.mp3",
+  "metadata": {
+    "book": "John",
+    "chapter": 3,
+    "source": "official-text-and-whisperx-word-timestamps",
+    "verse_boundary_qa": [
+      {
+        "verse_number": 1,
+        "expected_opening_text": "basi palikuwa na",
+        "closest_aligned_text": "Basi, Palikuana, Mtumoya,",
+        "similarity_score": 0.736842,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 2,
+        "expected_opening_text": "huyu alimjia yesu usiku akamwambia rabi",
+        "closest_aligned_text": "Huyo, Alim, Dia, Isausico, Komambia,",
+        "similarity_score": 0.676923,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 3,
+        "expected_opening_text": "yesu akamjibu amin amin nakuambia hakuna",
+        "closest_aligned_text": "Isa kamambia. Amin. Amin nakwambia. Akunam",
+        "similarity_score": 0.78481,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 4,
+        "expected_opening_text": "nikodemo akauliza awezaje mtu kuzaliwa wakati",
+        "closest_aligned_text": "nakwaroho. Muili huzaa muili.",
+        "similarity_score": 0.5,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 5,
+        "expected_opening_text": "yesu akamwambia amin amin nakuambia hakuna",
+        "closest_aligned_text": "kamambia. Amin. Amin nakwambia. Akunam tuyeote",
+        "similarity_score": 0.776471,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 6,
+        "expected_opening_text": "mwili huzaa mwili",
+        "closest_aligned_text": "Muili huzaa muili.",
+        "similarity_score": 0.882353,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 7,
+        "expected_opening_text": "kwa hiyo usishangae ninapokuambia huna budi",
+        "closest_aligned_text": "Kuaiou si shangaininapu kambia. Hunabu di",
+        "similarity_score": 0.746988,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 8,
+        "expected_opening_text": "upepo huvuma popote upendapo mvumo wake",
+        "closest_aligned_text": "Tuna, Zungum, Zalile, Tuna,",
+        "similarity_score": 0.431373,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 9,
+        "expected_opening_text": "nikodemo akamuuliza mambo haya yanawezekanaje",
+        "closest_aligned_text": "Ni, Takapua, Ambi,",
+        "similarity_score": 0.6,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 10,
+        "expected_opening_text": "yesu akamwambia wewe ni mwalimu mashuhuri",
+        "closest_aligned_text": "yahia wakamambia moalimu",
+        "similarity_score": 0.545455,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 11,
+        "expected_opening_text": "amin amin ninakuambia sisi",
+        "closest_aligned_text": "Amin, Amin, Nakwambia, Sisi,",
+        "similarity_score": 0.92,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 12,
+        "expected_opening_text": "nimewaambia mambo ya duniani",
+        "closest_aligned_text": "Me, Ambi, Amamboya, Duniani,",
+        "similarity_score": 0.846154,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 13,
+        "expected_opening_text": "hakuna mtu yeyote",
+        "closest_aligned_text": "Akunam, Tu, Iot,",
+        "similarity_score": 0.733333,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 14,
+        "expected_opening_text": "kama vile mose alivyomwinua yule nyoka",
+        "closest_aligned_text": "Ila ni me",
+        "similarity_score": 0.521739,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 15,
+        "expected_opening_text": "ili kila mtu amwaminiye awe na",
+        "closest_aligned_text": "Isi pokuakile tu",
+        "similarity_score": 0.642857,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 16,
+        "expected_opening_text": "kwa maana jinsi hii mungu aliupenda",
+        "closest_aligned_text": "a man, I",
+        "similarity_score": 0.636364,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 17,
+        "expected_opening_text": "kwa maana mungu hakumtuma mwanawe kuuhukumu",
+        "closest_aligned_text": "Alie, Andam, Benguni,",
+        "similarity_score": 0.545455,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 18,
+        "expected_opening_text": "yeyote amwaminiye hahukumiwi lakini asiyeamini amekwisha",
+        "closest_aligned_text": "Ye, Alie, Shuka,",
+        "similarity_score": 0.487805,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 19,
+        "expected_opening_text": "hii ndiyo hukumu kwamba nuru imekuja",
+        "closest_aligned_text": "Hii ilikuwa ka belaya",
+        "similarity_score": 0.545455,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 20,
+        "expected_opening_text": "kwa kuwa kila atendaye maovu huchukia",
+        "closest_aligned_text": "Hii ilikuwa ka",
+        "similarity_score": 0.592593,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 21,
+        "expected_opening_text": "lakini yule aishiye kwa ukweli huja",
+        "closest_aligned_text": "yordani yule uliyashuhudia",
+        "similarity_score": 0.577778,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 22,
+        "expected_opening_text": "baada ya haya",
+        "closest_aligned_text": "the Badaya Hayah.",
+        "similarity_score": 0.758621,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 23,
+        "expected_opening_text": "yohana naye alikuwa",
+        "closest_aligned_text": "Yahya nae alikuwa",
+        "similarity_score": 0.833333,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 24,
+        "expected_opening_text": "g hii ilikuwa kabla",
+        "closest_aligned_text": "Hii ilikuwa ka belaya",
+        "similarity_score": 0.85,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 25,
+        "expected_opening_text": "mashindano yakazuka kati",
+        "closest_aligned_text": "Machindano yakazu ka",
+        "similarity_score": 0.863636,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 26,
+        "expected_opening_text": "wakamwendea yohana wakamwambia",
+        "closest_aligned_text": "Wakamuindia yahia wakamambia",
+        "similarity_score": 0.793103,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 27,
+        "expected_opening_text": "yohana akawajibu hakuna",
+        "closest_aligned_text": "yahia kawajibu Haku",
+        "similarity_score": 0.809524,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 28,
+        "expected_opening_text": "ninyi wenyewe ni mashahidi wangu",
+        "closest_aligned_text": "niyo ni mashai di wangu",
+        "similarity_score": 0.763636,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 29,
+        "expected_opening_text": "bibi arusi ni",
+        "closest_aligned_text": "Bibhi arusi niwa",
+        "similarity_score": 0.896552,
+        "reason": "fuzzy"
+      },
+      {
+        "verse_number": 30,
+        "expected_opening_text": "yeye hana budi kuwa mkuu zaidi",
+        "closest_aligned_text": "yeah, yeah, yeah, I am",
+        "similarity_score": 0.511628,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 31,
+        "expected_opening_text": "yeye ajaye kutoka juu yu juu",
+        "closest_aligned_text": "Yeah, yeah, yeah.",
+        "similarity_score": 0.516129,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 32,
+        "expected_opening_text": "yeye hushuhudia yale aliyoyaona na kuyasikia",
+        "closest_aligned_text": "Yeah, yeah, yeah.",
+        "similarity_score": 0.470588,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 33,
+        "expected_opening_text": "lakini yeyote anayekubali huo ushuhuda anathibitisha",
+        "closest_aligned_text": "arusi. Yeah, yeah,",
+        "similarity_score": 0.45,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 34,
+        "expected_opening_text": "yeye aliyetumwa na mungu husema maneno",
+        "closest_aligned_text": "Yeah, yeah, yeah.",
+        "similarity_score": 0.5,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 35,
+        "expected_opening_text": "baba anampenda mwana naye ametia vitu",
+        "closest_aligned_text": "am not a man, I am",
+        "similarity_score": 0.444444,
+        "reason": "boundary_not_found"
+      },
+      {
+        "verse_number": 36,
+        "expected_opening_text": "yeyote anayemwamini mwana ana uzima wa",
+        "closest_aligned_text": "not a man,",
+        "similarity_score": 0.470588,
+        "reason": "boundary_not_found"
+      }
+    ],
+    "boundary_normalization_qa": [
+      {
+        "current_verse": "1",
+        "next_verse": "2",
+        "current_end_before": 56.345,
+        "next_start_before": 57.466,
+        "shared_boundary": 56.9055,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 1.121,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "2",
+        "next_verse": "3",
+        "current_end_before": 57.786,
+        "next_start_before": 57.466,
+        "shared_boundary": 57.626,
+        "overlap_seconds": 0.32,
+        "gap_seconds": 0.0,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "3",
+        "next_verse": "4",
+        "current_end_before": 57.786,
+        "next_start_before": 57.826,
+        "shared_boundary": 57.806,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.04,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "4",
+        "next_verse": "5",
+        "current_end_before": 58.487,
+        "next_start_before": 57.826,
+        "shared_boundary": 58.1565,
+        "overlap_seconds": 0.661,
+        "gap_seconds": 0.0,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "5",
+        "next_verse": "6",
+        "current_end_before": 68.676,
+        "next_start_before": 69.777,
+        "shared_boundary": 69.2265,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 1.101,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "6",
+        "next_verse": "7",
+        "current_end_before": 73.36,
+        "next_start_before": 74.381,
+        "shared_boundary": 73.8705,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 1.021,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "7",
+        "next_verse": "8",
+        "current_end_before": 88.328,
+        "next_start_before": 108.158,
+        "shared_boundary": 98.243,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 19.83,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "8",
+        "next_verse": "9",
+        "current_end_before": 108.478,
+        "next_start_before": 108.538,
+        "shared_boundary": 108.508,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.06,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "9",
+        "next_verse": "10",
+        "current_end_before": 108.858,
+        "next_start_before": 108.878,
+        "shared_boundary": 108.868,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.02,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "10",
+        "next_verse": "11",
+        "current_end_before": 109.518,
+        "next_start_before": 108.158,
+        "shared_boundary": 108.918,
+        "overlap_seconds": 1.36,
+        "gap_seconds": 0.0,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "11",
+        "next_verse": "12",
+        "current_end_before": 120.842,
+        "next_start_before": 120.862,
+        "shared_boundary": 120.852,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.02,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "12",
+        "next_verse": "13",
+        "current_end_before": 129.566,
+        "next_start_before": 130.706,
+        "shared_boundary": 130.136,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 1.14,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "13",
+        "next_verse": "14",
+        "current_end_before": 219.539,
+        "next_start_before": 219.559,
+        "shared_boundary": 219.549,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.02,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "14",
+        "next_verse": "15",
+        "current_end_before": 219.659,
+        "next_start_before": 221.697,
+        "shared_boundary": 220.678,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 2.038,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "15",
+        "next_verse": "16",
+        "current_end_before": 222.217,
+        "next_start_before": 222.257,
+        "shared_boundary": 222.237,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.04,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "16",
+        "next_verse": "17",
+        "current_end_before": 222.558,
+        "next_start_before": 223.458,
+        "shared_boundary": 223.008,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.9,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "17",
+        "next_verse": "18",
+        "current_end_before": 223.758,
+        "next_start_before": 223.778,
+        "shared_boundary": 223.768,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.02,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "18",
+        "next_verse": "19",
+        "current_end_before": 223.939,
+        "next_start_before": 223.959,
+        "shared_boundary": 223.949,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.02,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "19",
+        "next_verse": "20",
+        "current_end_before": 224.059,
+        "next_start_before": 224.099,
+        "shared_boundary": 224.079,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.04,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "20",
+        "next_verse": "21",
+        "current_end_before": 224.559,
+        "next_start_before": 224.579,
+        "shared_boundary": 224.569,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.02,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "21",
+        "next_verse": "22",
+        "current_end_before": 224.699,
+        "next_start_before": 219.559,
+        "shared_boundary": 224.619,
+        "overlap_seconds": 5.14,
+        "gap_seconds": 0.0,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "22",
+        "next_verse": "23",
+        "current_end_before": 230.463,
+        "next_start_before": 231.484,
+        "shared_boundary": 230.9735,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 1.021,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "23",
+        "next_verse": "24",
+        "current_end_before": 242.811,
+        "next_start_before": 243.892,
+        "shared_boundary": 243.3515,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 1.081,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "24",
+        "next_verse": "25",
+        "current_end_before": 247.134,
+        "next_start_before": 248.218,
+        "shared_boundary": 247.676,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 1.084,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "25",
+        "next_verse": "26",
+        "current_end_before": 257.6,
+        "next_start_before": 258.68,
+        "shared_boundary": 258.14,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 1.08,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "26",
+        "next_verse": "27",
+        "current_end_before": 272.362,
+        "next_start_before": 273.443,
+        "shared_boundary": 272.9025,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 1.081,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "27",
+        "next_verse": "28",
+        "current_end_before": 283.866,
+        "next_start_before": 283.926,
+        "shared_boundary": 283.896,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.06,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "28",
+        "next_verse": "29",
+        "current_end_before": 290.989,
+        "next_start_before": 292.07,
+        "shared_boundary": 291.5295,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 1.081,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "29",
+        "next_verse": "30",
+        "current_end_before": 329.423,
+        "next_start_before": 329.443,
+        "shared_boundary": 329.433,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.02,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "30",
+        "next_verse": "31",
+        "current_end_before": 329.543,
+        "next_start_before": 329.563,
+        "shared_boundary": 329.553,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.02,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "31",
+        "next_verse": "32",
+        "current_end_before": 329.743,
+        "next_start_before": 329.763,
+        "shared_boundary": 329.753,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.02,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "32",
+        "next_verse": "33",
+        "current_end_before": 329.863,
+        "next_start_before": 330.924,
+        "shared_boundary": 330.3935,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 1.061,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "33",
+        "next_verse": "34",
+        "current_end_before": 331.164,
+        "next_start_before": 331.184,
+        "shared_boundary": 331.174,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.02,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "34",
+        "next_verse": "35",
+        "current_end_before": 331.364,
+        "next_start_before": 331.384,
+        "shared_boundary": 331.374,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.02,
+        "minimum_duration_preserved": true
+      },
+      {
+        "current_verse": "35",
+        "next_verse": "36",
+        "current_end_before": 331.524,
+        "next_start_before": 331.544,
+        "shared_boundary": 331.534,
+        "overlap_seconds": 0.0,
+        "gap_seconds": 0.02,
+        "minimum_duration_preserved": true
+      }
+    ]
+  },
+  "verses": [
+    {
+      "verse": 1,
+      "start": 11.365,
+      "end": 56.9055,
+      "confidence": 0.0,
+      "duration": 45.5405,
+      "word_count": 15,
+      "text": "Basi palikuwa na mtu mmoja Farisayo, jina lake Nikodemo, mmoja wa Baraza la Wayahudii lililotawala."
+    },
+    {
+      "verse": 2,
+      "start": 56.9055,
+      "end": 57.626,
+      "confidence": 0.0,
+      "duration": 0.7204999999999941,
+      "word_count": 49,
+      "text": "Huyu alimjia Yesu usiku akamwambia, “Rabi, tunajua kuwa wewe ni mwalimu uliyetumwa na Mungu, kwa maana hakuna mtu awezaye kufanya miujiza hii uifanyayo wewe, kama Mungu hayuko pamoja naye.” Sanhedrin ambalo lilikuwa ndilo Baraza la juu kabisa la utawala wa Kiyahudi, lililoundwa na wazee 70 pamoja na kuhani mkuu."
+    },
+    {
+      "verse": 3,
+      "start": 57.626,
+      "end": 57.806,
+      "confidence": 0.0,
+      "duration": 0.17999999999999972,
+      "word_count": 17,
+      "text": "Yesu akamjibu, “Amin, amin nakuambia, hakuna mtu anayeweza kuuona Ufalme wa Mungu kama hajazaliwa mara ya pili.”"
+    },
+    {
+      "verse": 4,
+      "start": 57.806,
+      "end": 58.1565,
+      "confidence": 0.0,
+      "duration": 0.3505000000000038,
+      "word_count": 21,
+      "text": "Nikodemo akauliza, “Awezaje mtu kuzaliwa wakati akiwa mzee? Hakika hawezi kuingia mara ya pili kwenye tumbo la mama yake ili azaliwe!”"
+    },
+    {
+      "verse": 5,
+      "start": 58.1565,
+      "end": 69.2265,
+      "confidence": 0.0,
+      "duration": 11.07,
+      "word_count": 20,
+      "text": "Yesu akamwambia, “Amin, amin nakuambia, hakuna mtu yeyote anayeweza kuingia Ufalme wa Mungu kama hajazaliwa kwa maji na kwa Roho."
+    },
+    {
+      "verse": 6,
+      "start": 69.2265,
+      "end": 73.8705,
+      "confidence": 0.0,
+      "duration": 4.6440000000000055,
+      "word_count": 7,
+      "text": "Mwili huzaa mwili, lakini Roho huzaa roho."
+    },
+    {
+      "verse": 7,
+      "start": 73.8705,
+      "end": 98.243,
+      "confidence": 0.0,
+      "duration": 24.372499999999988,
+      "word_count": 10,
+      "text": "Kwa hiyo usishangae ninapokuambia huna budi ‘kuzaliwa mara ya pili.’"
+    },
+    {
+      "verse": 8,
+      "start": 98.243,
+      "end": 108.508,
+      "confidence": 0.0,
+      "duration": 10.265,
+      "word_count": 21,
+      "text": "Upepo huvuma popote upendapo. Mvumo wake unausikia lakini huwezi ukafahamu utokako wala uendako. Ndivyo ilivyo kwa kila mtu aliyezaliwa na Roho.”"
+    },
+    {
+      "verse": 9,
+      "start": 108.508,
+      "end": 108.868,
+      "confidence": 0.0,
+      "duration": 0.35999999999999943,
+      "word_count": 5,
+      "text": "Nikodemo akamuuliza, “Mambo haya yanawezekanaje?”"
+    },
+    {
+      "verse": 10,
+      "start": 108.868,
+      "end": 108.918,
+      "confidence": 0.0,
+      "duration": 0.05000000000001137,
+      "word_count": 12,
+      "text": "Yesu akamwambia, “Wewe ni mwalimu mashuhuri wa Waisraeli, nawe huelewi mambo haya?"
+    },
+    {
+      "verse": 11,
+      "start": 108.918,
+      "end": 120.852,
+      "confidence": 0.0,
+      "duration": 11.933999999999997,
+      "word_count": 17,
+      "text": "Amin, amin ninakuambia, sisi tunazungumza lile tunalolijua na tunashuhudia lile tuliloliona. Lakini ninyi watu hamkubali ushuhuda wetu."
+    },
+    {
+      "verse": 12,
+      "start": 120.852,
+      "end": 130.136,
+      "confidence": 0.0,
+      "duration": 9.283999999999992,
+      "word_count": 12,
+      "text": "Nimewaambia mambo ya duniani, nanyi hamkuniamini, mtaniaminije basi nitakapowaambia mambo ya mbinguni?"
+    },
+    {
+      "verse": 13,
+      "start": 130.136,
+      "end": 219.549,
+      "confidence": 0.0,
+      "duration": 89.41300000000001,
+      "word_count": 14,
+      "text": "Hakuna mtu yeyote aliyekwenda mbinguni isipokuwa yeye aliyeshuka kutoka mbinguni, yaani, Mwana wa Adamu."
+    },
+    {
+      "verse": 14,
+      "start": 219.549,
+      "end": 220.678,
+      "confidence": 0.0,
+      "duration": 1.1289999999999907,
+      "word_count": 17,
+      "text": "Kama vile Mose alivyomwinua yule nyoka kule jangwani, vivyo hivyo Mwana wa Adamu hana budi kuinuliwa juu."
+    },
+    {
+      "verse": 15,
+      "start": 220.678,
+      "end": 222.237,
+      "confidence": 0.0,
+      "duration": 1.5589999999999975,
+      "word_count": 9,
+      "text": "Ili kila mtu amwaminiye awe na uzima wa milele."
+    },
+    {
+      "verse": 16,
+      "start": 222.237,
+      "end": 223.008,
+      "confidence": 0.0,
+      "duration": 0.771000000000015,
+      "word_count": 23,
+      "text": "“Kwa maana jinsi hii Mungu aliupenda ulimwengu hata akamtoa Mwanawe wa pekee, ili kila mtu amwaminiye asipotee, bali awe na uzima wa milele."
+    },
+    {
+      "verse": 17,
+      "start": 223.008,
+      "end": 223.768,
+      "confidence": 0.0,
+      "duration": 0.7599999999999909,
+      "word_count": 13,
+      "text": "Kwa maana Mungu hakumtuma Mwanawe kuuhukumu ulimwengu, bali kupitia kwake ulimwengu upate kuokolewa."
+    },
+    {
+      "verse": 18,
+      "start": 223.768,
+      "end": 223.949,
+      "confidence": 0.0,
+      "duration": 0.1810000000000116,
+      "word_count": 16,
+      "text": "Yeyote amwaminiye hahukumiwi, lakini asiyeamini amekwisha kuhukumiwa, kwa sababu hakuliamini jina la Mwana pekee wa Mungu."
+    },
+    {
+      "verse": 19,
+      "start": 223.949,
+      "end": 224.079,
+      "confidence": 0.0,
+      "duration": 0.12999999999999545,
+      "word_count": 19,
+      "text": "Hii ndiyo hukumu kwamba: Nuru imekuja ulimwenguni, nao watu wakapenda giza kuliko nuru kwa sababu matendo yao ni maovu."
+    },
+    {
+      "verse": 20,
+      "start": 224.079,
+      "end": 224.569,
+      "confidence": 0.0,
+      "duration": 0.4899999999999807,
+      "word_count": 16,
+      "text": "Kwa kuwa kila atendaye maovu huchukia nuru, wala haji kwenye nuru ili matendo yake maovu yasifichuliwe."
+    },
+    {
+      "verse": 21,
+      "start": 224.569,
+      "end": 224.619,
+      "confidence": 0.0,
+      "duration": 0.05000000000001137,
+      "word_count": 23,
+      "text": "Lakini yule aishiye kwa ukweli huja kwenye nuru, ili ionekane wazi kwamba matendo yake yametendeka katika Mungu.” Ushuhuda Wa Yohana Mbatizaji Kuhusu Yesu"
+    },
+    {
+      "verse": 22,
+      "start": 224.619,
+      "end": 230.9735,
+      "confidence": 0.0,
+      "duration": 6.354500000000002,
+      "word_count": 19,
+      "text": "Baada ya haya, Yesu na wanafunzi wake walikwenda katika nchi ya Uyahudi, nao wakakaa huko kwa muda na kubatiza."
+    },
+    {
+      "verse": 23,
+      "start": 230.9735,
+      "end": 243.3515,
+      "confidence": 0.0,
+      "duration": 12.377999999999986,
+      "word_count": 22,
+      "text": "Yohana naye alikuwa akibatiza huko Ainoni karibu na Salimu kwa sababu huko kulikuwa na maji tele. Watu wazima wakamjia huko ili kubatizwa."
+    },
+    {
+      "verse": 24,
+      "start": 243.3515,
+      "end": 247.676,
+      "confidence": 0.0,
+      "duration": 4.3245000000000005,
+      "word_count": 6,
+      "text": "g(Hii ilikuwa kabla Yohana hajatiwa gerezani)."
+    },
+    {
+      "verse": 25,
+      "start": 247.676,
+      "end": 258.14,
+      "confidence": 0.0,
+      "duration": 10.463999999999999,
+      "word_count": 20,
+      "text": "Mashindano yakazuka kati ya baadhi ya wanafunzi wa Yohana na Myahudi mmoja kuhusu suala la desturi ya kunawa kwa utakaso."
+    },
+    {
+      "verse": 26,
+      "start": 258.14,
+      "end": 272.9025,
+      "confidence": 0.0,
+      "duration": 14.762499999999989,
+      "word_count": 23,
+      "text": "Wakamwendea Yohana wakamwambia, “Rabi, yule mtu aliyekuwa pamoja nawe ng’ambo ya Mto Yordani, yule uliyeshuhudia habari zake, sasa anabatiza na kila mtu anamwendea!”"
+    },
+    {
+      "verse": 27,
+      "start": 272.9025,
+      "end": 283.896,
+      "confidence": 0.0,
+      "duration": 10.99350000000004,
+      "word_count": 15,
+      "text": "Yohana akawajibu, “Hakuna mtu yeyote awezaye kupata kitu chochote isipokuwa kile tu alichopewa kutoka mbinguni."
+    },
+    {
+      "verse": 28,
+      "start": 283.896,
+      "end": 291.5295,
+      "confidence": 0.0,
+      "duration": 7.6334999999999695,
+      "word_count": 13,
+      "text": "Ninyi wenyewe ni mashahidi wangu kwamba nilisema, ‘Mimi si Kristo,l ila nimetumwa nimtangulie.’"
+    },
+    {
+      "verse": 29,
+      "start": 291.5295,
+      "end": 329.433,
+      "confidence": 0.0,
+      "duration": 37.90350000000001,
+      "word_count": 31,
+      "text": "Bibi arusi ni wa bwana arusi. Lakini rafiki yake bwana arusi anayesimama karibu naye na kusikiliza kutoka kwake, hufurahi sana aisikiapo sauti ya bwana arusi. Kwa sababu hii furaha yangu imekamilika."
+    },
+    {
+      "verse": 30,
+      "start": 329.433,
+      "end": 329.553,
+      "confidence": 0.0,
+      "duration": 0.12000000000000455,
+      "word_count": 14,
+      "text": "Yeye hana budi kuwa mkuu zaidi na mimi nizidi kuwa mdogo.” Yeye Aliyetoka Mbinguni"
+    },
+    {
+      "verse": 31,
+      "start": 329.553,
+      "end": 329.753,
+      "confidence": 0.0,
+      "duration": 0.19999999999998863,
+      "word_count": 28,
+      "text": "“Yeye ajaye kutoka juu yu juu ya yote, yeye aliye wa duniani ni wa dunia, naye huzungumza mambo ya duniani. Yeye aliyekuja kutoka mbinguni, yu juu ya yote."
+    },
+    {
+      "verse": 32,
+      "start": 329.753,
+      "end": 330.3935,
+      "confidence": 0.0,
+      "duration": 0.6405000000000314,
+      "word_count": 12,
+      "text": "Yeye hushuhudia yale aliyoyaona na kuyasikia, lakini hakuna yeyote anayekubali ushuhuda wake."
+    },
+    {
+      "verse": 33,
+      "start": 330.3935,
+      "end": 331.174,
+      "confidence": 0.0,
+      "duration": 0.7804999999999609,
+      "word_count": 10,
+      "text": "Lakini yeyote anayekubali huo ushuhuda anathibitisha kwamba, Mungu ni kweli."
+    },
+    {
+      "verse": 34,
+      "start": 331.174,
+      "end": 331.374,
+      "confidence": 0.0,
+      "duration": 0.20000000000004547,
+      "word_count": 15,
+      "text": "Yeye aliyetumwa na Mungu husema maneno ya Mungu, kwa kuwa Mungu humtoa Roho pasipo kipimo."
+    },
+    {
+      "verse": 35,
+      "start": 331.374,
+      "end": 331.534,
+      "confidence": 0.0,
+      "duration": 0.15999999999996817,
+      "word_count": 9,
+      "text": "Baba anampenda Mwana, naye ametia vitu vyote mikononi mwake."
+    },
+    {
+      "verse": 36,
+      "start": 331.534,
+      "end": 331.804,
+      "confidence": 0.0,
+      "duration": 0.2699999999999818,
+      "word_count": 25,
+      "text": "Yeyote anayemwamini Mwana ana uzima wa milele, lakini yeye asiyemwamini Mwana hatauona uzima, bali ghadhabu ya Mungu itakuwa juu yake.” Yesu Azungumza Na Mwanamke Msamaria"
+    }
+  ]
+}

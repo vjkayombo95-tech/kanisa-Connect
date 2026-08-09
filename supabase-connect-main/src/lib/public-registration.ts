@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logSupabaseError } from "@/lib/error-logger";
 
 const MAX_PHOTO_SIZE_BYTES = 2 * 1024 * 1024;
 const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -7,6 +8,8 @@ export type PublicChurch = {
   id: string;
   name: string;
   code: string | null;
+  church_code?: string | null;
+  short_code?: string | null;
   slug?: string | null;
   logo_url?: string | null;
   metadata?: Record<string, unknown> | null;
@@ -82,14 +85,23 @@ export async function fetchPublicRegistrationChurch(params: {
     return ((rpcResult.data as PublicChurch[] | null)?.[0] ?? null) as PublicChurch | null;
   }
 
-  console.warn("Falling back to direct church lookup:", rpcResult.error.message);
+  logSupabaseError(rpcResult.error, {
+    function: "fetchPublicRegistrationChurch",
+    operation: "rpc",
+    rpc: "get_public_registration_church",
+    metadata: { fallback: "direct church lookup" },
+  });
 
   const byIdQuery = churchId
-    ? supabase.from("churches").select("id, name, code").eq("id", churchId).maybeSingle()
+    ? supabase.from("churches").select("id, name, code, church_code, short_code").eq("id", churchId).maybeSingle()
     : Promise.resolve({ data: null, error: null });
 
   const byCodeQuery = !churchId && churchCode
-    ? supabase.from("churches").select("id, name, code").eq("code", churchCode).maybeSingle()
+    ? supabase
+        .from("churches")
+        .select("id, name, code, church_code, short_code")
+        .or(`code.eq.${churchCode},church_code.eq.${churchCode},short_code.eq.${churchCode}`)
+        .maybeSingle()
     : Promise.resolve({ data: null, error: null });
 
   const fallbackResult = churchId ? await byIdQuery : await byCodeQuery;
@@ -105,6 +117,8 @@ export async function fetchPublicRegistrationChurch(params: {
     id: fallbackResult.data.id,
     name: fallbackResult.data.name,
     code: fallbackResult.data.code,
+    church_code: fallbackResult.data.church_code,
+    short_code: fallbackResult.data.short_code,
     metadata: null,
   } satisfies PublicChurch;
 }
@@ -118,7 +132,13 @@ export async function fetchPublicRegistrationCommunities(churchId: string) {
     return (rpcResult.data as PublicDirectoryRow[] | null) ?? [];
   }
 
-  console.warn("Falling back to direct communities lookup:", rpcResult.error.message);
+  logSupabaseError(rpcResult.error, {
+    function: "fetchPublicRegistrationCommunities",
+    operation: "rpc",
+    rpc: "get_public_registration_communities",
+    church_id: churchId,
+    metadata: { fallback: "direct communities lookup" },
+  });
 
   const { data, error } = await supabase
     .from("communities")
@@ -142,7 +162,13 @@ export async function fetchPublicRegistrationMinistries(churchId: string) {
     return (rpcResult.data as PublicDirectoryRow[] | null) ?? [];
   }
 
-  console.warn("Falling back to direct ministries lookup:", rpcResult.error.message);
+  logSupabaseError(rpcResult.error, {
+    function: "fetchPublicRegistrationMinistries",
+    operation: "rpc",
+    rpc: "get_public_registration_ministries",
+    church_id: churchId,
+    metadata: { fallback: "direct ministries lookup" },
+  });
 
   const { data, error } = await supabase
     .from("ministries")
@@ -184,6 +210,11 @@ export async function removeRegistrationPhoto(storagePath: string | null) {
 
   const { error } = await supabase.storage.from("avatars").remove([storagePath]);
   if (error) {
-    console.warn("Failed to clean up uploaded avatar:", error.message);
+    logSupabaseError(error, {
+      function: "removeRegistrationPhoto",
+      operation: "delete",
+      bucket: "avatars",
+      metadata: { storagePath },
+    });
   }
 }

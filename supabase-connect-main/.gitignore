@@ -10,7 +10,19 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+.tmp/
+playwright-report/
+test-results/
 *.local
+**/__pycache__/
+*.py[cod]
+evaluation/speech_lab/golden/*.xlsx
+evaluation/uat/.uat-credentials.local.json
+evaluation/speech_lab/model_cache/
+supabase/audio/.venv/
+supabase/audio/models/
+supabase/audio/cache/
+supabase/seed/bible/audio1/
 
 # Editor directories and files
 .vscode/*

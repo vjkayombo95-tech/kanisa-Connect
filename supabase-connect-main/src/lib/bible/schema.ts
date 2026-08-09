@@ -5,6 +5,21 @@ export type BibleTranslationSeed = {
   name: string;
   language: string;
   description?: string;
+  canon?: string;
+  canon_type?: string;
+  license_name?: string;
+  license_url?: string;
+  source?: string;
+  source_url?: string;
+  publisher?: string;
+  copyright?: string;
+  copyright_notice?: string;
+  attribution?: string;
+  attribution_text?: string;
+  audio_generation_allowed?: boolean;
+  ai_processing_allowed?: boolean;
+  active?: boolean;
+  default_translation?: boolean;
 };
 
 export type BibleVerseSeed = {

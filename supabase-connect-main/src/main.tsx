@@ -4,7 +4,9 @@ import App from "./App.tsx";
 import "./index.css";
 import { logEnvironmentStatus } from "./lib/environment";
 import { logWarning } from "./lib/error-logger";
+import { markStartupEvent } from "./lib/startup-diagnostics";
 
+markStartupEvent("script_loaded");
 logEnvironmentStatus();
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
@@ -30,4 +32,6 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
   });
 }
 
+markStartupEvent("react_root_create_started");
 createRoot(document.getElementById("root")!).render(<App />);
+markStartupEvent("react_root_render_called");

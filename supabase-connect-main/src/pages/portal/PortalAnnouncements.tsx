@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,14 +8,18 @@ import { Badge } from "@/components/ui/badge";
 import { Megaphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CommentThread, type CommentReactionSummary } from "@/components/portal/CommentThread";
+import { AnnouncementContent } from "@/components/announcements/AnnouncementContent";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { fetchPortalAnnouncements, getPortalAnnouncementsCache } from "@/lib/portal-announcements";
+import { useTranslation } from "react-i18next";
+import { formatLocalizedDate, normalizeAppLanguage } from "@/lib/localization";
+import { announcementHtmlToPlainText } from "@/lib/announcement-content";
 
 const ANNOUNCEMENT_REACTION_EMOJIS = ["🎉", "❤️", "🙏", "🥳", "👏", "😊"] as const;
 const ANNOUNCEMENT_COMMENT_EMOJIS = ["🎉", "❤️", "🙏", "👏", "😊"] as const;
 
 function isCelebrationAnnouncement(title: string, content: string) {
-  const text = `${title} ${content}`.toLowerCase();
+  const text = `${title} ${announcementHtmlToPlainText(content)}`.toLowerCase();
   return (
     text.includes("birthday") ||
     text.includes("birthdays") ||
@@ -26,8 +30,11 @@ function isCelebrationAnnouncement(title: string, content: string) {
 }
 
 export default function PortalAnnouncements() {
+  const { i18n, t } = useTranslation();
+  const language = normalizeAppLanguage(i18n.language) ?? "en";
   const { user, churchId } = useAuth();
   const { isFeatureEnabled } = useFeatureAccess();
+  const announcementsEnabled = isFeatureEnabled("announcements");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
@@ -90,7 +97,7 @@ export default function PortalAnnouncements() {
 
       if (commentReactionsError) throw commentReactionsError;
 
-      const profileMap = new Map((profiles ?? []).map((profile: any) => [profile.id, profile.full_name || "Member"]));
+      const profileMap = new Map((profiles ?? []).map((profile: any) => [profile.id, profile.full_name || t("member_portal.common.member")]));
       const reactionMap = new Map<string, Array<{ emoji: string; count: number; reacted: boolean }>>();
       const groupedReactions = new Map<string, Map<string, Set<string>>>();
       const groupedCommentReactions = new Map<string, Map<string, Set<string>>>();
@@ -137,7 +144,7 @@ export default function PortalAnnouncements() {
         const list = commentsMap.get(comment.announcement_id) ?? [];
         list.push({
           ...comment,
-          author_name: profileMap.get(comment.user_id) || "Member",
+          author_name: profileMap.get(comment.user_id) || t("member_portal.common.member"),
           reactions: Array.from(groupedCommentReactions.get(comment.id)?.entries() ?? []).map(
             ([emoji, userIds]): CommentReactionSummary => ({
               emoji,
@@ -156,8 +163,8 @@ export default function PortalAnnouncements() {
         comments: commentsMap.get(announcement.id) ?? [],
       }));
     },
-    enabled: !!churchId && isFeatureEnabled("announcements"),
-    initialData: () =>
+    enabled: !!churchId && announcementsEnabled,
+    placeholderData: () =>
       getPortalAnnouncementsCache(churchId, 25).map((announcement) => ({
         ...announcement,
         isCelebration: isCelebrationAnnouncement(announcement.title, announcement.content),
@@ -165,11 +172,31 @@ export default function PortalAnnouncements() {
         comments: [],
       })),
     staleTime: 30_000,
+    refetchOnMount: "always",
   });
+
+  useEffect(() => {
+    if (!churchId || !announcementsEnabled) return;
+
+    const channel = supabase
+      .channel(`portal-announcements-${churchId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "announcements", filter: `church_id=eq.${churchId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["portal-announcements-all", user?.id, churchId] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [announcementsEnabled, churchId, queryClient, user?.id]);
 
   const toggleReaction = useMutation({
     mutationFn: async ({ announcementId, emoji, reacted }: { announcementId: string; emoji: string; reacted: boolean }) => {
-      if (!user) throw new Error("You need to sign in to react.");
+      if (!user) throw new Error(t("member_portal.parish_life.sign_in_to_react"));
 
       if (reacted) {
         const { error } = await supabase
@@ -194,16 +221,16 @@ export default function PortalAnnouncements() {
       queryClient.invalidateQueries({ queryKey: ["portal-announcements-all"] });
     },
     onError: (error: any) => {
-      toast({ title: "Unable to save reaction", description: error.message, variant: "destructive" });
+      toast({ title: t("member_portal.parish_life.unable_save_reaction"), description: error.message, variant: "destructive" });
     },
   });
 
   const addComment = useMutation({
     mutationFn: async (announcementId: string) => {
-      if (!user) throw new Error("You need to sign in to comment.");
+      if (!user) throw new Error(t("member_portal.parish_life.sign_in_to_comment"));
 
       const body = (commentDrafts[announcementId] || "").trim();
-      if (!body) throw new Error("Write a comment first.");
+      if (!body) throw new Error(t("member_portal.parish_life.write_comment_first"));
 
       const { error } = await supabase
         .from("announcement_comments" as never)
@@ -216,7 +243,7 @@ export default function PortalAnnouncements() {
       queryClient.invalidateQueries({ queryKey: ["portal-announcements-all"] });
     },
     onError: (error: any) => {
-      toast({ title: "Unable to add comment", description: error.message, variant: "destructive" });
+      toast({ title: t("member_portal.parish_life.unable_add_comment"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -230,7 +257,7 @@ export default function PortalAnnouncements() {
       emoji: string;
       reacted: boolean;
     }) => {
-      if (!user) throw new Error("You need to sign in to react.");
+      if (!user) throw new Error(t("member_portal.parish_life.sign_in_to_react"));
 
       if (reacted) {
         const { error } = await supabase
@@ -255,7 +282,7 @@ export default function PortalAnnouncements() {
       queryClient.invalidateQueries({ queryKey: ["portal-announcements-all"] });
     },
     onError: (error: any) => {
-      toast({ title: "Unable to save comment reaction", description: error.message, variant: "destructive" });
+      toast({ title: t("member_portal.parish_life.unable_save_comment_reaction"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -267,16 +294,16 @@ export default function PortalAnnouncements() {
   return (
     <div className="container mx-auto px-4 py-10 animate-fade-in">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-bold font-serif mb-2">Announcements</h1>
-        <p className="text-muted-foreground mb-8">Important updates and news from your church.</p>
+        <h1 className="text-2xl md:text-3xl font-bold font-serif mb-2">{t("member_portal.parish_life.announcements")}</h1>
+        <p className="text-muted-foreground mb-8">{t("member_portal.parish_life.announcements_description")}</p>
 
         {isLoading ? (
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t("member_portal.parish_life.loading_announcements")}</p>
         ) : announcements.length === 0 ? (
           <Card className="glass-card">
             <CardContent className="py-16 text-center text-muted-foreground">
               <Megaphone className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
-              No announcements at the moment.
+              {t("member_portal.parish_life.no_announcements")}
             </CardContent>
           </Card>
         ) : (
@@ -289,15 +316,15 @@ export default function PortalAnnouncements() {
                       <h3 className="font-semibold text-lg">{announcement.title}</h3>
                       {announcement.isCelebration && (
                         <Badge variant="outline" className="mt-2 border-primary/30 bg-primary/10 text-primary">
-                          Celebration
+                          {t("member_portal.parish_life.celebration")}
                         </Badge>
                       )}
                     </div>
                   </div>
 
-                  <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">{announcement.content}</p>
+                  <AnnouncementContent content={announcement.content} className="mt-2" />
                   <p className="text-xs text-muted-foreground/60 mt-4">
-                    {new Date(announcement.created_at).toLocaleDateString("en-US", {
+                    {formatLocalizedDate(announcement.created_at, language, {
                       weekday: "long",
                       year: "numeric",
                       month: "long",
@@ -368,8 +395,8 @@ export default function PortalAnnouncements() {
                         reactionPending={toggleCommentReaction.isPending}
                         quickEmojis={ANNOUNCEMENT_COMMENT_EMOJIS}
                         reactionEmojis={ANNOUNCEMENT_COMMENT_EMOJIS}
-                        draftPlaceholder="Write a kind message..."
-                        emptyState="No comments yet. Be the first to celebrate."
+                        draftPlaceholder={t("member_portal.parish_life.write_kind_message")}
+                        emptyState={t("member_portal.parish_life.no_comments_celebrate")}
                         className="mt-0 border-white/10 bg-white/[0.03]"
                         onToggleReaction={(commentId, emoji, reacted) =>
                           toggleCommentReaction.mutate({ commentId, emoji, reacted })
@@ -385,7 +412,7 @@ export default function PortalAnnouncements() {
 
         {!isLoading && celebrationAnnouncements.length === 0 && announcements.length > 0 && (
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Comments and emoji reactions appear automatically on birthday and wedding anniversary announcements.
+            {t("member_portal.parish_life.celebration_reactions_hint")}
           </p>
         )}
       </div>
