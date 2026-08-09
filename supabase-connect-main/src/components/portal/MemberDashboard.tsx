@@ -24,6 +24,7 @@ import {
 import { WorkspaceResolver } from "@/components/workspace";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MobileMemberHome } from "@/components/portal/MobileMemberHome";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { fetchMemberForUser } from "@/hooks/useMember";
@@ -301,6 +302,7 @@ export default function MemberDashboard() {
   const massVisible = getFeatureState("mass_intentions").visible;
   const prayerRequestsVisible = getFeatureState("prayer_requests").visible;
   const announcementsVisible = getFeatureState("announcements").visible;
+  const askVisible = getFeatureState("kanisa_ai").visible;
 
   const { data: massSummary } = useQuery({
     queryKey: ["next-mass-summary", churchId],
@@ -716,11 +718,24 @@ export default function MemberDashboard() {
   };
 
   return (
-    <WorkspaceResolver
-      workspaceId="member"
-      context={context}
-      widgets={widgets}
-      dashboardClassName="mx-auto max-w-7xl"
-    />
+    <>
+      <MobileMemberHome
+        announcementsVisible={announcementsVisible}
+        askVisible={askVisible}
+        giveVisible={giveVisible}
+        home={home}
+        isLoading={isLoading}
+        massSummary={massSummary}
+        massVisible={massVisible}
+      />
+      <div className="hidden lg:block">
+        <WorkspaceResolver
+          workspaceId="member"
+          context={context}
+          widgets={widgets}
+          dashboardClassName="mx-auto max-w-7xl"
+        />
+      </div>
+    </>
   );
 }

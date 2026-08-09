@@ -23,6 +23,7 @@ const MemberBibleHomePage = lazy(() => import("@/pages/portal/MemberBibleHomePag
 const MemberBibleBookPage = lazy(() => import("@/pages/portal/MemberBibleBookPage"));
 const MemberBibleChapterPage = lazy(() => import("@/pages/portal/MemberBibleChapterPage"));
 const KanisaAIHome = lazy(() => import("@/pages/ai/KanisaAIHome"));
+const RoleServicesPage = lazy(() => import("@/pages/RoleServicesPage"));
 
 function SectionFallback() {
   return (
@@ -39,6 +40,7 @@ export default function PastoralRoutes() {
       <Routes>
         <Route element={<WorkspaceRouteLayout workspaceId="pastoral" />}>
           <Route index element={<PriestDashboard />} />
+          <Route path="services" element={<RoleServicesPage />} />
           <Route path="dashboard" element={<PriestDashboard />} />
           <Route path="mass-intentions" element={<MassIntentionsPage />} />
           <Route path="prayer-requests" element={<PrayerRequestsPage />} />

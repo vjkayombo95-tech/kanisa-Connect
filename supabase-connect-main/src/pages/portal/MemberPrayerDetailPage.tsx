@@ -52,7 +52,7 @@ export default function MemberPrayerDetailPage() {
   return (
     <main className="min-h-full px-4 py-6 pb-28 lg:px-8">
       <div className="mx-auto max-w-4xl space-y-5">
-        <Button asChild variant="ghost"><Link to="/portal/prayers"><ArrowLeft className="mr-2 h-4 w-4" />Maktaba ya Sala</Link></Button>
+        <Button asChild variant="ghost" className="hidden lg:inline-flex"><Link to="/portal/prayers"><ArrowLeft className="mr-2 h-4 w-4" />Maktaba ya Sala</Link></Button>
         <Card className="rounded-3xl border-border/70 shadow-sm"><CardContent className="p-6 sm:p-9">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div><div className="flex flex-wrap gap-2">{prayer.data.category ? <Badge variant="outline">{prayer.data.category.name}</Badge> : null}{parent.data ? <Badge variant="secondary">{parent.data.title}</Badge> : null}</div><h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">{prayer.data.title}</h1>{prayer.data.summary ? <p className="mt-3 leading-7 text-muted-foreground">{prayer.data.summary}</p> : null}</div>

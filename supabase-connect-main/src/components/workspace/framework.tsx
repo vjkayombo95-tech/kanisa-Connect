@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronLeft, ChevronRight, HelpCircle, LogOut, Menu, Settings, UserCircle } from "lucide-react";
+import { BriefcaseBusiness, ChevronDown, ChevronLeft, ChevronRight, HelpCircle, Home, LogOut, Menu, MessageCircle, MoreHorizontal, Settings, UserCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { AppLink } from "@/components/AppLink";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { DashboardExperience, type DashboardConfig, type DashboardWidget } from "@/components/portal/dashboard";
+import { MemberMobileBackHeader } from "@/components/portal/MemberMobileBackHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import type { ChurchPermissionAction } from "@/hooks/use-church-permission";
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { getWorkspaceRoutePermission } from "@/lib/workspace-route-permissions";
 import { filterVisibleNavigationGroups } from "./navigation-merge";
 import type { NavigationGroupId } from "./navigation-groups";
+import { getRoleMobileNavigation, RoleMobileBackHeader, RoleMobileHome } from "./RoleMobileExperience";
 
 export type WorkspaceId = "member" | "pastoral" | "church_admin" | "finance" | "super_admin";
 
@@ -281,7 +283,7 @@ function isNavigationItemVisible(item: WorkspaceNavigationItem, decisions: Map<s
   return decisions.get(`${requirement.featureKey}:${requirement.action}`) === true;
 }
 
-function useVisibleNavigationGroups(groups: WorkspaceNavigationGroup[]) {
+export function useVisibleNavigationGroups(groups: WorkspaceNavigationGroup[]) {
   const items = useMemo(() => groups.flatMap((group) => group.items), [groups]);
   const decisions = useNavigationPermissionDecisions(items);
 
@@ -291,7 +293,7 @@ function useVisibleNavigationGroups(groups: WorkspaceNavigationGroup[]) {
   );
 }
 
-function useVisibleNavigationItems(items: WorkspaceNavigationItem[]) {
+export function useVisibleNavigationItems(items: WorkspaceNavigationItem[]) {
   const decisions = useNavigationPermissionDecisions(items);
 
   return useMemo(
@@ -637,6 +639,7 @@ type WorkspaceLayoutProps = {
 export function WorkspaceLayout({ workspace, children }: WorkspaceLayoutProps) {
   const Icon = workspace.icon;
   const location = useLocation();
+  const { getFeatureState } = useFeatureAccess();
   const { t } = useTranslation();
   const workspaceTitle = t(workspace.titleKey ?? `workspace.${workspace.id}.title`, workspace.title);
   const workspaceDescription = workspace.description ? t(workspace.descriptionKey ?? `workspace.${workspace.id}.description`, workspace.description) : null;
@@ -649,6 +652,11 @@ export function WorkspaceLayout({ workspace, children }: WorkspaceLayoutProps) {
     [location.pathname, workspace.navigation],
   );
   const activeLabel = activeItem ? t(activeItem.labelKey ?? `navigation.items.${activeItem.id}`, activeItem.label) : workspaceTitle;
+  const visibleGroups = useVisibleNavigationGroups(workspace.navigation);
+  const visibleQuickActions = useVisibleNavigationItems(workspace.quickActions ?? []);
+  const workspaceRoot = `/${workspace.id.replace("_", "-")}`;
+  const isRoleHome = workspace.id !== "member" && location.pathname.replace(/\/$/, "") === workspaceRoot;
+  const roleMobileNavigation = getRoleMobileNavigation(workspace, visibleGroups);
 
   return (
     <div className={cn("min-h-screen bg-background", workspace.theme?.shellClassName)}>
@@ -713,9 +721,9 @@ export function WorkspaceLayout({ workspace, children }: WorkspaceLayoutProps) {
             <WorkspaceNavigation groups={workspace.navigation} />
           </div>
         </aside>
-        <main id="workspace-main" className={cn("min-w-0 p-4 lg:p-6", workspace.theme?.dashboardClassName)}>
+        <main id="workspace-main" className={cn("min-w-0 p-4 lg:p-6", "pb-24 lg:pb-6", workspace.theme?.dashboardClassName)}>
           <section
-            className="mb-5 rounded-xl border border-border bg-card/40 px-4 py-3 shadow-sm"
+            className={cn("mb-5 rounded-xl border border-border bg-card/40 px-4 py-3 shadow-sm", workspace.id === "member" && "hidden lg:block")}
             aria-label="Workspace page header"
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -738,9 +746,33 @@ export function WorkspaceLayout({ workspace, children }: WorkspaceLayoutProps) {
               </div>
             </div>
           </section>
-          {children}
+          {workspace.id === "member" ? <MemberMobileBackHeader title={activeLabel} /> : null}
+          {workspace.id !== "member" ? <RoleMobileBackHeader workspace={workspace} title={activeLabel} primaryRoutes={roleMobileNavigation.map((item) => item.to)} /> : null}
+          {isRoleHome ? <RoleMobileHome workspace={workspace} visibleQuickActions={visibleQuickActions} /> : null}
+          <div className={cn(isRoleHome && "hidden lg:block")}>{children}</div>
         </main>
       </div>
+      {workspace.id === "member" ? (
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-background/85 pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_30px_-28px_hsl(var(--foreground)/0.45)] backdrop-blur-md supports-[backdrop-filter]:bg-background/75 lg:hidden" aria-label="Urambazaji mkuu">
+          <div className="mx-auto grid max-w-lg grid-cols-3 px-3 py-1.5">
+            {[
+              { label: "Nyumbani", to: "/portal", icon: Home },
+              ...(getFeatureState("kanisa_ai").visible ? [{ label: "Uliza", to: "/portal/kanisa-ai", icon: MessageCircle }] : []),
+              { label: "Zaidi", to: "/portal/services", icon: MoreHorizontal },
+            ].map((item) => {
+              const NavIcon = item.icon;
+              const active = isWorkspaceRouteActive(location.pathname, item.to);
+              return <AppLink key={item.to} to={item.to} className={cn("flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-semibold text-muted-foreground outline-none transition-[color,background-color,transform] duration-200 motion-reduce:transition-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.98] motion-reduce:active:scale-100", active && "bg-primary/[0.07] text-primary")} aria-current={active ? "page" : undefined}><NavIcon className="h-5 w-5 stroke-[1.8]" /><span>{item.label}</span></AppLink>;
+            })}
+          </div>
+        </nav>
+      ) : roleMobileNavigation.length ? (
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden" aria-label="Urambazaji mkuu wa nafasi">
+          <div className={cn("mx-auto grid max-w-lg px-3 py-1.5", roleMobileNavigation.length === 2 ? "grid-cols-2" : "grid-cols-3")}>
+            {roleMobileNavigation.map((item) => { const NavIcon = item.kind === "home" ? Home : item.kind === "work" ? BriefcaseBusiness : MoreHorizontal; const active = isWorkspaceRouteActive(location.pathname, item.to); return <AppLink key={item.to} to={item.to} className={cn("flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-semibold text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary", active && "bg-primary/[0.07] text-primary")} aria-current={active ? "page" : undefined}><NavIcon className="h-5 w-5 stroke-[1.8]" aria-hidden="true" /><span>{item.label}</span></AppLink>; })}
+          </div>
+        </nav>
+      ) : null}
     </div>
   );
 }

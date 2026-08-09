@@ -88,7 +88,7 @@ export default function PortalContributionReceiptPage() {
   return (
     <main className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-6 pb-28 lg:px-8 lg:pb-10">
     <div className="mx-auto max-w-2xl space-y-5">
-      <Button asChild variant="ghost" size="sm" className="-ml-2">
+      <Button asChild variant="ghost" size="sm" className="-ml-2 hidden lg:inline-flex">
         <Link to="/portal">
           <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
           {t("member_portal.giving_account.back_to_dashboard")}

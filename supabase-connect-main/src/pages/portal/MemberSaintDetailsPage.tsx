@@ -163,7 +163,7 @@ export default function MemberSaintDetailsPage() {
     <main className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-6 pb-28 lg:px-8 lg:pb-10">
       <div className="mx-auto max-w-6xl space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button asChild variant="ghost" className="rounded-xl">
+          <Button asChild variant="ghost" className="hidden rounded-xl lg:inline-flex">
             <Link to={saintsRoot}>
               <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
               {t("member_portal.catholic_content.back_to_saints")}

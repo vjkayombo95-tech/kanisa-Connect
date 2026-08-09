@@ -36,7 +36,8 @@ const DailyReadingsPage = lazy(() => import("@/pages/portal/DailyReadingsPage"))
 const MemberBibleHomePage = lazy(() => import("@/pages/portal/MemberBibleHomePage"));
 const MemberBibleBookPage = lazy(() => import("@/pages/portal/MemberBibleBookPage"));
 const MemberBibleChapterPage = lazy(() => import("@/pages/portal/MemberBibleChapterPage"));
-const KanisaAIHome = lazy(() => import("@/pages/ai/KanisaAIHome"));
+const KanisaAssistantPage = lazy(() => import("@/pages/portal/KanisaAssistantPage"));
+const MemberServicesPage = lazy(() => import("@/pages/portal/MemberServicesPage"));
 
 function SectionFallback() {
   return (
@@ -60,7 +61,7 @@ function PortalIndexRoute() {
     return <Navigate to={getDefaultRouteForRoles(userRoles, isSuperAdmin)} replace />;
   }
 
-  return <LiturgyHomePage />;
+  return <MemberDashboard />;
 }
 
 function PortalDashboardRoute() {
@@ -79,6 +80,8 @@ export default function MemberRoutes() {
       <Routes>
         <Route element={<WorkspaceRouteLayout workspaceId="member" />}>
           <Route index element={<PortalIndexRoute />} />
+          <Route path="services" element={<MemberServicesPage />} />
+          <Route path="today" element={<LiturgyHomePage />} />
           <Route path="my-parish" element={<MyParishPage />} />
           <Route path="bible-verses" element={<PortalHome />} />
           <Route path="dashboard" element={<PortalDashboardRoute />} />
@@ -106,7 +109,7 @@ export default function MemberRoutes() {
           <Route path="saints/:saintId" element={<MemberSaintDetailsPage />} />
           <Route path="liturgical-calendar" element={<LiturgicalCalendarPage />} />
           <Route path="daily-readings" element={<DailyReadingsPage />} />
-          <Route path="kanisa-ai" element={<KanisaAIHome />} />
+          <Route path="kanisa-ai" element={<KanisaAssistantPage />} />
           <Route path="bible" element={<MemberBibleHomePage />} />
           <Route path="bible/:bookId" element={<MemberBibleBookPage />} />
           <Route path="bible/:bookId/chapter/:chapterNumber" element={<MemberBibleChapterPage />} />

@@ -56,6 +56,7 @@ const AudioJobsPage = lazy(() => import("@/pages/church-admin/audio/AudioJobsPag
 const AudioUploadPage = lazy(() => import("@/pages/church-admin/audio/AudioUploadPage"));
 const AudioReviewPage = lazy(() => import("@/pages/church-admin/audio/AudioReviewPage"));
 const AudioSettingsPage = lazy(() => import("@/pages/church-admin/audio/AudioSettingsPage"));
+const RoleServicesPage = lazy(() => import("@/pages/RoleServicesPage"));
 const LivestreamsPage = lazy(() => import("@/pages/church-admin/LivestreamsPage"));
 
 function SectionFallback() {
@@ -93,6 +94,7 @@ export default function AdminRoutes() {
       <Routes>
         <Route element={<WorkspaceRouteLayout workspaceId="church_admin" />}>
           <Route index element={<ChurchDashboard />} />
+          <Route path="services" element={<RoleServicesPage />} />
           <Route path="finance" element={<FinanceDashboard />} />
           <Route path="priest-dashboard" element={<PriestDashboard />} />
           <Route path="qr-payments" element={<ChurchQRPage />} />
