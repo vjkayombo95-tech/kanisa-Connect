@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, BookOpen, Users, Loader2, Trash2, Pencil, CalendarDays, Megaphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useChurchPermission } from "@/hooks/use-church-permission";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import {
@@ -33,6 +34,8 @@ export default function MinistriesPage() {
   const [description, setDescription] = useState("");
   const [editingMinistry, setEditingMinistry] = useState<any | null>(null);
   const { churchId, user } = useAuth();
+  const { allowed: canApproveMinistryRequests, isLoading: approvePermissionLoading } =
+    useChurchPermission("ministries", "approve");
   const { isOnline } = useNetworkStatus();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -254,28 +257,34 @@ export default function MinistriesPage() {
                       <p className="text-xs text-muted-foreground">{request.members.phone || request.members.email}</p>
                     ) : null}
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="rounded-xl"
-                      disabled={approveRequest.isPending || rejectRequest.isPending}
-                      onClick={() => approveRequest.mutate(request)}
-                    >
-                      {approveRequest.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Approve
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="rounded-xl"
-                      disabled={approveRequest.isPending || rejectRequest.isPending}
-                      onClick={() => rejectRequest.mutate(request)}
-                    >
-                      Reject
-                    </Button>
-                  </div>
+                  {canApproveMinistryRequests ? (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="rounded-xl"
+                        disabled={approvePermissionLoading || approveRequest.isPending || rejectRequest.isPending}
+                        onClick={() => approveRequest.mutate(request)}
+                      >
+                        {approveRequest.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        Approve
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="rounded-xl"
+                        disabled={approvePermissionLoading || approveRequest.isPending || rejectRequest.isPending}
+                        onClick={() => rejectRequest.mutate(request)}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      You do not have permission to review ministry join requests.
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
