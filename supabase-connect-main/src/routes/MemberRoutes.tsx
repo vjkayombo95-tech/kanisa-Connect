@@ -39,6 +39,7 @@ const MemberBibleChapterPage = lazy(() => import("@/pages/portal/MemberBibleChap
 const KanisaAssistantPage = lazy(() => import("@/pages/portal/KanisaAssistantPage"));
 const MemberServicesPage = lazy(() => import("@/pages/portal/MemberServicesPage"));
 const MemberLivestreamPage = lazy(() => import("@/pages/portal/MemberLivestreamPage"));
+const MemberRadioPage = lazy(() => import("@/pages/portal/MemberRadioPage"));
 
 function SectionFallback() {
   return (
@@ -83,6 +84,7 @@ export default function MemberRoutes() {
           <Route index element={<PortalIndexRoute />} />
           <Route path="services" element={<MemberServicesPage />} />
           <Route path="live/:streamId" element={<MemberLivestreamPage />} />
+          <Route path="radio" element={<MemberRadioPage />} />
           <Route path="today" element={<LiturgyHomePage />} />
           <Route path="my-parish" element={<MyParishPage />} />
           <Route path="bible-verses" element={<PortalHome />} />

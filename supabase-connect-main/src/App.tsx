@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ChurchThemeProvider } from "@/contexts/ChurchThemeContext";
+import { RadioPlayerProvider } from "@/contexts/RadioPlayerContext";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { PreviewViewport } from "@/components/PreviewViewport";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -281,13 +282,15 @@ const App = () => {
               </div>
             ) : (
               <AuthProvider>
-                <ChurchThemeProvider>
-                  <PreviewViewport>
-                    <RoutePerformanceMonitor />
-                    <AppRoutes />
-                    <DeferredGlobalTools />
-                  </PreviewViewport>
-                </ChurchThemeProvider>
+                <RadioPlayerProvider>
+                  <ChurchThemeProvider>
+                    <PreviewViewport>
+                      <RoutePerformanceMonitor />
+                      <AppRoutes />
+                      <DeferredGlobalTools />
+                    </PreviewViewport>
+                  </ChurchThemeProvider>
+                </RadioPlayerProvider>
               </AuthProvider>
             )}
             <Toaster />
