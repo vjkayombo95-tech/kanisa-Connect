@@ -342,6 +342,7 @@ export const workspaceRegistry = {
           { id: "billing-verification", label: "Billing Verification", to: "/super-admin/billing-verification", icon: CreditCard },
           { id: "record-preservation", label: "Record Preservation", to: "/super-admin/record-preservation", icon: FileText },
           { id: "features", label: "Features", to: "/super-admin/features", icon: Settings },
+          { id: "radio-directory", label: "Radio Directory", to: "/super-admin/radio", icon: Radio },
         ],
       },
       {

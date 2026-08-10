@@ -1,26 +1,37 @@
-import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Radio } from "lucide-react";
+import { Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChurchPermission } from "@/hooks/use-church-permission";
-import { fetchAdminRadioStations, isSafeRadioStreamUrl, radioTable, type ChurchRadioStation } from "@/lib/church-radio";
 import { useToast } from "@/hooks/use-toast";
+import { fetchChurchRadioCatalogue, setChurchRadioSelection, type ChurchRadioCatalogueEntry } from "@/lib/church-radio";
 
-const empty = { id: "", name: "", streamUrl: "", websiteUrl: "", logoUrl: "", description: "", isActive: true, isFeatured: false };
 export default function RadioStationsPage() {
-  const { churchId } = useAuth(); const { allowed, isLoading: permissionLoading } = useChurchPermission("radio", "manage"); const client = useQueryClient(); const { toast } = useToast();
-  const [open, setOpen] = useState(false); const [form, setForm] = useState(empty);
-  const stations = useQuery({ queryKey: ["church-radio-stations", churchId, "admin"], queryFn: () => fetchAdminRadioStations(churchId!), enabled: !!churchId && allowed });
-  const save = useMutation({ mutationFn: async () => { if (!churchId || !isSafeRadioStreamUrl(form.streamUrl) || (form.websiteUrl && !isSafeRadioStreamUrl(form.websiteUrl)) || (form.logoUrl && !isSafeRadioStreamUrl(form.logoUrl))) throw new Error("Tumia anwani salama ya HTTPS ya umma."); const payload = { church_id: churchId, name: form.name.trim(), stream_url: form.streamUrl.trim(), website_url: form.websiteUrl.trim() || null, logo_url: form.logoUrl.trim() || null, description: form.description.trim() || null, is_active: form.isActive, is_featured: form.isFeatured }; if (form.isFeatured) { const { error } = await radioTable().update({ is_featured: false }).eq("church_id", churchId).eq("is_featured", true); if (error) throw error; } const query = form.id ? radioTable().update(payload).eq("id", form.id).eq("church_id", churchId) : radioTable().insert(payload); const { error } = await query; if (error) throw error; }, onSuccess: () => { client.invalidateQueries({ queryKey: ["church-radio-stations", churchId] }); setOpen(false); toast({ title: "Radio imehifadhiwa" }); }, onError: (error) => toast({ title: "Imeshindikana kuhifadhi", description: error instanceof Error ? error.message : "Jaribu tena.", variant: "destructive" }) });
-  const toggle = useMutation({ mutationFn: async (station: ChurchRadioStation) => { const { error } = await radioTable().update({ is_active: !station.isActive }).eq("id", station.id).eq("church_id", churchId!); if (error) throw error; }, onSuccess: () => client.invalidateQueries({ queryKey: ["church-radio-stations", churchId] }) });
-  if (permissionLoading) return null; if (!allowed) return <Card><CardContent className="p-6 text-sm text-muted-foreground">Huna ruhusa ya kusimamia Radio Live.</CardContent></Card>;
-  const edit = (station: ChurchRadioStation) => { setForm({ id: station.id, name: station.name, streamUrl: station.streamUrl, websiteUrl: station.websiteUrl ?? "", logoUrl: station.logoUrl ?? "", description: station.description ?? "", isActive: station.isActive, isFeatured: station.isFeatured }); setOpen(true); };
-  return <div className="space-y-6"><div className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-2xl font-bold">Radio Live</h1><p className="text-sm text-muted-foreground">Sanidi radio zinazotiririsha sauti moja kwa moja kwa waumini.</p></div><Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button onClick={() => setForm(empty)}><Plus className="mr-2 h-4 w-4" />Ongeza Radio</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>{form.id ? "Hariri Radio" : "Radio mpya"}</DialogTitle></DialogHeader><div className="space-y-4"><Label>Jina<Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Label><Label>Stream URL<Input value={form.streamUrl} onChange={(e) => setForm({ ...form, streamUrl: e.target.value })} placeholder="https://..." /></Label><Label>Tovuti (si lazima)<Input value={form.websiteUrl} onChange={(e) => setForm({ ...form, websiteUrl: e.target.value })} /></Label><Label>Logo (si lazima)<Input value={form.logoUrl} onChange={(e) => setForm({ ...form, logoUrl: e.target.value })} /></Label><label className="flex min-h-11 items-center gap-2"><input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} />Radio chaguo-msingi</label><Button disabled={!form.name.trim() || !form.streamUrl.trim() || save.isPending} onClick={() => save.mutate()} className="w-full">Hifadhi</Button></div></DialogContent></Dialog></div>
-    <div className="space-y-3">{stations.data?.map((station) => <Card key={station.id}><CardContent className="flex flex-wrap items-center gap-4 p-5"><Radio className="h-6 w-6 text-red-500" /><div className="min-w-0 flex-1"><h2 className="font-bold">{station.name}</h2><p className="break-all text-xs text-muted-foreground">{station.streamUrl}</p><p className="mt-1 text-xs font-bold">{station.isActive ? "ACTIVE" : "INACTIVE"}{station.isFeatured ? " · FEATURED" : ""}</p></div><Button variant="outline" onClick={() => edit(station)}>Hariri</Button><Button variant="outline" onClick={() => toggle.mutate(station)}>{station.isActive ? "Zima" : "Washa"}</Button></CardContent></Card>)}{!stations.isLoading && !stations.data?.length ? <p className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">Hakuna radio iliyosanidiwa.</p> : null}</div>
-  </div>;
+  const { churchId } = useAuth();
+  const { allowed, isLoading: permissionLoading } = useChurchPermission("radio", "manage");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const queryKey = ["church-radio-directory", churchId];
+  const stations = useQuery({ queryKey, queryFn: () => fetchChurchRadioCatalogue(churchId!), enabled: Boolean(churchId && allowed) });
+  const save = useMutation({
+    mutationFn: ({ station, enabled, featured = station.isFeatured, order = station.sortOrder }: { station: ChurchRadioCatalogueEntry; enabled: boolean; featured?: boolean; order?: number }) => setChurchRadioSelection(churchId!, station.id, enabled, featured, order),
+    onSuccess: () => { void queryClient.invalidateQueries({ queryKey }); toast({ title: "Mpangilio wa Radio umehifadhiwa" }); },
+    onError: (error) => toast({ title: "Imeshindikana kuhifadhi", description: error instanceof Error ? error.message : "Jaribu tena.", variant: "destructive" }),
+  });
+  if (permissionLoading) return null;
+  if (!allowed) return <Card><CardContent className="p-6 text-sm text-muted-foreground">Huna ruhusa ya kusimamia Radio Live.</CardContent></Card>;
+  return <main className="mx-auto max-w-4xl space-y-6">
+    <header><p className="text-xs font-extrabold tracking-[0.18em] text-red-500">RADIO LIVE</p><h1 className="mt-2 text-3xl font-bold">Chagua radio za waumini</h1><p className="mt-2 text-sm text-muted-foreground">Washa radio zilizoidhinishwa, chagua radio kuu, na panga mpangilio wake.</p></header>
+    <div className="space-y-3">{stations.data?.map((station, index) => <Card key={station.id}><CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-red-500/10">{station.logoUrl ? <img src={station.logoUrl} alt="" className="h-full w-full object-cover" /> : <Radio className="h-6 w-6 text-red-500" />}</span>
+      <div className="min-w-0 flex-1"><h2 className="font-bold">{station.name}</h2><p className="text-sm text-muted-foreground">{station.description || "Radio iliyoidhinishwa na Kanisa Connect"}</p><p className="mt-1 text-xs font-bold text-emerald-600">✓ IMEIDHINISHWA</p></div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant={station.enabled ? "default" : "outline"} disabled={save.isPending} onClick={() => save.mutate({ station, enabled: !station.enabled, featured: station.enabled ? false : station.isFeatured, order: station.sortOrder || index })}>{station.enabled ? "ON" : "OFF"}</Button>
+        <Button variant={station.isFeatured ? "secondary" : "outline"} disabled={!station.enabled || save.isPending} onClick={() => save.mutate({ station, enabled: true, featured: true })}>{station.isFeatured ? "Radio kuu" : "Weka kuwa kuu"}</Button>
+        <label className="flex items-center gap-2 text-xs font-semibold">Mpangilio<input aria-label={`Mpangilio wa ${station.name}`} type="number" min="0" defaultValue={station.sortOrder || index} className="h-10 w-16 rounded-md border bg-background px-2" onBlur={(event) => save.mutate({ station, enabled: station.enabled, order: Number(event.target.value) })} /></label>
+      </div>
+    </CardContent></Card>)}
+    {!stations.isLoading && !stations.data?.length ? <p className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">Hakuna radio iliyoidhinishwa kwenye katalogi kwa sasa.</p> : null}</div>
+  </main>;
 }

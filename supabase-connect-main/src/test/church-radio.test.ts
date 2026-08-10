@@ -8,6 +8,7 @@ const migration = read("supabase/migrations/20260810120000_add_church_live_radio
 const provider = read("src/contexts/RadioPlayerContext.tsx");
 const memberPage = read("src/pages/portal/MemberRadioPage.tsx");
 const adminPage = read("src/pages/church-admin/RadioStationsPage.tsx");
+const superAdminPage = read("src/pages/super-admin/RadioDirectoryPage.tsx");
 const hook = read("src/hooks/use-church-radio.ts");
 const app = read("src/App.tsx");
 
@@ -20,9 +21,9 @@ describe("church live radio", () => {
   });
 
   it("limits members to active same-church feature-authorized rows", () => {
-    expect(migration).toContain("is_active\n  and public.has_church_feature_permission(auth.uid(), church_id, 'radio', 'view')");
+    expect(migration).toMatch(/is_active\r?\n\s+and public\.has_church_feature_permission\(auth\.uid\(\), church_id, 'radio', 'view'\)/);
     expect(hook).toContain("fetchMemberRadioStations(churchId!)");
-    expect(read("src/lib/church-radio.ts")).toContain('.eq("church_id", churchId).eq("is_active", true)');
+    expect(read("src/lib/church-radio.ts")).toContain('.eq("church_id", churchId).eq("enabled", true)');
   });
 
   it("requires explicit own-church admin manage permission", () => {
@@ -71,6 +72,10 @@ describe("church live radio", () => {
   it("keeps the Radio Maria development endpoint configurable", () => {
     expect(migration).not.toContain("dreamsiteradiocp2.com");
     expect(memberPage).not.toContain("Radio Maria");
-    expect(adminPage).toContain("Stream URL");
+    expect(adminPage).not.toContain("Stream URL");
+    expect(adminPage).not.toContain("Metadata URL");
+    expect(adminPage).not.toContain("metadataUrl");
+    expect(superAdminPage).toContain("Stream URL");
+    expect(superAdminPage).toContain("Metadata URL (optional)");
   });
 });

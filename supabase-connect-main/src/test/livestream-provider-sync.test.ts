@@ -85,7 +85,7 @@ describe("livestream provider synchronization", () => {
     expect(worker).toContain('isServiceFeatureAvailable(db, stream.church_id, "livestream")');
     expect(worker).not.toContain("VITE_YOUTUBE");
     expect(worker).not.toContain("supplied !== serviceKey");
-    expect(supabaseConfig).toContain("[functions.sync-livestream-status]\nverify_jwt = true");
+    expect(supabaseConfig.replace(/\r\n/g, "\n")).toContain("[functions.sync-livestream-status]\nverify_jwt = true");
   });
 
   it("keeps manual, member, and sermon boundaries unchanged", () => {
