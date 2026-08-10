@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Radio, Video, X } from "lucide-react";
 
 import { AppLink } from "@/components/AppLink";
-import { useRadioPlayer } from "@/contexts/RadioPlayerContext";
 import { useChurchLivestream } from "@/hooks/use-church-livestream";
 import { useChurchRadioStations } from "@/hooks/use-church-radio";
 import { getYouTubeEmbedUrl, isSecureLivestreamUrl } from "@/lib/church-livestreams";
 import { cn } from "@/lib/utils";
+import { RadioStationSelector } from "@/components/portal/RadioStationSelector";
 
 export function DesktopLiveMediaAwareness({ disabled = false }: { disabled?: boolean }) {
   if (disabled) return null;
@@ -16,7 +16,6 @@ export function DesktopLiveMediaAwareness({ disabled = false }: { disabled?: boo
 function DesktopLiveMediaContent() {
   const livestream = useChurchLivestream();
   const radio = useChurchRadioStations();
-  const player = useRadioPlayer();
   const [dismissedIdentity, setDismissedIdentity] = useState<string | null>(null);
 
   const stream = livestream.featureEnabled
@@ -26,11 +25,8 @@ function DesktopLiveMediaContent() {
     && isSecureLivestreamUrl(livestream.data.watchUrl)
     ? livestream.data
     : null;
-  const station = radio.featureEnabled && !radio.error
-    ? radio.data.find((item) => item.churchId === radio.churchId && item.isFeatured)
-      ?? radio.data.find((item) => item.churchId === radio.churchId)
-      ?? null
-    : null;
+  const stations = radio.featureEnabled && !radio.error ? radio.data.filter((item) => item.churchId === radio.churchId) : [];
+  const station = stations[0] ?? null;
   const mediaIdentity = stream || station
     ? `live:${stream?.id ?? "none"}|radio:${station?.id ?? "none"}`
     : null;
@@ -68,8 +64,8 @@ function DesktopLiveMediaContent() {
         </div> : null}
         {station ? <div className="flex min-w-0 items-center gap-3 p-4">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-amber-300"><Radio className="h-5 w-5" /></span>
-          <div className="min-w-0 flex-1"><p className="text-[10px] font-extrabold tracking-[0.16em] text-amber-300">RADIO AVAILABLE</p><p className="break-words text-sm font-bold leading-5">{station.name}</p></div>
-          <button type="button" onClick={() => void player.play(station)} className="min-h-11 shrink-0 rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 text-xs font-bold text-amber-200 hover:bg-amber-300/15">Listen Now</button>
+          <div className="min-w-0 flex-1"><p className="text-[10px] font-extrabold tracking-[0.16em] text-amber-300">RADIO AVAILABLE</p><p className="break-words text-sm font-bold leading-5">{stations.length > 1 ? `${stations.length} stations available` : station.name}</p>{stations.length > 1 ? <p className="text-xs text-zinc-400">Choose what to listen to</p> : null}</div>
+          <RadioStationSelector stations={stations} className="w-32 shrink-0" />
         </div> : null}
       </div>
     </aside> : null}

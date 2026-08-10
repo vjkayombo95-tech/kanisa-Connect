@@ -94,11 +94,18 @@ export async function fetchMemberRadioStations(churchId: string) {
     .select(`id,church_id,radio_station_id,enabled,is_featured,sort_order,radio_stations(${platformColumns})`)
     .eq("church_id", churchId).eq("enabled", true).order("is_featured", { ascending: false }).order("sort_order");
   if (error) throw error;
-  return ((data ?? []) as unknown as SelectionRow[]).flatMap((row): ChurchRadioStation[] => {
+  return orderChurchRadioStations(((data ?? []) as unknown as SelectionRow[]).flatMap((row): ChurchRadioStation[] => {
     const station = nestedStation(row);
     if (!station || !station.is_active || !station.is_approved || !isSafeRadioStreamUrl(station.stream_url)) return [];
     return [{ ...normalizePlatform(station), churchId: row.church_id, selectionId: row.id, enabled: row.enabled, isFeatured: row.is_featured, sortOrder: row.sort_order }];
-  });
+  }));
+}
+
+export function orderChurchRadioStations(stations: ChurchRadioStation[]) {
+  return [...stations].sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured)
+    || a.sortOrder - b.sortOrder
+    || a.name.localeCompare(b.name)
+    || a.id.localeCompare(b.id));
 }
 
 export async function setChurchRadioSelection(churchId: string, stationId: string, enabled: boolean, isFeatured: boolean, sortOrder: number) {

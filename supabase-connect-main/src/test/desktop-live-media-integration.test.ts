@@ -8,6 +8,7 @@ const community = read("src/components/community-leader/CommunityLeaderLayout.ts
 const desktop = read("src/components/portal/DesktopLiveMediaAwareness.tsx");
 const mobile = read("src/components/portal/SharedChurchLiveMedia.tsx");
 const radio = read("src/lib/church-radio.ts");
+const radioCard = read("src/components/portal/RadioLiveCard.tsx");
 const registry = read("src/components/workspace/registry.ts");
 
 describe("desktop live-media workspace integration", () => {
@@ -24,6 +25,9 @@ describe("desktop live-media workspace integration", () => {
     expect(desktop).toContain("lg:block");
     expect(mobile).toContain('<LiveMassCard churchName={churchName} viewerBasePath="/church-live" />');
     expect(mobile).toContain("<RadioLiveCard playInline />");
+    expect(radioCard).toContain("<RadioStationSelector stations={stations}");
+    expect(radioCard).toContain("item.churchId === churchId");
+    expect(radioCard).toContain('chooseLabel="Chagua Stesheni"');
   });
 
   it("uses authoritative hooks without technical Radio metadata", () => {
