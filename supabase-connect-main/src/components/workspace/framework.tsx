@@ -19,6 +19,7 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { DashboardExperience, type DashboardConfig, type DashboardWidget } from "@/components/portal/dashboard";
 import { MemberMobileBackHeader } from "@/components/portal/MemberMobileBackHeader";
+import { DesktopLiveMediaAwareness } from "@/components/portal/DesktopLiveMediaAwareness";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import type { ChurchPermissionAction } from "@/hooks/use-church-permission";
@@ -704,6 +705,7 @@ export function WorkspaceLayout({ workspace, children }: WorkspaceLayoutProps) {
           {workspaceDescription ? <p className="truncate text-xs text-muted-foreground">{workspaceDescription}</p> : null}
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <DesktopLiveMediaAwareness disabled={workspace.id === "super_admin"} />
           {workspace.id === "church_admin" ? <ChurchAdminNotificationBell /> : null}
           <WorkspaceAccountMenu workspace={workspace} />
         </div>
