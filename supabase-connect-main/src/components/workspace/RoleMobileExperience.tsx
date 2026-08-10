@@ -3,6 +3,7 @@ import { ChevronDown, ChevronLeft, Search } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { AppLink } from "@/components/AppLink";
+import { SharedChurchLiveMedia } from "@/components/portal/SharedChurchLiveMedia";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import type { WorkspaceConfig, WorkspaceId, WorkspaceNavigationGroup, WorkspaceNavigationItem } from "./framework";
@@ -90,6 +91,7 @@ export function RoleMobileHome({ workspace, visibleQuickActions }: { workspace: 
         <h1 className="mt-3 text-2xl font-bold tracking-tight text-white">Habari, {String(name).split(" ")[0]}</h1>
         <p className="mt-1 text-sm text-zinc-400">{config.role}{church ? ` · ${church}` : ""}</p>
       </section>
+      {workspace.id !== "super_admin" ? <SharedChurchLiveMedia churchName={church} /> : null}
       <section aria-labelledby="role-mobile-actions">
         <h2 id="role-mobile-actions" className="mb-3 text-lg font-semibold">Ungependa kufanya nini?</h2>
         <div className="grid grid-cols-2 gap-3">

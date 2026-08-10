@@ -3,6 +3,7 @@ import { ChevronDown, HandCoins, Home, MoreHorizontal, Search, Target, Users } f
 import { useLocation } from "react-router-dom";
 
 import { AppLink } from "@/components/AppLink";
+import { SharedChurchLiveMedia } from "@/components/portal/SharedChurchLiveMedia";
 import { cn } from "@/lib/utils";
 
 const services = [
@@ -15,7 +16,8 @@ const services = [
 ];
 
 export function CommunityMobileHome({ base, name, role }: { base: string; name: string; role: string }) {
-  return <div className="space-y-7 lg:hidden"><section className="rounded-[28px] border border-amber-200/15 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black p-5"><p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-300/80">Kanisa Connect</p><h1 className="mt-3 text-2xl font-bold">Habari, kiongozi</h1><p className="mt-1 text-sm text-zinc-400">{role} · {name}</p></section><section><h2 className="mb-3 text-lg font-semibold">Ungependa kufanya nini?</h2><div className="grid grid-cols-2 gap-3">{services.slice(0, 4).map((item) => { const Icon = item.icon; return <AppLink key={item.to} to={`${base}/${item.to}`} className="flex min-h-28 flex-col justify-between rounded-[22px] border border-white/10 bg-card/80 p-4 outline-none focus-visible:ring-2 focus-visible:ring-primary"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span><span className="text-sm font-semibold">{item.label}</span></AppLink>; })}</div><AppLink to={`${base}/services`} className="mt-3 flex min-h-12 items-center justify-center text-sm font-semibold text-primary">Huduma zote →</AppLink></section></div>;
+  const liveMedia = <SharedChurchLiveMedia />;
+  return <div className="space-y-7 lg:hidden"><section className="rounded-[28px] border border-amber-200/15 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black p-5"><p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-300/80">Kanisa Connect</p><h1 className="mt-3 text-2xl font-bold">Habari, kiongozi</h1><p className="mt-1 text-sm text-zinc-400">{role} · {name}</p></section>{liveMedia}<section><h2 className="mb-3 text-lg font-semibold">Ungependa kufanya nini?</h2><div className="grid grid-cols-2 gap-3">{services.slice(0, 4).map((item) => { const Icon = item.icon; return <AppLink key={item.to} to={`${base}/${item.to}`} className="flex min-h-28 flex-col justify-between rounded-[22px] border border-white/10 bg-card/80 p-4 outline-none focus-visible:ring-2 focus-visible:ring-primary"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span><span className="text-sm font-semibold">{item.label}</span></AppLink>; })}</div><AppLink to={`${base}/services`} className="mt-3 flex min-h-12 items-center justify-center text-sm font-semibold text-primary">Huduma zote →</AppLink></section></div>;
 }
 
 export function CommunityMobileServices({ base }: { base: string }) {

@@ -22,9 +22,10 @@ function formatUpcomingStart(value: string) {
 
 type LiveMassCardProps = {
   churchName?: string | null;
+  viewerBasePath?: string;
 };
 
-export function LiveMassCard({ churchName }: LiveMassCardProps) {
+export function LiveMassCard({ churchName, viewerBasePath = "/portal/live" }: LiveMassCardProps) {
   const { data: stream, error, featureEnabled, churchId } = useChurchLivestream();
   const [failedThumbnail, setFailedThumbnail] = useState<string | null>(null);
 
@@ -42,7 +43,7 @@ export function LiveMassCard({ churchName }: LiveMassCardProps) {
   if (!presentation || !isSecureLivestreamUrl(stream.watchUrl)) return null;
 
   const isLive = presentation === "live";
-  const internalViewer = getYouTubeEmbedUrl(stream) ? `/portal/live/${stream.id}` : null;
+  const internalViewer = getYouTubeEmbedUrl(stream) ? `${viewerBasePath}/${stream.id}` : null;
   const thumbnail = stream.thumbnailUrl && isSecureLivestreamUrl(stream.thumbnailUrl)
     && failedThumbnail !== stream.thumbnailUrl
     ? stream.thumbnailUrl

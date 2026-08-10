@@ -28,7 +28,8 @@ export function RadioPlayerProvider({ children }: { children: ReactNode }) {
       const anchor = (event.target as Element | null)?.closest("a[href]") as HTMLAnchorElement | null;
       if (!anchor || anchor.target === "_blank") return;
       const target = new URL(anchor.href, window.location.href);
-      if (target.origin !== window.location.origin || (!target.pathname.startsWith("/portal") && !target.pathname.startsWith("/member"))) return;
+      const churchWorkspacePrefixes = ["/portal", "/member", "/church-admin", "/pastoral", "/finance", "/community", "/church-live"];
+      if (target.origin !== window.location.origin || !churchWorkspacePrefixes.some((prefix) => target.pathname.startsWith(prefix))) return;
       event.preventDefault();
       window.history.pushState({}, "", `${target.pathname}${target.search}${target.hash}`);
       window.dispatchEvent(new PopStateEvent("popstate"));
@@ -54,9 +55,9 @@ export function RadioPlayerProvider({ children }: { children: ReactNode }) {
   const retry = useCallback(async () => { if (station) { if (audioRef.current) audioRef.current.load(); await play(station); } }, [play, station]);
   const setVolume = useCallback((next: number) => { const safe = Math.min(1, Math.max(0, next)); setVolumeState(safe); if (audioRef.current) audioRef.current.volume = safe; }, []);
   const value = useMemo(() => ({ station, state, volume, play, pause, retry, setVolume }), [pause, play, retry, setVolume, state, station, volume]);
-  const inMemberPortal = location.pathname.startsWith("/portal") || location.pathname.startsWith("/member");
+  const inChurchWorkspace = Boolean(churchId) && !location.pathname.startsWith("/super-admin");
 
-  return <RadioPlayerContext.Provider value={value}>{children}{station && inMemberPortal ? <RadioMiniPlayer value={value} /> : null}</RadioPlayerContext.Provider>;
+  return <RadioPlayerContext.Provider value={value}>{children}{station && inChurchWorkspace ? <RadioMiniPlayer value={value} /> : null}</RadioPlayerContext.Provider>;
 }
 
 function RadioMiniPlayer({ value }: { value: RadioPlayerValue }) {

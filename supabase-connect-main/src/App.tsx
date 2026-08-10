@@ -30,6 +30,7 @@ const PayPage = lazy(() => import("./pages/PayPage"));
 const KanisaAIPlayground = lazy(() => import("./pages/dev/KanisaAIPlayground"));
 const AutomationPlayground = lazy(() => import("./pages/dev/AutomationPlayground"));
 const BibleLicensesPage = lazy(() => import("./pages/BibleLicensesPage"));
+const MemberLivestreamPage = lazy(() => import("./pages/portal/MemberLivestreamPage"));
 
 const MemberRoutes = lazy(() => import("./routes/MemberRoutes"));
 const StaffRoutes = lazy(() => import("./routes/StaffRoutes"));
@@ -159,6 +160,7 @@ function AppRoutes() {
         <Route path="/give/:churchSlugOrId" element={<PayPage />} />
         <Route path="/pay" element={<PayPage />} />
         <Route path="/bible-licenses" element={<BibleLicensesPage />} />
+        <Route path="/church-live/:streamId" element={<ProtectedRoute requireChurch><MemberLivestreamPage /></ProtectedRoute>} />
         {import.meta.env.DEV ? (
           <>
             <Route
