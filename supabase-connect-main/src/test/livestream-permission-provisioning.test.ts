@@ -11,8 +11,8 @@ describe("livestream permission provisioning", () => {
     expect(migration).toContain("'operations','livestream'");
     expect(migration).toContain("'audio_processing','livestream'");
     expect(migration).toContain("'notifications','audio_processing','livestream'");
-    expect(migration).toContain(
-      "'mass_intentions','sacraments','community_help'\n    )\n    when 'publish'",
+    expect(migration).toMatch(
+      /'mass_intentions','sacraments','community_help'\r?\n\s+\)\r?\n\s+when 'publish'/,
     );
   });
 
