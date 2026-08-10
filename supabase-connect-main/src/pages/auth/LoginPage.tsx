@@ -18,6 +18,7 @@ import {
 import { assertClientRateLimit } from "@/lib/client-rate-limit";
 import { logSupabaseError } from "@/lib/error-logger";
 import { getDefaultRouteForRoles } from "@/lib/role-utils";
+import { AuthorizationBootstrapError, isTransientAuthorizationFailure } from "@/lib/authorization-bootstrap";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PENDING_REGISTRATION_REDIRECT_PREFIX = "pending-registration-redirect:";
@@ -61,7 +62,13 @@ export default function LoginPage() {
     isLoading: isAuthLoading,
     authorizationReady,
     authorizationError,
+    refreshUserData,
   } = useAuth();
+  const hasConnectivityAuthorizationError = Boolean(
+    user
+    && authorizationError instanceof AuthorizationBootstrapError
+    && isTransientAuthorizationFailure(authorizationError.classification),
+  );
   const pendingRegistrationRedirect = useMemo(
     () => getPendingRegistrationRedirect(user?.email || identity),
     [identity, user?.email],
@@ -323,6 +330,20 @@ export default function LoginPage() {
             {isSignUp ? "Sign up to get started with Kanisa Connect" : "Sign in to continue to your dashboard"}
           </p>
         </div>
+
+        {hasConnectivityAuthorizationError && (
+          <Card className="mb-4 border-destructive/40" data-testid="login-authorization-connectivity-error">
+            <CardContent className="p-5 space-y-3">
+              <h2 className="font-semibold">We're having trouble connecting.</h2>
+              <p className="text-sm text-muted-foreground">
+                Your account is still signed in. Check your connection and try again.
+              </p>
+              <Button type="button" variant="outline" onClick={() => void refreshUserData()}>
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="glass-card gold-glow">
           <CardContent className="p-6 space-y-5">

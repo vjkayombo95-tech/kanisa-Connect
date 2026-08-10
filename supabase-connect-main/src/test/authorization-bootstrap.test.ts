@@ -8,6 +8,8 @@ import {
   runAuthorizationOperation,
   runWithTimeout,
   safeAuthorizationDiagnostic,
+  shouldEnableAuthorizationConsoleDiagnostics,
+  shouldPreserveVerifiedAuthorization,
 } from "@/lib/authorization-bootstrap";
 
 describe("authorization bootstrap resilience", () => {
@@ -18,6 +20,37 @@ describe("authorization bootstrap resilience", () => {
     expect(classifyAuthorizationFailure({ message: "database failure", code: "P0001" })).toBe("DATABASE");
     expect(isTransientAuthorizationFailure("NETWORK")).toBe(true);
     expect(isTransientAuthorizationFailure("DATABASE")).toBe(false);
+  });
+
+  it("classifies the observed Supabase transport wrapper before generic PostgREST details", () => {
+    const wrapped = {
+      message: "TypeError: Failed to fetch",
+      details: "TypeError: Failed to fetch at fetchWithAuth",
+      hint: "",
+      code: "",
+    };
+    expect(classifyAuthorizationFailure(wrapped, true)).toBe("NETWORK");
+    expect(classifyAuthorizationFailure(wrapped, false)).toBe("OFFLINE");
+    expect(classifyAuthorizationFailure({ message: "Failed to fetch", details: "connection error", code: "" }, true))
+      .toBe("NETWORK");
+    expect(classifyAuthorizationFailure({ message: "permission denied", details: "policy rejected", code: "42501" }, true))
+      .toBe("DATABASE");
+  });
+
+  it("preserves previously verified authorization for the wrapped transient failure", () => {
+    const classification = classifyAuthorizationFailure({
+      message: "TypeError: Failed to fetch", details: "TypeError: Failed to fetch", code: "", hint: "",
+    }, true);
+    expect(shouldPreserveVerifiedAuthorization(classification, true)).toBe(true);
+    expect(shouldPreserveVerifiedAuthorization("DATABASE", true)).toBe(false);
+    expect(shouldPreserveVerifiedAuthorization(classification, false)).toBe(false);
+  });
+
+  it("enables safe console diagnostics in development and staging application environments", () => {
+    expect(shouldEnableAuthorizationConsoleDiagnostics("development", false)).toBe(true);
+    expect(shouldEnableAuthorizationConsoleDiagnostics("staging", false)).toBe(true);
+    expect(shouldEnableAuthorizationConsoleDiagnostics("production", false)).toBe(false);
+    expect(shouldEnableAuthorizationConsoleDiagnostics("production", true)).toBe(true);
   });
 
   it("times out and aborts a hanging context request", async () => {
@@ -39,6 +72,17 @@ describe("authorization bootstrap resilience", () => {
   it("retries an initial network failure and returns the successful context", async () => {
     const operation = vi.fn()
       .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValueOnce({ church_id: "church-1" });
+    await expect(runAuthorizationOperation(operation, { retryDelaysMs: [0] }))
+      .resolves.toEqual({ church_id: "church-1" });
+    expect(operation).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries the observed wrapped Supabase transport error and recovers", async () => {
+    const operation = vi.fn()
+      .mockRejectedValueOnce({
+        message: "TypeError: Failed to fetch", details: "TypeError: Failed to fetch", hint: "", code: "",
+      })
       .mockResolvedValueOnce({ church_id: "church-1" });
     await expect(runAuthorizationOperation(operation, { retryDelaysMs: [0] }))
       .resolves.toEqual({ church_id: "church-1" });

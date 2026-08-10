@@ -48,24 +48,49 @@ function errorRecord(error: unknown) {
   return error && typeof error === "object" ? error as Record<string, unknown> : null;
 }
 
-export function classifyAuthorizationFailure(error: unknown): AuthorizationFailureClassification {
+function authorizationErrorText(error: unknown) {
+  const record = errorRecord(error);
+  const cause = errorRecord(record?.cause);
+  return [
+    error instanceof Error ? error.message : record?.message ?? error,
+    record?.details,
+    cause?.message,
+    typeof record?.cause === "string" ? record.cause : undefined,
+  ].filter(Boolean).join(" ").toLowerCase();
+}
+
+export function classifyAuthorizationFailure(
+  error: unknown,
+  navigatorOnline = typeof navigator === "undefined" ? true : navigator.onLine,
+): AuthorizationFailureClassification {
   if (error instanceof AuthorizationBootstrapError) return error.classification;
 
   const record = errorRecord(error);
-  const message = String(error instanceof Error ? error.message : record?.message ?? error ?? "").toLowerCase();
+  const message = authorizationErrorText(error);
   const status = Number(record?.status ?? record?.statusCode ?? 0);
   const code = String(record?.code ?? "").toLowerCase();
 
   if (message.includes("timed out") || message.includes("timeout") || error instanceof DOMException && error.name === "TimeoutError") return "TIMEOUT";
+  if (!navigatorOnline) return "OFFLINE";
+  if (/failed to fetch|networkerror|network request failed|fetch failed|load failed/.test(message)) return "NETWORK";
   if (status === 401 || status === 403 || code === "401" || code === "403" || message.includes("jwt")) return "HTTP_AUTH";
-  if (code || record?.details || record?.hint) return "DATABASE";
-  if (typeof navigator !== "undefined" && navigator.onLine === false) return "OFFLINE";
-  if (message.includes("failed to fetch") || message.includes("networkerror") || message.includes("network request failed")) return "NETWORK";
+  if (code) return "DATABASE";
   return "UNKNOWN";
 }
 
 export function isTransientAuthorizationFailure(classification: AuthorizationFailureClassification) {
   return classification === "NETWORK" || classification === "TIMEOUT" || classification === "OFFLINE";
+}
+
+export function shouldPreserveVerifiedAuthorization(
+  classification: AuthorizationFailureClassification,
+  hasVerifiedAuthorization: boolean,
+) {
+  return hasVerifiedAuthorization && isTransientAuthorizationFailure(classification);
+}
+
+export function shouldEnableAuthorizationConsoleDiagnostics(appEnvironment: string, viteDev: boolean) {
+  return viteDev || appEnvironment === "development" || appEnvironment === "staging";
 }
 
 export function isActiveAuthorizationLoad(requestSequence: number, activeSequence: number) {

@@ -24,11 +24,13 @@ import {
   AuthorizationBootstrapError,
   classifyAuthorizationFailure,
   isActiveAuthorizationLoad,
-  isTransientAuthorizationFailure,
   runAuthorizationOperation,
   safeAuthorizationDiagnostic,
+  shouldEnableAuthorizationConsoleDiagnostics,
+  shouldPreserveVerifiedAuthorization,
   type AuthorizationBootstrapStage,
 } from "@/lib/authorization-bootstrap";
+import { appEnvironment } from "@/lib/environment";
 
 type CurrentUserContext = {
   profile: any | null;
@@ -95,7 +97,9 @@ function recordAuthorizationDiagnostic(stage: AuthorizationBootstrapStage, metad
     visibilityState: typeof document !== "undefined" ? document.visibilityState : undefined,
     ...metadata,
   };
-  if (import.meta.env.DEV || import.meta.env.MODE === "staging") console.info("[authorization-bootstrap]", safeMetadata);
+  if (shouldEnableAuthorizationConsoleDiagnostics(appEnvironment, import.meta.env.DEV)) {
+    console.info("[authorization-bootstrap]", safeMetadata);
+  }
   logInfo(stage, { component: "AuthProvider", function: "authorizationBootstrap", metadata: safeMetadata });
 }
 
@@ -334,7 +338,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       recordAuthorizationDiagnostic("AUTHORIZATION_FAILED", {
         loadSequence, classification, staleResultIgnored: false, ...safeAuthorizationDiagnostic(err),
       });
-      if (isTransientAuthorizationFailure(classification) && hasVerifiedAuthorizationRef.current) {
+      if (shouldPreserveVerifiedAuthorization(classification, hasVerifiedAuthorizationRef.current)) {
         setAuthorizationError(null);
         setIsLoading(false);
       } else {
