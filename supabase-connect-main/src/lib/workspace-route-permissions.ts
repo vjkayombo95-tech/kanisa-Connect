@@ -27,6 +27,7 @@ export const WORKSPACE_ROUTE_PERMISSIONS: WorkspaceRoutePermission[] = ([
   { path: "/church-admin/announcements", featureKey: "announcements", action: "view" },
   { path: "/church-admin/sermons", featureKey: "sermons", action: "view" },
   { path: "/church-admin/livestreams", featureKey: "livestream", action: "manage" },
+  { path: "/church-admin/radio", featureKey: "radio", action: "manage" },
   { path: "/church-admin/bible-verses", featureKey: "bible_verses", action: "view" },
   { path: "/church-admin/bible", featureKey: "bible_verses", action: "view" },
   { path: "/church-admin/daily-readings", featureKey: "catholic_content", action: "view" },
