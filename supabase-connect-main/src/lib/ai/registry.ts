@@ -3,6 +3,10 @@ import type { WorkspaceId } from "@/components/workspace";
 import type { KanisaAIAction, KanisaAIContext, KanisaAIIntent } from "./types";
 
 export const kanisaAIActionRegistry: KanisaAIAction[] = [
+  { id: "pending-invitations", title: "Pending Invitations", intent: "PENDING_INVITATIONS", requiresAI: false, permission: "workspace:admin", handler: "supabase", workspaces: ["church_admin"] },
+  { id: "upcoming-events", title: "Upcoming Events", intent: "UPCOMING_EVENTS", requiresAI: false, permission: "workspace:read", handler: "supabase", workspaces: ["member", "pastoral", "church_admin", "finance"] },
+  { id: "unresolved-prayer-requests", title: "Unresolved Prayer Requests", intent: "UNRESOLVED_PRAYER_REQUESTS", requiresAI: false, permission: "workspace:pastoral", handler: "supabase", workspaces: ["pastoral", "church_admin"] },
+  { id: "contribution-summary", title: "Contribution Summary", intent: "CONTRIBUTION_SUMMARY", requiresAI: false, permission: "workspace:finance", handler: "supabase", workspaces: ["finance", "church_admin"] },
   { id: "open-bible", title: "Open Bible", intent: "OPEN_BIBLE", requiresAI: false, permission: "scripture:read", handler: "navigate" },
   { id: "open-daily-readings", title: "Open Daily Readings", intent: "OPEN_DAILY_READINGS", requiresAI: false, permission: "content:read", handler: "navigate" },
   { id: "open-saint", title: "Open Saints", intent: "OPEN_SAINT", requiresAI: false, permission: "content:read", handler: "navigate" },
@@ -100,6 +104,14 @@ const workspaceRoutes: Record<WorkspaceId, Record<string, string>> = {
 export function getKanisaAITargetRoute(intent: KanisaAIIntent, context: KanisaAIContext) {
   const routes = workspaceRoutes[context.workspace];
   switch (intent) {
+    case "PENDING_INVITATIONS":
+      return context.workspace === "church_admin" ? "/church-admin/roles" : undefined;
+    case "UPCOMING_EVENTS":
+      return routes.events;
+    case "UNRESOLVED_PRAYER_REQUESTS":
+      return routes.prayerRequests;
+    case "CONTRIBUTION_SUMMARY":
+      return routes.contributions;
     case "OPEN_BIBLE":
     case "SEARCH_SCRIPTURE":
       return routes.bible;

@@ -5,6 +5,10 @@ import type { WorkspaceId } from "@/components/workspace";
 import type { AppRole } from "@/lib/role-utils";
 
 export type KanisaAIIntent =
+  | "PENDING_INVITATIONS"
+  | "UPCOMING_EVENTS"
+  | "UNRESOLVED_PRAYER_REQUESTS"
+  | "CONTRIBUTION_SUMMARY"
   | "OPEN_BIBLE"
   | "OPEN_DAILY_READINGS"
   | "OPEN_SAINT"

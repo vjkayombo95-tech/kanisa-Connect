@@ -20,6 +20,11 @@ export function classifyKanisaIntent(input: string): KanisaAIIntent {
   if (hasAny(text, ["summarize", "summary", "recap", "muhtasari"])) return "AI_SUMMARIZE";
   if (hasAny(text, ["draft", "write", "compose", "prepare message", "tengeneza ujumbe"])) return "AI_DRAFT";
 
+  if (hasAny(text, ["pending invitations", "invitations waiting", "invitations are pending", "invitations need attention", "mialiko mingapi bado", "mialiko inayosubiri"])) return "PENDING_INVITATIONS";
+  if (hasAny(text, ["unresolved prayer requests", "prayer requests waiting", "urgent prayer requests", "maombi ambayo hayajashughulikiwa", "maombi hayajashughulikiwa"])) return "UNRESOLVED_PRAYER_REQUESTS";
+  if (hasAny(text, ["contribution trends", "contributions doing", "collect this month", "collected this month", "compare contributions", "michango inaendaje", "tumekusanya kiasi gani mwezi huu", "mwenendo wa michango"])) return "CONTRIBUTION_SUMMARY";
+  if (hasAny(text, ["events are coming up", "upcoming events", "happening this week", "events coming up", "matukio gani yanakuja", "matukio yanayokuja"])) return "UPCOMING_EVENTS";
+
   if (hasAny(text, ["today's gospel", "today s gospel", "todays gospel", "today gospel", "daily reading", "daily readings", "today's readings", "today s readings", "todays readings", "liturgy", "masomo ya leo", "masomo ya dominika", "injili ya leo"])) {
     return "OPEN_DAILY_READINGS";
   }
@@ -61,6 +66,10 @@ export function classifyKanisaIntent(input: string): KanisaAIIntent {
 }
 
 export const supportedKanisaIntents: KanisaAIIntent[] = [
+  "PENDING_INVITATIONS",
+  "UPCOMING_EVENTS",
+  "UNRESOLVED_PRAYER_REQUESTS",
+  "CONTRIBUTION_SUMMARY",
   "OPEN_BIBLE",
   "OPEN_DAILY_READINGS",
   "OPEN_SAINT",

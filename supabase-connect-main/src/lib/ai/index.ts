@@ -6,5 +6,6 @@ export * from "./cache";
 export * from "./registry";
 export * from "./experience";
 export * from "./conversation";
+export * from "./controlled-answers";
 export * from "./responses";
 export * from "./router";

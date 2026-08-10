@@ -2,6 +2,14 @@ import { classifyKanisaIntent } from "./intent";
 import { decideKanisaAIRoute, routeKanisaAIRequest } from "./router";
 import { getKanisaAITargetRoute } from "./registry";
 import { retrieveKanisaAIContextForIntent } from "./retrieval";
+import {
+  answerControlledKanisaAIIntent,
+  classifyControlledKanisaAIIntent,
+  isControlledKanisaAIIntent,
+  isAmbiguousControlledKanisaAIInput,
+  type ControlledKanisaAIAnswer,
+  type ControlledKanisaAIIntent,
+} from "./controlled-answers";
 import type { KanisaAIContext, KanisaAIIntent } from "./types";
 import { filterMemberDailyReadings, filterMemberPrayers, prayerMatchesCmsSearch, type CatholicPrayerContent, type CmsDailyReading } from "@/lib/catholic-cms";
 import { findCatholicEventTypeForPrompt } from "@/lib/calendar/catholic-event-taxonomy";
@@ -14,6 +22,7 @@ export type KanisaAIConversationStatus =
   | "empty"
   | "unavailable"
   | "unauthorized"
+  | "forbidden"
   | "provider_required"
   | "error";
 
@@ -136,6 +145,46 @@ function baseResponse(input: {
     sourceType: input.sourceType ?? "local-router",
     providerRequired: input.providerRequired ?? false,
   };
+}
+
+function controlledConversationResponse(answer: ControlledKanisaAIAnswer, retryInput: string): KanisaAIConversationResponse {
+  const titles: Record<ControlledKanisaAIIntent, string> = {
+    PENDING_INVITATIONS: "Pending Invitations",
+    UPCOMING_EVENTS: "Upcoming Events",
+    UNRESOLVED_PRAYER_REQUESTS: "Unresolved Prayer Requests",
+    CONTRIBUTION_SUMMARY: "Contribution Summary",
+  };
+  const metricLabels: Record<string, string> = {
+    pending: "Pending invitations",
+    oldestPendingDays: "Oldest pending age",
+    nextSevenDays: "Next 7 days",
+    unresolved: "Unresolved requests",
+    currentMonthTotal: "Current month total",
+    currentMonthPayments: "Recorded payments",
+    previousMonthTotal: "Previous month total",
+  };
+  const moneyMetrics = new Set(["currentMonthTotal", "previousMonthTotal"]);
+  const sections: KanisaAIConversationSection[] = [];
+  if (answer.details?.length) sections.push({ id: "controlled-details", title: "Upcoming", items: answer.details });
+  if (answer.metrics) {
+    sections.push({
+      id: "controlled-metrics",
+      title: "Summary",
+      metrics: Object.entries(answer.metrics).map(([key, value]) => ({
+        label: metricLabels[key] ?? key,
+        value: moneyMetrics.has(key) ? `TZS ${Number(value).toLocaleString("en-US")}` : key === "oldestPendingDays" ? `${value} days` : String(value),
+      })),
+    });
+  }
+  return baseResponse({
+    intent: answer.intent,
+    status: answer.status,
+    title: titles[answer.intent],
+    summary: answer.summary,
+    sections,
+    actions: answer.action ? [action(`open-${answer.intent.toLowerCase()}`, answer.action.label, answer.action.route)] : answer.status === "error" ? [action("retry-question", "Retry", undefined, undefined, retryInput)] : [],
+    sourceType: answer.status === "forbidden" ? "workspace-policy" : "local-router",
+  });
 }
 
 function getCachedRows<T>(context: KanisaAIContext, queryKey: unknown[]) {
@@ -684,7 +733,7 @@ export function answerKanisaAIConversation(input: string, context: KanisaAIConte
         ? saintResponse(context)
       : intent === "OPEN_PRAYER_LIBRARY"
         ? prayerResponse(context, trimmed)
-        : intent === "OPEN_CALENDAR" || intent === "OPEN_EVENTS"
+        : intent === "OPEN_CALENDAR" || intent === "OPEN_EVENTS" || intent === "UPCOMING_EVENTS"
         ? calendarResponse(context, trimmed)
           : intent === "OPEN_CONTRIBUTIONS"
             ? contributionsResponse(context)
@@ -733,17 +782,40 @@ export function answerKanisaAIConversation(input: string, context: KanisaAIConte
   });
 }
 
-export async function answerKanisaAIConversationAsync(input: string, context: KanisaAIContext): Promise<KanisaAIConversationResponse> {
+export async function answerKanisaAIConversationAsync(
+  input: string,
+  context: KanisaAIContext,
+  options: { controlledIntent?: ControlledKanisaAIIntent | null; lastIntent?: ControlledKanisaAIIntent | null } = {},
+): Promise<KanisaAIConversationResponse> {
   const trimmed = input.trim();
   if (!trimmed) return answerKanisaAIConversation(input, context);
 
   const restricted = restrictedWorkspaceRequest(context, trimmed);
   if (restricted) return restricted;
 
+  if (!options.controlledIntent && isAmbiguousControlledKanisaAIInput(trimmed)) {
+    return baseResponse({
+      intent: "UNKNOWN",
+      status: "unavailable",
+      title: "Please choose an area",
+      summary: "I'm not sure which area you mean. You can ask about contributions, invitations, events, or prayer requests.",
+      sourceType: "local-router",
+    });
+  }
+
+  const controlledIntent = options.controlledIntent ?? classifyControlledKanisaAIIntent(trimmed, options.lastIntent);
+  if (controlledIntent) {
+    const answer = await answerControlledKanisaAIIntent(controlledIntent, context);
+    return controlledConversationResponse(answer, trimmed);
+  }
   const operational = operationalResponse(context, trimmed);
   if (operational) return operational;
 
   const intent = classifyKanisaIntent(trimmed);
+  if (isControlledKanisaAIIntent(intent)) {
+    const answer = await answerControlledKanisaAIIntent(intent, context);
+    return controlledConversationResponse(answer, trimmed);
+  }
   const decision = decideKanisaAIRoute({ input: trimmed, context });
   if (!decision.allowed || intent === "AI_DRAFT" || intent === "AI_EXPLAIN_SCRIPTURE" || intent === "AI_SUMMARIZE") {
     return answerKanisaAIConversation(input, context);
@@ -778,7 +850,7 @@ export function createKanisaUserMessage(text: string): KanisaAIConversationMessa
 export function createKanisaAssistantMessage(response: KanisaAIConversationResponse): KanisaAIConversationMessage {
   return {
     id: response.id,
-    role: response.status === "unauthorized" || response.status === "unavailable" ? "system" : "assistant",
+    role: response.status === "unauthorized" || response.status === "forbidden" || response.status === "unavailable" ? "system" : "assistant",
     timestamp: Date.now(),
     text: response.message,
     response,
