@@ -9,6 +9,7 @@ const roles = read("src/components/workspace/RoleMobileExperience.tsx");
 const community = read("src/components/community-leader/CommunityMobileExperience.tsx");
 const liveCard = read("src/components/portal/LiveMassCard.tsx");
 const radioCard = read("src/components/portal/RadioLiveCard.tsx");
+const radioSelector = read("src/components/portal/RadioStationSelector.tsx");
 const player = read("src/contexts/RadioPlayerContext.tsx");
 const app = read("src/App.tsx");
 const migration = read("supabase/migrations/20260810160000_share_live_media_view_permissions.sql");
@@ -27,7 +28,8 @@ describe("shared church live media", () => {
     expect(liveCard).toContain('viewerBasePath = "/portal/live"');
     expect(shared).toContain('viewerBasePath="/church-live"');
     expect(app).toContain('path="/church-live/:streamId"');
-    expect(radioCard).toContain("onClick={() => void player.play(station)}");
+    expect(radioCard).toContain("<RadioStationSelector stations={stations}");
+    expect(radioSelector).toContain("onClick={() => void player.play(station)}");
     expect(radioCard).not.toContain("autoPlay");
     expect(player.match(/<RadioMiniPlayer value=\{value\}/g)).toHaveLength(1);
   });

@@ -36,6 +36,16 @@ describe("DesktopLiveMediaAwareness", () => {
     expect(container.innerHTML).not.toContain("metadata_url");
   });
 
+  it("keeps livestream priority while exposing one selector for multiple stations", () => {
+    mocks.stations = [station(), { ...station(), id: "radio-2", selectionId: "selection-2", name: "Radio Sauti ya Injili", isFeatured: false, sortOrder: 1 }];
+    paint();
+    expect(container.textContent).toContain("Holy Mass");
+    expect(container.textContent).toContain("2 stations available");
+    clickButtonText("Choose Station");
+    expect(container.textContent).toContain("Radio Maria Tanzania");
+    expect(container.textContent).toContain("Radio Sauti ya Injili");
+  });
+
   it("dismisses, retains the indicator, and reopens from it", () => {
     paint();
     click('button[aria-label="Funga taarifa ya Live Media"]');
