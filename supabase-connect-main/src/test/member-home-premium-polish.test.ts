@@ -25,9 +25,9 @@ describe("premium member mobile home polish", () => {
   });
 
   it("places the optional livestream experience between the parish greeting and quick actions", () => {
-    expect(home).toContain("<LiveMassCard churchName={home.churchName} />");
-    expect(home.indexOf("<LiveMassCard")).toBeGreaterThan(home.indexOf("Habari, {firstName}"));
-    expect(home.indexOf("<LiveMassCard")).toBeLessThan(home.indexOf('aria-labelledby="member-actions-title"'));
+    expect(home).toContain("<SharedChurchLiveMedia churchName={home.churchName} />");
+    expect(home.indexOf("<SharedChurchLiveMedia")).toBeGreaterThan(home.indexOf("Habari, {firstName}"));
+    expect(home.indexOf("<SharedChurchLiveMedia")).toBeLessThan(home.indexOf('aria-labelledby="member-actions-title"'));
   });
 
   it("polishes only the member bottom navigation", () => {

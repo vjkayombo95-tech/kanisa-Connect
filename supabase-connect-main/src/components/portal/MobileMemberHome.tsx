@@ -3,8 +3,7 @@ import { Bell, ChevronRight, Church, HandCoins, MessageCircle, Megaphone, Wallet
 import { AnnouncementContent } from "@/components/announcements/AnnouncementContent";
 import { AppLink } from "@/components/AppLink";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LiveMassCard } from "@/components/portal/LiveMassCard";
-import { RadioLiveCard } from "@/components/portal/RadioLiveCard";
+import { SharedChurchLiveMedia } from "@/components/portal/SharedChurchLiveMedia";
 import { cn } from "@/lib/utils";
 
 import type { MemberHomeData, NextMassSummary } from "./dashboard";
@@ -67,8 +66,7 @@ export function MobileMemberHome({
         </AppLink>
       </section>
 
-      <LiveMassCard churchName={home.churchName} />
-      <RadioLiveCard />
+      <SharedChurchLiveMedia churchName={home.churchName} />
 
       <section aria-labelledby="member-actions-title">
         <div className="flex items-end justify-between gap-3">

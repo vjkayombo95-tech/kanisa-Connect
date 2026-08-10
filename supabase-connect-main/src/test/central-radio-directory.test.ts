@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { isSafeRadioStreamUrl } from "@/lib/church-radio";
 
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
-const migration = read("supabase/migrations/20260810140000_centralize_radio_station_directory.sql");
+const migration = read("supabase/migrations/20260810140000_centralize_radio_station_directory.sql").replace(/\r\n/g, "\n");
 const privilegeRepair = read("supabase/migrations/20260810150000_repair_radio_station_column_privileges.sql");
 const rollout = read("supabase/migrations/20260810120000_add_church_live_radio.sql");
 const library = read("src/lib/church-radio.ts");
