@@ -13,6 +13,7 @@ import { useLedCommunities } from "@/hooks/use-community-leader";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CommunityMobileBottomNav } from "./CommunityMobileExperience";
+import { DesktopLiveMediaAwareness } from "@/components/portal/DesktopLiveMediaAwareness";
 
 export interface CommunityOutletContext {
   communityId: string;
@@ -81,6 +82,7 @@ export function CommunityLeaderLayout() {
                 </Badge>
               </div>
               <div className="flex items-center gap-2 ml-auto">
+                <DesktopLiveMediaAwareness />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full">
