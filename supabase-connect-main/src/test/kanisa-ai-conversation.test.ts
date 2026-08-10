@@ -143,7 +143,7 @@ describe("Kanisa AI conversation", () => {
       },
     ]);
     mocks.fetchParishCalendarFeed.mockResolvedValue([
-      { id: "event-cold", title: "Youth Retreat", description: "Authorized retreat", startsAt: new Date("2026-07-08T09:00:00"), type: "retreat", visibility: "member" },
+      { id: "event-cold", title: "Youth Retreat", description: "Authorized retreat", startsAt: new Date(Date.now() + 86_400_000), type: "retreat", visibility: "member" },
     ]);
   });
 

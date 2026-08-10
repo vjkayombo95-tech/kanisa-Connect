@@ -14,10 +14,12 @@ import {
   createKanisaAIContext,
   createKanisaAssistantMessage,
   createKanisaUserMessage,
+  getControlledQuickQuestionIntent,
   resolveKanisaAIExperience,
   type KanisaAIConversationMessage,
   type KanisaAIConversationPreview,
   type KanisaAIConversationResponse,
+  type ControlledKanisaAIIntent,
 } from "@/lib/ai";
 import type { WorkspaceId } from "@/components/workspace";
 import type { RecentCommand } from "@/components/ai/command-types";
@@ -37,11 +39,11 @@ function readRecentCommands() {
 function statusVariant(status: KanisaAIConversationResponse["status"]) {
   if (status === "success") return "secondary";
   if (status === "provider_required" || status === "unavailable") return "outline";
-  if (status === "unauthorized" || status === "error") return "destructive";
+  if (status === "unauthorized" || status === "forbidden" || status === "error") return "destructive";
   return "outline";
 }
 
-function ConversationResponseCard({
+export function ConversationResponseCard({
   response,
   onPreview,
   onRetry,
@@ -166,6 +168,7 @@ export default function KanisaAIHome() {
   const location = useLocation();
   const queryClient = useQueryClient();
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
+  const lastControlledIntentRef = useRef<ControlledKanisaAIIntent | null>(null);
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<KanisaAIConversationMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -192,7 +195,7 @@ export default function KanisaAIHome() {
   const assistants = experience.assistants;
   const recentCommands = useMemo(() => readRecentCommands(), [churchId, workspace]);
 
-  const submitQuestion = (question: string) => {
+  const submitQuestion = (question: string, controlledIntent?: ControlledKanisaAIIntent | null) => {
     const text = question.trim();
     if (!text || isProcessing) return;
     setDraft("");
@@ -202,7 +205,13 @@ export default function KanisaAIHome() {
 
     window.setTimeout(() => {
       try {
-        void answerKanisaAIConversationAsync(text, aiContext).then((response) => {
+        void answerKanisaAIConversationAsync(text, aiContext, {
+          controlledIntent,
+          lastIntent: lastControlledIntentRef.current,
+        }).then((response) => {
+          if (["PENDING_INVITATIONS", "UPCOMING_EVENTS", "UNRESOLVED_PRAYER_REQUESTS", "CONTRIBUTION_SUMMARY"].includes(response.intent)) {
+            lastControlledIntentRef.current = response.intent as ControlledKanisaAIIntent;
+          }
           setMessages((current) => [...current, createKanisaAssistantMessage(response)]);
         }).catch(() => {
           const response: KanisaAIConversationResponse = {
@@ -313,7 +322,7 @@ export default function KanisaAIHome() {
                             variant="outline"
                             size="sm"
                             className="h-auto whitespace-normal rounded-full py-1.5 text-left"
-                            onClick={() => submitQuestion(prompt)}
+                            onClick={() => submitQuestion(prompt, getControlledQuickQuestionIntent(prompt))}
                           >
                             {prompt}
                           </Button>
@@ -357,6 +366,7 @@ export default function KanisaAIHome() {
                       onClick={() => {
                         setMessages([]);
                         setDraft("");
+                        lastControlledIntentRef.current = null;
                         composerRef.current?.focus();
                       }}
                       className="gap-2"
