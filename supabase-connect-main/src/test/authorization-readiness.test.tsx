@@ -9,6 +9,7 @@ import {
   createResolvedAuthorizationState,
   isAuthorizationReady,
 } from "@/lib/authorization-readiness";
+import { AuthorizationBootstrapError } from "@/lib/authorization-bootstrap";
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -179,6 +180,21 @@ describe("authorization readiness", () => {
     expect(container.textContent).toContain("could not verify your workspace access");
     expect(container.textContent).toContain("Retry");
     expect(container.textContent).not.toContain("Member Onboarding");
+  });
+
+  it("shows a connectivity state for exhausted transient failures", () => {
+    authState = {
+      ...authState,
+      churchId: null,
+      isLoading: false,
+      authorizationReady: false,
+      authorizationError: new AuthorizationBootstrapError("Failed to fetch", "NETWORK"),
+      authorizationResolution: createAuthorizationErrorState(),
+    };
+    const { container } = mount(tree(<ProtectedRoute requireChurch><div>Protected page</div></ProtectedRoute>));
+    expect(container.textContent).toContain("having trouble connecting");
+    expect(container.textContent).toContain("still signed in");
+    expect(container.textContent).not.toContain("Protected page");
   });
 
   it("does not reuse a previous user's onboarding decision after user switching", async () => {

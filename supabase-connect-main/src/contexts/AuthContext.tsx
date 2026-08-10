@@ -9,7 +9,7 @@ import {
   removeAuthorizationQueries,
   type AuthorizationRealtimeSource,
 } from "@/lib/authorization-realtime";
-import { captureException, logSupabaseError } from "@/lib/error-logger";
+import { captureException, logInfo, logSupabaseError, logWarning } from "@/lib/error-logger";
 import { getDefaultRouteForRoles, type AppRole } from "@/lib/role-utils";
 import { markStartupEvent } from "@/lib/startup-diagnostics";
 import {
@@ -20,6 +20,15 @@ import {
   isAuthorizationReady,
   type AuthorizationResolutionState,
 } from "@/lib/authorization-readiness";
+import {
+  AuthorizationBootstrapError,
+  classifyAuthorizationFailure,
+  isActiveAuthorizationLoad,
+  isTransientAuthorizationFailure,
+  runAuthorizationOperation,
+  safeAuthorizationDiagnostic,
+  type AuthorizationBootstrapStage,
+} from "@/lib/authorization-bootstrap";
 
 type CurrentUserContext = {
   profile: any | null;
@@ -71,6 +80,25 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 const DEV_AUTH_TIMEOUT_MS = 6000;
 
+type LoadUserDataOptions = {
+  authoritative?: boolean;
+  previousChurchId?: string | null;
+  force?: boolean;
+  authEvent?: string;
+};
+
+function recordAuthorizationDiagnostic(stage: AuthorizationBootstrapStage, metadata: Record<string, unknown> = {}) {
+  const safeMetadata = {
+    operation: "authorization_bootstrap",
+    stage,
+    navigatorOnline: typeof navigator !== "undefined" ? navigator.onLine : undefined,
+    visibilityState: typeof document !== "undefined" ? document.visibilityState : undefined,
+    ...metadata,
+  };
+  if (import.meta.env.DEV || import.meta.env.MODE === "staging") console.info("[authorization-bootstrap]", safeMetadata);
+  logInfo(stage, { component: "AuthProvider", function: "authorizationBootstrap", metadata: safeMetadata });
+}
+
 function withDevTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
   if (!import.meta.env.DEV) return promise;
 
@@ -97,6 +125,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     createLoadingAuthorizationState,
   );
   const loadSequenceRef = useRef(0);
+  const hasVerifiedAuthorizationRef = useRef(false);
+  const inFlightLoadRef = useRef<{ userId: string; promise: Promise<void> } | null>(null);
+  const scheduledRefreshRef = useRef<number | null>(null);
   const authorizationScopeRef = useRef<{ userId: string | null; churchId: string | null }>({
     userId: null,
     churchId: null,
@@ -139,6 +170,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       removeAuthorizationQueries(queryClient, { userId: previousScope.userId, churchId: previousScope.churchId });
     }
     authorizationScopeRef.current = { userId: null, churchId: null };
+    hasVerifiedAuthorizationRef.current = false;
+    loadSequenceRef.current += 1;
     clearSensitiveOfflineData();
     setSession(null);
     setUser(null);
@@ -163,9 +196,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.replace(`/login?reason=session_expired&redirect=${redirect}`);
   }, []);
 
-  const loadUserData = useCallback(async (
+  const performUserDataLoad = useCallback(async (
     currentUser: User | null,
-    options: { authoritative?: boolean; previousChurchId?: string | null } = {},
+    options: LoadUserDataOptions = {},
   ) => {
     const loadSequence = loadSequenceRef.current + 1;
     loadSequenceRef.current = loadSequence;
@@ -176,9 +209,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setIsLoading(true);
-    setAuthorizationError(null);
-    setAuthorizationResolution(createLoadingAuthorizationState("found"));
+    if (!hasVerifiedAuthorizationRef.current) {
+      setIsLoading(true);
+      setAuthorizationError(null);
+      setAuthorizationResolution(createLoadingAuthorizationState("found"));
+    }
 
     try {
       markStartupEvent("auth_user_context_started");
@@ -207,22 +242,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const contextCacheKey = `offline-cache:current-user-context:v2:${currentUser.id}`;
-      const fetchContext = () => withDevTimeout((async () => {
-          const { data, error: contextError } = await supabase.rpc("get_current_user_context" as never);
-
-          if (contextError) throw contextError;
-          return data as unknown as CurrentUserContext;
-        })(), "get_current_user_context");
+      const bootstrapAttemptId = crypto.randomUUID();
+      const fetchContext = () => runAuthorizationOperation(async (signal) => {
+        const { data, error: contextError } = await supabase
+          .rpc("get_current_user_context" as never)
+          .abortSignal(signal);
+        if (contextError) throw contextError;
+        return data as unknown as CurrentUserContext;
+      }, {
+        onAttempt: ({ attempt, phase, durationMs, classification, error }) => {
+          const stage = phase === "started" ? "CONTEXT_RPC_STARTED"
+            : phase === "succeeded" ? "CONTEXT_RPC_OK" : "CONTEXT_RPC_FAILED";
+          recordAuthorizationDiagnostic(stage, {
+            bootstrapAttemptId, loadSequence, retryAttempt: attempt, durationMs, classification,
+            authEvent: options.authEvent, ...(error ? safeAuthorizationDiagnostic(error) : {}),
+          });
+        },
+      });
       // Cached authorization may paint a shell, but it must never resolve a
       // routing decision. Every startup and refresh waits for the database
       // context so stale null membership cannot be mistaken for onboarding.
       const contextData = await fetchContext();
-      writeOfflineCache(contextCacheKey, contextData);
 
       if (!contextData) {
-        throw new Error("Unable to load user context.");
+        throw new AuthorizationBootstrapError("Unable to load user context.", "CONTEXT_INVALID");
       }
-      if (loadSequence !== loadSequenceRef.current) return;
+      if (!isActiveAuthorizationLoad(loadSequence, loadSequenceRef.current)) {
+        recordAuthorizationDiagnostic("AUTHORIZATION_READY", { loadSequence, staleResultIgnored: true });
+        return;
+      }
+      writeOfflineCache(contextCacheKey, contextData);
 
       const profileData = contextData.profile;
       const isUserSuperAdmin = !!contextData.is_super_admin || profileData?.role === "super_admin";
@@ -246,6 +295,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         churchId: resolvedChurchId,
       }));
       setAuthorizationError(null);
+      hasVerifiedAuthorizationRef.current = true;
+      recordAuthorizationDiagnostic("AUTHORIZATION_READY", { loadSequence, staleResultIgnored: false });
       markStartupEvent("auth_user_context_completed", {
         role: resolvedRole,
         hasChurch: Boolean(resolvedChurchId),
@@ -266,13 +317,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (err) {
+      const classification = classifyAuthorizationFailure(err);
+      if (!isActiveAuthorizationLoad(loadSequence, loadSequenceRef.current)) {
+        recordAuthorizationDiagnostic("AUTHORIZATION_FAILED", {
+          loadSequence, classification, staleResultIgnored: true, ...safeAuthorizationDiagnostic(err),
+        });
+        return;
+      }
       captureException(err, {
         page: "Authentication",
         component: "AuthProvider",
         function: "loadUserData",
         user_id: currentUser.id,
+        metadata: { operation: "get_current_user_context", loadSequence, classification },
       });
-      failClosedAuthorization(currentUser.id, options.previousChurchId ?? null, err);
+      recordAuthorizationDiagnostic("AUTHORIZATION_FAILED", {
+        loadSequence, classification, staleResultIgnored: false, ...safeAuthorizationDiagnostic(err),
+      });
+      if (isTransientAuthorizationFailure(classification) && hasVerifiedAuthorizationRef.current) {
+        setAuthorizationError(null);
+        setIsLoading(false);
+      } else {
+        failClosedAuthorization(currentUser.id, options.previousChurchId ?? null, err);
+      }
     } finally {
       if (loadSequence === loadSequenceRef.current) {
         setIsLoading(false);
@@ -281,8 +348,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [failClosedAuthorization, redirectTo, resetUserData, shouldAutoNavigate]);
 
+  const loadUserData = useCallback((currentUser: User | null, options: LoadUserDataOptions = {}) => {
+    if (currentUser && !options.force && inFlightLoadRef.current?.userId === currentUser.id) {
+      return inFlightLoadRef.current.promise;
+    }
+    const promise = performUserDataLoad(currentUser, options);
+    if (currentUser) {
+      inFlightLoadRef.current = { userId: currentUser.id, promise };
+      void promise.then(() => {
+        if (inFlightLoadRef.current?.promise === promise) inFlightLoadRef.current = null;
+      }, () => {
+        if (inFlightLoadRef.current?.promise === promise) inFlightLoadRef.current = null;
+      });
+    }
+    return promise;
+  }, [performUserDataLoad]);
+
+  const scheduleUserDataRefresh = useCallback((currentUser: User, options: LoadUserDataOptions = {}) => {
+    if (scheduledRefreshRef.current !== null) window.clearTimeout(scheduledRefreshRef.current);
+    scheduledRefreshRef.current = window.setTimeout(() => {
+      scheduledRefreshRef.current = null;
+      void loadUserData(currentUser, options);
+    }, 75);
+  }, [loadUserData]);
+
   useEffect(() => {
     markStartupEvent("auth_initialization_started");
+    recordAuthorizationDiagnostic("AUTH_SESSION_STARTED");
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, newSession) => {
@@ -302,17 +394,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUserRole(null);
           setUserRoles([]);
         }
-        setIsLoading(true);
-        setAuthorizationError(null);
-        setAuthorizationResolution(createLoadingAuthorizationState("found"));
+        if (!hasVerifiedAuthorizationRef.current || authorizationScopeRef.current.userId !== newSession.user.id) {
+          setIsLoading(true);
+          setAuthorizationError(null);
+          setAuthorizationResolution(createLoadingAuthorizationState("found"));
+        }
       }
 
-      setTimeout(() => loadUserData(newSession?.user ?? null), 0);
+      setTimeout(() => loadUserData(newSession?.user ?? null, { authEvent: event }), 0);
     });
 
     withDevTimeout(supabase.auth.getSession(), "auth.getSession").then(async ({ data: { session: existingSession }, error }) => {
       markStartupEvent("auth_get_session_completed", { hasSession: Boolean(existingSession), hasError: Boolean(error) });
       if (error) {
+        recordAuthorizationDiagnostic("AUTH_SESSION_FAILED", {
+          authEvent: "INITIAL_SESSION", ...safeAuthorizationDiagnostic(error),
+        });
         if (isInvalidRefreshTokenError(error)) {
           logSupabaseError(error, {
             page: "Authentication",
@@ -339,8 +436,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
-      loadUserData(existingSession?.user ?? null);
+      recordAuthorizationDiagnostic("AUTH_SESSION_OK", { authEvent: "INITIAL_SESSION", hasSession: Boolean(existingSession) });
+      loadUserData(existingSession?.user ?? null, { authEvent: "INITIAL_SESSION" });
     }).catch((error) => {
+      recordAuthorizationDiagnostic("AUTH_SESSION_FAILED", {
+        authEvent: "INITIAL_SESSION", classification: classifyAuthorizationFailure(error),
+      });
       captureException(error, {
         page: "Authentication",
         component: "AuthProvider",
@@ -359,18 +460,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const refreshOnFocus = () => {
       if (document.visibilityState === "visible") {
-        loadUserData(user, { authoritative: true, previousChurchId: churchId });
+        scheduleUserDataRefresh(user, { authoritative: true, previousChurchId: churchId });
       }
     };
 
+    const refreshOnOnline = () => scheduleUserDataRefresh(user, {
+      authoritative: true, previousChurchId: churchId, authEvent: "ONLINE",
+    });
+
     window.addEventListener("focus", refreshOnFocus);
     document.addEventListener("visibilitychange", refreshOnFocus);
+    window.addEventListener("online", refreshOnOnline);
 
     return () => {
       window.removeEventListener("focus", refreshOnFocus);
       document.removeEventListener("visibilitychange", refreshOnFocus);
+      window.removeEventListener("online", refreshOnOnline);
+      if (scheduledRefreshRef.current !== null) window.clearTimeout(scheduledRefreshRef.current);
     };
-  }, [churchId, loadUserData, user]);
+  }, [churchId, scheduleUserDataRefresh, user]);
 
   useEffect(() => {
     if (!user) return;
@@ -386,8 +494,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const authorizationSource = source as AuthorizationRealtimeSource;
       void invalidateAuthorizationQueries(queryClient, authorizationSource, scope);
       if (AUTHORIZATION_REALTIME_DEPENDENCIES[authorizationSource].refreshUserContext) {
-        setIsLoading(true);
-        void loadUserData(user, { authoritative: true, previousChurchId: churchId });
+        scheduleUserDataRefresh(user, { authoritative: true, previousChurchId: churchId });
       }
     };
 
@@ -405,18 +512,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             for (const source of allowedSources) void invalidateAuthorizationQueries(queryClient, source, scope);
             if (refreshContextOnSubscribe) {
               // Close the fetch/subscription race and replace offline startup data.
-              setIsLoading(true);
-              void loadUserData(user, { authoritative: true, previousChurchId: churchId });
+              scheduleUserDataRefresh(user, { authoritative: true, previousChurchId: churchId });
             }
-          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-            failClosedAuthorization(user.id, churchId);
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+            recordAuthorizationDiagnostic("REALTIME_CHANNEL_STATUS", { channel: topic, status });
+            logWarning("Authorization realtime channel degraded.", {
+              component: "AuthProvider", function: "authorizationRealtime", metadata: { channel: topic, status },
+            });
+            scheduleUserDataRefresh(user, { authoritative: true, previousChurchId: churchId });
           }
         });
       channels.push(channel);
     };
 
+    recordAuthorizationDiagnostic("REALTIME_AUTH_STARTED");
     void supabase.realtime.setAuth().then(() => {
       if (!active) return;
+      recordAuthorizationDiagnostic("REALTIME_AUTH_OK");
       subscribe(`authorization:user:${user.id}`, ["user_roles", "members", "profiles"], true);
       if (churchId) {
         subscribe(`authorization:church:${churchId}`, [
@@ -424,15 +536,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ]);
       }
       subscribe("authorization:platform", ["platform_features"]);
-    }).catch(() => {
-      if (active) failClosedAuthorization(user.id, churchId);
+    }).catch((error) => {
+      if (!active) return;
+      recordAuthorizationDiagnostic("REALTIME_AUTH_FAILED", {
+        classification: classifyAuthorizationFailure(error), ...safeAuthorizationDiagnostic(error),
+      });
+      logWarning("Authorization realtime authentication degraded.", {
+        component: "AuthProvider", function: "authorizationRealtime.setAuth",
+        metadata: { classification: classifyAuthorizationFailure(error) },
+      });
+      scheduleUserDataRefresh(user, { authoritative: true, previousChurchId: churchId });
     });
 
     return () => {
       active = false;
       for (const channel of channels) void supabase.removeChannel(channel);
     };
-  }, [churchId, failClosedAuthorization, loadUserData, queryClient, user]);
+  }, [churchId, queryClient, scheduleUserDataRefresh, user]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -442,7 +562,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUserData = async () => {
     if (user) {
       setIsLoading(true);
-      await loadUserData(user, { authoritative: true, previousChurchId: churchId });
+      await loadUserData(user, { authoritative: true, previousChurchId: churchId, force: true, authEvent: "RETRY" });
     }
   };
 

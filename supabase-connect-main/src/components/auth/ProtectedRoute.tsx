@@ -4,6 +4,7 @@ import { hasAnyRole, isAdminRoles, type AppRole } from "@/lib/role-utils";
 import { getDefaultRouteForRoles } from "@/lib/role-utils";
 import { ErrorState, LoadingState } from "@/components/ui/page-state";
 import { shouldRedirectToMemberOnboarding } from "@/lib/authorization-readiness";
+import { AuthorizationBootstrapError, isTransientAuthorizationFailure } from "@/lib/authorization-bootstrap";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -33,12 +34,16 @@ export function ProtectedRoute({ children, requireSuperAdmin, requireChurch, req
   const location = useLocation();
 
   if (authorizationError) {
+    const isConnectivityFailure = authorizationError instanceof AuthorizationBootstrapError
+      && isTransientAuthorizationFailure(authorizationError.classification);
     return (
       <div className="min-h-screen bg-background p-4 sm:p-8">
         <div className="mx-auto max-w-2xl pt-16">
           <ErrorState
-            title="We could not verify your workspace access."
-            description="Your session is still signed in, but membership and permissions could not be loaded. Retry before continuing."
+            title={isConnectivityFailure ? "We're having trouble connecting." : "We could not verify your workspace access."}
+            description={isConnectivityFailure
+              ? "Your account is still signed in. Check your connection and try again."
+              : "Your session is still signed in, but membership and permissions could not be loaded. Retry before continuing."}
             onRetry={() => void refreshUserData()}
           />
         </div>
