@@ -3,6 +3,12 @@ import type { WorkspaceId } from "@/components/workspace";
 import type { KanisaAIAction, KanisaAIContext, KanisaAIIntent } from "./types";
 
 export const kanisaAIActionRegistry: KanisaAIAction[] = [
+  { id: "member-count", title: "Member Count", intent: "MEMBER_COUNT", requiresAI: false, permission: "workspace:admin", handler: "supabase", workspaces: ["church_admin"] },
+  { id: "new-members", title: "New Members", intent: "NEW_MEMBERS", requiresAI: false, permission: "workspace:admin", handler: "supabase", workspaces: ["church_admin"] },
+  { id: "outstanding-pledges", title: "Outstanding Pledges", intent: "OUTSTANDING_PLEDGES", requiresAI: false, permission: "workspace:finance", handler: "supabase", workspaces: ["finance", "church_admin"] },
+  { id: "pending-mass-intentions", title: "Pending Mass Intentions", intent: "PENDING_MASS_INTENTIONS", requiresAI: false, permission: "workspace:pastoral", handler: "supabase", workspaces: ["pastoral", "church_admin"] },
+  { id: "live-media-status", title: "Live Media Status", intent: "LIVE_MEDIA_STATUS", requiresAI: false, permission: "workspace:read", handler: "supabase", workspaces: ["member", "pastoral", "church_admin", "finance"] },
+  { id: "attention-summary", title: "Attention Summary", intent: "ATTENTION_SUMMARY", requiresAI: false, permission: "workspace:read", handler: "supabase", workspaces: ["member", "pastoral", "church_admin", "finance"] },
   { id: "pending-invitations", title: "Pending Invitations", intent: "PENDING_INVITATIONS", requiresAI: false, permission: "workspace:admin", handler: "supabase", workspaces: ["church_admin"] },
   { id: "upcoming-events", title: "Upcoming Events", intent: "UPCOMING_EVENTS", requiresAI: false, permission: "workspace:read", handler: "supabase", workspaces: ["member", "pastoral", "church_admin", "finance"] },
   { id: "unresolved-prayer-requests", title: "Unresolved Prayer Requests", intent: "UNRESOLVED_PRAYER_REQUESTS", requiresAI: false, permission: "workspace:pastoral", handler: "supabase", workspaces: ["pastoral", "church_admin"] },
@@ -104,6 +110,15 @@ const workspaceRoutes: Record<WorkspaceId, Record<string, string>> = {
 export function getKanisaAITargetRoute(intent: KanisaAIIntent, context: KanisaAIContext) {
   const routes = workspaceRoutes[context.workspace];
   switch (intent) {
+    case "MEMBER_COUNT":
+    case "NEW_MEMBERS":
+      return context.workspace === "church_admin" ? "/church-admin/members" : undefined;
+    case "OUTSTANDING_PLEDGES":
+      return routes.contributions;
+    case "PENDING_MASS_INTENTIONS":
+      return routes.massIntentions;
+    case "LIVE_MEDIA_STATUS":
+      return context.workspace === "member" ? "/portal/live" : context.workspace === "church_admin" ? "/church-admin/livestreams" : undefined;
     case "PENDING_INVITATIONS":
       return context.workspace === "church_admin" ? "/church-admin/roles" : undefined;
     case "UPCOMING_EVENTS":
