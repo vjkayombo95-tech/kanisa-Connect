@@ -8,7 +8,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/church-livestreams", () => ({ fetchMemberLivestream: mocks.livestream }));
 vi.mock("@/lib/church-radio", () => ({ fetchMemberRadioStations: mocks.radio }));
 vi.mock("@/lib/calendar", () => ({ fetchParishCalendarFeed: vi.fn().mockResolvedValue([]) }));
-vi.mock("jspdf", () => ({ default: class { setFont() {} setFontSize() {} text() {} output() { return mocks.pdfOutput(); } } }));
+vi.mock("jspdf", () => ({ default: class {
+  pages = 1; setFont() {} setFontSize() {} setTextColor() {} setDrawColor() {} setFillColor() {} setLineWidth() {} circle() {} line() {} rect() {} roundedRect() {} addImage() {} text() {}
+  splitTextToSize(value: string) { return [value]; } addPage() { this.pages += 1; } getNumberOfPages() { return this.pages; } setPage() {} output() { return mocks.pdfOutput(); }
+} }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {
   from: vi.fn((table: string) => { const builder: Record<string, unknown> = {};
     builder.select = (columns: string) => { mocks.selects.push([table, columns]); return builder; };

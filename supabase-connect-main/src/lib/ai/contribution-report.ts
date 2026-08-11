@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { KanisaAIContext } from "./types";
 import type { ControlledReportType, ReportPeriod } from "./controlled-answers";
+import { renderContributionReportPdf } from "./contribution-report-pdf";
 
 export type ContributionSummarySnapshot = {
   churchId: string;
@@ -69,6 +70,14 @@ export function resolveReportPeriod(period: ReportPeriod, now = new Date()) {
 function calculateSnapshot(rows: Array<{ amount: number | null; date: string; contribution_categories?: { name?: string | null } | Array<{ name?: string | null }> | null }>, churchId: string, range: NonNullable<ReturnType<typeof resolveReportPeriod>>, generatedAt: string): ContributionSummarySnapshot {
   const categories = new Map<string, number>();
   const monthly = new Map<string, { total: number; count: number }>();
+  const monthCursor = new Date(`${range.startDate.slice(0, 7)}-01T12:00:00`);
+  const lastMonth = range.endDate.slice(0, 7);
+  for (let slot = 0; slot < 13; slot += 1) {
+    const key = `${monthCursor.getFullYear()}-${String(monthCursor.getMonth() + 1).padStart(2, "0")}`;
+    monthly.set(key, { total: 0, count: 0 });
+    if (key === lastMonth) break;
+    monthCursor.setMonth(monthCursor.getMonth() + 1);
+  }
   let total = 0;
   for (const row of rows) {
     const amount = Number(row.amount ?? 0);
@@ -128,15 +137,7 @@ export async function generateControlledContributionReport(reportType: Controlle
     const churchName = context.church.name?.trim() || "Church";
     const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-    doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text("KANISA CONNECT", 42, 52);
-    doc.setFontSize(13); doc.text(churchName, 42, 78); doc.text("CONTRIBUTION REPORT", 42, 100);
-    doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.text(`Reporting period: ${result.snapshot.periodLabel}`, 42, 122);
-    doc.setFontSize(12); doc.text(`Total contributions: TZS ${result.snapshot.total.toLocaleString("en-US")}`, 42, 160); doc.text(`Recorded payments: ${result.snapshot.paymentCount}`, 42, 182);
-    if (result.snapshot.comparisonTotal !== null) doc.text(`Previous month: TZS ${result.snapshot.comparisonTotal.toLocaleString("en-US")}${result.snapshot.percentageChange === null ? "" : ` (${Math.abs(result.snapshot.percentageChange).toFixed(0)}% ${result.snapshot.percentageChange >= 0 ? "higher" : "lower"})`}`, 42, 204);
-    let y = 220;
-    if (result.snapshot.categories.length) { doc.setFont("helvetica", "bold"); doc.text("Category breakdown", 42, y); y += 20; doc.setFont("helvetica", "normal"); for (const item of result.snapshot.categories.slice(0, 12)) { doc.text(`${item.name}: TZS ${item.total.toLocaleString("en-US")}`, 52, y); y += 17; } }
-    if (result.snapshot.monthly.length > 1) { y += 8; doc.setFont("helvetica", "bold"); doc.text("Monthly trend", 42, y); y += 20; doc.setFont("helvetica", "normal"); for (const item of result.snapshot.monthly) { doc.text(`${item.month}: TZS ${item.total.toLocaleString("en-US")} (${item.count} payments)`, 52, y); y += 17; } }
-    doc.setFontSize(9); doc.text(`Generated: ${new Date(result.snapshot.generatedAt).toLocaleString("en-TZ")}`, 42, 780); doc.text(`Report period: ${result.snapshot.periodLabel} | Generated through Kanisa Connect`, 42, 796);
+    await renderContributionReportPdf(doc, result.snapshot, { name: churchName, logoUrl: context.church.logoUrl, address: context.church.address });
     const blob = doc.output("blob");
     const url = URL.createObjectURL(blob);
     const filename = `${churchName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "church"}-contribution-report-${result.snapshot.startDate}-${result.snapshot.endDate}.pdf`;

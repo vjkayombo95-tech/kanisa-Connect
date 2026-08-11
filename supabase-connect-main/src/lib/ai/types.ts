@@ -56,6 +56,8 @@ export type KanisaAIContext = {
   church: {
     id: string | null;
     name?: string | null;
+    logoUrl?: string | null;
+    address?: string | null;
   };
   tenant: {
     id: string | null;

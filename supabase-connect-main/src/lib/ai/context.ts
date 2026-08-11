@@ -18,6 +18,8 @@ export function createKanisaAIContext(input: CreateKanisaAIContextInput = {}): K
     church: {
       id: input.church?.id ?? null,
       name: input.church?.name ?? null,
+      logoUrl: input.church?.logoUrl ?? null,
+      address: input.church?.address ?? null,
     },
     tenant: {
       id: input.tenant?.id ?? input.church?.id ?? null,
