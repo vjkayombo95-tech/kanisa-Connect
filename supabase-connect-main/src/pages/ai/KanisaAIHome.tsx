@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bot, Clock, ExternalLink, Send, Sparkles, Trash2 } from "lucide-react";
+import { Bot, ChevronRight, ExternalLink, HelpCircle, Send, Sparkles, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,11 @@ import {
   createKanisaAIContext,
   createKanisaAssistantMessage,
   createKanisaUserMessage,
-  getControlledQuickQuestionIntent,
   resolveKanisaAIExperience,
+  resolveKanisaAIDiscovery,
+  groupKanisaAIDiscovery,
+  discoveryCategoryLabels,
+  type ResolvedDiscoveryQuestion,
   type KanisaAIConversationMessage,
   type KanisaAIConversationPreview,
   type KanisaAIConversationResponse,
@@ -26,24 +29,11 @@ import {
   generateControlledContributionReport,
   revokeContributionReportUrl,
   isControlledKanisaAIIntent,
-  isAuthorizedControlledIntent,
   isContributionReportRequest,
   classifyReportPeriodText,
 } from "@/lib/ai";
 import type { WorkspaceId } from "@/components/workspace";
-import type { RecentCommand } from "@/components/ai/command-types";
 import { formatLocalizedTime, type AppLanguage } from "@/lib/localization";
-
-const COMMAND_HISTORY_KEY = "kanisa-command-center-history:v1";
-
-function readRecentCommands() {
-  if (typeof window === "undefined") return [] as RecentCommand[];
-  try {
-    return (JSON.parse(window.localStorage.getItem(COMMAND_HISTORY_KEY) || "[]") as RecentCommand[]).slice(0, 5);
-  } catch {
-    return [];
-  }
-}
 
 function statusVariant(status: KanisaAIConversationResponse["status"]) {
   if (status === "success") return "secondary";
@@ -227,12 +217,8 @@ export default function KanisaAIHome() {
     [church, churchId, isSuperAdmin, language, location.pathname, queryClient, user, userRole, workspace],
   );
   const experience = useMemo(() => resolveKanisaAIExperience(aiContext), [aiContext]);
-  const assistants = experience.assistants;
-  const recentCommands = useMemo(() => readRecentCommands(), [churchId, workspace]);
-  const quickPrompts = useMemo(() => experience.suggestedPrompts.filter((prompt) => {
-    const intent = getControlledQuickQuestionIntent(prompt);
-    return !intent || isAuthorizedControlledIntent(intent, aiContext);
-  }), [aiContext, experience.suggestedPrompts]);
+  const discoveryQuestions = useMemo(() => resolveKanisaAIDiscovery(aiContext, language), [aiContext, language]);
+  const discoveryGroups = useMemo(() => groupKanisaAIDiscovery(discoveryQuestions.slice(0, 10)), [discoveryQuestions]);
 
   const appendAssistantResponse = (response: KanisaAIConversationResponse) => setMessages((current) => [...current, createKanisaAssistantMessage(response)]);
 
@@ -252,6 +238,17 @@ export default function KanisaAIHome() {
       { id: "report-cancel", type: "dismiss", label: "Cancel" },
     ],
   });
+
+  const submitSuggestedQuestion = (question: ResolvedDiscoveryQuestion) => {
+    if (question.mode === "report") {
+      setMessages((current) => [...current, createKanisaUserMessage(question.label)]);
+      pendingReportTypeRef.current = "CONTRIBUTION_SUMMARY_REPORT";
+      pendingFollowUpRef.current = { id: question.id, type: "generate_report", label: question.label, reportType: "CONTRIBUTION_SUMMARY_REPORT" };
+      appendAssistantResponse(periodSelectionResponse());
+      return;
+    }
+    submitQuestion(question.label, question.intent);
+  };
 
   const generateReport = async (reportType: ControlledReportType, period: ReportPeriod) => {
     setIsProcessing(true);
@@ -444,16 +441,16 @@ export default function KanisaAIHome() {
                       <h2 className="mt-4 font-serif text-2xl font-bold text-foreground">{t("ai.ask")}</h2>
                       <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("ai.empty_thread")}</p>
                       <div className="mt-5 flex flex-wrap justify-center gap-2" aria-label="Suggested prompts">
-                        {quickPrompts.slice(0, 4).map((prompt) => (
+                        {discoveryQuestions.slice(0, 4).map((question) => (
                           <Button
-                            key={prompt}
+                            key={question.id}
                             type="button"
                             variant="outline"
                             size="sm"
                             className="h-auto whitespace-normal rounded-full py-1.5 text-left"
-                            onClick={() => submitQuestion(prompt, getControlledQuickQuestionIntent(prompt))}
+                            onClick={() => submitSuggestedQuestion(question)}
                           >
-                            {prompt}
+                            {question.label}
                           </Button>
                         ))}
                       </div>
@@ -526,48 +523,27 @@ export default function KanisaAIHome() {
               </form>
             </div>
 
-            <aside className="border-t border-border/70 bg-card/70 p-4 lg:border-l lg:border-t-0 sm:p-5">
-              <p className="flex items-center gap-2 text-sm font-semibold">
-                <Clock className="h-4 w-4 text-primary" />
-                {t("ai.recent_commands")}
+            <aside className="border-t border-border/70 bg-card/70 p-4 lg:border-l lg:border-t-0 sm:p-5" aria-label={language === "sw" ? "Unaweza kuuliza" : "What you can ask"}>
+              <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide">
+                <HelpCircle className="h-4 w-4 text-primary" />
+                {language === "sw" ? "Unaweza kuuliza" : "What you can ask"}
               </p>
-              {recentCommands.length ? (
-                <div className="mt-3 space-y-2">
-                  {recentCommands.map((command) => (
-                    <div key={command.id} className="rounded-lg border border-border/70 bg-background/70 px-3 py-2">
-                      <p className="text-sm font-medium">{command.title}</p>
-                      <p className="text-xs text-muted-foreground">{command.intent}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="mt-3 text-sm text-muted-foreground">{t("ai.no_recent_commands")}</p>
-              )}
-
-              <div className="mt-5 space-y-2">
-                <p className="text-xs font-semibold uppercase text-muted-foreground">{t("ai.explore_assistants")}</p>
-                {assistants.slice(0, 4).map((assistant) => (
-                  <div key={assistant.id} className="rounded-lg border border-border/70 bg-background/70 p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{assistant.title}</p>
-                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">{assistant.description}</p>
-                      </div>
-                      <Badge variant={assistant.requiresAI ? "outline" : "secondary"} className="shrink-0 rounded-full">
-                        {assistant.requiresAI ? t("ai.provider_required") : t("ai.available")}
-                      </Badge>
-                    </div>
-                    {assistant.route ? (
-                      <Button asChild variant="link" size="sm" className="mt-2 h-auto p-0 text-primary">
-                        <Link to={assistant.route}>
-                          {t("ai.open")}
-                          <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
-                        </Link>
-                      </Button>
-                    ) : null}
+              {discoveryQuestions.length ? (
+                <>
+                  <div className="mt-3 flex flex-wrap gap-2 lg:hidden" aria-label="Top suggested questions">
+                    {discoveryQuestions.slice(0, 3).map((question) => <Button key={question.id} type="button" variant="outline" className="min-h-11 h-auto whitespace-normal rounded-full text-left" onClick={() => submitSuggestedQuestion(question)}>{question.label}</Button>)}
                   </div>
-                ))}
-              </div>
+                  <details className="mt-3 lg:hidden">
+                    <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-primary">{language === "sw" ? "Zaidi" : "More questions"}<ChevronRight className="ml-1 h-4 w-4" /></summary>
+                    <div className="space-y-4 pt-2">
+                      {discoveryGroups.map((group) => <div key={group.category}><p className="text-xs font-semibold uppercase text-muted-foreground">{discoveryCategoryLabels[group.category][language]}</p><div className="mt-1 space-y-1">{group.items.map((question) => <button key={question.id} type="button" className="flex min-h-11 w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => submitSuggestedQuestion(question)}><span>{question.label}</span><ChevronRight className="h-4 w-4 shrink-0 text-primary" /></button>)}</div></div>)}
+                    </div>
+                  </details>
+                  <div className="mt-4 hidden space-y-5 lg:block">
+                    {discoveryGroups.map((group) => <section key={group.category} aria-label={discoveryCategoryLabels[group.category][language]}><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{discoveryCategoryLabels[group.category][language]}</p><div className="mt-1 space-y-1">{group.items.map((question) => <button key={question.id} type="button" className="flex min-h-11 w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => submitSuggestedQuestion(question)}><span>{question.label}</span><ChevronRight className="h-4 w-4 shrink-0 text-primary" /></button>)}</div></section>)}
+                  </div>
+                </>
+              ) : <p className="mt-3 text-sm text-muted-foreground">{language === "sw" ? "Hakuna maswali yaliyodhibitiwa yanayopatikana kwa nafasi hii." : "No controlled questions are available for this workspace."}</p>}
             </aside>
           </div>
         </section>
