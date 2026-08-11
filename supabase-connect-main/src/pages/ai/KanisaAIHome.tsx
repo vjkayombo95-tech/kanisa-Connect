@@ -189,7 +189,7 @@ function ConversationMessage({
 
 export default function KanisaAIHome() {
   const { i18n, t } = useTranslation();
-  const { churchId, isSuperAdmin, userRole, user } = useAuth();
+  const { churchId, church, isSuperAdmin, userRole, user } = useAuth();
   const workspaceContext = useWorkspaceContext();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -216,7 +216,7 @@ export default function KanisaAIHome() {
         workspace,
         role: userRole,
         isSuperAdmin,
-        church: { id: churchId },
+        church: { id: churchId, name: church?.name ?? null, logoUrl: church?.logo_url ?? null, address: church?.address ?? null },
         tenant: { id: churchId },
         route: location.pathname,
         page: "kanisa-ai-home",
@@ -224,7 +224,7 @@ export default function KanisaAIHome() {
         queryClient,
         user,
       }),
-    [churchId, isSuperAdmin, language, location.pathname, queryClient, user, userRole, workspace],
+    [church, churchId, isSuperAdmin, language, location.pathname, queryClient, user, userRole, workspace],
   );
   const experience = useMemo(() => resolveKanisaAIExperience(aiContext), [aiContext]);
   const assistants = experience.assistants;
