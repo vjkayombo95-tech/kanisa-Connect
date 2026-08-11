@@ -85,6 +85,8 @@ describe("Kanisa AI controlled answer UI", () => {
       const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
       setter?.call(composer, "What events are coming up?");
       composer.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    act(() => {
       composer.closest("form")?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     });
     expect(rendered.container.querySelector('[aria-busy="true"]')).toBeTruthy();

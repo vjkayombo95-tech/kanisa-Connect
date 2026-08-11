@@ -9,6 +9,7 @@ import {
   isAmbiguousControlledKanisaAIInput,
   type ControlledKanisaAIAnswer,
   type ControlledKanisaAIIntent,
+  type ControlledFollowUp,
 } from "./controlled-answers";
 import type { KanisaAIContext, KanisaAIIntent } from "./types";
 import { filterMemberDailyReadings, filterMemberPrayers, prayerMatchesCmsSearch, type CatholicPrayerContent, type CmsDailyReading } from "@/lib/catholic-cms";
@@ -89,6 +90,7 @@ export type KanisaAIConversationResponse = {
   suggestions: string[];
   sourceType: "query-cache" | "local-router" | "future-provider" | "workspace-policy";
   providerRequired: boolean;
+  followUps?: ControlledFollowUp[];
 };
 
 export type KanisaAIConversationMessage = {
@@ -131,6 +133,7 @@ function baseResponse(input: {
   suggestions?: string[];
   sourceType?: KanisaAIConversationResponse["sourceType"];
   providerRequired?: boolean;
+  followUps?: ControlledFollowUp[];
 }): KanisaAIConversationResponse {
   return {
     id: responseId(),
@@ -144,6 +147,7 @@ function baseResponse(input: {
     suggestions: input.suggestions ?? [],
     sourceType: input.sourceType ?? "local-router",
     providerRequired: input.providerRequired ?? false,
+    followUps: input.followUps,
   };
 }
 
@@ -153,6 +157,12 @@ function controlledConversationResponse(answer: ControlledKanisaAIAnswer, retryI
     UPCOMING_EVENTS: "Upcoming Events",
     UNRESOLVED_PRAYER_REQUESTS: "Unresolved Prayer Requests",
     CONTRIBUTION_SUMMARY: "Contribution Summary",
+    MEMBER_COUNT: "Member Count",
+    NEW_MEMBERS: "New Members",
+    OUTSTANDING_PLEDGES: "Outstanding Pledges",
+    PENDING_MASS_INTENTIONS: "Pending Mass Intentions",
+    LIVE_MEDIA_STATUS: "Live Media Status",
+    ATTENTION_SUMMARY: "What Needs Your Attention",
   };
   const metricLabels: Record<string, string> = {
     pending: "Pending invitations",
@@ -162,8 +172,22 @@ function controlledConversationResponse(answer: ControlledKanisaAIAnswer, retryI
     currentMonthTotal: "Current month total",
     currentMonthPayments: "Recorded payments",
     previousMonthTotal: "Previous month total",
+    registeredMembers: "Registered members",
+    activeMembers: "Active",
+    inactiveMembers: "Inactive",
+    joinedThisMonth: "Joined this month",
+    newMembersThisMonth: "This month",
+    newMembersPreviousMonth: "Last month",
+    outstandingAmount: "Outstanding",
+    outstandingPledges: "Pledges",
+    paidAmount: "Paid",
+    pendingMassIntentions: "Pending",
+    nextScheduledDate: "Next scheduled date",
+    liveMass: "Live Mass",
+    availableRadioStations: "Radio stations",
+    verifiedAttentionItems: "Verified items",
   };
-  const moneyMetrics = new Set(["currentMonthTotal", "previousMonthTotal"]);
+  const moneyMetrics = new Set(["currentMonthTotal", "previousMonthTotal", "outstandingAmount", "paidAmount"]);
   const sections: KanisaAIConversationSection[] = [];
   if (answer.details?.length) sections.push({ id: "controlled-details", title: "Upcoming", items: answer.details });
   if (answer.metrics) {
@@ -184,6 +208,7 @@ function controlledConversationResponse(answer: ControlledKanisaAIAnswer, retryI
     sections,
     actions: answer.action ? [action(`open-${answer.intent.toLowerCase()}`, answer.action.label, answer.action.route)] : answer.status === "error" ? [action("retry-question", "Retry", undefined, undefined, retryInput)] : [],
     sourceType: answer.status === "forbidden" ? "workspace-policy" : "local-router",
+    followUps: answer.followUps,
   });
 }
 

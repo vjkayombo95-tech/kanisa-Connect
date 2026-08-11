@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Bot, Clock, ExternalLink, Send, Sparkles, Trash2 } from "lucide-react";
@@ -20,6 +20,15 @@ import {
   type KanisaAIConversationPreview,
   type KanisaAIConversationResponse,
   type ControlledKanisaAIIntent,
+  type ControlledFollowUp,
+  type ControlledReportType,
+  type ReportPeriod,
+  generateControlledContributionReport,
+  revokeContributionReportUrl,
+  isControlledKanisaAIIntent,
+  isAuthorizedControlledIntent,
+  isContributionReportRequest,
+  classifyReportPeriodText,
 } from "@/lib/ai";
 import type { WorkspaceId } from "@/components/workspace";
 import type { RecentCommand } from "@/components/ai/command-types";
@@ -47,10 +56,12 @@ export function ConversationResponseCard({
   response,
   onPreview,
   onRetry,
+  onFollowUp = () => undefined,
 }: {
   response: KanisaAIConversationResponse;
   onPreview: (preview: KanisaAIConversationPreview) => void;
   onRetry: (input: string) => void;
+  onFollowUp?: (followUp: ControlledFollowUp) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -131,6 +142,19 @@ export function ConversationResponseCard({
           )}
         </div>
       ) : null}
+      {response.followUps?.length ? (
+        <div className="flex flex-wrap gap-2 pt-1" aria-label="Follow-up actions">
+          {response.followUps.map((followUp) => followUp.type === "navigate" && followUp.route ? (
+            followUp.route.startsWith("blob:") ? (
+              <Button key={followUp.id} asChild size="sm" className="min-h-11"><a href={followUp.route} target="_blank" rel="noreferrer">{followUp.label}<ExternalLink className="ml-2 h-3.5 w-3.5" /></a></Button>
+            ) : (
+              <Button key={followUp.id} asChild size="sm" className="min-h-11"><Link to={followUp.route}>{followUp.label}<ExternalLink className="ml-2 h-3.5 w-3.5" /></Link></Button>
+            )
+          ) : (
+            <Button key={followUp.id} size="sm" variant="outline" className="min-h-11" onClick={() => onFollowUp(followUp)}>{followUp.label}</Button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -139,10 +163,12 @@ function ConversationMessage({
   message,
   onPreview,
   onRetry,
+  onFollowUp,
 }: {
   message: KanisaAIConversationMessage;
   onPreview: (preview: KanisaAIConversationPreview) => void;
   onRetry: (input: string) => void;
+  onFollowUp: (followUp: ControlledFollowUp) => void;
 }) {
   const { i18n, t } = useTranslation();
   const isUser = message.role === "user";
@@ -154,8 +180,8 @@ function ConversationMessage({
           <span className="font-semibold text-foreground">{isUser ? t("ai.you") : message.role === "system" ? t("ai.notice") : t("ai.brand")}</span>
           <span>{formatLocalizedTime(message.timestamp, language)}</span>
         </div>
-        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">{message.text}</p>
-        {message.response ? <ConversationResponseCard response={message.response} onPreview={onPreview} onRetry={onRetry} /> : null}
+        {!message.response ? <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">{message.text}</p> : null}
+        {message.response ? <ConversationResponseCard response={message.response} onPreview={onPreview} onRetry={onRetry} onFollowUp={onFollowUp} /> : null}
       </div>
     </article>
   );
@@ -169,10 +195,19 @@ export default function KanisaAIHome() {
   const queryClient = useQueryClient();
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const lastControlledIntentRef = useRef<ControlledKanisaAIIntent | null>(null);
+  const pendingReportTypeRef = useRef<ControlledReportType | null>(null);
+  const pendingFollowUpRef = useRef<ControlledFollowUp | null>(null);
+  const selectedReportPeriodRef = useRef<ReportPeriod | null>(null);
+  const reportOfferedRef = useRef(false);
+  const reportUrlRef = useRef<string | null>(null);
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<KanisaAIConversationMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [activePreview, setActivePreview] = useState<KanisaAIConversationPreview | null>(null);
+  const [customPeriodOpen, setCustomPeriodOpen] = useState(false);
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  useEffect(() => () => revokeContributionReportUrl(reportUrlRef.current), []);
   const workspace = workspaceContext?.workspace.id ?? getWorkspaceIdForRole(userRole, isSuperAdmin);
   const language = (i18n.language === "sw" ? "sw" : "en") satisfies AppLanguage;
   const aiContext = useMemo(
@@ -194,10 +229,98 @@ export default function KanisaAIHome() {
   const experience = useMemo(() => resolveKanisaAIExperience(aiContext), [aiContext]);
   const assistants = experience.assistants;
   const recentCommands = useMemo(() => readRecentCommands(), [churchId, workspace]);
+  const quickPrompts = useMemo(() => experience.suggestedPrompts.filter((prompt) => {
+    const intent = getControlledQuickQuestionIntent(prompt);
+    return !intent || isAuthorizedControlledIntent(intent, aiContext);
+  }), [aiContext, experience.suggestedPrompts]);
+
+  const appendAssistantResponse = (response: KanisaAIConversationResponse) => setMessages((current) => [...current, createKanisaAssistantMessage(response)]);
+
+  const periodSelectionResponse = (): KanisaAIConversationResponse => ({
+    id: `kanisa-ai-period-${Date.now()}`,
+    intent: "CONTRIBUTION_SUMMARY",
+    status: "success",
+    title: "Contribution Report",
+    summary: "Which period would you like?",
+    message: "Which period would you like?",
+    sections: [], actions: [], suggestions: [], sourceType: "local-router", providerRequired: false,
+    followUps: [
+      { id: "report-current", type: "select_period", label: "This Month", reportType: "CONTRIBUTION_SUMMARY_REPORT", period: { kind: "current_month" } },
+      { id: "report-previous", type: "select_period", label: "Last Month", reportType: "CONTRIBUTION_SUMMARY_REPORT", period: { kind: "previous_month" } },
+      { id: "report-three-months", type: "select_period", label: "Last 3 Months", reportType: "CONTRIBUTION_SUMMARY_REPORT", period: { kind: "last_n_months", months: 3 } },
+      { id: "report-custom", type: "select_period", label: "Choose Dates", reportType: "CONTRIBUTION_SUMMARY_REPORT", period: { kind: "custom", startDate: "", endDate: "" } },
+      { id: "report-cancel", type: "dismiss", label: "Cancel" },
+    ],
+  });
+
+  const generateReport = async (reportType: ControlledReportType, period: ReportPeriod) => {
+    setIsProcessing(true);
+    const result = await generateControlledContributionReport(reportType, period, aiContext);
+    if (result.status === "success" && result.url) {
+      revokeContributionReportUrl(reportUrlRef.current);
+      reportUrlRef.current = result.url;
+    }
+    appendAssistantResponse({
+      id: `kanisa-ai-report-${Date.now()}`,
+      intent: "CONTRIBUTION_SUMMARY",
+      status: result.status === "success" ? "success" : result.status === "no_data" ? "empty" : result.status === "forbidden" ? "forbidden" : "error",
+      title: result.status === "success" ? "Contribution Report Ready" : "Contribution Report",
+      summary: result.message,
+      message: result.message,
+      sections: [], actions: [], suggestions: [], sourceType: result.status === "forbidden" ? "workspace-policy" : "local-router", providerRequired: false,
+      followUps: result.url ? [{ id: "open-report", type: "navigate", label: "Open PDF", route: result.url }, { id: "dismiss-report", type: "dismiss", label: "Done" }] : undefined,
+    });
+    pendingReportTypeRef.current = null;
+    pendingFollowUpRef.current = null;
+    selectedReportPeriodRef.current = null;
+    reportOfferedRef.current = false;
+    setCustomPeriodOpen(false);
+    setIsProcessing(false);
+  };
+
+  const handleFollowUp = (followUp: ControlledFollowUp) => {
+    if (followUp.type === "controlled_intent" && followUp.intent) return submitQuestion(followUp.label, followUp.intent);
+    if (followUp.type === "generate_report" && followUp.reportType === "CONTRIBUTION_SUMMARY_REPORT") {
+      pendingReportTypeRef.current = followUp.reportType;
+      pendingFollowUpRef.current = followUp;
+      appendAssistantResponse(periodSelectionResponse());
+      return;
+    }
+    if (followUp.type === "select_period" && followUp.reportType && followUp.period) {
+      pendingReportTypeRef.current = followUp.reportType;
+      pendingFollowUpRef.current = followUp;
+      selectedReportPeriodRef.current = followUp.period;
+      if (followUp.period.kind === "custom" && (!followUp.period.startDate || !followUp.period.endDate)) { setCustomPeriodOpen(true); return; }
+      void generateReport(followUp.reportType, followUp.period);
+      return;
+    }
+    if (followUp.type === "dismiss") {
+      pendingReportTypeRef.current = null; pendingFollowUpRef.current = null; selectedReportPeriodRef.current = null; reportOfferedRef.current = false; setCustomPeriodOpen(false);
+    }
+  };
 
   const submitQuestion = (question: string, controlledIntent?: ControlledKanisaAIIntent | null) => {
     const text = question.trim();
     if (!text || isProcessing) return;
+    const asksForPdf = isContributionReportRequest(text);
+    if (asksForPdf) {
+      setMessages((current) => [...current, createKanisaUserMessage(text)]);
+      setDraft("");
+      if (reportOfferedRef.current && lastControlledIntentRef.current === "CONTRIBUTION_SUMMARY") {
+        pendingReportTypeRef.current = "CONTRIBUTION_SUMMARY_REPORT";
+        pendingFollowUpRef.current = { id: "report-request", type: "generate_report", label: "Generate PDF", reportType: "CONTRIBUTION_SUMMARY_REPORT" };
+        appendAssistantResponse(periodSelectionResponse());
+      } else {
+        appendAssistantResponse({ id: `kanisa-ai-report-context-${Date.now()}`, intent: "UNKNOWN", status: "unavailable", title: "Choose an approved report", summary: "Ask for a contribution summary first so I can offer the approved contribution report.", message: "Ask for a contribution summary first so I can offer the approved contribution report.", sections: [], actions: [], suggestions: [], sourceType: "local-router", providerRequired: false });
+      }
+      return;
+    }
+    if (pendingReportTypeRef.current) {
+      const period = classifyReportPeriodText(text);
+      if (period) {
+        setMessages((current) => [...current, createKanisaUserMessage(text)]); setDraft(""); void generateReport(pendingReportTypeRef.current, period); return;
+      }
+    }
     setDraft("");
     setIsProcessing(true);
     const userMessage = createKanisaUserMessage(text);
@@ -209,9 +332,15 @@ export default function KanisaAIHome() {
           controlledIntent,
           lastIntent: lastControlledIntentRef.current,
         }).then((response) => {
-          if (["PENDING_INVITATIONS", "UPCOMING_EVENTS", "UNRESOLVED_PRAYER_REQUESTS", "CONTRIBUTION_SUMMARY"].includes(response.intent)) {
+          if (isControlledKanisaAIIntent(response.intent)) {
+            if (pendingReportTypeRef.current && response.intent !== "CONTRIBUTION_SUMMARY") {
+              pendingReportTypeRef.current = null;
+              pendingFollowUpRef.current = null;
+              selectedReportPeriodRef.current = null;
+            }
             lastControlledIntentRef.current = response.intent as ControlledKanisaAIIntent;
           }
+          reportOfferedRef.current = response.followUps?.some((followUp) => followUp.type === "generate_report") === true;
           setMessages((current) => [...current, createKanisaAssistantMessage(response)]);
         }).catch(() => {
           const response: KanisaAIConversationResponse = {
@@ -305,7 +434,7 @@ export default function KanisaAIHome() {
             <div className="flex min-h-[58vh] flex-col">
               <div className="flex-1 space-y-4 p-4 sm:p-6" aria-live="polite" aria-busy={isProcessing}>
                 {messages.length ? (
-                  messages.map((message) => <ConversationMessage key={message.id} message={message} onPreview={setActivePreview} onRetry={submitQuestion} />)
+                  messages.map((message) => <ConversationMessage key={message.id} message={message} onPreview={setActivePreview} onRetry={submitQuestion} onFollowUp={handleFollowUp} />)
                 ) : (
                   <div className="flex min-h-64 items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card/70 p-6 text-center">
                     <div className="max-w-2xl">
@@ -315,7 +444,7 @@ export default function KanisaAIHome() {
                       <h2 className="mt-4 font-serif text-2xl font-bold text-foreground">{t("ai.ask")}</h2>
                       <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("ai.empty_thread")}</p>
                       <div className="mt-5 flex flex-wrap justify-center gap-2" aria-label="Suggested prompts">
-                        {experience.suggestedPrompts.slice(0, 4).map((prompt) => (
+                        {quickPrompts.slice(0, 4).map((prompt) => (
                           <Button
                             key={prompt}
                             type="button"
@@ -334,6 +463,16 @@ export default function KanisaAIHome() {
                 {isProcessing ? (
                   <div className="rounded-lg border border-border/70 bg-card/90 px-4 py-3 text-sm text-muted-foreground">
                     {t("ai.checking_data")}
+                  </div>
+                ) : null}
+                {customPeriodOpen ? (
+                  <div className="rounded-lg border border-border/70 bg-card/90 p-4" aria-label="Custom contribution report period">
+                    <p className="text-sm font-semibold">Choose a custom reporting period</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <label className="text-xs text-muted-foreground">Start date<input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} className="mt-1 min-h-11 w-full rounded-md border bg-background px-3" /></label>
+                      <label className="text-xs text-muted-foreground">End date<input type="date" value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} className="mt-1 min-h-11 w-full rounded-md border bg-background px-3" /></label>
+                    </div>
+                    <div className="mt-3 flex gap-2"><Button type="button" className="min-h-11" disabled={!customStart || !customEnd || isProcessing} onClick={() => void generateReport("CONTRIBUTION_SUMMARY_REPORT", { kind: "custom", startDate: customStart, endDate: customEnd })}>Generate PDF</Button><Button type="button" variant="outline" className="min-h-11" onClick={() => handleFollowUp({ id: "report-custom-cancel", type: "dismiss", label: "Cancel" })}>Cancel</Button></div>
                   </div>
                 ) : null}
               </div>
@@ -367,6 +506,13 @@ export default function KanisaAIHome() {
                         setMessages([]);
                         setDraft("");
                         lastControlledIntentRef.current = null;
+                        pendingReportTypeRef.current = null;
+                        pendingFollowUpRef.current = null;
+                        selectedReportPeriodRef.current = null;
+                        reportOfferedRef.current = false;
+                        revokeContributionReportUrl(reportUrlRef.current);
+                        reportUrlRef.current = null;
+                        setCustomPeriodOpen(false);
                         composerRef.current?.focus();
                       }}
                       className="gap-2"
