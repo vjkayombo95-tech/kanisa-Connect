@@ -84,6 +84,18 @@ export type KanisaAIAction = {
   permission: KanisaAIPermission;
   handler: KanisaAIHandlerType;
   workspaces?: WorkspaceId[];
+  discovery?: KanisaAIDiscoveryQuestion[];
+};
+
+export type KanisaAIDiscoveryCategory = "finance" | "members" | "operations" | "pastoral" | "live";
+
+export type KanisaAIDiscoveryQuestion = {
+  id: string;
+  category: KanisaAIDiscoveryCategory;
+  labelEn: string;
+  labelSw: string;
+  priority: number;
+  mode?: "question" | "report";
 };
 
 export type KanisaAIRouteDecision = {
