@@ -1,13 +1,13 @@
-import { ExternalLink, Radio } from "lucide-react";
+import { Play, Radio } from "lucide-react";
 import { useParams } from "react-router-dom";
 
 import { AppLink } from "@/components/AppLink";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePersistentLivestream } from "@/contexts/PersistentLivestreamContext";
 import { useMemberLivestream } from "@/hooks/use-church-livestream";
 import {
   getMemberLivestreamPresentation,
-  getValidatedYouTubeWatchUrl,
   getYouTubeEmbedUrl,
 } from "@/lib/church-livestreams";
 
@@ -29,6 +29,7 @@ function UnavailableState() {
 export default function MemberLivestreamPage() {
   const { streamId } = useParams<{ streamId: string }>();
   const { profile } = useAuth();
+  const persistentPlayer = usePersistentLivestream();
   const { data: stream, isLoading, error, featureEnabled, featureLoading, churchId } = useMemberLivestream(streamId);
 
   if (isLoading || featureLoading) {
@@ -37,7 +38,6 @@ export default function MemberLivestreamPage() {
 
   const presentation = getMemberLivestreamPresentation(stream);
   const embedUrl = stream ? getYouTubeEmbedUrl(stream) : null;
-  const watchUrl = stream ? getValidatedYouTubeWatchUrl(stream) : null;
   if (!featureEnabled || error || !stream || stream.churchId !== churchId || !presentation || !embedUrl) return <UnavailableState />;
 
   const churchName = String(profile?.church_name || profile?.church?.name || "Parokia yako");
@@ -54,27 +54,18 @@ export default function MemberLivestreamPage() {
         <p className="mt-1 break-words text-sm text-muted-foreground">{churchName}</p>
       </header>
 
-      <div className="aspect-video w-full overflow-hidden rounded-[1.65rem] border border-white/10 bg-black shadow-[0_24px_60px_-32px_rgba(0,0,0,0.85)]">
-        <iframe
-          src={embedUrl}
-          title={`${stream.title} — ${churchName}`}
-          className="h-full w-full border-0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin"
-        />
-      </div>
+      {persistentPlayer.activeStreamId !== stream.id ? (
+        <button type="button" onClick={() => persistentPlayer.open(stream.id)} className="flex aspect-video w-full flex-col items-center justify-center rounded-[1.65rem] border border-white/10 bg-black text-white shadow-[0_24px_60px_-32px_rgba(0,0,0,0.85)]" data-testid="start-livestream">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-zinc-950"><Play className="ml-1 h-7 w-7 fill-current" /></span>
+          <span className="mt-4 font-bold">Tazama Moja kwa Moja</span>
+        </button>
+      ) : <div className="aspect-video w-full" data-testid="persistent-livestream-host" aria-hidden="true" />}
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
         <div>
           <p className="font-semibold text-foreground">{churchName}</p>
           {isLive && stream.actualStartedAt ? <p>Ilianza saa {formatStartedAt(stream.actualStartedAt)}</p> : null}
         </div>
-        {watchUrl ? (
-          <a href={watchUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center gap-2 rounded-2xl border border-border px-4 font-semibold text-foreground outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary">
-            Fungua YouTube <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          </a>
-        ) : null}
       </div>
     </article>
   );

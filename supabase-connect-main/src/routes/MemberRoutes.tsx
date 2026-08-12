@@ -2,6 +2,8 @@ import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { PersistentLivestreamPlayer } from "@/components/portal/PersistentLivestreamPlayer";
+import { PersistentLivestreamProvider } from "@/contexts/PersistentLivestreamContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { isMemberPreviewActive } from "@/lib/member-preview";
 import { getDefaultRouteForRoles, isAdminRoles } from "@/lib/role-utils";
@@ -78,8 +80,9 @@ function PortalDashboardRoute() {
 
 export default function MemberRoutes() {
   return (
-    <Suspense fallback={<SectionFallback />}>
-      <Routes>
+    <PersistentLivestreamProvider>
+      <Suspense fallback={<SectionFallback />}>
+        <Routes>
         <Route element={<WorkspaceRouteLayout workspaceId="member" />}>
           <Route index element={<PortalIndexRoute />} />
           <Route path="services" element={<MemberServicesPage />} />
@@ -118,7 +121,9 @@ export default function MemberRoutes() {
           <Route path="bible/:bookId" element={<MemberBibleBookPage />} />
           <Route path="bible/:bookId/chapter/:chapterNumber" element={<MemberBibleChapterPage />} />
         </Route>
-      </Routes>
-    </Suspense>
+        </Routes>
+      </Suspense>
+      <PersistentLivestreamPlayer />
+    </PersistentLivestreamProvider>
   );
 }

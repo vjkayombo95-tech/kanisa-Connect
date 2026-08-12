@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Clock3, Play, Radio } from "lucide-react";
 
 import { AppLink } from "@/components/AppLink";
+import { useOptionalPersistentLivestream } from "@/contexts/PersistentLivestreamContext";
 import { useChurchLivestream } from "@/hooks/use-church-livestream";
 import { getMemberLivestreamPresentation, getYouTubeEmbedUrl, isSecureLivestreamUrl } from "@/lib/church-livestreams";
 import { logWarning } from "@/lib/error-logger";
@@ -28,6 +29,7 @@ type LiveMassCardProps = {
 export function LiveMassCard({ churchName, viewerBasePath = "/portal/live" }: LiveMassCardProps) {
   const { data: stream, error, featureEnabled, churchId } = useChurchLivestream();
   const [failedThumbnail, setFailedThumbnail] = useState<string | null>(null);
+  const persistentPlayer = useOptionalPersistentLivestream();
 
   useEffect(() => {
     if (!error) return;
@@ -92,6 +94,11 @@ export function LiveMassCard({ churchName, viewerBasePath = "/portal/live" }: Li
           to={internalViewer ?? stream.watchUrl}
           target={internalViewer ? undefined : "_blank"}
           rel={internalViewer ? undefined : "noopener noreferrer"}
+          onClick={(event) => {
+            if (!internalViewer || !persistentPlayer || event.button !== 0 || event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) return;
+            event.preventDefault();
+            persistentPlayer.open(stream.id);
+          }}
           aria-label={isLive ? `Tazama moja kwa moja: ${stream.title}` : `Angalia maelezo ya: ${stream.title}`}
           className={cn(
             "mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-4 text-sm font-bold outline-none transition-[transform,background-color] duration-200 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none",

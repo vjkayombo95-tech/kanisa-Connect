@@ -7,6 +7,7 @@ import { getMemberLivestreamPresentation, type ChurchLivestream } from "@/lib/ch
 const hookState = vi.hoisted(() => ({ value: {} as Record<string, unknown> }));
 
 vi.mock("@/hooks/use-church-livestream", () => ({ useChurchLivestream: () => hookState.value }));
+vi.mock("@/contexts/PersistentLivestreamContext", () => ({ useOptionalPersistentLivestream: () => null }));
 vi.mock("@/lib/error-logger", () => ({ logWarning: vi.fn() }));
 
 const liveStream: ChurchLivestream = {

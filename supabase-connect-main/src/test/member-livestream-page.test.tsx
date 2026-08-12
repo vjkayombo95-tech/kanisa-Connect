@@ -5,10 +5,12 @@ import MemberLivestreamPage from "@/pages/portal/MemberLivestreamPage";
 import { getValidatedYouTubeWatchUrl, getYouTubeEmbedUrl, type ChurchLivestream } from "@/lib/church-livestreams";
 
 const state = vi.hoisted(() => ({ hook: {} as Record<string, unknown> }));
+const player = vi.hoisted(() => ({ activeStreamId: null as string | null, open: vi.fn() }));
 
 vi.mock("react-router-dom", () => ({ useParams: () => ({ streamId: "stream-1" }) }));
 vi.mock("@/hooks/use-church-livestream", () => ({ useMemberLivestream: () => state.hook }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ churchId: "church-a", profile: { church_name: "St. Joseph Parish" } }) }));
+vi.mock("@/contexts/PersistentLivestreamContext", () => ({ usePersistentLivestream: () => player }));
 
 const liveStream: ChurchLivestream = {
   id: "stream-1", churchId: "church-a", status: "live", title: "Misa Takatifu", provider: "youtube",
@@ -23,21 +25,21 @@ function setStream(stream: ChurchLivestream | null, overrides: Record<string, un
 }
 
 describe("MemberLivestreamPage", () => {
-  beforeEach(() => setStream(liveStream));
+  beforeEach(() => { player.activeStreamId = null; player.open.mockReset(); setStream(liveStream); });
 
-  it("renders a same-church LIVE stream using the validated provider ID", () => {
+  it("renders a same-church LIVE stream host without a duplicate iframe", () => {
+    player.activeStreamId = liveStream.id;
     const markup = renderToStaticMarkup(<MemberLivestreamPage />);
     expect(markup).toContain("LIVE SASA");
-    expect(markup).toContain('src="https://www.youtube.com/embed/abc123DEF45"');
-    expect(markup).toContain("allowfullscreen");
-    expect(markup).toContain("picture-in-picture; web-share");
+    expect(markup).toContain('data-testid="persistent-livestream-host"');
+    expect(markup).not.toContain("<iframe");
   });
 
   it("never injects an arbitrary watch URL into the iframe", () => {
     const poisoned = { ...liveStream, watchUrl: "https://evil.example/embed/payload" };
     setStream(poisoned);
     const markup = renderToStaticMarkup(<MemberLivestreamPage />);
-    expect(markup).toContain('src="https://www.youtube.com/embed/abc123DEF45"');
+    expect(markup).not.toContain("<iframe");
     expect(markup).not.toContain("evil.example");
     expect(getValidatedYouTubeWatchUrl(poisoned)).toBeNull();
   });
@@ -63,7 +65,7 @@ describe("MemberLivestreamPage", () => {
     const markup = renderToStaticMarkup(<MemberLivestreamPage />);
     vi.useRealTimers();
     expect(markup).toContain("INAKARIBIA");
-    expect(markup).toContain("<iframe");
+    expect(markup).toContain('data-testid="start-livestream"');
     expect(markup).not.toContain("LIVE SASA");
   });
 
@@ -72,10 +74,9 @@ describe("MemberLivestreamPage", () => {
     expect(getYouTubeEmbedUrl({ ...liveStream, providerExternalId: "not-valid" })).toBeNull();
   });
 
-  it("renders a hardened YouTube fallback link", () => {
+  it("does not duplicate the persistent player's hardened YouTube fallback link", () => {
     const markup = renderToStaticMarkup(<MemberLivestreamPage />);
-    expect(markup).toContain("Fungua YouTube");
-    expect(markup).toContain('target="_blank"');
-    expect(markup).toContain('rel="noopener noreferrer"');
+    expect(markup).not.toContain("Fungua YouTube");
+    expect(markup).not.toContain("<iframe");
   });
 });
