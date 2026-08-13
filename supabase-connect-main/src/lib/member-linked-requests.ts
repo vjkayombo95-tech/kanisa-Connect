@@ -201,6 +201,34 @@ export async function submitPortalMassIntention(payload: {
   return data as { success: boolean; id: string; created: boolean };
 }
 
+export async function submitPortalMassIntentionForOccurrence(payload: {
+  church_id: string;
+  member_id: string;
+  mass_occurrence_id: string;
+  intention_type: string;
+  message: string;
+  offering_amount: number;
+  idempotency_key: string;
+}) {
+  if (!payload.church_id || !payload.member_id || !payload.mass_occurrence_id) {
+    throw new Error("Church, member and Mass occurrence are required.");
+  }
+  if (!payload.message.trim() || !payload.idempotency_key.trim()) {
+    throw new Error("Message and submission key are required.");
+  }
+  const { data, error } = await supabase.rpc("submit_portal_mass_intention_for_occurrence" as never, {
+    p_church_id: payload.church_id,
+    p_member_id: payload.member_id,
+    p_mass_occurrence_id: payload.mass_occurrence_id,
+    p_intention_type: payload.intention_type,
+    p_message: payload.message.trim(),
+    p_offering_amount: payload.offering_amount,
+    p_idempotency_key: payload.idempotency_key,
+  } as never);
+  if (error) throw error;
+  return data as { success: boolean; id: string; created: boolean };
+}
+
 export async function submitCommunityHelpRequest(payload: {
   category: string;
   description: string;

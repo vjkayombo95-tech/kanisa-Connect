@@ -36,6 +36,9 @@ const DataImportPage = lazy(() => import("@/pages/church-admin/DataImportPage"))
 const AuditLogsPage = lazy(() => import("@/pages/church-admin/AuditLogsPage"));
 const BillingPage = lazy(() => import("@/pages/church-admin/BillingPage"));
 const LivestreamsPage = lazy(() => import("@/pages/church-admin/LivestreamsPage"));
+const MassTimetablePage = lazy(() => import("@/pages/church-admin/MassTimetablePage"));
+const ParishCalendarPage = lazy(() => import("@/pages/ParishCalendarPage"));
+const EventRegistrationsPage = lazy(() => import("@/pages/church-admin/EventRegistrationsPage"));
 
 function SectionFallback() {
   return (
@@ -62,6 +65,9 @@ export default function AdminRoutes() {
           <Route path="ministries" element={<MinistriesPage />} />
           <Route path="families" element={<FamiliesPage />} />
           <Route path="events" element={<EventsPage />} />
+          <Route path="events/:eventId/registrations" element={<EventRegistrationsPage />} />
+          <Route path="calendar" element={<ParishCalendarPage workspace="admin" />} />
+          <Route path="mass-timetable" element={<MassTimetablePage />} />
           <Route path="mass-schedule" element={<MassSchedulePage />} />
           <Route path="event-requests" element={<EventRequestsPage />} />
           <Route path="announcements" element={<AnnouncementsPage />} />

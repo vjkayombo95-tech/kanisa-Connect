@@ -50,6 +50,7 @@ const adminServices: StaffService[] = [
   { id: "roles", label: "Mialiko na majukumu", route: "/church-admin/roles", group: "Watu", icon: UserCheck, featureKey: "roles", primary: true },
   { id: "announcements", label: "Matangazo", route: "/church-admin/announcements", group: "Mawasiliano", icon: Megaphone, featureKey: "announcements", primary: true },
   { id: "events", label: "Matukio", route: "/church-admin/events", group: "Uendeshaji", icon: CalendarDays, featureKey: "events", primary: true },
+  { id: "calendar", label: "Kalenda ya Parokia", route: "/church-admin/calendar", group: "Uendeshaji", icon: CalendarDays, featureKey: "events" },
   { id: "communities", label: "Jumuiya", route: "/church-admin/communities", group: "Watu", icon: Church, featureKey: "communities" },
   { id: "families", label: "Familia", route: "/church-admin/families", group: "Watu", icon: Users, featureKey: "families" },
   { id: "ministries", label: "Huduma", route: "/church-admin/ministries", group: "Watu", icon: HeartHandshake, featureKey: "ministries" },
@@ -59,6 +60,7 @@ const adminServices: StaffService[] = [
   { id: "mass-intentions", label: "Nia za Misa", route: "/church-admin/mass-intentions", group: "Kichungaji", icon: ClipboardList, featureKey: "mass_intentions" },
   { id: "prayer-requests", label: "Maombi", route: "/church-admin/prayer-requests", group: "Kichungaji", icon: HeartHandshake, featureKey: "prayer_requests" },
   { id: "mass-schedule", label: "Ratiba ya Misa", route: "/church-admin/mass-schedule", group: "Kichungaji", icon: CalendarDays, featureKey: "events" },
+  { id: "mass-timetable", label: "Ratiba za Misa", route: "/church-admin/mass-timetable", group: "Kichungaji", icon: CalendarDays, featureKey: "events" },
   { id: "sermons", label: "Mahubiri", route: "/church-admin/sermons", group: "Kichungaji", icon: BookOpen, featureKey: "sermons" },
   { id: "livestreams", label: "Matangazo Mubashara", route: "/church-admin/livestreams", group: "Kichungaji", icon: Activity, featureKey: "livestream", livestreamPermission: true },
   { id: "notifications", label: "Arifa", route: "/church-admin/notifications", group: "Mawasiliano", icon: Bell, featureKey: "notifications" },
@@ -66,7 +68,7 @@ const adminServices: StaffService[] = [
   { id: "billing", label: "Malipo ya kanisa", route: "/church-admin/billing", group: "Usimamizi", icon: CreditCard },
 ];
 
-const pastoralIds = new Set(["mass-intentions", "prayer-requests", "mass-schedule", "events", "announcements", "sermons", "livestreams"]);
+const pastoralIds = new Set(["mass-intentions", "prayer-requests", "mass-schedule", "mass-timetable", "calendar", "events", "announcements", "sermons", "livestreams"]);
 const financeIds = new Set(["contributions", "pledges", "reports"]);
 
 const pastoralServices = adminServices

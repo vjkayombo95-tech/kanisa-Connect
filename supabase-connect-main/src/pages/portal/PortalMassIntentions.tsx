@@ -13,7 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { CalendarDays, Flame, Heart, Loader2, Plus, User } from "lucide-react";
 import { formatTZS } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
-import { MASS_INTENTION_SELECT, mapMassIntentionRecord, submitPortalMassIntention, type MassIntentionWithMember } from "@/lib/member-linked-requests";
+import { MASS_INTENTION_SELECT, mapMassIntentionRecord, submitPortalMassIntentionForOccurrence, type MassIntentionWithMember } from "@/lib/member-linked-requests";
+import type { MassOccurrence } from "@/lib/mass-timetable";
 import { clearOfflineDraft, readOfflineDraft, writeOfflineDraft } from "@/lib/offline-drafts";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { enqueueOfflineSyncAction, processOfflineSyncQueue, removeOfflineSyncAction } from "@/lib/offline-sync";
@@ -69,6 +70,7 @@ export default function PortalMassIntentions() {
   const [message, setMessage] = useState("");
   const [offeringAmount, setOfferingAmount] = useState(String(DEFAULT_OFFERING));
   const [massDate, setMassDate] = useState("");
+  const [massOccurrenceId, setMassOccurrenceId] = useState("");
   const [tab, setTab] = useState("mine");
   const { churchId } = useAuth();
   const { isOnline } = useNetworkStatus();
@@ -90,6 +92,16 @@ export default function PortalMassIntentions() {
       ),
     [churchId, member?.id, offlineQueue],
   );
+  const { data: availableMasses = [], isLoading: massesLoading } = useQuery({
+    queryKey: ["available-mass-occurrences", churchId],
+    queryFn: async () => {
+      if (!churchId || !isOnline) return [];
+      const { data, error } = await supabase.rpc("get_available_mass_occurrences" as never, { p_church_id: churchId, p_date: null } as never);
+      if (error) throw error;
+      return (data ?? []) as unknown as Array<MassOccurrence & { remaining_slots: number | null; is_full: boolean }>;
+    },
+    enabled: !!churchId && isOnline,
+  });
   const [isSyncingPending, setIsSyncingPending] = useState(false);
 
   useEffect(() => {
@@ -180,33 +192,18 @@ export default function PortalMassIntentions() {
       if (!member?.id) throw new Error(t("mass_intentions_form.error_no_member"));
       const netAmount = parseFloat(offeringAmount) || DEFAULT_OFFERING;
       if (!message.trim()) throw new Error(t("mass_intentions_form.error_message_required"));
-      if (!massDate) throw new Error("Please select the Mass date.");
+      if (!massOccurrenceId) throw new Error("Please select an available Mass.");
       if (netAmount < 1000) throw new Error(t("mass_intentions_form.error_minimum_offering"));
       assertClientRateLimit(`mass-intention:${churchId}:${member.id}`, 5, 60 * 60 * 1000, "mass intention submissions");
 
-      if (!isOnline) {
-        enqueueOfflineSyncAction({
-          type: "mass_intention_create",
-          payload: {
-            churchId,
-            memberId: member.id,
-            memberName: member.full_name,
-            intentionType,
-            message,
-            offeringAmount: netAmount,
-            requestedMassDate: massDate || null,
-          },
-        });
-        return { queuedOffline: true };
-      }
-
-      await submitPortalMassIntention({
+      if (!isOnline) throw new Error("Unganisha intaneti ili kuthibitisha nafasi ya Misa.");
+      await submitPortalMassIntentionForOccurrence({
         intention_type: intentionType,
         message,
         offering_amount: netAmount,
         member_id: member.id,
         church_id: churchId,
-        requested_mass_date: massDate,
+        mass_occurrence_id: massOccurrenceId,
         idempotency_key: crypto.randomUUID(),
       });
       return { queuedOffline: false };
@@ -239,6 +236,7 @@ export default function PortalMassIntentions() {
       setMessage("");
       setOfferingAmount(String(DEFAULT_OFFERING));
       setMassDate("");
+      setMassOccurrenceId("");
     },
     onError: (err: Error) => {
       logSupabaseError(err, {
@@ -357,18 +355,15 @@ export default function PortalMassIntentions() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="mass_date">Tarehe ya Misa *</Label>
+                  <Label htmlFor="mass_occurrence">Chagua Misa *</Label>
                   <div className="relative">
                     <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="mass_date"
-                      type="date"
-                      value={massDate}
-                      onChange={(event) => setMassDate(event.target.value)}
-                      className="pl-9"
-                      required
-                    />
+                    <select id="mass_occurrence" value={massOccurrenceId} onChange={(event) => { const selected = availableMasses.find(item => item.id === event.target.value); setMassOccurrenceId(event.target.value); setMassDate(selected?.occurrence_date ?? ""); setOfferingAmount(String(selected?.intention_fee ?? 0)); }} className="h-11 w-full rounded-md border bg-background pl-9 pr-3" required disabled={massesLoading || !isOnline}>
+                      <option value="">{massesLoading ? "Inapakia Misa..." : "Chagua Misa inayopatikana"}</option>
+                      {availableMasses.filter(item => !item.is_full).map(item => <option key={item.id} value={item.id}>{item.occurrence_date} · {item.start_time.slice(0,5)} · {item.name}{item.remaining_slots == null ? "" : ` · nafasi ${item.remaining_slots}`}</option>)}
+                    </select>
                   </div>
+                  {!isOnline ? <p className="text-xs text-destructive">Uchaguzi wa Misa unahitaji muunganisho ili kuthibitisha nafasi.</p> : null}
                 </div>
                 <div className="space-y-2">
                   <Label>Nia / Ujumbe *</Label>
@@ -415,7 +410,7 @@ export default function PortalMassIntentions() {
                   <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
                     {t("common.cancel")}
                   </Button>
-                  <Button type="submit" disabled={submit.isPending || !message.trim() || !massDate || !offeringAmount || !member?.id}>
+                  <Button type="submit" disabled={submit.isPending || !message.trim() || !massOccurrenceId || !member?.id || !isOnline}>
                     {submit.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {t("mass_intentions_form.submit_and_pay", { amount: formatTZS(grossAmount) })}
                   </Button>

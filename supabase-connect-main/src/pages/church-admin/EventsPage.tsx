@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Calendar, MapPin, Clock, Loader2, Users, Pencil, Archive, Trash2, MessageCircle } from "lucide-react";
+import { Plus, Calendar, MapPin, Clock, Loader2, Users, Pencil, Archive, Trash2, MessageCircle, ListChecks } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { PaginationFooter } from "@/components/ui/pagination-footer";
@@ -326,6 +327,9 @@ export default function EventsPage() {
           </div>
 
           <div className="flex flex-wrap gap-2 pt-1">
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/church-admin/events/${event.id}/registrations`}><ListChecks className="mr-2 h-3.5 w-3.5" />Roster</Link>
+            </Button>
             <Button
               variant="outline"
               size="sm"
