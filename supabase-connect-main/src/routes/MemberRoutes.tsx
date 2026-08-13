@@ -1,6 +1,8 @@
 import { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { PersistentLivestreamPlayer } from "@/components/portal/PersistentLivestreamPlayer";
+import { PersistentLivestreamProvider } from "@/contexts/PersistentLivestreamContext";
 
 const PortalLayout = lazy(() =>
   import("@/components/portal/PortalLayout").then((module) => ({ default: module.PortalLayout })),
@@ -25,6 +27,7 @@ const DailyReadingsPage = lazy(() => import("@/pages/portal/DailyReadingsPage"))
 const MemberBibleHomePage = lazy(() => import("@/pages/portal/MemberBibleHomePage"));
 const MemberBibleBookPage = lazy(() => import("@/pages/portal/MemberBibleBookPage"));
 const MemberBibleChapterPage = lazy(() => import("@/pages/portal/MemberBibleChapterPage"));
+const MemberLivestreamPage = lazy(() => import("@/pages/portal/MemberLivestreamPage"));
 
 function SectionFallback() {
   return (
@@ -36,8 +39,9 @@ function SectionFallback() {
 
 export default function MemberRoutes() {
   return (
-    <Suspense fallback={<SectionFallback />}>
-      <Routes>
+    <PersistentLivestreamProvider>
+      <Suspense fallback={<SectionFallback />}>
+        <Routes>
         <Route element={<PortalLayout />}>
           <Route index element={<MemberDashboard />} />
           <Route path="bible-verses" element={<PortalHome />} />
@@ -59,8 +63,11 @@ export default function MemberRoutes() {
           <Route path="bible" element={<MemberBibleHomePage />} />
           <Route path="bible/:bookId" element={<MemberBibleBookPage />} />
           <Route path="bible/:bookId/chapter/:chapterNumber" element={<MemberBibleChapterPage />} />
+          <Route path="live/:streamId" element={<MemberLivestreamPage />} />
         </Route>
-      </Routes>
-    </Suspense>
+        </Routes>
+      </Suspense>
+      <PersistentLivestreamPlayer />
+    </PersistentLivestreamProvider>
   );
 }

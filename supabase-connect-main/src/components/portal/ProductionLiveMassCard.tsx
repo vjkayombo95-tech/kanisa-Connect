@@ -1,0 +1,5 @@
+import { Play } from "lucide-react";
+import { useChurchLivestream } from "@/hooks/use-church-livestream";
+import { getYouTubeEmbedUrl, presentation } from "@/lib/church-livestreams";
+import { useOptionalPersistentLivestream } from "@/contexts/PersistentLivestreamContext";
+export function ProductionLiveMassCard(){const {data:stream,featureEnabled,churchId,error}=useChurchLivestream();const player=useOptionalPersistentLivestream();if(!featureEnabled||error||!stream||stream.churchId!==churchId||!presentation(stream)||!getYouTubeEmbedUrl(stream))return null;return <section data-testid="live-mass-card" className="rounded-[28px] border border-red-500/20 bg-zinc-950 p-5 text-white shadow-xl"><span className="rounded-full border border-red-400/30 px-3 py-1 text-xs font-bold text-red-300">LIVE</span><h2 className="mt-4 text-xl font-bold">{stream.title}</h2><button type="button" onClick={()=>player?.open(stream.id)} className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 font-bold text-zinc-950"><Play className="h-4 w-4 fill-current"/>Tazama Moja kwa Moja</button></section>}

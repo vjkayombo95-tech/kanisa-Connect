@@ -1,0 +1,26 @@
+import { readFileSync } from "node:fs";
+import { describe,expect,it } from "vitest";
+import { extractYouTubeVideoId } from "@/lib/church-livestreams";
+const read=(path:string)=>readFileSync(path,"utf8");
+const migration=read("supabase/migrations/20260813120000_production_livestream_adaptation.sql");
+const routes=read("src/routes/MemberRoutes.tsx");
+const context=read("src/contexts/PersistentLivestreamContext.tsx");
+const player=read("src/components/portal/PersistentLivestreamPlayer.tsx");
+const card=read("src/components/portal/ProductionLiveMassCard.tsx");
+const hook=read("src/hooks/use-church-livestream.ts");
+const app=read("src/App.tsx");
+describe("minimal production livestream adaptation",()=>{
+  it("adds only the livestream database surface",()=>{expect(migration).toContain("create table public.church_livestreams");expect(migration).toContain("has_livestream_permission");expect(migration).toContain("enable row level security");expect(migration).toContain("one_live_per_church");expect(migration).not.toMatch(/radio|ministries/i)});
+  it("uses explicit generic feature/action permissions",()=>{expect(migration).toContain("create table public.church_role_permissions");expect(migration).toContain("has_church_feature_permission");expect(migration).toContain("when 'view' then crp.can_view");expect(migration).not.toMatch(/_action = 'view'.*ur\.role/s)});
+  it("can independently deny or allow member view",()=>{expect(migration).toContain("can_view boolean not null default false");expect(migration).toContain("('member')");expect(migration).toContain("r.role in ('church_admin','pastor')")});
+  it("keeps reads feature, permission, and tenant scoped",()=>{expect(hook).toContain('getFeatureState("livestream")');expect(hook).toContain('has_livestream_permission');expect(hook).toContain("churchId");expect(migration).toContain("auth.uid(), church_id, 'view'")});
+  it("separates view, create, edit, delete, and lifecycle management",()=>{expect(migration).toContain("church_id, 'create'");expect(migration).toContain("church_id, 'edit'");expect(migration).toContain("church_id, 'delete'");expect(migration).toContain("old.church_id, 'manage'")});
+  it("explicitly revokes public and anonymous access",()=>{expect(migration).toContain("revoke all on table public.church_livestreams from public, anon, authenticated");expect(migration).toContain("revoke all on table public.church_role_permissions from public, anon, authenticated");expect(migration).toMatch(/revoke all on function[\s\S]*transition_production_livestream[\s\S]*from public, anon, authenticated/)});
+  it("runs validation as a hardened trigger without exposing its helper",()=>{expect(migration).toMatch(/function public\.enforce_production_livestream\(\)[\s\S]*security definer set search_path = pg_catalog, public/);expect(migration).toMatch(/revoke all on function[\s\S]*youtube_livestream_video_id\(text\)[\s\S]*enforce_production_livestream\(\)[\s\S]*from public, anon, authenticated/);expect(migration).not.toMatch(/grant execute on function[^;]*youtube_livestream_video_id/)});
+  it("adds the viewer to both existing member mounts without removing routes",()=>{expect(routes).toContain('path="live/:streamId"');expect(app).toContain('path="/portal/*"');expect(app).toContain('path="/member/*"');expect(routes).toContain('path="announcements"');expect(routes).toContain('path="give"')});
+  it("owns one iframe in the persistent player after explicit action",()=>{expect(player.match(/<iframe/g)).toHaveLength(1);expect(card).toContain('type="button"');expect(card).toContain("player?.open");expect(card).not.toContain("autoPlay");expect(context).toContain('"closed"|"full"|"mini"')});
+  it("clears on user or tenant scope change and intercepts only member SPA links",()=>{expect(context).toContain("scope.current.churchId!==churchId");expect(context).toContain("scope.current.user!==user?.id");expect(context).toContain('a.target||a.hasAttribute("download")');expect(context).toContain('^\\/(?:portal|member)')});
+  it("validates supported YouTube identities",()=>{expect(extractYouTubeVideoId("https://www.youtube.com/watch?v=M7lc1UVf-VE")).toBe("M7lc1UVf-VE");expect(extractYouTubeVideoId("https://youtu.be/M7lc1UVf-VE")).toBe("M7lc1UVf-VE");expect(extractYouTubeVideoId("https://example.com/M7lc1UVf-VE")).toBeNull()});
+  it("rejects malformed and incomplete YouTube sources",()=>{expect(extractYouTubeVideoId("not-a-url")).toBeNull();expect(extractYouTubeVideoId("https://youtube.com/watch?v=short")).toBeNull();expect(extractYouTubeVideoId("https://vimeo.com/M7lc1UVf-VE")).toBeNull()});
+  it("keeps member and admin routes behind their authenticated shells",()=>{expect(app).toMatch(/path="\/portal\/\*"[\s\S]*?<ProtectedRoute requireChurch>/);expect(app).toMatch(/path="\/member\/\*"[\s\S]*?<ProtectedRoute requireChurch>/);expect(app).toMatch(/path="\/church-admin\/\*"[\s\S]*?<ProtectedRoute requireChurch requireAdmin>/);expect(read("src/routes/AdminRoutes.tsx")).toContain('path="livestreams"')});
+});

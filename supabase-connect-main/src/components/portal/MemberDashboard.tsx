@@ -26,6 +26,7 @@ import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
 import { cn } from "@/lib/utils";
 import { getReadableReadingDate, getTodayReadingEntry } from "@/lib/daily-readings";
 import { logWarning } from "@/lib/error-logger";
+import { ProductionLiveMassCard } from "@/components/portal/ProductionLiveMassCard";
 
 type MemberHomeData = {
   memberId: string | null;
@@ -400,6 +401,7 @@ export default function MemberDashboard() {
   return (
     <div className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-5 pb-28 lg:px-8 lg:pb-8">
       <div className="mx-auto max-w-5xl space-y-5">
+        <ProductionLiveMassCard />
         <section className="overflow-hidden rounded-[32px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.15),hsl(var(--card))_58%,hsl(var(--card)))] p-5 shadow-sm sm:p-7">
           <div className="flex items-start gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">

@@ -135,6 +135,7 @@ const SIMPLE_MEMBER_ALLOWED_PATHS = [
   "/portal/give",
   "/portal/mass-intentions",
   "/portal/announcements",
+  "/portal/live",
 ];
 
 const LIMITED_MAIN_ITEMS: NavItem[] = [
