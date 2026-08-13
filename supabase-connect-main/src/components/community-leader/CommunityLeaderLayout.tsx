@@ -1,6 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { CommunityLeaderSidebar } from "./CommunityLeaderSidebar";
-import { Outlet, useParams, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
 import {
@@ -12,6 +12,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLedCommunities } from "@/hooks/use-community-leader";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { StaffMobileBackHeader, StaffMobileBottomNav, StaffMobileHome } from "@/components/staff-mobile/StaffMobileExperience";
+import { getCommunityMobileConfig } from "@/lib/staff-mobile-registry";
 
 export interface CommunityOutletContext {
   communityId: string;
@@ -24,6 +26,7 @@ export function CommunityLeaderLayout() {
   const { communityId } = useParams<{ communityId: string }>();
   const { signOut, profile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { data: ledCommunities, isLoading: loadingLed } = useLedCommunities();
 
@@ -61,6 +64,9 @@ export function CommunityLeaderLayout() {
     leadershipRole: leaderEntry.leadership_role,
     churchId: leaderEntry.church_id,
   };
+  const mobileConfig = getCommunityMobileConfig(communityId!);
+  const isHome = location.pathname.replace(/\/$/, "") === mobileConfig.home;
+  const mobileTitle = location.pathname.split("/").filter(Boolean).at(-1)?.replace(/-/g, " ") ?? "Jumuiya";
 
   return (
     <ProtectedRoute requireChurch>
@@ -72,7 +78,7 @@ export function CommunityLeaderLayout() {
             leadershipRole={leaderEntry.leadership_role}
           />
           <div className="flex-1 flex flex-col min-w-0">
-            <header className="h-14 flex items-center gap-4 border-b border-border px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+            <header className="hidden h-14 items-center gap-4 border-b border-border px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-10 lg:flex">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
               <div className="flex items-center gap-2 flex-1">
                 <Badge variant="outline" className="text-xs border-primary/30 text-primary">
@@ -101,9 +107,12 @@ export function CommunityLeaderLayout() {
                 </DropdownMenu>
               </div>
             </header>
-            <main className="flex-1 p-6 overflow-auto">
-              <Outlet context={context} />
+            <main className="flex-1 overflow-auto px-4 pb-24 pt-5 lg:p-6">
+              <StaffMobileBackHeader config={mobileConfig} title={mobileTitle} />
+              {isHome ? <StaffMobileHome config={mobileConfig} contextLabel={leaderEntry.community_name} /> : null}
+              <div className={isHome ? "hidden lg:block" : undefined}><Outlet context={context} /></div>
             </main>
+            <StaffMobileBottomNav config={mobileConfig} />
           </div>
         </div>
       </SidebarProvider>
