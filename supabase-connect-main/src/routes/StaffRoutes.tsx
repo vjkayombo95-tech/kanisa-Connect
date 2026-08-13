@@ -1,6 +1,8 @@
 import { Suspense, lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import StaffServicesPage from "@/pages/StaffServicesPage";
+import { getCommunityMobileConfig } from "@/lib/staff-mobile-registry";
 
 const CommunityLeaderLayout = lazy(() =>
   import("@/components/community-leader/CommunityLeaderLayout").then((module) => ({ default: module.CommunityLeaderLayout })),
@@ -21,6 +23,11 @@ function SectionFallback() {
   );
 }
 
+function CommunityServicesRoute() {
+  const { communityId } = useParams<{ communityId: string }>();
+  return communityId ? <StaffServicesPage config={getCommunityMobileConfig(communityId)} /> : <Navigate to="/portal" replace />;
+}
+
 export default function StaffRoutes() {
   return (
     <Suspense fallback={<SectionFallback />}>
@@ -28,6 +35,7 @@ export default function StaffRoutes() {
         <Route element={<CommunityLeaderLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<CommunityDashboardPage />} />
+          <Route path="services" element={<CommunityServicesRoute />} />
           <Route path="members" element={<CommunityMembersPage />} />
           <Route path="contributions" element={<CommunityContributionsPage />} />
           <Route path="pledges" element={<CommunityPledgesPage />} />

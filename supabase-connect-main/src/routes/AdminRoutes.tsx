@@ -1,6 +1,9 @@
 import { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import StaffServicesPage from "@/pages/StaffServicesPage";
+import { STAFF_MOBILE_CONFIGS } from "@/lib/staff-mobile-registry";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ChurchAdminLayout = lazy(() =>
   import("@/components/church-admin/ChurchAdminLayout").then((module) => ({ default: module.ChurchAdminLayout })),
@@ -43,11 +46,14 @@ function SectionFallback() {
 }
 
 export default function AdminRoutes() {
+  const { staffWorkspace } = useAuth();
+  const config = staffWorkspace === "admin" || staffWorkspace === "pastoral" || staffWorkspace === "finance" ? STAFF_MOBILE_CONFIGS[staffWorkspace] : STAFF_MOBILE_CONFIGS.admin;
   return (
     <Suspense fallback={<SectionFallback />}>
       <Routes>
         <Route element={<ChurchAdminLayout />}>
           <Route index element={<ChurchDashboard />} />
+          <Route path="services" element={<StaffServicesPage config={config} />} />
           <Route path="qr-payments" element={<ChurchQRPage />} />
           <Route path="members" element={<MembersPage />} />
           <Route path="contributions" element={<ContributionsPage />} />

@@ -11,6 +11,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useUnresolvedSystemLogCount } from "@/hooks/use-system-log-alert";
 import { SuperAdminSearch } from "./SuperAdminSearch";
+import { StaffMobileBackHeader, StaffMobileBottomNav, StaffMobileHome } from "@/components/staff-mobile/StaffMobileExperience";
+import { STAFF_MOBILE_CONFIGS } from "@/lib/staff-mobile-registry";
 
 const pageTitles: Array<{ match: string; title: string; description: string }> = [
   { match: "/super-admin/settings", title: "Platform Settings", description: "Control platform-wide behavior" },
@@ -31,11 +33,13 @@ const pageTitles: Array<{ match: string; title: string; description: string }> =
 ];
 
 export function SuperAdminLayout() {
-  const { signOut } = useAuth();
+  const { signOut, profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { data: unresolvedSystemLogCount = 0 } = useUnresolvedSystemLogCount();
   const hasUnresolvedSystemLogs = unresolvedSystemLogCount > 0;
+  const mobileConfig = STAFF_MOBILE_CONFIGS.super_admin;
+  const isHome = location.pathname.replace(/\/$/, "") === "/super-admin";
 
   const currentPage =
     pageTitles.find((page) => {
@@ -55,7 +59,7 @@ export function SuperAdminLayout() {
         <div className="min-h-screen flex w-full bg-background">
           <SuperAdminSidebar />
           <div className="flex-1 flex min-w-0 flex-col">
-            <header className="sticky top-0 z-10 border-b border-border bg-card/70 backdrop-blur-xl">
+            <header className="sticky top-0 z-10 hidden border-b border-border bg-card/70 backdrop-blur-xl lg:block">
               <div className="px-3 py-3 sm:px-4 sm:py-0">
                 <div className="flex min-h-14 items-start gap-3 sm:items-center">
                   <SidebarTrigger className="mt-1 h-9 w-9 shrink-0 rounded-xl border border-border/60 text-muted-foreground hover:text-foreground sm:mt-0" />
@@ -148,11 +152,14 @@ export function SuperAdminLayout() {
                 </div>
               </div>
             </header>
-            <main className="flex-1 overflow-auto px-3 py-4 sm:p-6">
+            <main className="flex-1 overflow-auto px-4 pb-24 pt-5 lg:p-6">
               <div className="mx-auto w-full max-w-7xl">
-                <Outlet />
+                <StaffMobileBackHeader config={mobileConfig} title={currentPage.title} />
+                {isHome ? <StaffMobileHome config={mobileConfig} contextLabel={profile?.full_name ? "Kanisa Connect" : null} /> : null}
+                <div className={isHome ? "hidden lg:block" : undefined}><Outlet /></div>
               </div>
             </main>
+            <StaffMobileBottomNav config={mobileConfig} />
           </div>
         </div>
       </SidebarProvider>

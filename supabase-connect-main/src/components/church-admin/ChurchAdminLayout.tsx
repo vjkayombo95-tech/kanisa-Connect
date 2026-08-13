@@ -17,13 +17,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { getChurchAdminFeatureForPath } from "@/lib/church-admin-features";
 import { Card, CardContent } from "@/components/ui/card";
+import { StaffMobileBackHeader, StaffMobileBottomNav, StaffMobileHome } from "@/components/staff-mobile/StaffMobileExperience";
+import { STAFF_MOBILE_CONFIGS, canSuperAdminEnterChurchWorkspace, isStaffRouteAllowed } from "@/lib/staff-mobile-registry";
 
 const FloatingAIAssistant = lazy(() =>
   import("./FloatingAIAssistant").then((module) => ({ default: module.FloatingAIAssistant })),
 );
 
 export function ChurchAdminLayout() {
-  const { signOut, profile, isSuperAdmin } = useAuth();
+  const { signOut, profile, isSuperAdmin, churchId, staffWorkspace } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { getFeatureState, isLoading: featuresLoading } = useFeatureAccess();
@@ -32,6 +34,13 @@ export function ChurchAdminLayout() {
   const activeFeatureState = activeFeatureKey ? getFeatureState(activeFeatureKey) : null;
   const routeHidden = !featuresLoading && activeFeatureKey && !activeFeatureState?.visible;
   const routeLocked = !featuresLoading && activeFeatureState?.locked;
+  const mobileWorkspace = staffWorkspace === "admin" || staffWorkspace === "pastoral" || staffWorkspace === "finance" ? staffWorkspace : null;
+  const mobileConfig = mobileWorkspace ? STAFF_MOBILE_CONFIGS[mobileWorkspace] : null;
+  const routeDenied = isSuperAdmin
+    ? !canSuperAdminEnterChurchWorkspace(churchId)
+    : !isStaffRouteAllowed(staffWorkspace, location.pathname);
+  const isHome = location.pathname.replace(/\/$/, "") === "/church-admin";
+  const mobileTitle = location.pathname.split("/").filter(Boolean).at(-1)?.replace(/-/g, " ") ?? "Huduma";
 
   const handleSignOut = async () => {
     await signOut();
@@ -42,6 +51,8 @@ export function ChurchAdminLayout() {
     <ProtectedRoute requireChurch requireAdmin>
       {isLegacySystemHealthPath ? (
         <Navigate to={isSuperAdmin ? "/super-admin/system-health" : "/church-admin"} replace />
+      ) : routeDenied ? (
+        <Navigate to={mobileConfig?.home ?? "/portal/dashboard"} replace />
       ) : routeHidden ? (
         <Navigate to="/church-admin" replace />
       ) : (
@@ -49,7 +60,7 @@ export function ChurchAdminLayout() {
         <div className="min-h-screen flex w-full bg-background">
           <ChurchAdminSidebar />
           <div className="flex-1 flex flex-col min-w-0">
-            <header className="h-14 flex items-center gap-4 border-b border-border px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+            <header className="hidden h-14 items-center gap-4 border-b border-border px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40 lg:flex">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
               <div className="flex-1 max-w-md">
                 <div className="relative">
@@ -79,7 +90,8 @@ export function ChurchAdminLayout() {
                 </DropdownMenu>
               </div>
             </header>
-            <main className="flex-1 p-6 overflow-auto">
+            <main className="flex-1 overflow-auto px-4 pb-24 pt-5 lg:p-6">
+              {mobileConfig ? <StaffMobileBackHeader config={mobileConfig} title={mobileTitle} /> : null}
               {routeLocked ? (
                 <div className="mx-auto max-w-2xl">
                   <Card className="glass-card border-primary/20">
@@ -97,12 +109,14 @@ export function ChurchAdminLayout() {
                   </Card>
                 </div>
               ) : (
-                <Outlet />
+                <>
+                  {mobileConfig && isHome ? <StaffMobileHome config={mobileConfig} contextLabel={profile?.church_name ?? profile?.church?.name} /> : null}
+                  <div className={mobileConfig && isHome ? "hidden lg:block" : undefined}><Outlet /></div>
+                </>
               )}
             </main>
-            <Suspense fallback={null}>
-              <FloatingAIAssistant />
-            </Suspense>
+            <div className="hidden lg:block"><Suspense fallback={null}><FloatingAIAssistant /></Suspense></div>
+            {mobileConfig ? <StaffMobileBottomNav config={mobileConfig} /> : null}
           </div>
         </div>
       </SidebarProvider>

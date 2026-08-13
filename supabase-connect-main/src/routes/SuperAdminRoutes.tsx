@@ -1,6 +1,8 @@
 import { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import StaffServicesPage from "@/pages/StaffServicesPage";
+import { STAFF_MOBILE_CONFIGS } from "@/lib/staff-mobile-registry";
 
 const SuperAdminLayout = lazy(() =>
   import("@/components/super-admin/SuperAdminLayout").then((module) => ({ default: module.SuperAdminLayout })),
@@ -43,6 +45,7 @@ export default function SuperAdminRoutes() {
       <Routes>
         <Route element={<SuperAdminLayout />}>
           <Route index element={<PlatformDashboard />} />
+          <Route path="services" element={<StaffServicesPage config={STAFF_MOBILE_CONFIGS.super_admin} />} />
           <Route path="churches" element={<ChurchManagement />} />
           <Route path="subscriptions" element={<SASubscriptionsPage />} />
           <Route path="billing-verification" element={<BillingVerificationPage />} />
