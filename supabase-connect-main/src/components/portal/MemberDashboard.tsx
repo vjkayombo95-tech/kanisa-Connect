@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { getReadableReadingDate, getTodayReadingEntry } from "@/lib/daily-readings";
 import { logWarning } from "@/lib/error-logger";
 import { ProductionLiveMassCard } from "@/components/portal/ProductionLiveMassCard";
+import { MobileMemberHome } from "@/components/portal/MobileMemberHome";
 
 type MemberHomeData = {
   memberId: string | null;
@@ -400,7 +401,15 @@ export default function MemberDashboard() {
 
   return (
     <div className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-5 pb-28 lg:px-8 lg:pb-8">
-      <div className="mx-auto max-w-5xl space-y-5">
+      <MobileMemberHome
+        announcementsVisible={announcementsVisible}
+        churchName={home.churchName}
+        giveVisible={giveVisible}
+        latestAnnouncement={home.latestAnnouncement}
+        massVisible={massVisible}
+        memberName={home.memberName}
+      />
+      <div className="mx-auto hidden max-w-5xl space-y-5 lg:block">
         <ProductionLiveMassCard />
         <section className="overflow-hidden rounded-[32px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.15),hsl(var(--card))_58%,hsl(var(--card)))] p-5 shadow-sm sm:p-7">
           <div className="flex items-start gap-4">

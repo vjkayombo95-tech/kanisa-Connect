@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Church, Heart, Sparkles } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,12 +34,24 @@ type BibleVerseRecord = {
 
 const STORAGE_KEY = "verseSeenToday";
 
-function getTodayStorageValue() {
+export function getTodayStorageValue() {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+export function getBibleVerseDismissalKey(userId: string | null | undefined) {
+  return `${STORAGE_KEY}:${userId || "anonymous"}`;
+}
+
+export function hasSeenBibleVerseToday(storage: Pick<Storage, "getItem">, userId: string | null | undefined) {
+  return storage.getItem(getBibleVerseDismissalKey(userId)) === getTodayStorageValue();
+}
+
+export function markBibleVerseSeenToday(storage: Pick<Storage, "setItem">, userId: string | null | undefined) {
+  storage.setItem(getBibleVerseDismissalKey(userId), getTodayStorageValue());
 }
 
 function normalizeRole(role: string | null): PopupRole {
@@ -87,6 +99,7 @@ function pickBestVerse(records: BibleVerseRecord[]) {
 export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
   const { churchId, user, isLoading: authLoading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const popupRole = useMemo(() => normalizeRole(userRole), [userRole]);
 
@@ -195,22 +208,24 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
     if (typeof window === "undefined") return;
     if (authLoading || resolvingChurchId || isLoading || !data?.verseText || !resolvedChurchId) return;
 
-    const today = getTodayStorageValue();
-    const verseSignature = `${today}:${resolvedChurchId}:${data.verseReference}`;
-    const seenValue = window.localStorage.getItem(STORAGE_KEY);
+    if (hasSeenBibleVerseToday(window.localStorage, user?.id)) return;
 
-    if (seenValue === verseSignature) return;
-
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setIsOpen(true);
-  }, [authLoading, data?.verseReference, data?.verseText, isLoading, resolvedChurchId, resolvingChurchId]);
+  }, [authLoading, data?.verseText, isLoading, resolvedChurchId, resolvingChurchId, user?.id]);
+
+  const closePopup = useCallback(() => {
+    if (typeof window !== "undefined") markBibleVerseSeenToday(window.localStorage, user?.id);
+    setIsOpen(false);
+    window.setTimeout(() => returnFocusRef.current?.focus(), 0);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!isOpen) return;
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        window.localStorage.setItem(STORAGE_KEY, `${getTodayStorageValue()}:${resolvedChurchId ?? "unknown"}:${data?.verseReference ?? "verse"}`);
-        setIsOpen(false);
+        closePopup();
       }
     };
 
@@ -222,14 +237,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [data?.verseReference, isOpen, resolvedChurchId]);
-
-  const handleClose = () => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, `${getTodayStorageValue()}:${resolvedChurchId ?? "unknown"}:${data?.verseReference ?? "verse"}`);
-    }
-    setIsOpen(false);
-  };
+  }, [closePopup, isOpen]);
 
   if (authLoading || resolvingChurchId) {
     return null;
@@ -247,7 +255,10 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={handleClose}
+          onClick={closePopup}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Daily Bible verse"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 18 }}
@@ -311,7 +322,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Button
                   type="button"
-                  onClick={handleClose}
+                  onClick={closePopup}
                   className="h-11 rounded-2xl px-6 shadow-[0_16px_42px_-24px_rgba(245,158,11,0.75)]"
                 >
                   <Heart className="h-4 w-4 fill-current" />
@@ -320,7 +331,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handleClose}
+                  onClick={closePopup}
                   className="h-11 rounded-2xl border-primary/20 bg-white/[0.03] px-6 text-foreground hover:border-primary/30 hover:bg-white/[0.06] hover:text-foreground"
                 >
                   Continue
