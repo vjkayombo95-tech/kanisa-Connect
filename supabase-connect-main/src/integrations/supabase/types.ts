@@ -226,6 +226,65 @@ export type Database = {
           },
         ]
       }
+      church_livestreams: {
+        Row: {
+          actual_ended_at: string | null
+          actual_started_at: string | null
+          church_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          provider: string
+          provider_external_id: string
+          scheduled_end: string | null
+          scheduled_start: string | null
+          status: string
+          title: string
+          updated_at: string
+          watch_url: string
+        }
+        Insert: {
+          actual_ended_at?: string | null
+          actual_started_at?: string | null
+          church_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          provider?: string
+          provider_external_id: string
+          scheduled_end?: string | null
+          scheduled_start?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          watch_url: string
+        }
+        Update: {
+          actual_ended_at?: string | null
+          actual_started_at?: string | null
+          church_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          provider?: string
+          provider_external_id?: string
+          scheduled_end?: string | null
+          scheduled_start?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          watch_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "church_livestreams_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       church_subscriptions: {
         Row: {
           church_id: string
