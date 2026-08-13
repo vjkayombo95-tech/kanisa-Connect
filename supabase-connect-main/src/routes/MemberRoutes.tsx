@@ -28,11 +28,19 @@ const MemberBibleHomePage = lazy(() => import("@/pages/portal/MemberBibleHomePag
 const MemberBibleBookPage = lazy(() => import("@/pages/portal/MemberBibleBookPage"));
 const MemberBibleChapterPage = lazy(() => import("@/pages/portal/MemberBibleChapterPage"));
 const MemberLivestreamPage = lazy(() => import("@/pages/portal/MemberLivestreamPage"));
+const MemberServicesPage = lazy(() => import("@/pages/portal/MemberServicesPage"));
 
 function SectionFallback() {
   return (
-    <div className="min-h-[50vh] flex items-center justify-center">
-      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+    <div className="min-h-[50vh] bg-background px-4 py-8">
+      <div className="mx-auto max-w-5xl space-y-4">
+        <div className="h-24 animate-pulse rounded-[28px] bg-muted" />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="h-28 animate-pulse rounded-3xl bg-muted" />
+          <div className="h-28 animate-pulse rounded-3xl bg-muted" />
+        </div>
+        <span className="sr-only"><Loader2 className="h-6 w-6 animate-spin" />Inapakia</span>
+      </div>
     </div>
   );
 }
@@ -44,6 +52,7 @@ export default function MemberRoutes() {
         <Routes>
         <Route element={<PortalLayout />}>
           <Route index element={<MemberDashboard />} />
+          <Route path="services" element={<MemberServicesPage />} />
           <Route path="bible-verses" element={<PortalHome />} />
           <Route path="dashboard" element={<PortalDashboard />} />
           <Route path="events" element={<PortalEvents />} />

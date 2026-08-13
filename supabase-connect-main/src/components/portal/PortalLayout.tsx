@@ -30,6 +30,7 @@ import { useBillingAccess } from "@/hooks/use-billing-access";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { Card, CardContent } from "@/components/ui/card";
 import { BibleVersePopup } from "@/components/portal/BibleVersePopup";
+import { MemberMobileBackHeader } from "@/components/portal/MemberMobileBackHeader";
 import { formatTZS } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { getPortalFeatureForPath, type PortalFeatureKey } from "@/lib/portal-features";
@@ -114,6 +115,7 @@ const FULL_GROUPS: NavGroup[] = [
 
 const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
   { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
+  { titleKey: "Huduma", url: "/portal/services", icon: PortalIcon, featureKey: null },
   { titleKey: "Catholic Library", url: "/member/library", icon: BibleIcon, featureKey: null },
   { titleKey: "Liturgical Calendar", url: "/portal/liturgical-calendar", icon: LiturgicalCalendarIcon, featureKey: null },
   { titleKey: "Daily Readings", url: "/portal/daily-readings", icon: BibleIcon, featureKey: null },
@@ -126,6 +128,7 @@ const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
 
 const SIMPLE_MEMBER_ALLOWED_PATHS = [
   "/portal",
+  "/portal/services",
   "/member/library",
   "/portal/library",
   "/portal/liturgical-calendar",
@@ -187,7 +190,7 @@ function DesktopNavLink({
       <span className="relative flex items-center gap-2.5">
         <span
           className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border transition-all",
+            "hidden h-9 w-9 shrink-0 items-center justify-center rounded-2xl border transition-all 2xl:flex",
             active
               ? "border-primary/20 bg-primary/10 text-primary"
               : "border-border/60 bg-background/40 text-muted-foreground group-hover:border-primary/10 group-hover:text-foreground",
@@ -690,7 +693,10 @@ export function PortalLayout() {
                 </div>
               </div>
             ) : (
-              <Outlet />
+              <>
+                {!isAdmin ? <MemberMobileBackHeader /> : null}
+                <Outlet />
+              </>
             )}
           </main>
 
@@ -698,9 +704,11 @@ export function PortalLayout() {
             <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 px-2 py-2 shadow-[0_-18px_48px_-32px_rgba(0,0,0,0.75)] backdrop-blur-xl lg:hidden">
               <div
                 className="mx-auto grid max-w-md gap-1"
-                style={{ gridTemplateColumns: `repeat(${visibleMainItems.length}, minmax(0, 1fr))` }}
+                style={{ gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}
               >
-                {visibleMainItems.map((item) => {
+                {visibleMainItems
+                  .filter((item) => ["/portal", "/portal/give", "/portal/mass-intentions", "/portal/announcements", "/portal/services"].includes(item.url))
+                  .map((item) => {
                   const active = isActive(location.pathname, item.url);
                   const Icon = item.icon;
 
