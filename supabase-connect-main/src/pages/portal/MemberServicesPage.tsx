@@ -49,6 +49,7 @@ const services: ServiceItem[] = [
   { id: "channels", label: "Jumuiya", description: "Ungana na jumuiya yako", section: "community", to: "/portal/channels", icon: Users, featureKey: "channels" },
   { id: "community-help", label: "Msaada wa Jumuiya", description: "Omba au toa msaada", section: "community", to: "/portal/community-help", icon: CircleHelp, featureKey: "community_help" },
   { id: "events", label: "Matukio", description: "Matukio yajayo ya parokia", section: "more", to: "/portal/events", icon: CalendarDays, featureKey: "events" },
+  { id: "parish-calendar", label: "Kalenda ya Parokia", description: "Misa na matukio yajayo", section: "more", to: "/portal/calendar", icon: CalendarDays, featureKey: "events" },
   { id: "event-requests", label: "Omba Tukio", description: "Wasilisha ombi la tukio", section: "more", to: "/portal/event-requests", icon: Bell, featureKey: "events" },
   { id: "pledges", label: "Ahadi za Michango", description: "Angalia ahadi zako", section: "more", to: "/portal/pledges", icon: HandCoins, featureKey: "pledges" },
   { id: "bible-verses", label: "Mistari ya Biblia", description: "Mistari ya kutia moyo", section: "more", to: "/portal/bible-verses", icon: BookOpen, featureKey: "bible_verses" },

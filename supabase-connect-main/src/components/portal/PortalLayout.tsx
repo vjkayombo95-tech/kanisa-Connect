@@ -129,6 +129,7 @@ const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
 const SIMPLE_MEMBER_ALLOWED_PATHS = [
   "/portal",
   "/portal/services",
+  "/portal/calendar",
   "/member/library",
   "/portal/library",
   "/portal/liturgical-calendar",
