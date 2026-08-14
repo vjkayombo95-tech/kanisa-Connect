@@ -30,25 +30,28 @@ function DetailSkeleton() {
 }
 
 export default function MemberSaintDetailsPage() {
-  const { slug } = useParams();
+  const { slug, saintId } = useParams();
+  const saintKey = saintId ?? slug;
   const { toast } = useToast();
 
   const { data: saint, isLoading, isError, error } = useQuery({
-    queryKey: ["member-catholic-library-saint", slug],
+    queryKey: ["member-catholic-library-saint", saintKey],
     queryFn: async () => {
-      if (!slug) throw new Error("Saint slug is required.");
+      if (!saintKey) throw new Error("Saint identifier is required.");
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("saints" as never)
         .select(SAINT_SELECT)
-        .eq("slug", slug)
-        .eq("is_active", true)
-        .maybeSingle();
+        .eq("is_active", true);
+      query = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(saintKey)
+        ? query.eq("id", saintKey)
+        : query.eq("slug", saintKey);
+      const { data, error } = await query.maybeSingle();
 
       if (error) throw error;
       return (data ?? null) as unknown as LibrarySaint | null;
     },
-    enabled: !!slug,
+    enabled: !!saintKey,
     staleTime: 10 * 60 * 1000,
   });
 
