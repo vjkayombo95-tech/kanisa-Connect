@@ -29,6 +29,8 @@ const MemberBibleBookPage = lazy(() => import("@/pages/portal/MemberBibleBookPag
 const MemberBibleChapterPage = lazy(() => import("@/pages/portal/MemberBibleChapterPage"));
 const MemberLivestreamPage = lazy(() => import("@/pages/portal/MemberLivestreamPage"));
 const MemberServicesPage = lazy(() => import("@/pages/portal/MemberServicesPage"));
+const PortalContributionHistoryPage = lazy(() => import("@/pages/portal/PortalContributionHistoryPage"));
+const PortalContributionReceiptPage = lazy(() => import("@/pages/portal/PortalContributionReceiptPage"));
 const ParishCalendarPage = lazy(() => import("@/pages/ParishCalendarPage"));
 
 function SectionFallback() {
@@ -62,6 +64,8 @@ export default function MemberRoutes() {
           <Route path="sermons" element={<PortalSermons />} />
           <Route path="announcements" element={<PortalAnnouncements />} />
           <Route path="give" element={<PortalGive />} />
+          <Route path="contribution-history" element={<PortalContributionHistoryPage />} />
+          <Route path="contribution-receipt/:contributionId" element={<PortalContributionReceiptPage />} />
           <Route path="pledges" element={<PortalPledges />} />
           <Route path="prayer-requests" element={<PortalPrayerRequests />} />
           <Route path="mass-intentions" element={<PortalMassIntentions />} />

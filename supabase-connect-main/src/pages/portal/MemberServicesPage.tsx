@@ -39,7 +39,7 @@ const services: ServiceItem[] = [
   { id: "giving", label: "Toa Mchango", description: "Changia parokia yako", section: "frequent", to: "/portal/give", icon: HandCoins, featureKey: "give" },
   { id: "mass-intentions", label: "Nia za Misa", description: "Wasilisha au fuatilia nia", section: "frequent", to: "/portal/mass-intentions", icon: HeartHandshake, featureKey: "mass_intentions" },
   { id: "announcements", label: "Matangazo", description: "Taarifa mpya za parokia", section: "frequent", to: "/portal/announcements", icon: Megaphone, featureKey: "announcements" },
-  { id: "history", label: "Historia Yangu", description: "Michango, ahadi na wasifu", section: "frequent", to: "/portal/dashboard", icon: HandCoins, featureKey: null },
+  { id: "history", label: "Historia ya Michango", description: "Angalia michango na risiti", section: "more", to: "/portal/contribution-history", icon: HandCoins, featureKey: null },
   { id: "daily-readings", label: "Masomo ya Leo", description: "Neno la Mungu la leo", section: "worship", to: "/portal/daily-readings", icon: BookOpen, featureKey: null },
   { id: "liturgical-calendar", label: "Kalenda ya Liturujia", description: "Sikukuu na majira ya Kanisa", section: "worship", to: "/portal/liturgical-calendar", icon: CalendarDays, featureKey: null },
   { id: "sermons", label: "Mahubiri", description: "Soma mahubiri ya parokia", section: "worship", to: "/portal/sermons", icon: Church, featureKey: "sermons" },

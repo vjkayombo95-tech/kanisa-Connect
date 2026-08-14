@@ -6,6 +6,7 @@ import { isPrimaryMemberRoute, resolveMemberBackTarget } from "@/lib/member-mobi
 const titleByRoute: Record<string, string> = {
   "/portal/dashboard": "Historia Yangu",
   "/portal/give": "Michango",
+  "/portal/contribution-history": "Historia ya Michango",
   "/portal/mass-intentions": "Nia za Misa",
   "/portal/announcements": "Matangazo",
   "/portal/prayer-requests": "Maombi",
@@ -18,6 +19,7 @@ const titleByRoute: Record<string, string> = {
 };
 
 function getMemberPageTitle(pathname: string) {
+  if (/^\/(?:portal|member)\/contribution-receipt\/[^/]+$/.test(pathname)) return "Risiti ya Mchango";
   if (/^\/(?:portal|member)\/bible\/[^/]+\/chapter\//.test(pathname)) return "Sura ya Biblia";
   if (/^\/(?:portal|member)\/bible\/[^/]+$/.test(pathname)) return "Biblia";
   if (/^\/(?:portal|member)\/library\/[^/]+$/.test(pathname)) return "Mtakatifu";
