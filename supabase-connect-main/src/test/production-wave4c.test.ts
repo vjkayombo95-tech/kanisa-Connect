@@ -1,0 +1,13 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
+describe("production Wave 4C content display", () => {
+  it("registers only the approved authenticated member routes", () => { const routes = read("src/routes/MemberRoutes.tsx"); expect(routes).toContain('path="reflections"'); expect(routes).toContain('path="reflections/:reflectionId"'); expect(routes).toContain('path="saints/:saintId"'); expect(routes).toContain('path="prayers"'); expect(routes).toContain('path="prayers/:slug"'); expect(routes).not.toContain('path="today"'); });
+  it("filters reflections through the published daily-reading contract", () => { const queries = read("src/lib/content-display.ts"); const pages = read("src/pages/portal/ReflectionsPage.tsx") + read("src/pages/portal/ReflectionDetailPage.tsx"); expect(queries.match(/\.eq\("is_published", true\)/g)).toHaveLength(2); expect(pages).not.toMatch(/audio|bookmark|favorite|note/i); });
+  it("filters both prayer queries to published and featured records", () => { const queries = read("src/lib/content-display.ts"); expect(queries.match(/\.in\("status", \["published", "featured"\]\)/g)).toHaveLength(2); for (const page of ["PrayersPage.tsx", "PrayerDetailPage.tsx"]) expect(read(`src/pages/portal/${page}`)).not.toMatch(/audio player|favorite button|import control|reading history/i); });
+  it("reuses the saint detail component for the alias and restricts records to active saints", () => { const routes = read("src/routes/MemberRoutes.tsx"); const detail = read("src/pages/portal/MemberSaintDetailsPage.tsx"); expect(routes.match(/<MemberSaintDetailsPage \/>/g)).toHaveLength(2); expect(detail).toContain('.eq("is_active", true)'); expect(detail).toContain("saintId ?? slug"); });
+  it("keeps the existing Bible route hierarchy intact", () => { const routes = read("src/routes/MemberRoutes.tsx"); expect(routes).toContain('path="bible"'); expect(routes).toContain('path="bible/:bookId"'); expect(routes).toContain('path="bible/:bookId/chapter/:chapterNumber"'); });
+  it("places all new discovery links in the services experience", () => { const services = read("src/pages/portal/MemberServicesPage.tsx"); expect(services).toContain('label: "Sala"'); expect(services).toContain('label: "Tafakari"'); expect(services).toContain('label: "Watakatifu"'); });
+  it("keeps Bible translation administration deferred", () => { const superAdminRoutes = read("src/routes/SuperAdminRoutes.tsx"); const memberRoutes = read("src/routes/MemberRoutes.tsx"); expect(superAdminRoutes).not.toContain("bible-translations"); expect(memberRoutes).not.toContain("super-admin"); });
+});
