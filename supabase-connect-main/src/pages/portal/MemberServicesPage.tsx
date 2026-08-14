@@ -12,7 +12,9 @@ import {
   HeartHandshake,
   Megaphone,
   Search,
+  ScrollText,
   Settings,
+  Sparkles,
   Users,
 } from "lucide-react";
 
@@ -44,7 +46,9 @@ const services: ServiceItem[] = [
   { id: "liturgical-calendar", label: "Kalenda ya Liturujia", description: "Sikukuu na majira ya Kanisa", section: "worship", to: "/portal/liturgical-calendar", icon: CalendarDays, featureKey: null },
   { id: "sermons", label: "Mahubiri", description: "Soma mahubiri ya parokia", section: "worship", to: "/portal/sermons", icon: Church, featureKey: "sermons" },
   { id: "bible", label: "Biblia", description: "Soma Biblia", section: "faith", to: "/portal/bible", icon: BookOpen, featureKey: null },
-  { id: "library", label: "Maktaba Katoliki", description: "Watakatifu na nyenzo za imani", section: "faith", to: "/member/library", icon: BookOpen, featureKey: null },
+  { id: "library", label: "Watakatifu", description: "Jifunze maisha ya watakatifu", section: "faith", to: "/portal/library", icon: BookOpen, featureKey: null },
+  { id: "prayers", label: "Sala", description: "Soma sala zilizochapishwa", section: "faith", to: "/portal/prayers", icon: ScrollText, featureKey: null },
+  { id: "reflections", label: "Tafakari", description: "Tafakari za masomo ya kila siku", section: "faith", to: "/portal/reflections", icon: Sparkles, featureKey: null },
   { id: "prayer-requests", label: "Ombi la Maombi", description: "Tuma na fuatilia ombi", section: "faith", to: "/portal/prayer-requests", icon: HeartHandshake, featureKey: "prayer_requests" },
   { id: "channels", label: "Jumuiya", description: "Ungana na jumuiya yako", section: "community", to: "/portal/channels", icon: Users, featureKey: "channels" },
   { id: "community-help", label: "Msaada wa Jumuiya", description: "Omba au toa msaada", section: "community", to: "/portal/community-help", icon: CircleHelp, featureKey: "community_help" },

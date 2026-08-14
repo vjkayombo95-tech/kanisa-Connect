@@ -31,6 +31,10 @@ const MemberLivestreamPage = lazy(() => import("@/pages/portal/MemberLivestreamP
 const MemberServicesPage = lazy(() => import("@/pages/portal/MemberServicesPage"));
 const PortalContributionHistoryPage = lazy(() => import("@/pages/portal/PortalContributionHistoryPage"));
 const PortalContributionReceiptPage = lazy(() => import("@/pages/portal/PortalContributionReceiptPage"));
+const ReflectionsPage = lazy(() => import("@/pages/portal/ReflectionsPage"));
+const ReflectionDetailPage = lazy(() => import("@/pages/portal/ReflectionDetailPage"));
+const PrayersPage = lazy(() => import("@/pages/portal/PrayersPage"));
+const PrayerDetailPage = lazy(() => import("@/pages/portal/PrayerDetailPage"));
 const ParishCalendarPage = lazy(() => import("@/pages/ParishCalendarPage"));
 
 function SectionFallback() {
@@ -73,6 +77,11 @@ export default function MemberRoutes() {
           <Route path="channels" element={<PortalChannels />} />
           <Route path="library" element={<MemberLibraryPage />} />
           <Route path="library/:slug" element={<MemberSaintDetailsPage />} />
+          <Route path="saints/:saintId" element={<MemberSaintDetailsPage />} />
+          <Route path="reflections" element={<ReflectionsPage />} />
+          <Route path="reflections/:reflectionId" element={<ReflectionDetailPage />} />
+          <Route path="prayers" element={<PrayersPage />} />
+          <Route path="prayers/:slug" element={<PrayerDetailPage />} />
           <Route path="liturgical-calendar" element={<LiturgicalCalendarPage />} />
           <Route path="daily-readings" element={<DailyReadingsPage />} />
           <Route path="bible" element={<MemberBibleHomePage />} />

@@ -17,7 +17,7 @@ describe("production Wave 1 member services", () => {
   });
 
   it("does not expose excluded staging features", () => {
-    for (const excluded of ["/portal/radio", "/portal/kanisa-ai", "/portal/ministries", "/portal/prayers"]) {
+    for (const excluded of ["/portal/radio", "/portal/kanisa-ai", "/portal/ministries"]) {
       expect(services).not.toContain(`to: "${excluded}"`);
     }
   });
