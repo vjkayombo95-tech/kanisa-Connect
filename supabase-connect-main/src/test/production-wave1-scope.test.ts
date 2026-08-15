@@ -14,8 +14,9 @@ describe("production Wave 1 scope guard", () => {
 
   it("does not add excluded architecture to the member router", () => {
     const routes = readFileSync(join(process.cwd(), "src/routes/MemberRoutes.tsx"), "utf8");
-    for (const excluded of ["WorkspaceRouteLayout", "PastoralRoutes", "FinanceRoutes", "RadioPlayer", "KanisaAI"]) {
+    for (const excluded of ["WorkspaceRouteLayout", "PastoralRoutes", "FinanceRoutes", "KanisaAI"]) {
       expect(routes).not.toContain(excluded);
     }
+    expect(routes).toContain("RadioPlayerProvider");
   });
 });

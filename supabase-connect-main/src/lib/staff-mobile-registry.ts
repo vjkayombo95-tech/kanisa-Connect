@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity, BarChart3, Bell, BookOpen, Building2, CalendarDays, Church, ClipboardList,
   CreditCard, FileText, HandCoins, HeartHandshake, Landmark, ListChecks, Megaphone,
-  Receipt, Settings, Shield, Target, UserCheck, Users,
+  Receipt, Settings, Shield, Target, UserCheck, Users, Radio,
 } from "lucide-react";
 import type { StaffMobileWorkspace } from "./staff-mobile-role";
 
@@ -15,6 +15,7 @@ export type StaffService = {
   featureKey?: string;
   primary?: boolean;
   livestreamPermission?: boolean;
+  radioPermission?: boolean;
 };
 
 export type StaffMobileConfig = {
@@ -63,6 +64,7 @@ const adminServices: StaffService[] = [
   { id: "mass-timetable", label: "Ratiba za Misa", route: "/church-admin/mass-timetable", group: "Kichungaji", icon: CalendarDays, featureKey: "events" },
   { id: "sermons", label: "Mahubiri", route: "/church-admin/sermons", group: "Kichungaji", icon: BookOpen, featureKey: "sermons" },
   { id: "livestreams", label: "Matangazo Mubashara", route: "/church-admin/livestreams", group: "Kichungaji", icon: Activity, featureKey: "livestream", livestreamPermission: true },
+  { id: "radio", label: "Radio", route: "/church-admin/radio", group: "Mawasiliano", icon: Radio, featureKey: "radio", radioPermission: true },
   { id: "notifications", label: "Arifa", route: "/church-admin/notifications", group: "Mawasiliano", icon: Bell, featureKey: "notifications" },
   { id: "settings", label: "Mipangilio", route: "/church-admin/settings", group: "Usimamizi", icon: Settings },
   { id: "billing", label: "Malipo ya kanisa", route: "/church-admin/billing", group: "Usimamizi", icon: CreditCard },
@@ -89,6 +91,7 @@ const superAdminServices: StaffService[] = [
   { id: "subscriptions", label: "Usajili", route: "/super-admin/subscriptions", group: "Fedha", icon: CreditCard, primary: true },
   { id: "system-health", label: "Afya ya mfumo", route: "/super-admin/system-health", group: "Mfumo", icon: Activity, primary: true },
   { id: "features", label: "Vipengele", route: "/super-admin/features", group: "Mfumo", icon: ListChecks, primary: true },
+  { id: "radio", label: "Radio", route: "/super-admin/radio", group: "Mfumo", icon: Radio },
   { id: "billing-verification", label: "Uhakiki wa malipo", route: "/super-admin/billing-verification", group: "Fedha", icon: Receipt },
   { id: "record-preservation", label: "Uhifadhi wa rekodi", route: "/super-admin/record-preservation", group: "Fedha", icon: FileText },
   { id: "revenue", label: "Mapato", route: "/super-admin/revenue", group: "Fedha", icon: Landmark },

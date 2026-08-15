@@ -8,6 +8,7 @@ import {
   FileText,
   Lock,
   ShieldCheck,
+  Radio,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -53,6 +54,7 @@ import {
 } from "./sidebar-icons";
 
 type IconComponent = (props: { active?: boolean; className?: string }) => ReactNode;
+const RadioIcon: IconComponent = ({ className }) => <Radio className={className} />;
 
 type NavItem = {
   titleKey: string;
@@ -138,6 +140,7 @@ const groupedSections: AccordionGroup[] = [
         featureKey: "announcements",
       },
       { titleKey: "sermons", url: "/church-admin/sermons", icon: SermonsIcon, featureKey: "sermons" },
+      { titleKey: "Radio", url: "/church-admin/radio", icon: RadioIcon, featureKey: "radio" },
       { titleKey: "bible_verses", url: "/church-admin/bible-verses", icon: BibleIcon, featureKey: "bible_verses" },
       { titleKey: "channels", url: "/church-admin/channels", icon: ChannelsIcon, featureKey: "channels" },
       {

@@ -30,6 +30,7 @@ const SuperAdminDailyReadingsPage = lazy(() => import("@/pages/super-admin/Super
 const SuperAdminPrayerLibraryPage = lazy(() => import("@/pages/super-admin/SuperAdminPrayerLibraryPage"));
 const SuperAdminLiturgicalCalendarPage = lazy(() => import("@/pages/super-admin/SuperAdminLiturgicalCalendarPage"));
 const SuperAdminImportCenter = lazy(() => import("@/pages/super-admin/SuperAdminImportCenter"));
+const RadioDirectoryPage = lazy(() => import("@/pages/super-admin/RadioDirectoryPage"));
 
 function SectionFallback() {
   return (
@@ -51,6 +52,7 @@ export default function SuperAdminRoutes() {
           <Route path="billing-verification" element={<BillingVerificationPage />} />
           <Route path="record-preservation" element={<MemberRecordSubscriptionsPage />} />
           <Route path="features" element={<FeatureManagement />} />
+          <Route path="radio" element={<RadioDirectoryPage />} />
           <Route path="revenue" element={<RevenueAnalytics />} />
           <Route path="logs" element={<SystemLogs />} />
           <Route path="audit-logs" element={<AuditLogsPage />} />

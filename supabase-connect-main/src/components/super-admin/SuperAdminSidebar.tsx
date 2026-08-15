@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Building2, CreditCard, Receipt, ToggleRight,
   TrendingUp, FileText, Activity, Settings, Shield, Archive, MonitorCheck, CalendarClock, BookOpen,
-  Library, Cross, Upload,
+  Library, Cross, Upload, Radio,
 } from "lucide-react";
 import { AppLink } from "@/components/AppLink";
 import {
@@ -20,6 +20,7 @@ const items = [
   { title: "Billing Verification", url: "/super-admin/billing-verification", icon: Receipt },
   { title: "Record Preservation", url: "/super-admin/record-preservation", icon: Archive },
   { title: "Feature Management", url: "/super-admin/features", icon: ToggleRight },
+  { title: "Radio Directory", url: "/super-admin/radio", icon: Radio },
   { title: "Revenue Analytics", url: "/super-admin/revenue", icon: TrendingUp },
   { title: "System Health", url: "/super-admin/system-health", icon: MonitorCheck },
   { title: "Scheduled Jobs", url: "/super-admin/system-jobs", icon: CalendarClock },

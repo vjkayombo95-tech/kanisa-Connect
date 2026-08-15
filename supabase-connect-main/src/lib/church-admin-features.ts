@@ -16,7 +16,8 @@ export type ChurchAdminFeatureKey =
   | "reports"
   | "channels"
   | "notifications"
-  | "roles";
+  | "roles"
+  | "radio";
 
 export const CHURCH_ADMIN_FEATURE_ROUTE_MAP: Array<{ prefix: string; featureKey: ChurchAdminFeatureKey }> = [
   { prefix: "/church-admin/members", featureKey: "members" },
@@ -38,6 +39,7 @@ export const CHURCH_ADMIN_FEATURE_ROUTE_MAP: Array<{ prefix: string; featureKey:
   { prefix: "/church-admin/channels", featureKey: "channels" },
   { prefix: "/church-admin/notifications", featureKey: "notifications" },
   { prefix: "/church-admin/roles", featureKey: "roles" },
+  { prefix: "/church-admin/radio", featureKey: "radio" },
 ];
 
 export function getChurchAdminFeatureForPath(pathname: string): ChurchAdminFeatureKey | null {
