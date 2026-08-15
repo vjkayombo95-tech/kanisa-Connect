@@ -28,6 +28,7 @@ import { getReadableReadingDate, getTodayReadingEntry } from "@/lib/daily-readin
 import { logWarning } from "@/lib/error-logger";
 import { ProductionLiveMassCard } from "@/components/portal/ProductionLiveMassCard";
 import { MobileMemberHome } from "@/components/portal/MobileMemberHome";
+import { fetchMemberContributionTotal } from "@/lib/member-contributions";
 
 type MemberHomeData = {
   memberId: string | null;
@@ -87,13 +88,6 @@ type SaintOfDay = {
   image_url: string | null;
   color_theme: string | null;
 };
-
-function readContributionTotal(rows: unknown) {
-  const firstRow = Array.isArray(rows) ? (rows[0] as Record<string, unknown> | undefined) : null;
-  const total = firstRow?.total;
-
-  return Number(total ?? 0);
-}
 
 function readPendingPledgeBalance(rows: unknown) {
   if (!Array.isArray(rows)) return 0;
@@ -202,11 +196,9 @@ function useSimpleMemberHomeData() {
           .eq("member_id", member.id)
           .order("date", { ascending: false })
           .limit(1),
-        supabase
-          .from("contributions")
-          .select("total:amount.sum()")
-          .eq("church_id", member.church_id)
-          .eq("member_id", member.id),
+        fetchMemberContributionTotal(member.church_id, member.id)
+          .then((data) => ({ data, error: null }))
+          .catch((error: unknown) => ({ data: 0, error })),
         supabase.rpc("get_member_pledges" as never, { _member_id: member.id } as never),
         fetchPortalAnnouncements(member.church_id, 1),
       ]);
@@ -218,7 +210,7 @@ function useSimpleMemberHomeData() {
 
       const latestContribution = (latestContributionResult.error ? null : latestContributionResult.data?.[0] ?? null) as any;
       const latestAnnouncement = announcementRows[0] ?? null;
-      const totalPaid = contributionTotalResult.error ? 0 : readContributionTotal(contributionTotalResult.data);
+      const totalPaid = contributionTotalResult.error ? 0 : contributionTotalResult.data;
       const pendingAmount = pledgeBalanceResult.error ? 0 : readPendingPledgeBalance(pledgeBalanceResult.data);
 
       return {
