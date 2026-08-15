@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { useLivestreamPermission } from "@/hooks/use-church-livestream";
+import { useRadioPermission } from "@/hooks/use-church-radio";
 import type { StaffMobileConfig, StaffService } from "@/lib/staff-mobile-registry";
 import { roleLabel } from "@/lib/staff-mobile-role";
 import { cn } from "@/lib/utils";
@@ -17,15 +18,17 @@ function MobileLink({ to, className, children }: { to: string; className?: strin
 export function useVisibleStaffServices(config: StaffMobileConfig) {
   const features = useFeatureAccess();
   const livestream = useLivestreamPermission("manage");
+  const radio = useRadioPermission("manage");
   const services = useMemo(() => config.services.filter((service) => {
     if (service.featureKey) {
       const state = features.getFeatureState(service.featureKey);
       if (!state.exists || !state.visible) return false;
     }
     if (service.livestreamPermission && livestream.data !== true) return false;
+    if (service.radioPermission && radio.data !== true) return false;
     return true;
-  }), [config.services, features, livestream.data]);
-  return { services, isLoading: features.isLoading || (config.services.some((service) => service.livestreamPermission) && livestream.isLoading) };
+  }), [config.services, features, livestream.data, radio.data]);
+  return { services, isLoading: features.isLoading || (config.services.some((service) => service.livestreamPermission) && livestream.isLoading) || (config.services.some((service) => service.radioPermission) && radio.isLoading) };
 }
 
 export function StaffMobileHome({ config, contextLabel }: { config: StaffMobileConfig; contextLabel?: string | null }) {

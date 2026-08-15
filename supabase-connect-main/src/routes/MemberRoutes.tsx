@@ -3,6 +3,9 @@ import { Route, Routes } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { PersistentLivestreamPlayer } from "@/components/portal/PersistentLivestreamPlayer";
 import { PersistentLivestreamProvider } from "@/contexts/PersistentLivestreamContext";
+import { LiveMediaCoordinatorProvider } from "@/contexts/LiveMediaCoordinator";
+import { RadioPlayerProvider } from "@/contexts/RadioPlayerContext";
+import { PersistentRadioPlayer } from "@/components/portal/PersistentRadioPlayer";
 
 const PortalLayout = lazy(() =>
   import("@/components/portal/PortalLayout").then((module) => ({ default: module.PortalLayout })),
@@ -35,6 +38,7 @@ const ReflectionsPage = lazy(() => import("@/pages/portal/ReflectionsPage"));
 const ReflectionDetailPage = lazy(() => import("@/pages/portal/ReflectionDetailPage"));
 const PrayersPage = lazy(() => import("@/pages/portal/PrayersPage"));
 const PrayerDetailPage = lazy(() => import("@/pages/portal/PrayerDetailPage"));
+const MemberRadioPage = lazy(() => import("@/pages/portal/MemberRadioPage"));
 const ParishCalendarPage = lazy(() => import("@/pages/ParishCalendarPage"));
 
 function SectionFallback() {
@@ -54,7 +58,9 @@ function SectionFallback() {
 
 export default function MemberRoutes() {
   return (
+    <LiveMediaCoordinatorProvider>
     <PersistentLivestreamProvider>
+    <RadioPlayerProvider>
       <Suspense fallback={<SectionFallback />}>
         <Routes>
         <Route element={<PortalLayout />}>
@@ -88,10 +94,14 @@ export default function MemberRoutes() {
           <Route path="bible/:bookId" element={<MemberBibleBookPage />} />
           <Route path="bible/:bookId/chapter/:chapterNumber" element={<MemberBibleChapterPage />} />
           <Route path="live/:streamId" element={<MemberLivestreamPage />} />
+          <Route path="radio" element={<MemberRadioPage />} />
         </Route>
         </Routes>
       </Suspense>
       <PersistentLivestreamPlayer />
+      <PersistentRadioPlayer />
+    </RadioPlayerProvider>
     </PersistentLivestreamProvider>
+    </LiveMediaCoordinatorProvider>
   );
 }

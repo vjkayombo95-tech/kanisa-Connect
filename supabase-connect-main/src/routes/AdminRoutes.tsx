@@ -39,6 +39,7 @@ const LivestreamsPage = lazy(() => import("@/pages/church-admin/LivestreamsPage"
 const MassTimetablePage = lazy(() => import("@/pages/church-admin/MassTimetablePage"));
 const ParishCalendarPage = lazy(() => import("@/pages/ParishCalendarPage"));
 const EventRegistrationsPage = lazy(() => import("@/pages/church-admin/EventRegistrationsPage"));
+const RadioStationsPage = lazy(() => import("@/pages/church-admin/RadioStationsPage"));
 
 function SectionFallback() {
   return (
@@ -88,6 +89,7 @@ export default function AdminRoutes() {
           <Route path="audit-logs" element={<AuditLogsPage />} />
           <Route path="billing" element={<BillingPage />} />
           <Route path="livestreams" element={<LivestreamsPage />} />
+          <Route path="radio" element={<RadioStationsPage />} />
         </Route>
       </Routes>
     </Suspense>

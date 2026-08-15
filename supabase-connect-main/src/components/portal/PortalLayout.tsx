@@ -12,6 +12,7 @@ import {
   X,
   ChevronDown,
   CalendarDays,
+  Radio,
 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -56,6 +57,7 @@ import {
 type PortalIconComponent = (props: { active?: boolean; className?: string }) => ReactNode;
 
 const LiturgicalCalendarIcon: PortalIconComponent = ({ className }) => <CalendarDays className={className} />;
+const RadioIcon: PortalIconComponent = ({ className }) => <Radio className={className} />;
 
 type NavItem = {
   titleKey: string;
@@ -87,6 +89,7 @@ const FULL_GROUPS: NavGroup[] = [
     label: "Spiritual",
     items: [
       { titleKey: "sermons", url: "/portal/sermons", icon: SermonsIcon, featureKey: "sermons" },
+      { titleKey: "Radio", url: "/portal/radio", icon: RadioIcon, featureKey: "radio" },
       { titleKey: "bible_verses", url: "/portal/bible-verses", icon: BibleIcon, featureKey: "bible_verses" },
       { titleKey: "prayer_requests", url: "/portal/prayer-requests", icon: PrayerIcon, featureKey: "prayer_requests" },
       { titleKey: "mass_intentions", url: "/portal/mass-intentions", icon: MassIntentionsIcon, featureKey: "mass_intentions" },
@@ -129,6 +132,7 @@ const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
 const SIMPLE_MEMBER_ALLOWED_PATHS = [
   "/portal",
   "/portal/services",
+  "/portal/radio",
   "/portal/calendar",
   "/member/library",
   "/portal/library",
@@ -191,7 +195,7 @@ function DesktopNavLink({
       <span className="relative flex items-center gap-2.5">
         <span
           className={cn(
-            "hidden h-9 w-9 shrink-0 items-center justify-center rounded-2xl border transition-all 2xl:flex",
+            "hidden h-9 w-9 shrink-0 items-center justify-center rounded-2xl border transition-all min-[1700px]:flex",
             active
               ? "border-primary/20 bg-primary/10 text-primary"
               : "border-border/60 bg-background/40 text-muted-foreground group-hover:border-primary/10 group-hover:text-foreground",

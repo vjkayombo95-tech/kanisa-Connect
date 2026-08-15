@@ -9,7 +9,8 @@ export type PortalFeatureKey =
   | "prayer_requests"
   | "mass_intentions"
   | "community_help"
-  | "channels";
+  | "channels"
+  | "radio";
 
 export const PORTAL_FEATURE_ROUTE_MAP: Array<{ prefix: string; featureKey: PortalFeatureKey }> = [
   { prefix: "/portal/events", featureKey: "events" },
@@ -23,6 +24,7 @@ export const PORTAL_FEATURE_ROUTE_MAP: Array<{ prefix: string; featureKey: Porta
   { prefix: "/portal/mass-intentions", featureKey: "mass_intentions" },
   { prefix: "/portal/community-help", featureKey: "community_help" },
   { prefix: "/portal/channels", featureKey: "channels" },
+  { prefix: "/portal/radio", featureKey: "radio" },
 ];
 
 export function getPortalFeatureForPath(pathname: string): PortalFeatureKey | null {

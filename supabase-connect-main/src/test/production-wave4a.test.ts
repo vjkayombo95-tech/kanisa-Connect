@@ -36,7 +36,8 @@ describe("production catch-up Wave 4A", () => {
     const services = source("pages/portal/MemberServicesPage.tsx");
     expect(layout).toContain('"/portal/calendar"');
     expect(layout).not.toContain('"/portal/today"');
-    expect(layout).not.toContain('"/portal/radio"');
+    expect(layout).toContain('"/portal/radio"');
+    expect(layout).toContain('featureKey: "radio"');
     expect(services).toContain('to: "/portal/calendar"');
     expect(services).toContain('featureKey: "events"');
     expect(services).toContain("getFeatureState(item.featureKey).visible");

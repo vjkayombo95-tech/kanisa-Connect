@@ -46,8 +46,8 @@ describe("Wave 4B member contribution authorization", () => {
     expect(history).toContain("/portal/contribution-receipt/${row.id}");
   });
 
-  it("does not introduce excluded Wave 4C routes", () => {
-    expect(routes).not.toContain('path="radio"');
+  it("keeps post-Wave 4B routes bounded to approved releases", () => {
+    expect(routes).toContain('path="radio"');
     expect(routes).not.toContain('path="kanisa-ai"');
   });
 });
