@@ -20,6 +20,6 @@ export function RadioPlayerProvider({children}:{children:ReactNode}) {
   useEffect(()=>{if(!stations.featureLoading&&(!stations.featureEnabled||(station&&!stations.data.some(item=>item.id===station.id))))close()},[stations.featureLoading,stations.featureEnabled,stations.data,station,close]);
   useEffect(()=>close,[close]);
   const value=useMemo(()=>({station,state,play,pause,close}),[station,state,play,pause,close]);
-  return <Context.Provider value={value}>{children}<audio ref={audio} data-testid="persistent-radio-audio" preload="none" onPlaying={()=>setState("playing")} onPause={()=>setState(current=>current==="closed"?current:"paused")} onError={()=>setState("error")} /></Context.Provider>;
+  return <Context.Provider value={value}>{children}{stations.featureEnabled?<audio ref={audio} data-testid="persistent-radio-audio" preload="none" onPlaying={()=>setState("playing")} onPause={()=>setState(current=>current==="closed"?current:"paused")} onError={()=>setState("error")} />:null}</Context.Provider>;
 }
 export function useRadioPlayer(){const value=useContext(Context);if(!value)throw new Error("RadioPlayerProvider required");return value;}

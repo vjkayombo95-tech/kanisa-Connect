@@ -6,11 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function useRadioPermission(action:"view"|"manage") {
   const { churchId, user } = useAuth();
+  const features = useFeatureAccess();
+  const feature = features.getFeatureState("radio");
   return useQuery({ queryKey:["production-radio-permission", action, user?.id, churchId], queryFn:async()=>{
     const { data, error } = await supabase.rpc("has_radio_permission" as never, { _user_id:user!.id, _church_id:churchId!, _action:action } as never);
     if (error) throw error;
     return data === true;
-  }, enabled:!!user && !!churchId, staleTime:30_000 });
+  }, enabled:!!user && !!churchId && !features.isLoading && feature.exists && feature.visible, staleTime:30_000 });
 }
 
 export function useChurchRadioStations() {
