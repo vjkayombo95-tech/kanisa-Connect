@@ -394,22 +394,22 @@ export function ChurchAdminSidebar() {
     <Sidebar
       collapsible="icon"
       className={cn(
-        "border-r border-white/6 bg-[#0b0f14]/92 p-3 text-sidebar-foreground backdrop-blur-2xl",
-        "before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,0.12),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.05),transparent_28%)] before:content-['']",
+        "border-r border-white/[0.07] bg-[#0a0d12]/95 text-sidebar-foreground backdrop-blur-2xl",
+        "before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,0.08),transparent_28%)] before:content-['']",
       )}
     >
-      <div className="relative flex h-full flex-col overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.035] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_28px_80px_-42px_rgba(0,0,0,0.88)] backdrop-blur-2xl">
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent_24%,transparent_76%,rgba(250,204,21,0.05))]" />
+      <div className="relative flex h-full flex-col overflow-hidden bg-white/[0.018]">
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent_24%,transparent_82%,rgba(250,204,21,0.035))]" />
 
         <motion.div
           layout
           transition={panelTransition}
-          className="relative z-10 flex items-center gap-3 border-b border-white/8 px-3 py-4"
+          className="relative z-10 flex items-center gap-3 border-b border-white/[0.07] px-4 py-4"
         >
           <motion.div
             layout
             transition={panelTransition}
-            className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[16px] border border-primary/20 bg-[linear-gradient(145deg,rgba(250,204,21,0.24),rgba(250,204,21,0.08))] shadow-[0_18px_34px_-24px_rgba(250,204,21,0.55)]"
+            className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary/20 bg-primary/[0.09]"
           >
             {church?.logo_url ? (
               <img src={church.logo_url} alt={`${church?.name || "Church"} logo`} loading="lazy" decoding="async" className="h-full w-full object-contain" />
@@ -430,31 +430,31 @@ export function ChurchAdminSidebar() {
                 className="min-w-0"
               >
                 <p className="truncate text-[11px] font-semibold uppercase tracking-[0.24em] text-primary/80">
-                  Church OS
+                  Kanisa Connect
                 </p>
                 <h2 className="truncate text-sm font-semibold text-foreground">{church?.name || "Kanisa Connect"}</h2>
                 <p className="truncate text-xs text-muted-foreground">
                   {billing.isLoading
                     ? "Loading plan..."
-                    : `${billing.currentPlanDefinition.name} ${billing.isTrial ? "Trial" : "Plan"}`}
+                    : `${billing.currentPlanDefinition.name} ${billing.isTrial ? "Trial" : "Plan"} · Usimamizi`}
                 </p>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
 
-        <SidebarContent className="premium-scrollbar relative z-10 flex-1 overflow-y-auto px-2 py-3 pr-1 scrollbar-gutter-stable">
-          <div className="space-y-5">
+        <SidebarContent className="premium-scrollbar relative z-10 flex-1 overflow-y-auto px-3 py-4 pr-2 scrollbar-gutter-stable">
+          <div className="space-y-4">
             <section className="space-y-2">
-              <SidebarSectionLabel label="Core" collapsed={collapsed} />
-              <div className="space-y-1.5">
+              <SidebarSectionLabel label="Kuu" collapsed={collapsed} />
+              <div className="space-y-1">
                 {visibleCoreItems.map((item, index) => renderNavItem(item, index * 0.04))}
               </div>
             </section>
 
             <section className="space-y-2">
-              <SidebarSectionLabel label="Grouped Navigation" collapsed={collapsed} />
-              <div className="space-y-2">
+              <SidebarSectionLabel label="Huduma" collapsed={collapsed} />
+              <div className="space-y-1.5">
                 {visibleGroupedSections.map((section, sectionIndex) => {
                   const open = openGroups.includes(section.id) && !collapsed;
                   const activeWithin = section.items.some((item) => isItemActive(location.pathname, item.url));
@@ -493,17 +493,19 @@ export function ChurchAdminSidebar() {
               </div>
             </section>
 
-            <section className="space-y-2">
-              <SidebarSectionLabel label="Workspace" collapsed={collapsed} />
-              <div className="space-y-1.5">
-                {visibleWorkspaceItems.map((item, index) => renderNavItem(item, 0.12 + index * 0.03))}
-              </div>
-            </section>
+            {visibleWorkspaceItems.length > 0 && (
+              <section className="space-y-2">
+                <SidebarSectionLabel label="Nafasi" collapsed={collapsed} />
+                <div className="space-y-1">
+                  {visibleWorkspaceItems.map((item, index) => renderNavItem(item, 0.12 + index * 0.03))}
+                </div>
+              </section>
+            )}
 
             {visibleOperationsItems.length > 0 && (
               <section className="space-y-2">
-                <SidebarSectionLabel label="Operations" collapsed={collapsed} />
-                <div className="space-y-1.5">
+                <SidebarSectionLabel label="Usimamizi" collapsed={collapsed} />
+                <div className="space-y-1">
                   {visibleOperationsItems.map((item, index) => renderNavItem(item, 0.16 + index * 0.03))}
                 </div>
               </section>

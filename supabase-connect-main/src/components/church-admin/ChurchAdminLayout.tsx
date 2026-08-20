@@ -4,7 +4,7 @@ import { ChurchAdminSidebar } from "./ChurchAdminSidebar";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Bell, User, Lock } from "lucide-react";
+import { Search, Bell, User, Lock, Building2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,26 +56,37 @@ export function ChurchAdminLayout() {
       ) : routeHidden ? (
         <Navigate to="/church-admin" replace />
       ) : (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-background">
-          <ChurchAdminSidebar />
-          <div className="flex-1 flex flex-col min-w-0">
-            <header className="hidden h-14 items-center gap-4 border-b border-border px-4 bg-card/50 backdrop-blur-sm sticky top-0 z-40 lg:flex">
-              <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
-              <div className="flex-1 max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search..." className="pl-9 bg-secondary border-border/50 h-9" />
+      <SidebarProvider className="[--sidebar-width:14.5rem] [--sidebar-width-icon:4rem]">
+        <div className="flex min-h-screen w-full bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.07),transparent_28%),hsl(var(--background))]">
+          <div className="hidden lg:block">
+            <ChurchAdminSidebar />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <header className="sticky top-0 z-40 hidden h-16 items-center gap-4 border-b border-white/[0.07] bg-background/85 px-5 backdrop-blur-xl lg:flex xl:px-7">
+              <SidebarTrigger className="rounded-xl text-muted-foreground hover:bg-white/[0.05] hover:text-foreground" />
+              <div className="flex min-w-0 items-center gap-3 border-l border-white/[0.08] pl-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/[0.08] text-primary">
+                  <Building2 className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">{profile?.church_name ?? profile?.church?.name ?? "Kanisa Connect"}</p>
+                  <p className="truncate text-xs text-muted-foreground">Usimamizi wa parokia</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 ml-auto">
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" onClick={() => navigate("/church-admin/notifications")}>
+              <div className="ml-auto w-full max-w-sm xl:max-w-md">
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input aria-label="Tafuta katika usimamizi" placeholder="Tafuta huduma..." className="h-10 rounded-xl border-white/[0.08] bg-white/[0.035] pl-10 shadow-none" />
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <Button aria-label="Fungua arifa" variant="ghost" size="icon" className="rounded-xl text-muted-foreground hover:bg-white/[0.05] hover:text-foreground" onClick={() => navigate("/church-admin/notifications")}>
                   <Bell className="h-4 w-4" />
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      <div className="h-8 w-8 rounded-full gradient-gold flex items-center justify-center">
+                    <Button aria-label="Fungua wasifu" variant="ghost" size="icon" className="rounded-xl hover:bg-white/[0.05]">
+                      <div className="gradient-gold flex h-8 w-8 items-center justify-center rounded-xl">
                         <User className="h-4 w-4 text-primary-foreground" />
                       </div>
                     </Button>
@@ -90,7 +101,7 @@ export function ChurchAdminLayout() {
                 </DropdownMenu>
               </div>
             </header>
-            <main className="flex-1 overflow-auto px-4 pb-24 pt-5 lg:p-6">
+            <main className="flex-1 overflow-auto px-4 pb-24 pt-5 lg:px-7 lg:pb-8 lg:pt-6 xl:px-9">
               {mobileConfig ? <StaffMobileBackHeader config={mobileConfig} title={mobileTitle} /> : null}
               {routeLocked ? (
                 <div className="mx-auto max-w-2xl">
@@ -111,7 +122,9 @@ export function ChurchAdminLayout() {
               ) : (
                 <>
                   {mobileConfig && isHome ? <StaffMobileHome config={mobileConfig} contextLabel={profile?.church_name ?? profile?.church?.name} /> : null}
-                  <div className={mobileConfig && isHome ? "hidden lg:block" : undefined}><Outlet /></div>
+                  <div className={mobileConfig && isHome ? "hidden lg:block" : undefined}>
+                    <div className="mx-auto w-full max-w-[1600px]"><Outlet /></div>
+                  </div>
                 </>
               )}
             </main>
