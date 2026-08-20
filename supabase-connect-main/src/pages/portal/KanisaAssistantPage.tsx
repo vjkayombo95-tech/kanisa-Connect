@@ -30,6 +30,7 @@ const quickQuestions = [
   { id: "readings", label: "Masomo ya leo", question: "Masomo ya leo", icon: BookOpen },
   { id: "calendar", label: "Kalenda", question: "Kalenda ya parokia", icon: CalendarDays },
   { id: "prayers", label: "Sala", question: "Sala", icon: Sparkles },
+  { id: "reflections", label: "Tafakari", question: "Tafakari", icon: Sparkles },
   { id: "saints", label: "Watakatifu", question: "Watakatifu", icon: Star },
   { id: "radio", label: "Radio", question: "Radio", icon: Radio },
 ] as const;
