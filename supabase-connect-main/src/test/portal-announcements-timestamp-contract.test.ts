@@ -8,6 +8,11 @@ const migration = readFileSync(
 );
 
 describe("portal announcement timestamp contract migration", () => {
+  it("replaces the existing RPC without destructive DDL", () => {
+    expect(migration).toContain("create or replace function public.get_portal_announcements");
+    expect(migration).not.toMatch(/drop\s+function/i);
+  });
+
   it("preserves the timestamptz API and explicitly converts both legacy timestamp columns", () => {
     expect(migration).toContain("published_at timestamptz");
     expect(migration).toContain("created_at timestamptz");

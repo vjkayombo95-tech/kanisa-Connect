@@ -1,9 +1,7 @@
 -- Keep the portal announcements RPC's timestamptz contract compatible with
 -- the legacy timestamp-without-time-zone announcement columns.
 
-drop function if exists public.get_portal_announcements(uuid, integer);
-
-create function public.get_portal_announcements(_church_id uuid, _limit integer default 50)
+create or replace function public.get_portal_announcements(_church_id uuid, _limit integer default 50)
 returns table (
   id uuid,
   church_id uuid,
