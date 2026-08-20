@@ -29,6 +29,8 @@ export type FeatureState = {
   locked: boolean;
 };
 
+export type ExplicitChurchFeatureResolution = "loading" | "enabled" | "disabled" | "error";
+
 const DEFAULT_FEATURE_STATE = (key: string): FeatureState => ({
   key,
   exists: false,
@@ -40,7 +42,7 @@ const DEFAULT_FEATURE_STATE = (key: string): FeatureState => ({
 export function useFeatureAccess() {
   const { churchId } = useAuth();
 
-  const { data: platformFeatures = [], isLoading: platformLoading } = useQuery({
+  const platformQuery = useQuery({
     queryKey: ["portal-platform-features"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -53,8 +55,9 @@ export function useFeatureAccess() {
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+  const { data: platformFeatures = [], isLoading: platformLoading } = platformQuery;
 
-  const { data: churchFeatures = [], isLoading: churchLoading } = useQuery({
+  const churchQuery = useQuery({
     queryKey: ["portal-church-features", churchId],
     queryFn: async () => {
       if (!churchId) return [];
@@ -71,6 +74,7 @@ export function useFeatureAccess() {
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
+  const { data: churchFeatures = [], isLoading: churchLoading } = churchQuery;
 
   const featureMap = useMemo(() => {
     const churchOverrides = new Map(churchFeatures.map((feature) => [feature.feature_id, feature.enabled]));
@@ -116,13 +120,39 @@ export function useFeatureAccess() {
     return DEFAULT_FEATURE_STATE(key);
   };
 
+  const isFeatureExplicitlyEnabledForChurch = (key: string) => {
+    if (!churchId) return false;
+
+    const candidateKeys = [key, ...(FEATURE_KEY_ALIASES[key] ?? [])];
+    const platformFeature = platformFeatures.find((feature) => candidateKeys.includes(feature.key));
+    if (!platformFeature?.globally_enabled) return false;
+
+    return churchFeatures.some(
+      (feature) => feature.feature_id === platformFeature.id && feature.enabled === true,
+    );
+  };
+
+  const isResolved = Boolean(churchId) && platformQuery.isFetched && churchQuery.isFetched
+    && !platformQuery.isError && !churchQuery.isError;
+  const error = platformQuery.error ?? churchQuery.error ?? null;
+
+  const getExplicitChurchFeatureResolution = (key: string): ExplicitChurchFeatureResolution => {
+    if (platformQuery.isError || churchQuery.isError) return "error";
+    if (!isResolved) return "loading";
+    return isFeatureExplicitlyEnabledForChurch(key) ? "enabled" : "disabled";
+  };
+
   return {
     isLoading: platformLoading || churchLoading,
+    isResolved,
+    error,
     platformFeatures,
     churchFeatures,
     getFeatureState,
     isFeatureVisible: (key: string) => getFeatureState(key).visible,
     isFeatureLocked: (key: string) => getFeatureState(key).locked,
     isFeatureEnabled: (key: string) => getFeatureState(key).enabled,
+    isFeatureExplicitlyEnabledForChurch,
+    getExplicitChurchFeatureResolution,
   };
 }

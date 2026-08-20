@@ -132,6 +132,7 @@ const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
 const SIMPLE_MEMBER_ALLOWED_PATHS = [
   "/portal",
   "/portal/services",
+  "/portal/kanisa-ai",
   "/portal/radio",
   "/portal/calendar",
   "/member/library",

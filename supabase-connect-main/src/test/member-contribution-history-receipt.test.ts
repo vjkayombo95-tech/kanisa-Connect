@@ -48,6 +48,7 @@ describe("Wave 4B member contribution authorization", () => {
 
   it("keeps post-Wave 4B routes bounded to approved releases", () => {
     expect(routes).toContain('path="radio"');
-    expect(routes).not.toContain('path="kanisa-ai"');
+    expect(routes).toContain('path="kanisa-ai"');
+    expect(routes).toContain("<UlizaKanisaFeatureGate>");
   });
 });
