@@ -10,6 +10,7 @@ export type PortalFeatureKey =
   | "mass_intentions"
   | "community_help"
   | "channels"
+  | "kanisa_ai"
   | "radio";
 
 export const PORTAL_FEATURE_ROUTE_MAP: Array<{ prefix: string; featureKey: PortalFeatureKey }> = [
@@ -24,6 +25,7 @@ export const PORTAL_FEATURE_ROUTE_MAP: Array<{ prefix: string; featureKey: Porta
   { prefix: "/portal/mass-intentions", featureKey: "mass_intentions" },
   { prefix: "/portal/community-help", featureKey: "community_help" },
   { prefix: "/portal/channels", featureKey: "channels" },
+  { prefix: "/portal/kanisa-ai", featureKey: "kanisa_ai" },
   { prefix: "/portal/radio", featureKey: "radio" },
 ];
 

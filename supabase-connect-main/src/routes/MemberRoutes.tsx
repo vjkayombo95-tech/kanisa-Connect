@@ -6,6 +6,7 @@ import { PersistentLivestreamProvider } from "@/contexts/PersistentLivestreamCon
 import { LiveMediaCoordinatorProvider } from "@/contexts/LiveMediaCoordinator";
 import { RadioPlayerProvider } from "@/contexts/RadioPlayerContext";
 import { PersistentRadioPlayer } from "@/components/portal/PersistentRadioPlayer";
+import { UlizaKanisaFeatureGate } from "@/components/portal/UlizaKanisaFeatureGate";
 
 const PortalLayout = lazy(() =>
   import("@/components/portal/PortalLayout").then((module) => ({ default: module.PortalLayout })),
@@ -40,6 +41,7 @@ const PrayersPage = lazy(() => import("@/pages/portal/PrayersPage"));
 const PrayerDetailPage = lazy(() => import("@/pages/portal/PrayerDetailPage"));
 const MemberRadioPage = lazy(() => import("@/pages/portal/MemberRadioPage"));
 const ParishCalendarPage = lazy(() => import("@/pages/ParishCalendarPage"));
+const KanisaAssistantPage = lazy(() => import("@/pages/portal/KanisaAssistantPage"));
 
 function SectionFallback() {
   return (
@@ -66,6 +68,7 @@ export default function MemberRoutes() {
         <Route element={<PortalLayout />}>
           <Route index element={<MemberDashboard />} />
           <Route path="services" element={<MemberServicesPage />} />
+          <Route path="kanisa-ai" element={<UlizaKanisaFeatureGate><KanisaAssistantPage /></UlizaKanisaFeatureGate>} />
           <Route path="calendar" element={<ParishCalendarPage workspace="member" />} />
           <Route path="bible-verses" element={<PortalHome />} />
           <Route path="dashboard" element={<PortalDashboard />} />
