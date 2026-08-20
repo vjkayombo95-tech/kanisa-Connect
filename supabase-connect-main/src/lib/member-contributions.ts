@@ -2,6 +2,21 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const MEMBER_CONTRIBUTION_PAGE_SIZE = 20;
 
+export async function fetchMemberContributionTotal(churchId: string, memberId: string) {
+  const { data, error } = await supabase
+    .from("contributions")
+    .select("amount")
+    .eq("church_id", churchId)
+    .eq("member_id", memberId);
+
+  if (error) throw error;
+
+  return (data ?? []).reduce((total, row) => {
+    const amount = Number(row.amount ?? 0);
+    return Number.isFinite(amount) ? total + amount : total;
+  }, 0);
+}
+
 export type MemberContribution = {
   id: string;
   amount: number;
