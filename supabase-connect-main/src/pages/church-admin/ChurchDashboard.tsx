@@ -18,6 +18,7 @@ import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ChurchDashboardIntelligence } from "@/components/church-admin/ChurchDashboardIntelligence";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
@@ -503,6 +504,8 @@ export default function ChurchDashboard() {
             Some dashboard records could not be loaded. Refresh after confirming database access.
           </p>
         ) : null}
+
+        <ChurchDashboardIntelligence />
 
         <section className="rounded-2xl border border-primary/15 bg-primary/[0.045] p-5 sm:p-6">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">

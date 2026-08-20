@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { BriefcaseBusiness, ChevronDown, ChevronLeft, Home, MoreHorizontal, Search } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
+import { ChurchDashboardIntelligence } from "@/components/church-admin/ChurchDashboardIntelligence";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { useLivestreamPermission } from "@/hooks/use-church-livestream";
@@ -51,6 +52,7 @@ export function StaffMobileHome({ config, contextLabel }: { config: StaffMobileC
       ) : <p className="rounded-[22px] border bg-card p-5 text-sm text-muted-foreground">Hakuna huduma iliyothibitishwa kwa sasa.</p>}
       <MobileLink to={config.servicesRoute} className="mt-3 flex min-h-12 items-center justify-center rounded-2xl text-sm font-semibold text-primary outline-none focus-visible:ring-2 focus-visible:ring-primary">Huduma zote →</MobileLink>
     </section>
+    {config.workspace === "admin" || config.workspace === "pastoral" || config.workspace === "finance" ? <ChurchDashboardIntelligence compact /> : null}
     <section className="rounded-[22px] border bg-card/70 p-4"><h2 className="font-semibold">Muhtasari</h2><p className="mt-1 text-sm text-muted-foreground">Fungua huduma iliyopewa kipaumbele kuona kazi zinazohitaji umakini.</p></section>
   </div>;
 }
