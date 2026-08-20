@@ -423,29 +423,29 @@ export default function ChurchDashboard() {
   };
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative mx-auto max-w-[1600px] overflow-hidden">
       <motion.div
         initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
         animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: prefersReducedMotion ? 0 : 0.55 }}
-        className="space-y-6"
+        className="space-y-5"
       >
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_30px_100px_-50px_rgba(0,0,0,0.95)] sm:p-8">
-          <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.035] p-5 shadow-[0_24px_70px_-52px_rgba(0,0,0,0.9)] sm:p-6">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase text-primary">
                 <Church className="h-3.5 w-3.5" />
                 Dashboard
               </div>
-              <h1 className="mt-5 text-3xl font-bold font-serif text-white sm:text-4xl">
+              <h1 className="mt-4 text-2xl font-bold text-white sm:text-3xl">
                 {data?.churchName || "Your Church"}
               </h1>
               <p className="mt-3 text-sm leading-7 text-white/70 sm:text-base">
                 Welcome, {administratorName}. This summary reflects records entered in your workspace.
               </p>
 
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
                   <p className="text-sm text-white/58">This Month Giving</p>
                   {isDeferredPending && !monthlyGiving.length ? (
                     <Skeleton className="mt-3 h-14 rounded-2xl bg-white/10" />
@@ -460,7 +460,7 @@ export default function ChurchDashboard() {
                     </>
                   )}
                 </div>
-                <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
+                <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
                   <p className="text-sm text-white/58">Expected Attendance</p>
                   {isDeferredPending ? (
                     <Skeleton className="mt-3 h-14 rounded-2xl bg-white/10" />
@@ -479,7 +479,7 @@ export default function ChurchDashboard() {
               </div>
             </div>
 
-            <div className="rounded-[1.75rem] border border-primary/20 bg-primary/5 p-5">
+            <div className="rounded-2xl border border-primary/15 bg-primary/[0.045] p-5">
               <p className="text-xs uppercase text-primary/80">Current Records</p>
               <p className="mt-2 text-xl font-semibold text-white">Workspace Summary</p>
               <div className="mt-6 space-y-4">
@@ -488,7 +488,7 @@ export default function ChurchDashboard() {
                   ["Recent announcements", String(data?.announcements.length ?? 0)],
                   ["Upcoming events", String(deferredData.upcomingEvents.length ?? 0)],
                 ].map(([label, value]) => (
-                  <div key={label} className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                  <div key={label} className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-black/15 px-3.5 py-2.5">
                     <span className="text-sm text-white/72">{label}</span>
                     <span className="text-sm font-semibold text-white">{value}</span>
                   </div>
@@ -504,7 +504,7 @@ export default function ChurchDashboard() {
           </p>
         ) : null}
 
-        <section className="rounded-[2rem] border border-primary/20 bg-primary/[0.06] p-6 sm:p-7">
+        <section className="rounded-2xl border border-primary/15 bg-primary/[0.045] p-5 sm:p-6">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Plan & Billing</p>
@@ -555,7 +555,7 @@ export default function ChurchDashboard() {
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {stats.map((stat) => (
-            <div key={stat.title} className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
+            <div key={stat.title} className="rounded-2xl border border-white/[0.08] bg-white/[0.035] p-5">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
                 <stat.icon className="h-5 w-5" />
               </div>
@@ -570,7 +570,7 @@ export default function ChurchDashboard() {
           ))}
         </section>
 
-        <section className="rounded-[2rem] border border-white/10 bg-white/5 p-6 sm:p-7">
+        <section className="rounded-2xl border border-white/[0.08] bg-white/[0.035] p-5 sm:p-6">
           <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_250px] lg:items-center">
             <div>
               <div className="flex items-center gap-3">
@@ -605,7 +605,7 @@ export default function ChurchDashboard() {
               )}
             </div>
 
-            <div className="flex min-h-[250px] items-center justify-center rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
+            <div className="flex min-h-[230px] items-center justify-center rounded-2xl border border-white/[0.08] bg-black/15 p-5">
               {joinLink ? (
                 <div className="rounded-xl bg-white p-3">
                   <QRCodeSVG value={joinLink} size={190} level="H" marginSize={2} title={`${data?.churchName || "Church"} member join link`} />
@@ -618,7 +618,7 @@ export default function ChurchDashboard() {
         </section>
 
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 sm:p-7">
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.035] p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase text-primary/75">Contributions</p>
@@ -636,7 +636,7 @@ export default function ChurchDashboard() {
                 ))
               ) : givingBars.map((bar) => (
                 <div key={bar.key} className="flex flex-col items-center gap-3">
-                  <div className="flex h-52 w-full items-end rounded-2xl border border-white/10 bg-black/20 p-2">
+                  <div className="flex h-48 w-full items-end rounded-xl border border-white/[0.08] bg-black/15 p-2">
                     <div className="w-full rounded-xl bg-primary" style={{ height: `${bar.height}%` }} />
                   </div>
                   <span className="text-xs text-white/50">{bar.month}</span>
@@ -646,7 +646,7 @@ export default function ChurchDashboard() {
             {!hasGiving ? <p className="mt-5 text-sm text-white/55">No contributions recorded yet.</p> : null}
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 sm:p-7">
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.035] p-5 sm:p-6">
             <div className="flex items-center gap-3">
               <Megaphone className="h-5 w-5 text-primary" />
               <h2 className="text-2xl font-semibold text-white">Recent Records</h2>
@@ -657,7 +657,7 @@ export default function ChurchDashboard() {
                   <Skeleton key={index} className="h-24 rounded-3xl bg-white/10" />
                 ))
               ) : recentActivity.map((item) => (
-                <div key={item.id} className="rounded-3xl border border-white/10 bg-black/20 p-4">
+                <div key={item.id} className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
                   <p className="text-sm font-medium text-white">{item.title}</p>
                   <p className="mt-1 text-sm text-white/58">{item.detail}</p>
                   <p className="mt-2 text-xs text-white/40">{relativeDate(item.date)}</p>
@@ -680,7 +680,7 @@ export default function ChurchDashboard() {
                 </div>
               ))}
               {!recentActivity.length ? (
-                <p className="rounded-3xl border border-white/10 bg-black/20 p-4 text-sm text-white/55">
+                <p className="rounded-2xl border border-white/[0.08] bg-black/15 p-4 text-sm text-white/55">
                   No activity has been recorded yet.
                 </p>
               ) : null}
