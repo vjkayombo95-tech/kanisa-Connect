@@ -380,6 +380,7 @@ export default function ChurchDashboard() {
   ];
 
   const administratorName = profile?.full_name || user?.user_metadata?.full_name || "Administrator";
+  const greeting = new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening";
   const joinLink = data?.churchSlug && typeof window !== "undefined"
     ? `${window.location.origin}/join/${data.churchSlug}`
     : "";
@@ -431,19 +432,20 @@ export default function ChurchDashboard() {
         transition={{ duration: prefersReducedMotion ? 0 : 0.55 }}
         className="space-y-5"
       >
-        <section className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.035] p-5 shadow-[0_24px_70px_-52px_rgba(0,0,0,0.9)] sm:p-6">
+        <section className="overflow-hidden rounded-[28px] border border-white/[0.08] bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.12),transparent_32%),rgba(255,255,255,0.035)] p-5 shadow-[0_24px_70px_-52px_rgba(0,0,0,0.9)] sm:p-6 lg:p-7">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase text-primary">
                 <Church className="h-3.5 w-3.5" />
-                Dashboard
+                Workspace briefing
               </div>
-              <h1 className="mt-4 text-2xl font-bold text-white sm:text-3xl">
-                {data?.churchName || "Your Church"}
+              <h1 className="mt-4 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                {greeting}, {administratorName.split(" ")[0]}.
               </h1>
               <p className="mt-3 text-sm leading-7 text-white/70 sm:text-base">
-                Welcome, {administratorName}. This summary reflects records entered in your workspace.
+                Here is your Church Admin briefing for today at {data?.churchName || "your parish"}.
               </p>
+              <p className="mt-3 inline-flex rounded-full border border-white/10 bg-black/15 px-3 py-1 text-xs text-white/55">Church Admin Workspace · Role: church admin</p>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
@@ -481,8 +483,8 @@ export default function ChurchDashboard() {
             </div>
 
             <div className="rounded-2xl border border-primary/15 bg-primary/[0.045] p-5">
-              <p className="text-xs uppercase text-primary/80">Current Records</p>
-              <p className="mt-2 text-xl font-semibold text-white">Workspace Summary</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">Today&apos;s focus</p>
+              <p className="mt-2 text-xl font-semibold text-white">Operational snapshot</p>
               <div className="mt-6 space-y-4">
                 {[
                   ["Active members", String(data?.activeMembers ?? 0)],
