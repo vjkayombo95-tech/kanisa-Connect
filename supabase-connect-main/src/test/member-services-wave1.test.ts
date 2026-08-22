@@ -16,10 +16,9 @@ describe("production Wave 1 member services", () => {
     }
   });
 
-  it("does not expose excluded staging features", () => {
-    for (const excluded of ["/portal/ministries"]) {
-      expect(services).not.toContain(`to: "${excluded}"`);
-    }
+  it("adds the tenant-gated member ministry service without exposing larger staging workspaces", () => {
+    expect(services).toContain('to: "/portal/ministries"');
+    expect(services).toContain('featureKey: "ministries"');
     expect(services).toContain('to: "/portal/kanisa-ai"');
     expect(services).toContain('requiresExplicitChurchEnable: true');
     expect(services).toContain('to: "/portal/radio"');

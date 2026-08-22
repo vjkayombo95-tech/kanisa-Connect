@@ -134,6 +134,7 @@ const SIMPLE_MEMBER_ALLOWED_PATHS = [
   "/portal/services",
   "/portal/kanisa-ai",
   "/portal/radio",
+  "/portal/ministries",
   "/portal/calendar",
   "/member/library",
   "/portal/library",

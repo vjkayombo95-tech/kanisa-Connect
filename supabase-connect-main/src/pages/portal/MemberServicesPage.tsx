@@ -56,6 +56,7 @@ const services: ServiceItem[] = [
   { id: "reflections", label: "Tafakari", description: "Tafakari za masomo ya kila siku", section: "faith", to: "/portal/reflections", icon: Sparkles, featureKey: null },
   { id: "prayer-requests", label: "Ombi la Maombi", description: "Tuma na fuatilia ombi", section: "faith", to: "/portal/prayer-requests", icon: HeartHandshake, featureKey: "prayer_requests" },
   { id: "channels", label: "Jumuiya", description: "Ungana na jumuiya yako", section: "community", to: "/portal/channels", icon: Users, featureKey: "channels" },
+  { id: "ministries", label: "Huduma za Parokia", description: "Jiunge na huduma ya parokia", section: "community", to: "/portal/ministries", icon: Users, featureKey: "ministries" },
   { id: "community-help", label: "Msaada wa Jumuiya", description: "Omba au toa msaada", section: "community", to: "/portal/community-help", icon: CircleHelp, featureKey: "community_help" },
   { id: "events", label: "Matukio", description: "Matukio yajayo ya parokia", section: "more", to: "/portal/events", icon: CalendarDays, featureKey: "events" },
   { id: "parish-calendar", label: "Kalenda ya Parokia", description: "Misa na matukio yajayo", section: "more", to: "/portal/calendar", icon: CalendarDays, featureKey: "events" },
