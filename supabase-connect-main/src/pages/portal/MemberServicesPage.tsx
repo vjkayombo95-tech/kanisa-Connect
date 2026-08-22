@@ -37,6 +37,7 @@ type ServiceItem = {
   icon: typeof Church;
   featureKey: PortalFeatureKey | null;
   requiresExplicitChurchEnable?: boolean;
+  requiresExistingFeature?: boolean;
 };
 
 // Every destination below exists in the production MemberRoutes table.
@@ -56,7 +57,7 @@ const services: ServiceItem[] = [
   { id: "reflections", label: "Tafakari", description: "Tafakari za masomo ya kila siku", section: "faith", to: "/portal/reflections", icon: Sparkles, featureKey: null },
   { id: "prayer-requests", label: "Ombi la Maombi", description: "Tuma na fuatilia ombi", section: "faith", to: "/portal/prayer-requests", icon: HeartHandshake, featureKey: "prayer_requests" },
   { id: "channels", label: "Jumuiya", description: "Ungana na jumuiya yako", section: "community", to: "/portal/channels", icon: Users, featureKey: "channels" },
-  { id: "ministries", label: "Huduma za Parokia", description: "Jiunge na huduma ya parokia", section: "community", to: "/portal/ministries", icon: Users, featureKey: "ministries" },
+  { id: "ministries", label: "Huduma za Parokia", description: "Jiunge na huduma ya parokia", section: "community", to: "/portal/ministries", icon: Users, featureKey: "ministries", requiresExistingFeature: true },
   { id: "community-help", label: "Msaada wa Jumuiya", description: "Omba au toa msaada", section: "community", to: "/portal/community-help", icon: CircleHelp, featureKey: "community_help" },
   { id: "events", label: "Matukio", description: "Matukio yajayo ya parokia", section: "more", to: "/portal/events", icon: CalendarDays, featureKey: "events" },
   { id: "parish-calendar", label: "Kalenda ya Parokia", description: "Misa na matukio yajayo", section: "more", to: "/portal/calendar", icon: CalendarDays, featureKey: "events" },
@@ -108,7 +109,8 @@ export default function MemberServicesPage() {
     () => services.filter((item) => {
       if (!item.featureKey) return true;
       if (item.requiresExplicitChurchEnable) return isFeatureExplicitlyEnabledForChurch(item.featureKey);
-      return getFeatureState(item.featureKey).visible;
+      const state = getFeatureState(item.featureKey);
+      return (!item.requiresExistingFeature || state.exists) && state.visible;
     }),
     [getFeatureState, isFeatureExplicitlyEnabledForChurch],
   );

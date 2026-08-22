@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, Search, UserPlus, Users } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Loader2, Search, UserPlus, Users } from "lucide-react";
+import { useParams } from "react-router-dom";
 
 import { AppLink } from "@/components/AppLink";
 import { Badge } from "@/components/ui/badge";
@@ -31,8 +31,8 @@ function MinistryCard({ ministry, memberId }: { ministry: MemberMinistry; member
         ? leaveMemberMinistry(memberId, ministry.id)
         : requestMinistryMembership(churchId, memberId, ministry.id);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: memberMinistriesQueryKey(churchId, memberId) });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: memberMinistriesQueryKey(churchId, memberId) });
       toast({
         title: ministry.joined ? "Umeondoka kwenye huduma" : "Ombi limetumwa",
         description: ministry.joined ? "Uanachama wako umesasishwa." : "Parokia itakagua ombi lako.",
@@ -46,7 +46,7 @@ function MinistryCard({ ministry, memberId }: { ministry: MemberMinistry; member
       <CardContent className="space-y-4 p-5">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-bold">{ministry.name}</h2>
+            <h2 className="min-w-0 break-words text-lg font-bold">{ministry.name}</h2>
             {ministry.joined ? <Badge>Umejiunga</Badge> : ministry.requestPending ? <Badge variant="secondary">Ombi linasubiri</Badge> : null}
           </div>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">{ministry.description || "Huduma ya parokia inayokukaribisha kushiriki."}</p>
@@ -73,7 +73,6 @@ function MinistryCard({ ministry, memberId }: { ministry: MemberMinistry; member
 }
 
 export default function MemberMinistriesPage() {
-  const navigate = useNavigate();
   const { ministryId } = useParams();
   const { churchId } = useAuth();
   const member = useLinkedMember();
@@ -96,7 +95,6 @@ export default function MemberMinistriesPage() {
 
   return (
     <main className="mx-auto min-w-0 max-w-5xl space-y-6 overflow-x-hidden px-4 py-6 pb-28 lg:px-8 lg:pb-10" data-testid="member-ministries-page">
-      <button type="button" onClick={() => navigate(-1)} className="inline-flex min-h-11 items-center gap-2 font-semibold"><ArrowLeft className="h-5 w-5" />Rudi</button>
       <header className="rounded-[28px] border border-primary/20 bg-card/90 p-5 shadow-sm sm:p-7">
         <p className="flex items-center gap-2 text-sm font-bold text-primary"><Users className="h-4 w-4" />Huduma za parokia</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight">Tumikia pamoja na jumuiya yako</h1>

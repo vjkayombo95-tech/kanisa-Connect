@@ -9,6 +9,9 @@ describe("production member ministry parity", () => {
   const services = read("pages/portal/MemberServicesPage.tsx");
   const queries = read("lib/member-ministries.ts");
   const features = read("lib/portal-features.ts");
+  const page = read("pages/portal/MemberMinistriesPage.tsx");
+  const mobileBack = read("components/portal/MemberMobileBackHeader.tsx");
+  const layout = read("components/portal/PortalLayout.tsx");
 
   it("registers list and detail routes through the existing protected member shell", () => {
     expect(routes).toContain('path="ministries"');
@@ -19,6 +22,9 @@ describe("production member ministry parity", () => {
   it("keeps feature visibility fail closed", () => {
     expect(features).toContain('{ prefix: "/portal/ministries", featureKey: "ministries" }');
     expect(services).toContain('featureKey: "ministries"');
+    expect(services).toContain("requiresExistingFeature: true");
+    expect(layout).toContain('activeFeatureKey === "ministries"');
+    expect(layout).toContain("!activeFeatureState?.exists");
   });
 
   it("scopes reads and join requests to the resolved church and member", () => {
@@ -32,5 +38,17 @@ describe("production member ministry parity", () => {
     expect(queries).toContain('.from("ministries")');
     expect(queries).toContain('.from("member_ministries")');
     expect(queries).toContain('.from("ministry_join_requests")');
+  });
+
+  it("uses the portal's safe mobile back header without rendering a duplicate", () => {
+    expect(mobileBack).toContain('"/portal/ministries": "Huduma za Parokia"');
+    expect(mobileBack).toContain("/ministries\\/[^/]+$");
+    expect(page).not.toContain("navigate(-1)");
+    expect(page).not.toContain("ArrowLeft");
+  });
+
+  it("keeps mutations pending until refreshed membership state is available", () => {
+    expect(page).toContain("onSuccess: async () =>");
+    expect(page).toContain("await queryClient.invalidateQueries");
   });
 });

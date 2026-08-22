@@ -367,7 +367,8 @@ export function PortalLayout() {
   const simpleMemberRouteHidden =
     useSimpleMemberNav &&
     !SIMPLE_MEMBER_ALLOWED_PATHS.some((path) => (path === "/portal" ? location.pathname === path : location.pathname.startsWith(path)));
-  const routeHidden = !featuresLoading && (simpleMemberRouteHidden || (activeFeatureKey && !activeFeatureState?.visible));
+  const ministryRouteUnavailable = activeFeatureKey === "ministries" && (!activeFeatureState?.exists || !activeFeatureState.visible);
+  const routeHidden = !featuresLoading && (simpleMemberRouteHidden || ministryRouteUnavailable || (activeFeatureKey && !activeFeatureState?.visible));
   const routeLocked = !featuresLoading && activeFeatureState?.locked;
 
   const toggleMobileGroup = (groupId: string) => {

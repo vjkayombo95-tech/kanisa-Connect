@@ -19,6 +19,7 @@ describe("production Wave 1 member services", () => {
   it("adds the tenant-gated member ministry service without exposing larger staging workspaces", () => {
     expect(services).toContain('to: "/portal/ministries"');
     expect(services).toContain('featureKey: "ministries"');
+    expect(services).toContain("requiresExistingFeature: true");
     expect(services).toContain('to: "/portal/kanisa-ai"');
     expect(services).toContain('requiresExplicitChurchEnable: true');
     expect(services).toContain('to: "/portal/radio"');
@@ -26,7 +27,7 @@ describe("production Wave 1 member services", () => {
   });
 
   it("supports feature visibility, local search, and collapsible sections", () => {
-    expect(services).toContain("getFeatureState(item.featureKey).visible");
+    expect(services).toContain("state.visible");
     expect(services).toContain('placeholder="Tafuta huduma..."');
     expect(services).toContain("normalizeSearch");
     expect(services).toContain("aria-expanded={isExpanded}");
