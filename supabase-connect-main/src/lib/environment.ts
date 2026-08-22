@@ -52,8 +52,11 @@ export const isStaging = appEnvironment === "staging";
 
 export function logEnvironmentStatus() {
   const details = { environment: appEnvironment, supabaseProjectRef: supabaseProjectRef ?? "unavailable" };
-  if (isEnvironmentValid && import.meta.env.DEV) console.info("[Kanisa Connect] Environment configured", details);
-  else console.error("[Kanisa Connect] Environment configuration rejected", { ...details, errors: environmentValidationErrors });
+  if (!isEnvironmentValid) {
+    console.error("[Kanisa Connect] Environment configuration rejected", { ...details, errors: environmentValidationErrors });
+    return;
+  }
+  if (import.meta.env.DEV) console.info("[Kanisa Connect] Environment configured", details);
   if (import.meta.env.DEV) {
     environmentValidationWarnings.forEach((warning) => console.warn("[Kanisa Connect]", warning));
   }
