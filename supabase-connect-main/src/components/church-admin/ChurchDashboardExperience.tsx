@@ -2,6 +2,7 @@ import { CalendarClock, CheckCircle2, ChevronRight, Clock3, Sparkles } from "luc
 import { Link } from "react-router-dom";
 
 import { ChurchDashboardIntelligenceView } from "@/components/church-admin/ChurchDashboardIntelligence";
+import { ChurchAdminLiveMediaAwareness } from "@/components/church-admin/ChurchAdminLiveMediaAwareness";
 import { useVisibleStaffServices } from "@/components/staff-mobile/StaffMobileExperience";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ChurchDashboardIntelligenceState } from "@/components/church-admin/ChurchDashboardIntelligence";
@@ -212,6 +213,8 @@ export function ChurchDashboardExperience({
           ))}
         </div>
       </section>
+
+      <ChurchAdminLiveMediaAwareness />
 
       <section className="space-y-3" aria-labelledby="church-dashboard-release-b">
         <SectionHeading id="church-dashboard-release-b" title="Pending Work + Financial Summary" description="Release B intelligence with its existing authorization and RPC contracts." />
