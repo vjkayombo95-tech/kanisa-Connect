@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { ChurchDashboardIntelligenceView } from "@/components/church-admin/ChurchDashboardIntelligence";
 import { useVisibleStaffServices } from "@/components/staff-mobile/StaffMobileExperience";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useChurchDashboardIntelligence } from "@/hooks/use-church-dashboard-intelligence";
+import type { ChurchDashboardIntelligenceState } from "@/components/church-admin/ChurchDashboardIntelligence";
 import { EMPTY_FINANCIAL_SUMMARY, EMPTY_PENDING_COUNTS, visiblePendingActions } from "@/lib/church-dashboard-intelligence";
 import { formatTZS } from "@/lib/currency";
 import { getStaffMobileConfig, type StaffMobileConfig } from "@/lib/staff-mobile-registry";
@@ -24,6 +24,7 @@ export type ChurchDashboardActivityItem = {
 };
 
 type ChurchDashboardExperienceProps = {
+  intelligence: ChurchDashboardIntelligenceState;
   administratorName: string;
   greeting: string;
   churchName: string | null;
@@ -69,6 +70,7 @@ export function ChurchDashboardQuickActions({ config }: { config: StaffMobileCon
 }
 
 export function ChurchDashboardExperience({
+  intelligence,
   administratorName,
   greeting,
   churchName,
@@ -81,7 +83,6 @@ export function ChurchDashboardExperience({
   criticalLoading,
   deferredLoading,
 }: ChurchDashboardExperienceProps) {
-  const intelligence = useChurchDashboardIntelligence();
   const counts = intelligence.pending.data ?? EMPTY_PENDING_COUNTS;
   const financial = intelligence.financial.data ?? EMPTY_FINANCIAL_SUMMARY;
   const priorities = visiblePendingActions(counts, intelligence.staffWorkspace);

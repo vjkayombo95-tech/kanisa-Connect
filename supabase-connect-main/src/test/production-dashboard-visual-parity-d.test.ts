@@ -28,7 +28,8 @@ describe("production dashboard visual parity D", () => {
   });
 
   it("derives priorities and the daily briefing from the existing Release B hook", () => {
-    expect(experience).toContain("useChurchDashboardIntelligence()");
+    expect(dashboard).toContain("useChurchDashboardIntelligence()");
+    expect(experience).not.toContain("useChurchDashboardIntelligence()");
     expect(experience).toContain("visiblePendingActions(counts, intelligence.staffWorkspace)");
     expect(experience).toContain("border-success/20 bg-success/5");
     expect(experience).toContain("deterministic summary derived only from current production dashboard data");

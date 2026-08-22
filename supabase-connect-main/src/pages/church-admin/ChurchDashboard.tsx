@@ -8,16 +8,19 @@ import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChurchDashboardExperience } from "@/components/church-admin/ChurchDashboardExperience";
+import { ChurchDashboardMobileExperience } from "@/components/church-admin/ChurchDashboardMobileExperience";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBillingAccess } from "@/hooks/use-billing-access";
+import { useChurchDashboardIntelligence } from "@/hooks/use-church-dashboard-intelligence";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureBirthdayAnnouncements } from "@/lib/birthday-announcements";
 import { fetchChurchMessageTemplate, renderChurchMessageTemplate } from "@/lib/church-message-templates";
 import { formatTZS } from "@/lib/currency";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
+import { getStaffMobileConfig } from "@/lib/staff-mobile-registry";
 import { openWhatsAppShare } from "@/lib/whatsapp-share";
 
 type ContributionRow = {
@@ -137,10 +140,12 @@ function relativeDate(value: string) {
 
 export default function ChurchDashboard() {
   const prefersReducedMotion = useReducedMotion();
-  const { churchId, profile, user } = useAuth();
+  const { churchId, profile, staffWorkspace, user } = useAuth();
   const { toast } = useToast();
   const [loadDeferredDashboardData, setLoadDeferredDashboardData] = useState(false);
   const billing = useBillingAccess({ enabled: loadDeferredDashboardData });
+  const intelligence = useChurchDashboardIntelligence();
+  const mobileConfig = getStaffMobileConfig(staffWorkspace);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["church-dashboard-critical", churchId],
@@ -218,7 +223,7 @@ export default function ChurchDashboard() {
     return () => window.clearTimeout(timeoutId);
   }, [churchId, isLoading]);
 
-  const { data: deferredData = emptyDeferredDashboardData, isLoading: isDeferredLoading } = useQuery({
+  const { data: deferredData = emptyDeferredDashboardData, isLoading: isDeferredLoading, isError: isDeferredError } = useQuery({
     queryKey: ["church-dashboard-deferred", churchId],
     queryFn: async (): Promise<DeferredDashboardData> => {
       if (!churchId) return emptyDeferredDashboardData;
@@ -406,11 +411,29 @@ export default function ChurchDashboard() {
 
   return (
     <div className="relative mx-auto max-w-7xl overflow-hidden">
+      {mobileConfig ? (
+        <ChurchDashboardMobileExperience
+          config={mobileConfig}
+          intelligence={intelligence}
+          administratorName={administratorName}
+          greeting={greeting}
+          churchName={data?.churchName ?? null}
+          activeMembers={data?.activeMembers ?? 0}
+          totalMembers={data?.totalMembers ?? 0}
+          announcementCount={data?.announcements.length ?? 0}
+          upcomingEventCount={deferredData.upcomingEvents.length}
+          attendance={deferredData.expectedAttendance}
+          criticalLoading={isLoading}
+          criticalError={isError}
+          deferredLoading={isDeferredPending}
+          deferredError={isDeferredError}
+        />
+      ) : null}
       <motion.div
         initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
         animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: prefersReducedMotion ? 0 : 0.55 }}
-        className="space-y-8"
+        className="hidden space-y-8 lg:block"
       >
         {isError ? (
           <p className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
@@ -419,6 +442,7 @@ export default function ChurchDashboard() {
         ) : null}
 
         <ChurchDashboardExperience
+          intelligence={intelligence}
           administratorName={administratorName}
           greeting={greeting}
           churchName={data?.churchName ?? null}

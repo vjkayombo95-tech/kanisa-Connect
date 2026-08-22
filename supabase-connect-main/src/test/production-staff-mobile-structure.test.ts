@@ -24,7 +24,10 @@ describe("Wave 3 production integration boundaries", () => {
   });
 
   it("keeps desktop content mounted and scopes mobile presentation to lg:hidden", () => {
-    expect(adminLayout).toContain('className={mobileConfig && isHome ? "hidden lg:block"');
+    const dashboard = read("src/pages/church-admin/ChurchDashboard.tsx");
+    const mobileDashboard = read("src/components/church-admin/ChurchDashboardMobileExperience.tsx");
+    expect(dashboard).toContain('className="hidden space-y-8 lg:block"');
+    expect(mobileDashboard).toContain('className="space-y-7 lg:hidden"');
     expect(mobile).toContain("lg:hidden");
   });
 
