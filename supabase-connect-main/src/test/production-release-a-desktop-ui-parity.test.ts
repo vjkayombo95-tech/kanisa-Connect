@@ -11,6 +11,7 @@ describe("Release A Church Admin desktop UI parity boundaries", () => {
   const sidebar = read("src/components/church-admin/ChurchAdminSidebar.tsx");
   const dashboard = read("src/pages/church-admin/ChurchDashboard.tsx");
   const mobile = read("src/components/staff-mobile/StaffMobileExperience.tsx");
+  const registry = read("src/lib/staff-mobile-registry.ts");
 
   const expectedRoutePaths = [
     "services", "qr-payments", "members", "contributions", "pledges", "communities", "ministries", "families",
@@ -29,8 +30,12 @@ describe("Release A Church Admin desktop UI parity boundaries", () => {
   });
 
   it("keeps feature-gated production navigation and media destinations", () => {
-    expect(sidebar).toContain("getFeatureState(item.featureKey).visible");
-    expect(sidebar).toContain('url: "/church-admin/radio"');
+    expect(sidebar).toContain("useVisibleStaffServices(STAFF_MOBILE_CONFIGS.admin)");
+    expect(mobile).toContain("features.getFeatureState(service.featureKey)");
+    expect(mobile).toContain("livestream.data !== true");
+    expect(mobile).toContain("radio.data !== true");
+    expect(registry).toContain('route: "/church-admin/radio"');
+    expect(registry).toContain('route: "/church-admin/livestreams"');
     expect(routes).toContain('path="radio"');
     expect(routes).toContain('path="livestreams"');
     expect(sidebar).not.toMatch(/\/(audio|operations|preview-member|finance-intelligence)(["/])/);

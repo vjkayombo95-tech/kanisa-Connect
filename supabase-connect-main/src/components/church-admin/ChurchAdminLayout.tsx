@@ -1,10 +1,10 @@
 import { Suspense, lazy } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ChurchAdminSidebar } from "./ChurchAdminSidebar";
+import { ChurchAdminCommandMenu } from "./ChurchAdminCommandMenu";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Bell, User, Lock, Building2 } from "lucide-react";
+import { Bell, User, Lock, Building2, ChevronRight } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +40,9 @@ export function ChurchAdminLayout() {
     ? !canSuperAdminEnterChurchWorkspace(churchId)
     : !isStaffRouteAllowed(staffWorkspace, location.pathname);
   const isHome = location.pathname.replace(/\/$/, "") === "/church-admin";
-  const mobileTitle = location.pathname.split("/").filter(Boolean).at(-1)?.replace(/-/g, " ") ?? "Huduma";
+  const pageSegment = location.pathname.split("/").filter(Boolean).at(-1)?.replace(/-/g, " ") ?? "dashboard";
+  const mobileTitle = pageSegment;
+  const pageTitle = pageSegment.replace(/\b\w/g, (character) => character.toUpperCase());
 
   const handleSignOut = async () => {
     await signOut();
@@ -56,28 +58,25 @@ export function ChurchAdminLayout() {
       ) : routeHidden ? (
         <Navigate to="/church-admin" replace />
       ) : (
-      <SidebarProvider className="[--sidebar-width:14.5rem] [--sidebar-width-icon:4rem]">
+      <SidebarProvider className="[--sidebar-width:15.25rem] [--sidebar-width-icon:4rem]">
         <div className="flex min-h-screen w-full bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.07),transparent_28%),hsl(var(--background))]">
           <div className="hidden lg:block">
             <ChurchAdminSidebar />
           </div>
           <div className="flex min-w-0 flex-1 flex-col">
-            <header className="sticky top-0 z-40 hidden h-16 items-center gap-4 border-b border-white/[0.07] bg-background/85 px-5 backdrop-blur-xl lg:flex xl:px-7">
+            <header className="sticky top-0 z-40 hidden h-[76px] items-center gap-4 border-b border-white/[0.07] bg-background/88 px-5 backdrop-blur-xl lg:flex xl:px-7">
               <SidebarTrigger className="rounded-xl text-muted-foreground hover:bg-white/[0.05] hover:text-foreground" />
               <div className="flex min-w-0 items-center gap-3 border-l border-white/[0.08] pl-4">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/[0.08] text-primary">
                   <Building2 className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-foreground">{profile?.church_name ?? profile?.church?.name ?? "Kanisa Connect"}</p>
-                  <p className="truncate text-xs text-muted-foreground">Usimamizi wa parokia</p>
+                  <p className="truncate text-sm font-semibold text-foreground">Church Admin Workspace</p>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground"><span className="truncate">{profile?.church_name ?? profile?.church?.name ?? "Kanisa Connect"}</span><ChevronRight className="h-3 w-3 shrink-0" /><span className="truncate text-foreground/70">{pageTitle}</span></div>
                 </div>
               </div>
               <div className="ml-auto w-full max-w-sm xl:max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input aria-label="Tafuta katika usimamizi" placeholder="Tafuta huduma..." className="h-10 rounded-xl border-white/[0.08] bg-white/[0.035] pl-10 shadow-none" />
-                </div>
+                <ChurchAdminCommandMenu />
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <Button aria-label="Fungua arifa" variant="ghost" size="icon" className="rounded-xl text-muted-foreground hover:bg-white/[0.05] hover:text-foreground" onClick={() => navigate("/church-admin/notifications")}>
@@ -123,6 +122,7 @@ export function ChurchAdminLayout() {
                 <>
                   {mobileConfig && isHome ? <StaffMobileHome config={mobileConfig} contextLabel={profile?.church_name ?? profile?.church?.name} /> : null}
                   <div className={mobileConfig && isHome ? "hidden lg:block" : undefined}>
+                    {!isHome ? <div className="mx-auto mb-5 flex w-full max-w-[1600px] items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Church Admin Workspace</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{pageTitle}</h1></div><p className="hidden text-sm text-muted-foreground md:block">{profile?.church_name ?? profile?.church?.name ?? "Parish operations"}</p></div> : null}
                     <div className="mx-auto w-full max-w-[1600px]"><Outlet /></div>
                   </div>
                 </>
