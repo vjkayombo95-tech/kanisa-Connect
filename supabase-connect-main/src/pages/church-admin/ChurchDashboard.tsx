@@ -1,24 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, useReducedMotion } from "framer-motion";
-import {
-  Activity,
-  BarChart3,
-  Calendar,
-  Church,
-  Copy,
-  CreditCard,
-  Link2,
-  MessageCircle,
-  Megaphone,
-  Users,
-} from "lucide-react";
+import { BarChart3, Church, Copy, Link2, MessageCircle, Megaphone } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChurchDashboardIntelligence } from "@/components/church-admin/ChurchDashboardIntelligence";
+import { ChurchDashboardExperience } from "@/components/church-admin/ChurchDashboardExperience";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
@@ -310,12 +299,10 @@ export default function ChurchDashboard() {
   const now = useMemo(() => new Date(), []);
   const isDeferredPending = !loadDeferredDashboardData || isDeferredLoading;
   const thisMonthGiving = deferredData.thisMonthGiving;
-  const lastMonthGiving = deferredData.lastMonthGiving;
   const monthlyGiving = deferredData.monthlyGiving;
   const recentContributions = deferredData.recentContributions;
   const hasGiving = monthlyGiving.some((item) => Number(item.amount) > 0);
   const billingLoading = !loadDeferredDashboardData || billing.isLoading;
-  const givingDifference = thisMonthGiving - lastMonthGiving;
   const memberUsage = data?.totalMembers ?? 0;
   const memberLimit = billingLoading ? null : billing.memberLimit;
   const memberUsageRatio = memberLimit ? memberUsage / memberLimit : 0;
@@ -372,13 +359,6 @@ export default function ChurchDashboard() {
       .slice(0, 4);
   }, [data?.announcements, deferredData.anniversaryMembers, deferredData.birthdayMembers, deferredData.upcomingEvents, now, recentContributions]);
 
-  const stats = [
-    { title: "Active Members", value: String(data?.activeMembers ?? 0), label: "Registered active members", icon: Users },
-    { title: "Giving This Month", value: formatTZS(thisMonthGiving), label: "Recorded contributions", icon: CreditCard },
-    { title: "Expected Attendance", value: String(deferredData.expectedAttendance.yes), label: deferredData.expectedAttendance.title ? `${deferredData.expectedAttendance.maybe} maybe · ${deferredData.expectedAttendance.responseRate.toFixed(0)}% response` : "No upcoming Mass scheduled", icon: Activity },
-    { title: "Upcoming Events", value: String(deferredData.upcomingEvents.length ?? 0), label: "Future programs scheduled", icon: Calendar },
-  ];
-
   const administratorName = profile?.full_name || user?.user_metadata?.full_name || "Administrator";
   const greeting = new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening";
   const joinLink = data?.churchSlug && typeof window !== "undefined"
@@ -425,89 +405,38 @@ export default function ChurchDashboard() {
   };
 
   return (
-    <div className="relative mx-auto max-w-[1600px] overflow-hidden">
+    <div className="relative mx-auto max-w-7xl overflow-hidden">
       <motion.div
         initial={prefersReducedMotion ? false : { opacity: 0, y: 18 }}
         animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
         transition={{ duration: prefersReducedMotion ? 0 : 0.55 }}
-        className="space-y-5"
+        className="space-y-8"
       >
-        <section className="overflow-hidden rounded-[28px] border border-white/[0.08] bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.12),transparent_32%),rgba(255,255,255,0.035)] p-5 shadow-[0_24px_70px_-52px_rgba(0,0,0,0.9)] sm:p-6 lg:p-7">
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase text-primary">
-                <Church className="h-3.5 w-3.5" />
-                Workspace briefing
-              </div>
-              <h1 className="mt-4 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                {greeting}, {administratorName.split(" ")[0]}.
-              </h1>
-              <p className="mt-3 text-sm leading-7 text-white/70 sm:text-base">
-                Here is your Church Admin briefing for today at {data?.churchName || "your parish"}.
-              </p>
-              <p className="mt-3 inline-flex rounded-full border border-white/10 bg-black/15 px-3 py-1 text-xs text-white/55">Church Admin Workspace · Role: church admin</p>
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
-                  <p className="text-sm text-white/58">This Month Giving</p>
-                  {isDeferredPending && !monthlyGiving.length ? (
-                    <Skeleton className="mt-3 h-14 rounded-2xl bg-white/10" />
-                  ) : (
-                    <>
-                      <p className="mt-2 text-2xl font-semibold text-white">{formatTZS(thisMonthGiving)}</p>
-                      <p className="mt-2 text-sm text-white/60">
-                        {givingDifference === 0
-                          ? "No change from last month"
-                          : `${givingDifference > 0 ? "+" : ""}${formatTZS(givingDifference)} compared with last month`}
-                      </p>
-                    </>
-                  )}
-                </div>
-                <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
-                  <p className="text-sm text-white/58">Expected Attendance</p>
-                  {isDeferredPending ? (
-                    <Skeleton className="mt-3 h-14 rounded-2xl bg-white/10" />
-                  ) : deferredData.expectedAttendance.title ? (
-                    <>
-                      <p className="mt-2 text-2xl font-semibold text-white">{deferredData.expectedAttendance.yes}</p>
-                      <p className="mt-2 text-sm text-white/60">
-                        {deferredData.expectedAttendance.maybe} maybe · {deferredData.expectedAttendance.no} no · {deferredData.expectedAttendance.responseRate.toFixed(0)}% response
-                      </p>
-                    </>
-                  ) : (
-                    <p className="mt-2 text-sm text-white/60">No upcoming Mass scheduled.</p>
-                  )}
-                  {deferredData.expectedAttendance.title ? <p className="mt-2 text-sm text-white/60">{deferredData.expectedAttendance.title}</p> : null}
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-primary/15 bg-primary/[0.045] p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">Today&apos;s focus</p>
-              <p className="mt-2 text-xl font-semibold text-white">Operational snapshot</p>
-              <div className="mt-6 space-y-4">
-                {[
-                  ["Active members", String(data?.activeMembers ?? 0)],
-                  ["Recent announcements", String(data?.announcements.length ?? 0)],
-                  ["Upcoming events", String(deferredData.upcomingEvents.length ?? 0)],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-black/15 px-3.5 py-2.5">
-                    <span className="text-sm text-white/72">{label}</span>
-                    <span className="text-sm font-semibold text-white">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {isError ? (
           <p className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
             Some dashboard records could not be loaded. Refresh after confirming database access.
           </p>
         ) : null}
 
-        <ChurchDashboardIntelligence />
+        <ChurchDashboardExperience
+          administratorName={administratorName}
+          greeting={greeting}
+          churchName={data?.churchName ?? null}
+          activeMembers={data?.activeMembers ?? 0}
+          totalMembers={data?.totalMembers ?? 0}
+          announcementCount={data?.announcements.length ?? 0}
+          upcomingEventCount={deferredData.upcomingEvents.length}
+          attendance={deferredData.expectedAttendance}
+          recentActivity={recentActivity}
+          criticalLoading={isLoading}
+          deferredLoading={isDeferredPending}
+        />
+
+        <div className="border-t border-border/70 pt-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Production Utilities</p>
+          <h2 className="mt-2 font-serif text-xl font-semibold text-foreground">Church administration tools</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Existing Release B production tools and records remain available below the daily workspace.</p>
+        </div>
 
         <section className="rounded-2xl border border-primary/15 bg-primary/[0.045] p-5 sm:p-6">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
@@ -556,23 +485,6 @@ export default function ChurchDashboard() {
               </Button>
             </div>
           </div>
-        </section>
-
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {stats.map((stat) => (
-            <div key={stat.title} className="rounded-2xl border border-white/[0.08] bg-white/[0.035] p-5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
-                <stat.icon className="h-5 w-5" />
-              </div>
-              <p className="mt-7 text-sm text-white/60">{stat.title}</p>
-              {isLoading || (stat.title !== "Active Members" && isDeferredPending) ? (
-                <Skeleton className="mt-3 h-9 w-28 rounded-xl bg-white/10" />
-              ) : (
-                <p className="mt-2 text-3xl font-semibold text-white">{stat.value}</p>
-              )}
-              <p className="mt-3 text-sm text-white/58">{stat.label}</p>
-            </div>
-          ))}
         </section>
 
         <section className="rounded-2xl border border-white/[0.08] bg-white/[0.035] p-5 sm:p-6">

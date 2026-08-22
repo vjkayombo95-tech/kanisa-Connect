@@ -78,7 +78,8 @@ describe("Release B production dashboard intelligence", () => {
     expect(component).toContain("pending.isError");
     expect(component).toContain("No pending work is available for your current role.");
     expect(component).toContain("financial.isError");
-    expect(dashboard).toContain("<ChurchDashboardIntelligence />");
+    expect(dashboard).toContain("<ChurchDashboardExperience");
+    expect(dashboard).not.toContain("<ChurchDashboardIntelligence />");
     expect(mobile).toContain("<ChurchDashboardIntelligence compact />");
     expect(mobile).toContain("services.filter((service) => service.primary).slice(0, 4)");
     expect(routes).toContain("<Route element={<ChurchAdminLayout />}");
