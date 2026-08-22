@@ -109,6 +109,12 @@ export const STAFF_MOBILE_CONFIGS: Record<Exclude<StaffMobileWorkspace, "member"
   super_admin: { workspace: "super_admin", home: "/super-admin", workLabel: "Makanisa", workRoute: "/super-admin/churches", servicesRoute: "/super-admin/services", services: superAdminServices },
 };
 
+export function getStaffMobileConfig(workspace: StaffMobileWorkspace | null): StaffMobileConfig | null {
+  return workspace === "admin" || workspace === "pastoral" || workspace === "finance" || workspace === "super_admin"
+    ? STAFF_MOBILE_CONFIGS[workspace]
+    : null;
+}
+
 const exactPath = (pathname: string) => pathname.replace(/\/$/, "") || "/";
 
 export function isStaffRouteAllowed(workspace: StaffMobileWorkspace | null, pathname: string) {

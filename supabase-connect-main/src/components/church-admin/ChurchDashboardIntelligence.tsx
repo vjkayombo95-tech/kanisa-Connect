@@ -11,7 +11,21 @@ import {
 import { formatTZS } from "@/lib/currency";
 
 export function ChurchDashboardIntelligence({ compact = false }: { compact?: boolean }) {
-  const { financial, financialEnabled, pending, pendingEnabled, staffWorkspace } = useChurchDashboardIntelligence();
+  const intelligence = useChurchDashboardIntelligence();
+
+  return <ChurchDashboardIntelligenceView intelligence={intelligence} compact={compact} />;
+}
+
+export type ChurchDashboardIntelligenceState = ReturnType<typeof useChurchDashboardIntelligence>;
+
+export function ChurchDashboardIntelligenceView({
+  intelligence,
+  compact = false,
+}: {
+  intelligence: ChurchDashboardIntelligenceState;
+  compact?: boolean;
+}) {
+  const { financial, financialEnabled, pending, pendingEnabled, staffWorkspace } = intelligence;
   const counts = pending.data ?? EMPTY_PENDING_COUNTS;
   const summary = financial.data ?? EMPTY_FINANCIAL_SUMMARY;
   const actions = visiblePendingActions(counts, staffWorkspace);
