@@ -17,7 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { getChurchAdminFeatureForPath } from "@/lib/church-admin-features";
 import { Card, CardContent } from "@/components/ui/card";
-import { StaffMobileBackHeader, StaffMobileBottomNav, StaffMobileHome } from "@/components/staff-mobile/StaffMobileExperience";
+import { StaffMobileBackHeader, StaffMobileBottomNav } from "@/components/staff-mobile/StaffMobileExperience";
 import { STAFF_MOBILE_CONFIGS, canSuperAdminEnterChurchWorkspace, isStaffRouteAllowed } from "@/lib/staff-mobile-registry";
 
 const FloatingAIAssistant = lazy(() =>
@@ -120,8 +120,7 @@ export function ChurchAdminLayout() {
                 </div>
               ) : (
                 <>
-                  {mobileConfig && isHome ? <StaffMobileHome config={mobileConfig} contextLabel={profile?.church_name ?? profile?.church?.name} /> : null}
-                  <div className={mobileConfig && isHome ? "hidden lg:block" : undefined}>
+                  <div>
                     {!isHome ? <div className="mx-auto mb-5 flex w-full max-w-[1600px] items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Church Admin Workspace</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{pageTitle}</h1></div><p className="hidden text-sm text-muted-foreground md:block">{profile?.church_name ?? profile?.church?.name ?? "Parish operations"}</p></div> : null}
                     <div className="mx-auto w-full max-w-[1600px]"><Outlet /></div>
                   </div>

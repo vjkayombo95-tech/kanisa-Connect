@@ -33,7 +33,7 @@ export function ChurchDashboardIntelligenceView({
   if (!pendingEnabled && !financialEnabled) return null;
 
   return (
-    <section className={compact ? "space-y-3" : "grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)]"} aria-label="Dashboard intelligence">
+    <section className={compact ? "grid gap-3 md:grid-cols-2" : "grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)]"} aria-label="Dashboard intelligence">
       {pendingEnabled ? (
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.035] p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">

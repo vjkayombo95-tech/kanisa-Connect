@@ -10,6 +10,7 @@ describe("Release A Church Admin desktop UI parity boundaries", () => {
   const layout = read("src/components/church-admin/ChurchAdminLayout.tsx");
   const sidebar = read("src/components/church-admin/ChurchAdminSidebar.tsx");
   const dashboard = read("src/pages/church-admin/ChurchDashboard.tsx");
+  const mobileDashboard = read("src/components/church-admin/ChurchDashboardMobileExperience.tsx");
   const mobile = read("src/components/staff-mobile/StaffMobileExperience.tsx");
   const registry = read("src/lib/staff-mobile-registry.ts");
 
@@ -51,8 +52,9 @@ describe("Release A Church Admin desktop UI parity boundaries", () => {
 
   it("preserves the Wave 3 mobile and desktop split", () => {
     expect(layout).toContain('<div className="hidden lg:block">');
-    expect(layout).toContain('className={mobileConfig && isHome ? "hidden lg:block"');
-    expect(layout).toContain("StaffMobileHome");
+    expect(dashboard).toContain('className="hidden space-y-8 lg:block"');
+    expect(mobileDashboard).toContain('className="space-y-7 lg:hidden"');
+    expect(dashboard).toContain("ChurchDashboardMobileExperience");
     expect(layout).toContain("StaffMobileBottomNav");
     expect(mobile).toContain("services.filter((service) => service.primary).slice(0, 4)");
     expect(mobile).toContain("Tafuta huduma");
