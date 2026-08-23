@@ -1,4 +1,5 @@
 import { AnchorHTMLAttributes, MouseEvent, forwardRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 type AppLinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & {
   to: string;
@@ -9,11 +10,12 @@ function isModifiedEvent(event: MouseEvent<HTMLAnchorElement>) {
 }
 
 function isExternalUrl(to: string) {
-  return /^(https?:)?\/\//.test(to) || to.startsWith("mailto:") || to.startsWith("tel:");
+  return to.startsWith("mailto:") || to.startsWith("tel:");
 }
 
 const AppLink = forwardRef<HTMLAnchorElement, AppLinkProps>(
   ({ to, onClick, target, rel, ...props }, ref) => {
+    const navigate = useNavigate();
     const safeRel = target === "_blank" ? rel ?? "noreferrer noopener" : rel;
 
     return (
@@ -28,15 +30,21 @@ const AppLink = forwardRef<HTMLAnchorElement, AppLinkProps>(
           if (
             event.defaultPrevented ||
             typeof window === "undefined" ||
-            target === "_blank" ||
+            event.button !== 0 ||
+            (target && target !== "_self") ||
+            props.download !== undefined ||
             isModifiedEvent(event) ||
-            isExternalUrl(to)
+            isExternalUrl(to) ||
+            to.startsWith("#")
           ) {
             return;
           }
 
+          const url = new URL(to, window.location.href);
+          if (url.origin !== window.location.origin) return;
+
           event.preventDefault();
-          window.location.assign(to);
+          navigate(`${url.pathname}${url.search}${url.hash}`);
         }}
         {...props}
       />
