@@ -7,7 +7,6 @@ const queries = read("src/lib/member-contributions.ts");
 const history = read("src/pages/portal/PortalContributionHistoryPage.tsx");
 const receipt = read("src/pages/portal/PortalContributionReceiptPage.tsx");
 const routes = read("src/routes/MemberRoutes.tsx");
-const services = read("src/pages/portal/MemberServicesPage.tsx");
 
 describe("Wave 4B member contribution authorization", () => {
   it("scopes history by the resolved church and linked member with a bounded range", () => {
@@ -40,9 +39,10 @@ describe("Wave 4B member contribution authorization", () => {
   });
 
   it("mounts history and direct-refresh receipt routes for portal and member aliases", () => {
+    const registry = readFileSync(join(process.cwd(), "src/lib/member-service-registry.ts"), "utf8");
     expect(routes).toContain('path="contribution-history"');
     expect(routes).toContain('path="contribution-receipt/:contributionId"');
-    expect(services).toContain('to: "/portal/contribution-history"');
+    expect(registry).toContain('path: "/portal/contribution-history"');
     expect(history).toContain("/portal/contribution-receipt/${row.id}");
   });
 

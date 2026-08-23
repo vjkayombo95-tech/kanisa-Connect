@@ -16,10 +16,11 @@ describe("production Wave 5B feature gate", () => {
 
   it("keeps the service hidden by explicit opt-in and preserves mobile-safe layout", () => {
     const services = readFileSync(join(process.cwd(), "src/pages/portal/MemberServicesPage.tsx"), "utf8");
+    const registry = readFileSync(join(process.cwd(), "src/lib/member-service-registry.ts"), "utf8");
     const page = readFileSync(join(process.cwd(), "src/pages/portal/KanisaAssistantPage.tsx"), "utf8");
     const routes = readFileSync(join(process.cwd(), "src/routes/MemberRoutes.tsx"), "utf8");
     const gate = readFileSync(join(process.cwd(), "src/components/portal/UlizaKanisaFeatureGate.tsx"), "utf8");
-    expect(services).toContain('requiresExplicitChurchEnable: true');
+    expect(registry).toContain('requiresExplicitChurchEnable: true');
     expect(services).toContain("isFeatureExplicitlyEnabledForChurch(item.featureKey)");
     expect(routes).toContain('path="kanisa-ai"');
     expect(routes).toContain("<UlizaKanisaFeatureGate>");

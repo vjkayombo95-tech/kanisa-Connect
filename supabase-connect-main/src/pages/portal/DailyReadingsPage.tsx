@@ -13,37 +13,12 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   getReadableReadingDate,
   getTodayReadingEntry,
+  fetchPublishedDailyReading,
+  publishedDailyReadingKey,
   readingEntryMatchesSearch,
-  type DailyReadingKind,
   type DailyReadingEntry,
-  type DailyReadingPassageRecord,
-  type DailyReadingRecord,
-  type DailyReadingSection,
 } from "@/lib/daily-readings";
 import { SAINT_SELECT, getSaintImageAlt, type LibrarySaint } from "@/lib/catholic-library";
-
-const READING_SECTION_META: Record<DailyReadingKind, Pick<DailyReadingSection, "id" | "title" | "reference">> = {
-  first: {
-    id: "first",
-    title: "First Reading",
-    reference: "Daily reading reference pending",
-  },
-  psalm: {
-    id: "psalm",
-    title: "Responsorial Psalm",
-    reference: "Psalm reference pending",
-  },
-  second: {
-    id: "second",
-    title: "Second Reading",
-    reference: "Optional reading reference pending",
-  },
-  gospel: {
-    id: "gospel",
-    title: "Gospel",
-    reference: "Gospel reference pending",
-  },
-};
 
 function getTodayParts() {
   const today = new Date();
@@ -51,87 +26,6 @@ function getTodayParts() {
     month: today.getMonth() + 1,
     day: today.getDate(),
   };
-}
-
-function getLegacyReadingText(record: DailyReadingRecord, kind: DailyReadingKind) {
-  if (kind === "first") return record.first_reading;
-  if (kind === "psalm") return record.psalm;
-  if (kind === "second") return record.second_reading;
-  return record.gospel;
-}
-
-function getPassageBibleReference(passage: DailyReadingPassageRecord | undefined) {
-  if (
-    !passage?.book_id ||
-    !passage.chapter_start ||
-    !passage.verse_start ||
-    !passage.chapter_end ||
-    !passage.verse_end
-  ) {
-    return null;
-  }
-
-  return {
-    book_id: passage.book_id,
-    chapter_start: passage.chapter_start,
-    verse_start: passage.verse_start,
-    chapter_end: passage.chapter_end,
-    verse_end: passage.verse_end,
-  };
-}
-
-function mapDailyReadingRecordToEntry(
-  record: DailyReadingRecord,
-  passages: DailyReadingPassageRecord[],
-  fallback: DailyReadingEntry,
-): DailyReadingEntry {
-  const passagesByKind = new Map(passages.map((passage) => [passage.reading_kind, passage]));
-  const readings = fallback.readings.map((fallbackReading) => {
-    const passage = passagesByKind.get(fallbackReading.id);
-    const sectionMeta = READING_SECTION_META[fallbackReading.id];
-
-    return {
-      id: fallbackReading.id,
-      title: passage?.title ?? sectionMeta.title,
-      reference: passage?.reference ?? fallbackReading.reference,
-      text: passage?.text ?? getLegacyReadingText(record, fallbackReading.id) ?? fallbackReading.text,
-      bibleReference: getPassageBibleReference(passage),
-    };
-  });
-
-  return {
-    id: record.id,
-    date: record.reading_date,
-    liturgicalSeason: record.liturgical_season,
-    reflection: record.reflection ?? fallback.reflection,
-    prayer: record.prayer ?? fallback.prayer,
-    readings,
-  };
-}
-
-async function fetchPublishedDailyReading(date: string, fallback: DailyReadingEntry) {
-  const { data, error } = await supabase
-    .from("daily_readings" as never)
-    .select(
-      "id, reading_date, liturgical_season, first_reading, psalm, second_reading, gospel, reflection, prayer, is_published",
-    )
-    .eq("reading_date", date)
-    .eq("is_published", true)
-    .maybeSingle();
-
-  if (error || !data) return null;
-
-  const record = data as unknown as DailyReadingRecord;
-  const passagesResult = await supabase
-    .from("daily_reading_passages" as never)
-    .select(
-      "id, daily_reading_id, reading_kind, title, reference, text, book_id, chapter_start, verse_start, chapter_end, verse_end, sort_order",
-    )
-    .eq("daily_reading_id", record.id)
-    .order("sort_order", { ascending: true });
-
-  const passages = passagesResult.error ? [] : ((passagesResult.data ?? []) as unknown as DailyReadingPassageRecord[]);
-  return mapDailyReadingRecordToEntry(record, passages, fallback);
 }
 
 function TodaySaintCard({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: boolean }) {
@@ -230,14 +124,13 @@ export default function DailyReadingsPage() {
   const [search, setSearch] = useState("");
   const today = useMemo(() => getTodayParts(), []);
   const fallbackTodayReading = useMemo(() => getTodayReadingEntry(), []);
-  const { data: publishedTodayReading } = useQuery({
-    queryKey: ["daily-readings-published-today", fallbackTodayReading.date],
-    queryFn: () => fetchPublishedDailyReading(fallbackTodayReading.date, fallbackTodayReading),
+  const { data: publishedTodayReading, isLoading: readingLoading, isError: readingError } = useQuery({
+    queryKey: publishedDailyReadingKey(fallbackTodayReading.date),
+    queryFn: () => fetchPublishedDailyReading(fallbackTodayReading.date),
     staleTime: 10 * 60 * 1000,
     retry: false,
   });
-  const todayReading = publishedTodayReading ?? fallbackTodayReading;
-  const readingHistory = useMemo(() => [todayReading], [todayReading]);
+  const readingHistory = useMemo(() => publishedTodayReading ? [publishedTodayReading] : [], [publishedTodayReading]);
 
   const { data: todaySaints = [], isLoading: saintLoading } = useQuery({
     queryKey: ["daily-readings-today-saints", today.month, today.day],
@@ -262,6 +155,10 @@ export default function DailyReadingsPage() {
     [readingHistory, search],
   );
 
+  if (readingLoading) return <main className="px-4 py-6"><div className="mx-auto max-w-7xl space-y-4"><Skeleton className="h-40 rounded-[32px]" /><Skeleton className="h-64 rounded-[28px]" /></div></main>;
+  if (readingError || !publishedTodayReading) return <main className="px-4 py-10"><Card className="mx-auto max-w-3xl rounded-[28px]"><CardContent className="p-8 text-center"><h1 className="text-2xl font-bold">Masomo ya leo hayajapatikana</h1><p className="mt-2 text-muted-foreground">Masomo yaliyochapishwa hayapatikani kwa sasa. Tafadhali jaribu tena baadaye.</p></CardContent></Card></main>;
+
+  const todayReading = publishedTodayReading;
   const requiredReadings = todayReading.readings.filter((reading) => reading.id !== "second");
   const secondReading = todayReading.readings.find((reading) => reading.id === "second");
 

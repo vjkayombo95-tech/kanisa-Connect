@@ -29,6 +29,8 @@ import { logWarning } from "@/lib/error-logger";
 import { ProductionLiveMassCard } from "@/components/portal/ProductionLiveMassCard";
 import { MobileMemberHome } from "@/components/portal/MobileMemberHome";
 import { fetchMemberContributionTotal } from "@/lib/member-contributions";
+import { dailyLifeKeys, fetchNextMassSummary } from "@/lib/member-daily-life";
+import { useIsDesktop } from "@/hooks/use-mobile";
 
 type MemberHomeData = {
   memberId: string | null;
@@ -46,27 +48,6 @@ type MemberHomeData = {
     content: string | null;
     date: string | null;
   } | null;
-};
-
-type NextMassSummary = {
-  success?: boolean;
-  mass?: {
-    id: string;
-    title: string;
-    description: string | null;
-    mass_date: string;
-    start_time: string;
-    end_time: string | null;
-    response_deadline: string | null;
-    ask_for_rsvp: boolean;
-    my_member_id: string | null;
-    my_response: "yes" | "maybe" | "no" | null;
-  } | null;
-  yes_count?: number;
-  maybe_count?: number;
-  no_count?: number;
-  response_rate?: number;
-  error?: string;
 };
 
 type SaintOfDay = {
@@ -187,45 +168,20 @@ function useSimpleMemberHomeData() {
 
       if (!member) return emptyState;
 
-      const [churchResult, latestContributionResult, contributionTotalResult, pledgeBalanceResult, announcementRows] = await Promise.all([
+      const [churchResult, announcementRows] = await Promise.all([
         supabase.from("churches").select("name").eq("id", member.church_id).maybeSingle(),
-        supabase
-          .from("contributions")
-          .select("id, amount, date, category_id")
-          .eq("church_id", member.church_id)
-          .eq("member_id", member.id)
-          .order("date", { ascending: false })
-          .limit(1),
-        fetchMemberContributionTotal(member.church_id, member.id)
-          .then((data) => ({ data, error: null }))
-          .catch((error: unknown) => ({ data: 0, error })),
-        supabase.rpc("get_member_pledges" as never, { _member_id: member.id } as never),
         fetchPortalAnnouncements(member.church_id, 1),
       ]);
-
       if (churchResult.error) logMemberDashboardError("church", churchResult.error);
-      if (latestContributionResult.error) logMemberDashboardError("latest contribution", latestContributionResult.error);
-      if (contributionTotalResult.error) logMemberDashboardError("contribution total", contributionTotalResult.error);
-      if (pledgeBalanceResult.error) logMemberDashboardError("pledge balance", pledgeBalanceResult.error);
-
-      const latestContribution = (latestContributionResult.error ? null : latestContributionResult.data?.[0] ?? null) as any;
       const latestAnnouncement = announcementRows[0] ?? null;
-      const totalPaid = contributionTotalResult.error ? 0 : contributionTotalResult.data;
-      const pendingAmount = pledgeBalanceResult.error ? 0 : readPendingPledgeBalance(pledgeBalanceResult.data);
 
       return {
         memberId: member.id,
         memberName: member.full_name || fallbackName,
         churchName: churchResult.error ? null : churchResult.data?.name ?? null,
-        totalPaid,
-        pendingAmount,
-        lastPayment: latestContribution
-          ? {
-              amount: Number(latestContribution.amount ?? 0),
-              date: latestContribution.date ?? null,
-              label: "Malipo",
-            }
-          : null,
+        totalPaid: 0,
+        pendingAmount: 0,
+        lastPayment: null,
         latestAnnouncement: latestAnnouncement
           ? {
               title: latestAnnouncement.title || "Tangazo",
@@ -236,6 +192,39 @@ function useSimpleMemberHomeData() {
       };
     },
     enabled: !!user && !!churchId,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+function useMemberFinancialData(churchId: string | null, memberId: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: ["member-home-financials", churchId, memberId],
+    queryFn: async () => {
+      const [latestContributionResult, contributionTotalResult, pledgeBalanceResult] = await Promise.all([
+        supabase.from("contributions").select("id, amount, date, category_id").eq("church_id", churchId!).eq("member_id", memberId!).order("date", { ascending: false }).limit(1),
+        fetchMemberContributionTotal(churchId!, memberId!).then((data) => ({ data, error: null })).catch((error: unknown) => ({ data: 0, error })),
+        supabase.rpc("get_member_pledges" as never, { _member_id: memberId! } as never),
+      ]);
+
+      if (latestContributionResult.error) logMemberDashboardError("latest contribution", latestContributionResult.error);
+      if (contributionTotalResult.error) logMemberDashboardError("contribution total", contributionTotalResult.error);
+      if (pledgeBalanceResult.error) logMemberDashboardError("pledge balance", pledgeBalanceResult.error);
+
+      const latestContribution = (latestContributionResult.error ? null : latestContributionResult.data?.[0] ?? null) as {
+        amount?: number | string | null;
+        date?: string | null;
+      } | null;
+
+      return {
+        totalPaid: contributionTotalResult.error ? 0 : contributionTotalResult.data,
+        pendingAmount: pledgeBalanceResult.error ? 0 : readPendingPledgeBalance(pledgeBalanceResult.data),
+        lastPayment: latestContribution
+          ? { amount: Number(latestContribution.amount ?? 0), date: latestContribution.date ?? null, label: "Malipo" }
+          : null,
+      };
+    },
+    enabled: enabled && !!churchId && !!memberId,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -326,19 +315,17 @@ function BigAction({
 }
 
 export default function MemberDashboard() {
+  const isDesktop = useIsDesktop();
   const { data, isLoading, isError } = useSimpleMemberHomeData();
   const { getFeatureState } = useFeatureAccess();
   const { churchId } = useAuth();
   const queryClient = useQueryClient();
-  const home = data ?? emptyMemberHome("Mshirika");
+  const financials = useMemberFinancialData(churchId, data?.memberId ?? null, isDesktop);
+  const home = { ...(data ?? emptyMemberHome("Mshirika")), ...(financials.data ?? {}) };
 
-  const { data: massSummary } = useQuery({
-    queryKey: ["next-mass-summary", churchId],
-    queryFn: async () => {
-      const { data: summary, error } = await supabase.rpc("get_next_mass_summary" as never, { p_church_id: churchId } as never);
-      if (error) throw error;
-      return summary as NextMassSummary;
-    },
+  const { data: massSummary, isLoading: massLoading, isError: massError } = useQuery({
+    queryKey: dailyLifeKeys.nextMass(churchId),
+    queryFn: () => fetchNextMassSummary(churchId!),
     enabled: !!churchId,
     staleTime: 60 * 1000,
   });
@@ -350,6 +337,7 @@ export default function MemberDashboard() {
       if (error) throw error;
       return (saints ?? []) as unknown as SaintOfDay[];
     },
+    enabled: isDesktop,
     staleTime: 6 * 60 * 60 * 1000,
   });
 
@@ -366,12 +354,12 @@ export default function MemberDashboard() {
       } as never);
 
       if (error) throw error;
-      const payload = result as NextMassSummary;
+      const payload = result as { success?: boolean; error?: string };
       if (!payload?.success) throw new Error(payload?.error || "Unable to submit Mass RSVP.");
       return payload;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["next-mass-summary"] });
+      queryClient.invalidateQueries({ queryKey: dailyLifeKeys.nextMass(churchId) });
       queryClient.invalidateQueries({ queryKey: ["church-dashboard-deferred"] });
     },
   });
@@ -388,8 +376,8 @@ export default function MemberDashboard() {
   const psalmReading = todayReading.readings.find((reading) => reading.id === "psalm");
   const secondReading = todayReading.readings.find((reading) => reading.id === "second");
   const gospelReading = todayReading.readings.find((reading) => reading.id === "gospel");
-  const deadlinePassed = isDeadlinePassed(nextMass?.response_deadline ?? null);
-  const rsvpDisabled = !nextMass?.ask_for_rsvp || deadlinePassed || !home.memberId || submitMassResponse.isPending;
+  const deadlinePassed = isDeadlinePassed(nextMass?.responseDeadline ?? null);
+  const rsvpDisabled = !nextMass?.askForRsvp || deadlinePassed || !home.memberId || submitMassResponse.isPending;
 
   return (
     <div className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-5 pb-28 lg:px-8 lg:pb-8">
@@ -400,6 +388,9 @@ export default function MemberDashboard() {
         latestAnnouncement={home.latestAnnouncement}
         massVisible={massVisible}
         memberName={home.memberName}
+        nextMass={nextMass}
+        nextMassError={massError}
+        nextMassLoading={massLoading}
       />
       <div className="mx-auto hidden max-w-5xl space-y-5 lg:block">
         <ProductionLiveMassCard />
@@ -458,11 +449,11 @@ export default function MemberDashboard() {
                   <>
                     <h2 className="mt-1 text-2xl font-bold text-foreground">{nextMass.title}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {formatDate(nextMass.mass_date)} · {formatMassTime(nextMass.start_time)}
+                      {formatDate(nextMass.massDate)} · {formatMassTime(nextMass.startTime)}
                     </p>
-                    {nextMass.response_deadline ? (
+                    {nextMass.responseDeadline ? (
                       <p className="mt-2 text-xs text-muted-foreground">
-                        RSVP deadline: {new Date(nextMass.response_deadline).toLocaleString("en-TZ")}
+                        RSVP deadline: {new Date(nextMass.responseDeadline).toLocaleString("en-TZ")}
                       </p>
                     ) : null}
                   </>
@@ -478,7 +469,7 @@ export default function MemberDashboard() {
                     {(["yes", "maybe", "no"] as const).map((response) => (
                       <Button
                         key={response}
-                        variant={nextMass.my_response === response ? "default" : "outline"}
+                        variant={nextMass.memberResponse === response ? "default" : "outline"}
                         className="min-w-24 capitalize"
                         disabled={rsvpDisabled}
                         onClick={() => submitMassResponse.mutate(response)}
@@ -488,9 +479,9 @@ export default function MemberDashboard() {
                     ))}
                   </div>
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    <span>Expected: {massSummary?.yes_count ?? 0}</span>
-                    <span>Maybe: {massSummary?.maybe_count ?? 0}</span>
-                    <span>Response rate: {Number(massSummary?.response_rate ?? 0).toFixed(0)}%</span>
+                    <span>Expected: {massSummary?.responseCounts.yes ?? 0}</span>
+                    <span>Maybe: {massSummary?.responseCounts.maybe ?? 0}</span>
+                    <span>Response rate: {Number(massSummary?.responseRate ?? 0).toFixed(0)}%</span>
                   </div>
                   {deadlinePassed ? <p className="text-xs text-muted-foreground">RSVP deadline has passed.</p> : null}
                 </div>
