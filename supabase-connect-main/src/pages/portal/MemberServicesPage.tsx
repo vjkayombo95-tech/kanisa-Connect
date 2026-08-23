@@ -18,11 +18,14 @@ import {
   Settings,
   Sparkles,
   Users,
+  Video,
 } from "lucide-react";
 
 import { AppLink } from "@/components/AppLink";
 import { Input } from "@/components/ui/input";
+import { useChurchLivestream } from "@/hooks/use-church-livestream";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
+import { getYouTubeEmbedUrl, presentation } from "@/lib/church-livestreams";
 import type { PortalFeatureKey } from "@/lib/portal-features";
 import { cn } from "@/lib/utils";
 
@@ -37,10 +40,13 @@ type ServiceItem = {
   icon: typeof Church;
   featureKey: PortalFeatureKey | null;
   requiresExplicitChurchEnable?: boolean;
+  requiresExistingFeature?: boolean;
 };
 
 // Every destination below exists in the production MemberRoutes table.
 const services: ServiceItem[] = [
+  { id: "today", label: "Leo / Masomo ya Leo", description: "Masomo, mtakatifu na maisha ya leo", section: "frequent", to: "/portal/today", icon: BookOpen, featureKey: null },
+  { id: "my-parish", label: "Parokia Yangu", description: "Misa, matukio na huduma za parokia", section: "frequent", to: "/portal/my-parish", icon: Church, featureKey: null },
   { id: "giving", label: "Toa Mchango", description: "Changia parokia yako", section: "frequent", to: "/portal/give", icon: HandCoins, featureKey: "give" },
   { id: "mass-intentions", label: "Nia za Misa", description: "Wasilisha au fuatilia nia", section: "frequent", to: "/portal/mass-intentions", icon: HeartHandshake, featureKey: "mass_intentions" },
   { id: "announcements", label: "Matangazo", description: "Taarifa mpya za parokia", section: "frequent", to: "/portal/announcements", icon: Megaphone, featureKey: "announcements" },
@@ -56,6 +62,7 @@ const services: ServiceItem[] = [
   { id: "reflections", label: "Tafakari", description: "Tafakari za masomo ya kila siku", section: "faith", to: "/portal/reflections", icon: Sparkles, featureKey: null },
   { id: "prayer-requests", label: "Ombi la Maombi", description: "Tuma na fuatilia ombi", section: "faith", to: "/portal/prayer-requests", icon: HeartHandshake, featureKey: "prayer_requests" },
   { id: "channels", label: "Jumuiya", description: "Ungana na jumuiya yako", section: "community", to: "/portal/channels", icon: Users, featureKey: "channels" },
+  { id: "ministries", label: "Huduma za Parokia", description: "Jiunge na huduma ya parokia", section: "community", to: "/portal/ministries", icon: Users, featureKey: "ministries", requiresExistingFeature: true },
   { id: "community-help", label: "Msaada wa Jumuiya", description: "Omba au toa msaada", section: "community", to: "/portal/community-help", icon: CircleHelp, featureKey: "community_help" },
   { id: "events", label: "Matukio", description: "Matukio yajayo ya parokia", section: "more", to: "/portal/events", icon: CalendarDays, featureKey: "events" },
   { id: "parish-calendar", label: "Kalenda ya Parokia", description: "Misa na matukio yajayo", section: "more", to: "/portal/calendar", icon: CalendarDays, featureKey: "events" },
@@ -95,6 +102,7 @@ function ServiceRows({ items }: { items: ServiceItem[] }) {
 
 export default function MemberServicesPage() {
   const { getFeatureState, isFeatureExplicitlyEnabledForChurch } = useFeatureAccess();
+  const livestream = useChurchLivestream();
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<Record<SectionId, boolean>>({
     frequent: true,
@@ -103,13 +111,30 @@ export default function MemberServicesPage() {
     community: false,
     more: false,
   });
+  const livestreamService = useMemo<ServiceItem | null>(() => {
+    const stream = livestream.data;
+    if (!livestream.featureEnabled || livestream.featureLoading || livestream.isLoading || livestream.error || !stream) return null;
+    if (!livestream.churchId || stream.churchId !== livestream.churchId) return null;
+    if (!presentation(stream) || !getYouTubeEmbedUrl(stream)) return null;
+    return {
+      id: "livestream",
+      label: "Misa Live",
+      description: stream.status === "live" ? "Tazama Misa moja kwa moja" : "Misa inaanza hivi karibuni",
+      section: "worship",
+      to: `/portal/live/${stream.id}`,
+      icon: Video,
+      featureKey: "livestream",
+      requiresExistingFeature: true,
+    };
+  }, [livestream.churchId, livestream.data, livestream.error, livestream.featureEnabled, livestream.featureLoading, livestream.isLoading]);
   const visibleServices = useMemo(
-    () => services.filter((item) => {
+    () => [...services, ...(livestreamService ? [livestreamService] : [])].filter((item) => {
       if (!item.featureKey) return true;
       if (item.requiresExplicitChurchEnable) return isFeatureExplicitlyEnabledForChurch(item.featureKey);
-      return getFeatureState(item.featureKey).visible;
+      const state = getFeatureState(item.featureKey);
+      return (!item.requiresExistingFeature || state.exists) && state.visible;
     }),
-    [getFeatureState, isFeatureExplicitlyEnabledForChurch],
+    [getFeatureState, isFeatureExplicitlyEnabledForChurch, livestreamService],
   );
   const query = normalizeSearch(search);
   const filtered = useMemo(

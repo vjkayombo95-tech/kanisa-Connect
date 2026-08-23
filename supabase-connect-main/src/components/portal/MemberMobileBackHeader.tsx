@@ -16,6 +16,9 @@ const titleByRoute: Record<string, string> = {
   "/member/library": "Watakatifu",
   "/portal/liturgical-calendar": "Kalenda ya Liturujia",
   "/portal/daily-readings": "Masomo ya Leo",
+  "/portal/today": "Leo",
+  "/portal/my-parish": "Parokia Yangu",
+  "/portal/ministries": "Huduma za Parokia",
 };
 
 function getMemberPageTitle(pathname: string) {
@@ -24,6 +27,7 @@ function getMemberPageTitle(pathname: string) {
   if (/^\/(?:portal|member)\/bible\/[^/]+$/.test(pathname)) return "Biblia";
   if (/^\/(?:portal|member)\/library\/[^/]+$/.test(pathname)) return "Mtakatifu";
   if (/^\/(?:portal|member)\/live\/[^/]+$/.test(pathname)) return "Misa Mubashara";
+  if (/^\/(?:portal|member)\/ministries\/[^/]+$/.test(pathname)) return "Huduma za Parokia";
   return titleByRoute[pathname] ?? "Huduma";
 }
 
