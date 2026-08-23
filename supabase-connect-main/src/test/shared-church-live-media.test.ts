@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -12,7 +12,8 @@ const radioCard = read("src/components/portal/RadioLiveCard.tsx");
 const radioSelector = read("src/components/portal/RadioStationSelector.tsx");
 const player = read("src/contexts/RadioPlayerContext.tsx");
 const app = read("src/App.tsx");
-const migration = read("supabase/migrations/20260810160000_share_live_media_view_permissions.sql");
+const migrations = readdirSync(resolve(process.cwd(), "supabase/migrations"));
+const retiredMigration = read("docs/retired-migrations/20260810160000_share_live_media_view_permissions.sql");
 
 describe("shared church live media", () => {
   it("places one shared mobile surface on member, staff, and community homes", () => {
@@ -34,12 +35,10 @@ describe("shared church live media", () => {
     expect(player.match(/<RadioMiniPlayer value=\{value\}/g)).toHaveLength(1);
   });
 
-  it("adds only view authority for existing pastoral, secretary, and finance roles", () => {
-    for (const role of ["pastor", "secretary", "treasurer"]) expect(migration).toContain(`'${role}'`);
-    expect(migration).toContain("pf.key in ('livestream', 'radio')");
-    expect(migration).toContain("can_view = true");
-    expect(migration).not.toMatch(/can_manage\s*=\s*true/);
-    expect(migration).not.toMatch(/can_(?:create|edit|delete|approve|publish)\s*=\s*true/);
+  it("does not execute the rejected universal staff Live Media grants", () => {
+    expect(migrations).not.toContain("20260810160000_share_live_media_view_permissions.sql");
+    expect(retiredMigration).toContain("pf.key in ('livestream', 'radio')");
+    expect(shared).not.toMatch(/pastor|secretary|treasurer|can_view/);
   });
 
   it("continues to fail closed through authoritative church-scoped hooks", () => {
