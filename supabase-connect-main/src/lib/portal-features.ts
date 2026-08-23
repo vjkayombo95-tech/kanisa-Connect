@@ -17,6 +17,7 @@ export type PortalFeatureKey =
 
 export const PORTAL_FEATURE_ROUTE_MAP: Array<{ prefix: string; featureKey: PortalFeatureKey }> = [
   { prefix: "/portal/events", featureKey: "events" },
+  { prefix: "/portal/calendar", featureKey: "events" },
   { prefix: "/portal/event-requests", featureKey: "event_requests" },
   { prefix: "/portal/sermons", featureKey: "sermons" },
   { prefix: "/portal/bible-verses", featureKey: "bible_verses" },

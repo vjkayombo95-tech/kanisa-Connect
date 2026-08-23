@@ -8,6 +8,7 @@ describe("Wave 2 daily-life discovery", () => {
   const routes = read("routes/MemberRoutes.tsx");
   const home = read("components/portal/MobileMemberHome.tsx");
   const services = read("pages/portal/MemberServicesPage.tsx");
+  const registry = read("lib/member-service-registry.ts");
   const layout = read("components/portal/PortalLayout.tsx");
   const appLink = read("components/AppLink.tsx");
 
@@ -16,9 +17,9 @@ describe("Wave 2 daily-life discovery", () => {
     expect(routes).toContain('path="my-parish"');
     for (const route of ["/portal/today", "/portal/my-parish"]) {
       expect(home).toContain(`to="${route}"`);
-      expect(services).toContain(`to: "${route}"`);
+      expect(registry).toContain(`path: "${route}"`);
       expect(layout).toContain(`url: "${route}"`);
-      expect(layout).toContain(`"${route}"`);
+      expect(layout).toContain("isOrdinaryMemberPathAllowed");
     }
   });
 

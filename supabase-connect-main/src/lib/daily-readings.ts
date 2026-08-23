@@ -1,4 +1,5 @@
 import type { DailyReadingBibleReference } from "./daily-reading-references";
+import { supabase } from "@/integrations/supabase/client";
 
 export { formatReference, resolveReference, toReferenceValues } from "./daily-reading-references";
 export type {
@@ -57,6 +58,73 @@ export type DailyReadingRecord = {
 
 export const READING_PLACEHOLDER =
   "Reading text has not been populated yet. This section is ready for the approved daily readings source.";
+
+const READING_SECTION_META: Record<DailyReadingKind, Pick<DailyReadingSection, "id" | "title" | "reference">> = {
+  first: { id: "first", title: "First Reading", reference: "Daily reading reference pending" },
+  psalm: { id: "psalm", title: "Responsorial Psalm", reference: "Psalm reference pending" },
+  second: { id: "second", title: "Second Reading", reference: "Optional reading reference pending" },
+  gospel: { id: "gospel", title: "Gospel", reference: "Gospel reference pending" },
+};
+
+export const publishedDailyReadingKey = (date: string) => ["member-daily-readings", "published", date] as const;
+
+function getLegacyReadingText(record: DailyReadingRecord, kind: DailyReadingKind) {
+  if (kind === "first") return record.first_reading;
+  if (kind === "psalm") return record.psalm;
+  if (kind === "second") return record.second_reading;
+  return record.gospel;
+}
+
+function getPassageBibleReference(passage: DailyReadingPassageRecord | undefined) {
+  if (!passage?.book_id || !passage.chapter_start || !passage.verse_start || !passage.chapter_end || !passage.verse_end) return null;
+  return {
+    book_id: passage.book_id,
+    chapter_start: passage.chapter_start,
+    verse_start: passage.verse_start,
+    chapter_end: passage.chapter_end,
+    verse_end: passage.verse_end,
+  };
+}
+
+export async function fetchPublishedDailyReading(date: string): Promise<DailyReadingEntry | null> {
+  const { data, error } = await supabase
+    .from("daily_readings" as never)
+    .select("id, reading_date, liturgical_season, first_reading, psalm, second_reading, gospel, reflection, prayer, is_published")
+    .eq("reading_date", date)
+    .eq("is_published", true)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+
+  const record = data as unknown as DailyReadingRecord;
+  const passagesResult = await supabase
+    .from("daily_reading_passages" as never)
+    .select("id, daily_reading_id, reading_kind, title, reference, text, book_id, chapter_start, verse_start, chapter_end, verse_end, sort_order")
+    .eq("daily_reading_id", record.id)
+    .order("sort_order", { ascending: true });
+  const passages = (passagesResult.error ? [] : passagesResult.data ?? []) as unknown as DailyReadingPassageRecord[];
+  const passagesByKind = new Map(passages.map((passage) => [passage.reading_kind, passage]));
+  const readings = (["first", "psalm", "second", "gospel"] as DailyReadingKind[]).map((kind) => {
+    const passage = passagesByKind.get(kind);
+    const meta = READING_SECTION_META[kind];
+    return {
+      id: kind,
+      title: passage?.title ?? meta.title,
+      reference: passage?.reference ?? meta.reference,
+      text: passage?.text ?? getLegacyReadingText(record, kind) ?? null,
+      bibleReference: getPassageBibleReference(passage),
+    };
+  });
+
+  return {
+    id: record.id,
+    date: record.reading_date,
+    liturgicalSeason: record.liturgical_season,
+    reflection: record.reflection ?? "",
+    prayer: record.prayer ?? "",
+    readings,
+  };
+}
 
 function toDateKey(date: Date) {
   return date.toISOString().slice(0, 10);

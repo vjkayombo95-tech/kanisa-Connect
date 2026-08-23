@@ -3,6 +3,8 @@ import { Bell, BookOpen, CalendarDays, ChevronRight, Church, HandCoins, HeartHan
 import { AppLink } from "@/components/AppLink";
 import { ProductionLiveMassCard } from "@/components/portal/ProductionLiveMassCard";
 import { cn } from "@/lib/utils";
+import type { MemberNextMass } from "@/lib/member-daily-life";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type MobileMemberHomeProps = {
   announcementsVisible: boolean;
@@ -11,6 +13,9 @@ type MobileMemberHomeProps = {
   latestAnnouncement: { title: string; content: string | null } | null;
   massVisible: boolean;
   memberName: string;
+  nextMass: MemberNextMass | null;
+  nextMassError: boolean;
+  nextMassLoading: boolean;
 };
 
 const actions = [
@@ -27,6 +32,9 @@ export function MobileMemberHome({
   latestAnnouncement,
   massVisible,
   memberName,
+  nextMass,
+  nextMassError,
+  nextMassLoading,
 }: MobileMemberHomeProps) {
   const firstName = memberName.trim().split(/\s+/)[0] || "Mshirika";
   const visibleActions = actions.filter(({ id }) => {
@@ -69,6 +77,15 @@ export function MobileMemberHome({
         <AppLink to="/portal/services" className="mt-3 flex min-h-12 items-center justify-end gap-1 rounded-2xl px-2 text-sm font-bold text-primary">
           Huduma zote <ChevronRight className="h-4 w-4" />
         </AppLink>
+      </section>
+
+      <section aria-label="Misa ijayo">
+        {nextMassLoading ? <Skeleton data-testid="mobile-next-mass-loading" className="h-28 rounded-[24px]" /> : (
+          <div data-testid="mobile-next-mass" className="rounded-[24px] border border-border/70 bg-card/85 p-4 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-wider text-primary">Misa ijayo</p>
+            {nextMassError ? <p className="mt-2 text-sm text-muted-foreground">Taarifa ya Misa haikupatikana</p> : nextMass ? <div className="mt-2 flex items-start justify-between gap-3"><div className="min-w-0"><h2 className="break-words font-bold">{nextMass.title}</h2><p className="mt-1 text-sm text-muted-foreground">{new Date(`${nextMass.massDate}T${nextMass.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })}</p></div><AppLink to="/portal/calendar" className="shrink-0 rounded-xl px-2 py-2 text-sm font-bold text-primary">Kalenda</AppLink></div> : <p className="mt-2 text-sm text-muted-foreground">Hakuna Misa ijayo iliyopangwa</p>}
+          </div>
+        )}
       </section>
 
       <section className="grid gap-3">

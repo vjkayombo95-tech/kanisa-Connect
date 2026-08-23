@@ -35,6 +35,7 @@ import { MemberMobileBackHeader } from "@/components/portal/MemberMobileBackHead
 import { formatTZS } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { getPortalFeatureForPath, type PortalFeatureKey } from "@/lib/portal-features";
+import { isOrdinaryMemberPathAllowed } from "@/lib/member-service-registry";
 import { AppLink } from "@/components/AppLink";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
@@ -130,27 +131,6 @@ const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
   { titleKey: "Nia za Misa", url: "/portal/mass-intentions", icon: MassIntentionsIcon, featureKey: "mass_intentions" },
   { titleKey: "Matangazo", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
   { titleKey: "Wasifu", url: "/portal/dashboard", icon: PortalIcon, featureKey: null },
-];
-
-const SIMPLE_MEMBER_ALLOWED_PATHS = [
-  "/portal/today",
-  "/portal/my-parish",
-  "/portal",
-  "/portal/services",
-  "/portal/kanisa-ai",
-  "/portal/radio",
-  "/portal/ministries",
-  "/portal/calendar",
-  "/member/library",
-  "/portal/library",
-  "/portal/liturgical-calendar",
-  "/portal/daily-readings",
-  "/portal/bible",
-  "/portal/dashboard",
-  "/portal/give",
-  "/portal/mass-intentions",
-  "/portal/announcements",
-  "/portal/live",
 ];
 
 const LIMITED_MAIN_ITEMS: NavItem[] = [
@@ -371,7 +351,7 @@ export function PortalLayout() {
   const activeFeatureState = activeFeatureKey ? getFeatureState(activeFeatureKey) : null;
   const simpleMemberRouteHidden =
     useSimpleMemberNav &&
-    !SIMPLE_MEMBER_ALLOWED_PATHS.some((path) => (path === "/portal" ? location.pathname === path : location.pathname.startsWith(path)));
+    !isOrdinaryMemberPathAllowed(location.pathname);
   const ministryRouteUnavailable = activeFeatureKey === "ministries" && (!activeFeatureState?.exists || !activeFeatureState.visible);
   const routeHidden = !featuresLoading && (simpleMemberRouteHidden || ministryRouteUnavailable || (activeFeatureKey && !activeFeatureState?.visible));
   const routeLocked = !featuresLoading && activeFeatureState?.locked;

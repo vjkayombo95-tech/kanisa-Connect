@@ -35,12 +35,13 @@ describe("production catch-up Wave 4A", () => {
   it("allows only the approved member Calendar route and retains feature gating", () => {
     const layout = source("components/portal/PortalLayout.tsx");
     const services = source("pages/portal/MemberServicesPage.tsx");
-    expect(layout).toContain('"/portal/calendar"');
-    expect(layout).toContain('"/portal/today"');
-    expect(layout).toContain('"/portal/radio"');
-    expect(layout).toContain('featureKey: "radio"');
-    expect(services).toContain('to: "/portal/calendar"');
-    expect(services).toContain('featureKey: "events"');
+    const registry = source("lib/member-service-registry.ts");
+    expect(registry).toContain('path: "/portal/calendar"');
+    expect(registry).toContain('path: "/portal/today"');
+    expect(registry).toContain('path: "/portal/radio"');
+    expect(registry).toContain('featureKey: "radio"');
+    expect(registry).toContain('featureKey: "events"');
+    expect(layout).toContain("isOrdinaryMemberPathAllowed");
     expect(services).toContain("const state = getFeatureState(item.featureKey)");
     expect(services).toContain("state.visible");
   });

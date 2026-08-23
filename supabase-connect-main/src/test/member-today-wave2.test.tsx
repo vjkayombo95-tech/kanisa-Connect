@@ -10,7 +10,8 @@ describe("Wave 2 member Today", () => {
   const helper = read("lib/member-daily-life.ts");
 
   it("uses production daily content and independent parish summaries", () => {
-    expect(page).toContain("getTodayReadingEntry");
+    expect(page).toContain("fetchPublishedDailyReading");
+    expect(page).not.toContain("getTodayReadingEntry");
     expect(page).toContain("daily-readings-today-saints");
     expect(page).toContain("dailyLifeKeys.nextMass");
     expect(page).toContain("dailyLifeKeys.events");
@@ -22,7 +23,7 @@ describe("Wave 2 member Today", () => {
   it("scopes every parish read and reuses established cache identities", () => {
     expect(helper).toContain('.eq("church_id", churchId)');
     expect(helper).toContain('events: (churchId?: string | null) => ["portal-events", churchId]');
-    expect(helper).toContain('nextMass: (churchId?: string | null) => ["next-mass-summary", churchId]');
+    expect(helper).toContain('nextMass: (churchId?: string | null) => ["member-daily-life", "next-mass", churchId]');
     expect(helper).toContain("fetchPortalAnnouncements(churchId, 1)");
   });
 

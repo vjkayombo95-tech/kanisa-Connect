@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(join(process.cwd(), "src", path), "u
 describe("production member ministry parity", () => {
   const routes = read("routes/MemberRoutes.tsx");
   const services = read("pages/portal/MemberServicesPage.tsx");
+  const registry = read("lib/member-service-registry.ts");
   const queries = read("lib/member-ministries.ts");
   const features = read("lib/portal-features.ts");
   const page = read("pages/portal/MemberMinistriesPage.tsx");
@@ -16,13 +17,13 @@ describe("production member ministry parity", () => {
   it("registers list and detail routes through the existing protected member shell", () => {
     expect(routes).toContain('path="ministries"');
     expect(routes).toContain('path="ministries/:ministryId"');
-    expect(services).toContain('to: "/portal/ministries"');
+    expect(registry).toContain('path: "/portal/ministries"');
   });
 
   it("keeps feature visibility fail closed", () => {
     expect(features).toContain('{ prefix: "/portal/ministries", featureKey: "ministries" }');
-    expect(services).toContain('featureKey: "ministries"');
-    expect(services).toContain("requiresExistingFeature: true");
+    expect(registry).toContain('featureKey: "ministries"');
+    expect(registry).toContain("requiresExistingFeature: true");
     expect(layout).toContain('activeFeatureKey === "ministries"');
     expect(layout).toContain("!activeFeatureState?.exists");
   });

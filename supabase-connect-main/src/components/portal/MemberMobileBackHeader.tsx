@@ -2,6 +2,7 @@ import { ChevronLeft } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { isPrimaryMemberRoute, resolveMemberBackTarget } from "@/lib/member-mobile-navigation";
+import { getMemberBackTitle } from "@/lib/member-service-registry";
 
 const titleByRoute: Record<string, string> = {
   "/portal/dashboard": "Historia Yangu",
@@ -28,7 +29,7 @@ function getMemberPageTitle(pathname: string) {
   if (/^\/(?:portal|member)\/library\/[^/]+$/.test(pathname)) return "Mtakatifu";
   if (/^\/(?:portal|member)\/live\/[^/]+$/.test(pathname)) return "Misa Mubashara";
   if (/^\/(?:portal|member)\/ministries\/[^/]+$/.test(pathname)) return "Huduma za Parokia";
-  return titleByRoute[pathname] ?? "Huduma";
+  return getMemberBackTitle(pathname) ?? titleByRoute[pathname] ?? "Huduma";
 }
 
 export function MemberMobileBackHeader() {
