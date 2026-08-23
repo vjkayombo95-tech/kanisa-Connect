@@ -18,11 +18,14 @@ import {
   Settings,
   Sparkles,
   Users,
+  Video,
 } from "lucide-react";
 
 import { AppLink } from "@/components/AppLink";
 import { Input } from "@/components/ui/input";
+import { useChurchLivestream } from "@/hooks/use-church-livestream";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
+import { getYouTubeEmbedUrl, presentation } from "@/lib/church-livestreams";
 import type { PortalFeatureKey } from "@/lib/portal-features";
 import { cn } from "@/lib/utils";
 
@@ -97,6 +100,7 @@ function ServiceRows({ items }: { items: ServiceItem[] }) {
 
 export default function MemberServicesPage() {
   const { getFeatureState, isFeatureExplicitlyEnabledForChurch } = useFeatureAccess();
+  const livestream = useChurchLivestream();
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<Record<SectionId, boolean>>({
     frequent: true,
@@ -105,14 +109,30 @@ export default function MemberServicesPage() {
     community: false,
     more: false,
   });
+  const livestreamService = useMemo<ServiceItem | null>(() => {
+    const stream = livestream.data;
+    if (!livestream.featureEnabled || livestream.featureLoading || livestream.isLoading || livestream.error || !stream) return null;
+    if (!livestream.churchId || stream.churchId !== livestream.churchId) return null;
+    if (!presentation(stream) || !getYouTubeEmbedUrl(stream)) return null;
+    return {
+      id: "livestream",
+      label: "Misa Live",
+      description: stream.status === "live" ? "Tazama Misa moja kwa moja" : "Misa inaanza hivi karibuni",
+      section: "worship",
+      to: `/portal/live/${stream.id}`,
+      icon: Video,
+      featureKey: "livestream",
+      requiresExistingFeature: true,
+    };
+  }, [livestream.churchId, livestream.data, livestream.error, livestream.featureEnabled, livestream.featureLoading, livestream.isLoading]);
   const visibleServices = useMemo(
-    () => services.filter((item) => {
+    () => [...services, ...(livestreamService ? [livestreamService] : [])].filter((item) => {
       if (!item.featureKey) return true;
       if (item.requiresExplicitChurchEnable) return isFeatureExplicitlyEnabledForChurch(item.featureKey);
       const state = getFeatureState(item.featureKey);
       return (!item.requiresExistingFeature || state.exists) && state.visible;
     }),
-    [getFeatureState, isFeatureExplicitlyEnabledForChurch],
+    [getFeatureState, isFeatureExplicitlyEnabledForChurch, livestreamService],
   );
   const query = normalizeSearch(search);
   const filtered = useMemo(

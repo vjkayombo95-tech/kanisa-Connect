@@ -12,6 +12,7 @@ export type PortalFeatureKey =
   | "channels"
   | "kanisa_ai"
   | "radio"
+  | "livestream"
   | "ministries";
 
 export const PORTAL_FEATURE_ROUTE_MAP: Array<{ prefix: string; featureKey: PortalFeatureKey }> = [
@@ -28,6 +29,7 @@ export const PORTAL_FEATURE_ROUTE_MAP: Array<{ prefix: string; featureKey: Porta
   { prefix: "/portal/channels", featureKey: "channels" },
   { prefix: "/portal/kanisa-ai", featureKey: "kanisa_ai" },
   { prefix: "/portal/radio", featureKey: "radio" },
+  { prefix: "/portal/live", featureKey: "livestream" },
   { prefix: "/portal/ministries", featureKey: "ministries" },
 ];
 
