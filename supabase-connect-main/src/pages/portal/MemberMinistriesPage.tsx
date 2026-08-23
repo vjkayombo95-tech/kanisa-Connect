@@ -1,9 +1,20 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Search, UserPlus, Users } from "lucide-react";
 import { useParams } from "react-router-dom";
 
 import { AppLink } from "@/components/AppLink";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +35,7 @@ function MinistryCard({ ministry, memberId }: { ministry: MemberMinistry; member
   const queryClient = useQueryClient();
   const { churchId } = useAuth();
   const { toast } = useToast();
+  const leaveRequested = useRef(false);
   const mutation = useMutation({
     mutationFn: () => {
       if (!churchId) throw new Error("Parish context is unavailable.");
@@ -39,7 +51,14 @@ function MinistryCard({ ministry, memberId }: { ministry: MemberMinistry; member
       });
     },
     onError: (error: Error) => toast({ title: "Hatukuweza kusasisha huduma", description: error.message, variant: "destructive" }),
+    onSettled: () => { leaveRequested.current = false; },
   });
+
+  const confirmLeave = () => {
+    if (leaveRequested.current || mutation.isPending) return;
+    leaveRequested.current = true;
+    mutation.mutate();
+  };
 
   return (
     <Card className="rounded-[24px] border-border/70 bg-card/90 shadow-sm" data-testid={`member-ministry-${ministry.id}`}>
@@ -56,16 +75,34 @@ function MinistryCard({ ministry, memberId }: { ministry: MemberMinistry; member
           <Button asChild variant="outline" className="min-h-11 rounded-xl">
             <AppLink to={`/portal/ministries/${ministry.id}`}>Maelezo</AppLink>
           </Button>
-          <Button
-            type="button"
-            variant={ministry.joined ? "secondary" : "default"}
-            className="min-h-11 rounded-xl"
-            disabled={mutation.isPending || ministry.requestPending}
-            onClick={() => mutation.mutate()}
-          >
-            {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : !ministry.joined ? <UserPlus className="mr-2 h-4 w-4" /> : null}
-            {ministry.joined ? "Ondoka kwenye huduma" : ministry.requestPending ? "Ombi limetumwa" : "Omba kujiunga"}
-          </Button>
+          {ministry.joined ? (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button type="button" variant="secondary" className="min-h-11 rounded-xl" disabled={mutation.isPending}>
+                  {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Ondoka kwenye huduma
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Ondoka kwenye huduma?</AlertDialogTitle>
+                  <AlertDialogDescription>Unakaribia kuondoka kwenye huduma ya {ministry.name}. Uanachama wako utaondolewa baada ya kuthibitisha.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={mutation.isPending}>Ghairi</AlertDialogCancel>
+                  <AlertDialogAction disabled={mutation.isPending} onClick={confirmLeave}>
+                    {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Thibitisha kuondoka
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : (
+            <Button type="button" className="min-h-11 rounded-xl" disabled={mutation.isPending || ministry.requestPending} onClick={() => mutation.mutate()}>
+              {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : !ministry.requestPending ? <UserPlus className="mr-2 h-4 w-4" /> : null}
+              {ministry.requestPending ? "Ombi linasubiri" : "Omba kujiunga"}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -89,6 +126,10 @@ export default function MemberMinistriesPage() {
     if (!normalized) return ministries.data ?? [];
     return (ministries.data ?? []).filter(({ name, description }) => `${name} ${description ?? ""}`.toLocaleLowerCase("sw").includes(normalized));
   }, [ministries.data, search]);
+  const joined = visible.filter((ministry) => ministry.joined);
+  const other = visible
+    .filter((ministry) => !ministry.joined)
+    .sort((left, right) => Number(right.requestPending) - Number(left.requestPending));
   const selected = ministryId ? (ministries.data ?? []).find(({ id }) => id === ministryId) : null;
 
   if (member.isLoading || ministries.isLoading) return <div className="mx-auto max-w-5xl space-y-4 px-4 py-6"><Skeleton className="h-32 rounded-[24px]" /><Skeleton className="h-48 rounded-[24px]" /></div>;
@@ -115,7 +156,10 @@ export default function MemberMinistriesPage() {
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(event) => setSearch(event.target.value)} aria-label="Tafuta huduma" placeholder="Tafuta huduma..." className="h-12 rounded-2xl bg-card pl-12" />
           </div>
-          {visible.length ? <div className="grid gap-4 md:grid-cols-2">{visible.map((ministry) => <MinistryCard key={ministry.id} ministry={ministry} memberId={member.data.id} />)}</div> : <Card><CardContent className="p-8 text-center text-sm text-muted-foreground">Hakuna huduma iliyopatikana.</CardContent></Card>}
+          {!ministries.data?.length ? <Card><CardContent className="p-8 text-center text-sm text-muted-foreground">Hakuna huduma zilizowekwa kwa parokia hii.</CardContent></Card> : !visible.length ? <Card><CardContent className="p-8 text-center text-sm text-muted-foreground">Hakuna huduma zinazolingana na utafutaji wako.</CardContent></Card> : <div className="space-y-7">
+            {joined.length ? <section aria-labelledby="joined-ministries-heading"><h2 id="joined-ministries-heading" className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-primary">Huduma zangu</h2><div className="grid gap-4 md:grid-cols-2">{joined.map((ministry) => <MinistryCard key={ministry.id} ministry={ministry} memberId={member.data.id} />)}</div></section> : null}
+            {other.length ? <section aria-labelledby="other-ministries-heading"><h2 id="other-ministries-heading" className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-muted-foreground">Huduma nyingine</h2><div className="grid gap-4 md:grid-cols-2">{other.map((ministry) => <MinistryCard key={ministry.id} ministry={ministry} memberId={member.data.id} />)}</div></section> : null}
+          </div>}
         </section>
       ) : null}
     </main>

@@ -11,9 +11,19 @@ describe("Wave 2 My Parish", () => {
   const linkedMember = read("hooks/use-linked-member.ts");
 
   it("renders production parish identity with a safe missing-logo fallback", () => {
-    expect(helper).toContain('.select("id,name,logo_url")');
+    expect(helper).toContain('.select("id,name,logo_url,phone,email,address")');
     expect(page).toContain("parish.data.logoUrl ?");
     expect(page).toContain("<Church className");
+  });
+
+  it("uses the canonical tenant-keyed query for optional parish contact data", () => {
+    expect(helper).toContain('["member-parish-identity", churchId]');
+    expect(helper).toContain("data.id !== churchId");
+    expect(helper).toContain("phone: normalizeParishContact(data.phone)");
+    expect(helper).toContain("email: normalizeParishContact(data.email)");
+    expect(helper).toContain("address: normalizeParishContact(data.address)");
+    expect(page).toContain("enabled: !!churchId");
+    expect(page).not.toContain("metadata");
   });
 
   it("keeps member and parish data tenant scoped", () => {
@@ -27,7 +37,9 @@ describe("Wave 2 My Parish", () => {
   });
 
   it("uses fail-closed production media components", () => {
-    expect(page).toContain("ProductionLiveMassCard");
+    expect(page).toContain("presentation(livestream.data)");
+    expect(page).toContain("getYouTubeEmbedUrl(livestream.data)");
+    expect(page).toContain("livestream.data.churchId === livestream.churchId");
     expect(page).toContain("radio.featureEnabled && !radio.isError && radio.data.length");
     expect(page).toContain('to="/portal/radio"');
   });
