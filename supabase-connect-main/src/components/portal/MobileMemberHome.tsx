@@ -1,4 +1,4 @@
-import { Bell, BookOpen, ChevronRight, Church, HandCoins, HeartHandshake, History, Megaphone } from "lucide-react";
+import { Bell, BookOpen, CalendarDays, ChevronRight, Church, HandCoins, HeartHandshake, History, Megaphone } from "lucide-react";
 
 import { AppLink } from "@/components/AppLink";
 import { ProductionLiveMassCard } from "@/components/portal/ProductionLiveMassCard";
@@ -72,9 +72,14 @@ export function MobileMemberHome({
       </section>
 
       <section className="grid gap-3">
-        <AppLink to="/portal/daily-readings" className="flex min-h-20 items-center gap-4 rounded-[24px] border border-border/70 bg-card/85 p-4 shadow-sm">
+        <AppLink to="/portal/today" className="flex min-h-20 items-center gap-4 rounded-[24px] border border-border/70 bg-card/85 p-4 shadow-sm">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><BookOpen className="h-5 w-5" /></span>
           <span className="min-w-0 flex-1"><span className="block font-bold">Masomo ya Leo</span><span className="block text-sm text-muted-foreground">Neno la Mungu la leo</span></span>
+          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+        </AppLink>
+        <AppLink to="/portal/my-parish" className="flex min-h-20 items-center gap-4 rounded-[24px] border border-border/70 bg-card/85 p-4 shadow-sm">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><CalendarDays className="h-5 w-5" /></span>
+          <span className="min-w-0 flex-1"><span className="block font-bold">Parokia Yangu</span><span className="block text-sm text-muted-foreground">Misa, matukio na huduma</span></span>
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
         </AppLink>
         {announcementsVisible && latestAnnouncement ? (

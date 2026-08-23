@@ -16,6 +16,8 @@ const titleByRoute: Record<string, string> = {
   "/member/library": "Watakatifu",
   "/portal/liturgical-calendar": "Kalenda ya Liturujia",
   "/portal/daily-readings": "Masomo ya Leo",
+  "/portal/today": "Leo",
+  "/portal/my-parish": "Parokia Yangu",
   "/portal/ministries": "Huduma za Parokia",
 };
 

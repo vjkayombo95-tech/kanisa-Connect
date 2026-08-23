@@ -45,6 +45,8 @@ type ServiceItem = {
 
 // Every destination below exists in the production MemberRoutes table.
 const services: ServiceItem[] = [
+  { id: "today", label: "Leo / Masomo ya Leo", description: "Masomo, mtakatifu na maisha ya leo", section: "frequent", to: "/portal/today", icon: BookOpen, featureKey: null },
+  { id: "my-parish", label: "Parokia Yangu", description: "Misa, matukio na huduma za parokia", section: "frequent", to: "/portal/my-parish", icon: Church, featureKey: null },
   { id: "giving", label: "Toa Mchango", description: "Changia parokia yako", section: "frequent", to: "/portal/give", icon: HandCoins, featureKey: "give" },
   { id: "mass-intentions", label: "Nia za Misa", description: "Wasilisha au fuatilia nia", section: "frequent", to: "/portal/mass-intentions", icon: HeartHandshake, featureKey: "mass_intentions" },
   { id: "announcements", label: "Matangazo", description: "Taarifa mpya za parokia", section: "frequent", to: "/portal/announcements", icon: Megaphone, featureKey: "announcements" },

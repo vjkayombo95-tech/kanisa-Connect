@@ -33,6 +33,8 @@ const MemberBibleBookPage = lazy(() => import("@/pages/portal/MemberBibleBookPag
 const MemberBibleChapterPage = lazy(() => import("@/pages/portal/MemberBibleChapterPage"));
 const MemberLivestreamPage = lazy(() => import("@/pages/portal/MemberLivestreamPage"));
 const MemberServicesPage = lazy(() => import("@/pages/portal/MemberServicesPage"));
+const MemberTodayPage = lazy(() => import("@/pages/portal/MemberTodayPage"));
+const MemberMyParishPage = lazy(() => import("@/pages/portal/MemberMyParishPage"));
 const PortalContributionHistoryPage = lazy(() => import("@/pages/portal/PortalContributionHistoryPage"));
 const PortalContributionReceiptPage = lazy(() => import("@/pages/portal/PortalContributionReceiptPage"));
 const ReflectionsPage = lazy(() => import("@/pages/portal/ReflectionsPage"));
@@ -69,6 +71,8 @@ export default function MemberRoutes() {
         <Route element={<PortalLayout />}>
           <Route index element={<MemberDashboard />} />
           <Route path="services" element={<MemberServicesPage />} />
+          <Route path="today" element={<MemberTodayPage />} />
+          <Route path="my-parish" element={<MemberMyParishPage />} />
           <Route path="kanisa-ai" element={<UlizaKanisaFeatureGate><KanisaAssistantPage /></UlizaKanisaFeatureGate>} />
           <Route path="calendar" element={<ParishCalendarPage workspace="member" />} />
           <Route path="bible-verses" element={<PortalHome />} />

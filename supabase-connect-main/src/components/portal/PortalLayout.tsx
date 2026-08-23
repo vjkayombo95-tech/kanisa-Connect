@@ -58,6 +58,7 @@ type PortalIconComponent = (props: { active?: boolean; className?: string }) => 
 
 const LiturgicalCalendarIcon: PortalIconComponent = ({ className }) => <CalendarDays className={className} />;
 const RadioIcon: PortalIconComponent = ({ className }) => <Radio className={className} />;
+const ParishIcon: PortalIconComponent = ({ className }) => <Church className={className} />;
 
 type NavItem = {
   titleKey: string;
@@ -117,6 +118,8 @@ const FULL_GROUPS: NavGroup[] = [
 ];
 
 const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
+  { titleKey: "Leo", url: "/portal/today", icon: BibleIcon, featureKey: null },
+  { titleKey: "Parokia Yangu", url: "/portal/my-parish", icon: ParishIcon, featureKey: null },
   { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
   { titleKey: "Huduma", url: "/portal/services", icon: PortalIcon, featureKey: null },
   { titleKey: "Catholic Library", url: "/member/library", icon: BibleIcon, featureKey: null },
@@ -130,6 +133,8 @@ const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
 ];
 
 const SIMPLE_MEMBER_ALLOWED_PATHS = [
+  "/portal/today",
+  "/portal/my-parish",
   "/portal",
   "/portal/services",
   "/portal/kanisa-ai",
