@@ -128,11 +128,11 @@ function logMemberDashboardError(label: string, error: unknown) {
   });
 }
 
-function useSimpleMemberHomeData(includeDesktopFinancials: boolean) {
+function useSimpleMemberHomeData() {
   const { user, churchId } = useAuth();
 
   return useQuery({
-    queryKey: ["simple-member-home", user?.id, user?.email, churchId, includeDesktopFinancials ? "desktop" : "mobile"],
+    queryKey: ["simple-member-home", user?.id, user?.email, churchId],
     queryFn: async (): Promise<MemberHomeData> => {
       const fallbackName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Mshirika";
       const emptyState = emptyMemberHome(fallbackName);
@@ -172,40 +172,16 @@ function useSimpleMemberHomeData(includeDesktopFinancials: boolean) {
         supabase.from("churches").select("name").eq("id", member.church_id).maybeSingle(),
         fetchPortalAnnouncements(member.church_id, 1),
       ]);
-      const [latestContributionResult, contributionTotalResult, pledgeBalanceResult] = includeDesktopFinancials
-        ? await Promise.all([
-            supabase.from("contributions").select("id, amount, date, category_id").eq("church_id", member.church_id).eq("member_id", member.id).order("date", { ascending: false }).limit(1),
-            fetchMemberContributionTotal(member.church_id, member.id).then((data) => ({ data, error: null })).catch((error: unknown) => ({ data: 0, error })),
-            supabase.rpc("get_member_pledges" as never, { _member_id: member.id } as never),
-          ])
-        : [{ data: [], error: null }, { data: 0, error: null }, { data: [], error: null }];
-
       if (churchResult.error) logMemberDashboardError("church", churchResult.error);
-      if (latestContributionResult.error) logMemberDashboardError("latest contribution", latestContributionResult.error);
-      if (contributionTotalResult.error) logMemberDashboardError("contribution total", contributionTotalResult.error);
-      if (pledgeBalanceResult.error) logMemberDashboardError("pledge balance", pledgeBalanceResult.error);
-
-      const latestContribution = (latestContributionResult.error ? null : latestContributionResult.data?.[0] ?? null) as {
-        amount?: number | string | null;
-        date?: string | null;
-      } | null;
       const latestAnnouncement = announcementRows[0] ?? null;
-      const totalPaid = contributionTotalResult.error ? 0 : contributionTotalResult.data;
-      const pendingAmount = pledgeBalanceResult.error ? 0 : readPendingPledgeBalance(pledgeBalanceResult.data);
 
       return {
         memberId: member.id,
         memberName: member.full_name || fallbackName,
         churchName: churchResult.error ? null : churchResult.data?.name ?? null,
-        totalPaid,
-        pendingAmount,
-        lastPayment: latestContribution
-          ? {
-              amount: Number(latestContribution.amount ?? 0),
-              date: latestContribution.date ?? null,
-              label: "Malipo",
-            }
-          : null,
+        totalPaid: 0,
+        pendingAmount: 0,
+        lastPayment: null,
         latestAnnouncement: latestAnnouncement
           ? {
               title: latestAnnouncement.title || "Tangazo",
@@ -216,6 +192,39 @@ function useSimpleMemberHomeData(includeDesktopFinancials: boolean) {
       };
     },
     enabled: !!user && !!churchId,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+function useMemberFinancialData(churchId: string | null, memberId: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: ["member-home-financials", churchId, memberId],
+    queryFn: async () => {
+      const [latestContributionResult, contributionTotalResult, pledgeBalanceResult] = await Promise.all([
+        supabase.from("contributions").select("id, amount, date, category_id").eq("church_id", churchId!).eq("member_id", memberId!).order("date", { ascending: false }).limit(1),
+        fetchMemberContributionTotal(churchId!, memberId!).then((data) => ({ data, error: null })).catch((error: unknown) => ({ data: 0, error })),
+        supabase.rpc("get_member_pledges" as never, { _member_id: memberId! } as never),
+      ]);
+
+      if (latestContributionResult.error) logMemberDashboardError("latest contribution", latestContributionResult.error);
+      if (contributionTotalResult.error) logMemberDashboardError("contribution total", contributionTotalResult.error);
+      if (pledgeBalanceResult.error) logMemberDashboardError("pledge balance", pledgeBalanceResult.error);
+
+      const latestContribution = (latestContributionResult.error ? null : latestContributionResult.data?.[0] ?? null) as {
+        amount?: number | string | null;
+        date?: string | null;
+      } | null;
+
+      return {
+        totalPaid: contributionTotalResult.error ? 0 : contributionTotalResult.data,
+        pendingAmount: pledgeBalanceResult.error ? 0 : readPendingPledgeBalance(pledgeBalanceResult.data),
+        lastPayment: latestContribution
+          ? { amount: Number(latestContribution.amount ?? 0), date: latestContribution.date ?? null, label: "Malipo" }
+          : null,
+      };
+    },
+    enabled: enabled && !!churchId && !!memberId,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -307,11 +316,12 @@ function BigAction({
 
 export default function MemberDashboard() {
   const isDesktop = useIsDesktop();
-  const { data, isLoading, isError } = useSimpleMemberHomeData(isDesktop);
+  const { data, isLoading, isError } = useSimpleMemberHomeData();
   const { getFeatureState } = useFeatureAccess();
   const { churchId } = useAuth();
   const queryClient = useQueryClient();
-  const home = data ?? emptyMemberHome("Mshirika");
+  const financials = useMemberFinancialData(churchId, data?.memberId ?? null, isDesktop);
+  const home = { ...(data ?? emptyMemberHome("Mshirika")), ...(financials.data ?? {}) };
 
   const { data: massSummary, isLoading: massLoading, isError: massError } = useQuery({
     queryKey: dailyLifeKeys.nextMass(churchId),

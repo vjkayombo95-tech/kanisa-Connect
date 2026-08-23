@@ -126,8 +126,15 @@ export async function fetchPublishedDailyReading(date: string): Promise<DailyRea
   };
 }
 
-function toDateKey(date: Date) {
-  return date.toISOString().slice(0, 10);
+export function getDarEsSalaamDateKey(date: Date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Dar_es_Salaam",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value;
+  return `${value("year")}-${value("month")}-${value("day")}`;
 }
 
 function formatReadableDate(date: Date) {
@@ -143,7 +150,7 @@ export function getTodayReadingEntry(): DailyReadingEntry {
   const today = new Date();
 
   return {
-    date: toDateKey(today),
+    date: getDarEsSalaamDateKey(today),
     liturgicalSeason: null,
     reflection:
       "Let the Word of God shape the day before the day shapes you. Read slowly, listen for one phrase that draws your attention, and carry it into prayer, work, family life, and service.",

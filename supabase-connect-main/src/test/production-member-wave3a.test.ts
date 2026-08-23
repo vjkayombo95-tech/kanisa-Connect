@@ -6,7 +6,7 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { dailyLifeKeys, normalizeNextMassSummary } from "@/lib/member-daily-life";
 import { getMemberServiceForPath, isOrdinaryMemberPathAllowed, memberServiceRegistry } from "@/lib/member-service-registry";
-import { publishedDailyReadingKey } from "@/lib/daily-readings";
+import { getDarEsSalaamDateKey, publishedDailyReadingKey } from "@/lib/daily-readings";
 import { MobileMemberHome } from "@/components/portal/MobileMemberHome";
 
 vi.mock("@/components/AppLink", () => ({ AppLink: ({ to, children, ...props }: { to: string; children: unknown }) => createElement("a", { href: to, ...props }, children) }));
@@ -19,6 +19,11 @@ describe("Wave 3A member reliability contracts", () => {
     expect(dailyLifeKeys.nextMass("church-a")).toEqual(["member-daily-life", "next-mass", "church-a"]);
     expect(dailyLifeKeys.nextMass("church-b")).not.toEqual(dailyLifeKeys.nextMass("church-a"));
     expect(publishedDailyReadingKey("2026-08-23")).toEqual(["member-daily-readings", "published", "2026-08-23"]);
+  });
+
+  it("resolves the Today date in the parish timezone at UTC boundaries", () => {
+    expect(getDarEsSalaamDateKey(new Date("2026-08-22T22:30:00Z"))).toBe("2026-08-23");
+    expect(getDarEsSalaamDateKey(new Date("2026-08-23T21:30:00Z"))).toBe("2026-08-24");
   });
 
   it("normalizes the RPC response into one stable shape", () => {
@@ -94,7 +99,9 @@ describe("Wave 3A member reliability contracts", () => {
 
   it("does not execute proven desktop-only Home requests on mobile", () => {
     const dashboard = read("components/portal/MemberDashboard.tsx");
-    expect(dashboard).toContain("includeDesktopFinancials");
+    expect(dashboard).toContain('["simple-member-home", user?.id, user?.email, churchId]');
+    expect(dashboard).toContain('["member-home-financials", churchId, memberId]');
+    expect(dashboard).toContain("enabled: enabled && !!churchId && !!memberId");
     expect(dashboard).toContain("enabled: isDesktop");
     expect(dashboard).toContain("useIsDesktop");
   });

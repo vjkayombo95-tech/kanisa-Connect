@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SAINT_SELECT, type LibrarySaint } from "@/lib/catholic-library";
-import { fetchPublishedDailyReading, getReadableReadingDate, publishedDailyReadingKey } from "@/lib/daily-readings";
+import { fetchPublishedDailyReading, getDarEsSalaamDateKey, getReadableReadingDate, publishedDailyReadingKey } from "@/lib/daily-readings";
 import { dailyLifeKeys, fetchLatestAnnouncement, fetchNextMassSummary, fetchParishEvents, isEventToday } from "@/lib/member-daily-life";
 
 function Summary({ title, children, to }: { title: string; children: React.ReactNode; to?: string }) {
@@ -20,7 +20,7 @@ function Summary({ title, children, to }: { title: string; children: React.React
 export default function MemberTodayPage() {
   const { churchId } = useAuth();
   const today = useMemo(() => new Date(), []);
-  const dateKey = useMemo(() => today.toISOString().slice(0, 10), [today]);
+  const dateKey = useMemo(() => getDarEsSalaamDateKey(today), [today]);
   const reading = useQuery({ queryKey: publishedDailyReadingKey(dateKey), queryFn: () => fetchPublishedDailyReading(dateKey), staleTime: 10 * 60_000, retry: false });
   const mass = useQuery({ queryKey: dailyLifeKeys.nextMass(churchId), queryFn: () => fetchNextMassSummary(churchId!), enabled: !!churchId, staleTime: 60_000 });
   const events = useQuery({ queryKey: dailyLifeKeys.events(churchId), queryFn: () => fetchParishEvents(churchId!), enabled: !!churchId, staleTime: 60_000 });
