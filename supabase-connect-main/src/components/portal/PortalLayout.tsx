@@ -130,7 +130,7 @@ const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
   { titleKey: "Lipa", url: "/portal/give", icon: ContributionsIcon, featureKey: "give" },
   { titleKey: "Nia za Misa", url: "/portal/mass-intentions", icon: MassIntentionsIcon, featureKey: "mass_intentions" },
   { titleKey: "Matangazo", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
-  { titleKey: "Wasifu", url: "/portal/dashboard", icon: PortalIcon, featureKey: null },
+  { titleKey: "Historia Yangu", url: "/portal/dashboard", icon: PortalIcon, featureKey: null },
 ];
 
 const LIMITED_MAIN_ITEMS: NavItem[] = [
@@ -476,13 +476,10 @@ export function PortalLayout() {
                       {profile?.full_name || t("member")}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setMobileOpen(false);
-                        window.location.assign("/portal/dashboard");
-                      }}
-                    >
-                      {useSimpleMemberNav ? "Historia Yangu" : t("my_dashboard")}
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/portal/dashboard" onClick={() => setMobileOpen(false)}>
+                        Historia Yangu
+                      </AppLink>
                     </DropdownMenuItem>
                     {ledCommunities.length > 0 && (
                       <>

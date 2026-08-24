@@ -1,7 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
 
-export type ParishIdentity = { id: string; name: string; logoUrl: string | null };
+export type ParishIdentity = {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+};
 export type ParishEvent = { id: string; churchId: string; title: string; description: string | null; startDate: string; location: string | null };
 export type MemberNextMass = {
   id: string;
@@ -29,10 +36,56 @@ export const dailyLifeKeys = {
   announcements: (churchId?: string | null) => ["portal-announcements", churchId, 1] as const,
 };
 
+const PHONE_CHARACTERS = /^[\d\s()+\-.*#,;pPwW]+$/;
+const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function hasControlCharacters(value: string) {
+  return [...value].some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 31 || code === 127;
+  });
+}
+
+export function normalizeParishContact(value: string | null | undefined) {
+  const normalized = value?.trim().replace(/\s+/gu, " ") ?? "";
+  return normalized && !hasControlCharacters(normalized) ? normalized : null;
+}
+
+export function getParishPhoneHref(value: string | null | undefined) {
+  if (!value || hasControlCharacters(value)) return null;
+  const normalized = normalizeParishContact(value);
+  if (!normalized || !PHONE_CHARACTERS.test(normalized) || !/\d/.test(normalized)) return null;
+  const dialValue = normalized.replace(/[\s().-]/g, "");
+  return /^\+?[\d*#,;pPwW]+$/.test(dialValue) ? `tel:${dialValue}` : null;
+}
+
+export function getParishEmailHref(value: string | null | undefined) {
+  if (!value || hasControlCharacters(value)) return null;
+  const normalized = normalizeParishContact(value);
+  if (!normalized || normalized.includes("?") || normalized.includes("#") || !EMAIL_ADDRESS.test(normalized)) return null;
+  return `mailto:${encodeURIComponent(normalized)}`;
+}
+
+export function getParishMapHref(value: string | null | undefined) {
+  const normalized = normalizeParishContact(value);
+  return normalized
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(normalized)}`
+    : null;
+}
+
 export async function fetchParishIdentity(churchId: string): Promise<ParishIdentity | null> {
-  const { data, error } = await supabase.from("churches").select("id,name,logo_url").eq("id", churchId).maybeSingle();
+  if (!churchId) return null;
+  const { data, error } = await supabase.from("churches").select("id,name,logo_url,phone,email,address").eq("id", churchId).maybeSingle();
   if (error) throw error;
-  return data ? { id: data.id, name: data.name, logoUrl: data.logo_url } : null;
+  if (!data || data.id !== churchId) return null;
+  return {
+    id: data.id,
+    name: data.name,
+    logoUrl: normalizeParishContact(data.logo_url),
+    phone: normalizeParishContact(data.phone),
+    email: normalizeParishContact(data.email),
+    address: normalizeParishContact(data.address),
+  };
 }
 
 export async function fetchParishEvents(churchId: string): Promise<ParishEvent[]> {

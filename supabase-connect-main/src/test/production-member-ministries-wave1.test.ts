@@ -52,4 +52,24 @@ describe("production member ministry parity", () => {
     expect(page).toContain("onSuccess: async () =>");
     expect(page).toContain("await queryClient.invalidateQueries");
   });
+
+  it("separates member ministry states without changing the backend contract", () => {
+    expect(page).toContain("Huduma zangu");
+    expect(page).toContain("Huduma nyingine");
+    expect(page).toContain("Ombi linasubiri");
+    expect(page).toContain("Number(right.requestPending) - Number(left.requestPending)");
+  });
+
+  it("confirms a tenant-owned leave before invoking the existing mutation", () => {
+    expect(page).toContain("AlertDialogTrigger");
+    expect(page).toContain("Unakaribia kuondoka kwenye huduma ya {ministry.name}");
+    expect(page).toContain("leaveRequested.current");
+    expect(page).toContain("Thibitisha kuondoka");
+    expect(queries).toContain("leaveMemberMinistry");
+  });
+
+  it("distinguishes no configured ministries from an empty search", () => {
+    expect(page).toContain("Hakuna huduma zilizowekwa kwa parokia hii.");
+    expect(page).toContain("Hakuna huduma zinazolingana na utafutaji wako.");
+  });
 });
