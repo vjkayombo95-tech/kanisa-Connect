@@ -58,7 +58,7 @@ describe("Wave 3B1 parish usefulness", () => {
     expect(events).toBeGreaterThan(identity);
     expect(ministries).toBeGreaterThan(events);
     expect(shortcuts).toBeGreaterThan(ministries);
-    expect(parishPage).toContain('title="Redio"');
+    expect(parishPage).toContain('title="Radio"');
     expect(parishPage).toContain('title="Misa Mubashara"');
   });
 

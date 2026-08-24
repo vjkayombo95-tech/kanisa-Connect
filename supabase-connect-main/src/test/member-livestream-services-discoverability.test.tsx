@@ -85,7 +85,7 @@ describe("member Livestream Services discoverability", () => {
   it("shows an eligible live stream and routes directly to its detail page", () => {
     render();
     expandWorship();
-    expect(livestreamLink()?.textContent).toContain("Misa Live");
+    expect(livestreamLink()?.textContent).toContain("Misa Mubashara");
     act(() => livestreamLink()?.click());
     expect(host.querySelector('[data-testid="location"]')?.textContent).toBe("/portal/live/stream-a");
   });
@@ -109,7 +109,7 @@ describe("member Livestream Services discoverability", () => {
     render();
     expandWorship();
     expect(livestreamLink()).toBeNull();
-    expect(host.textContent).not.toContain("Misa Live");
+    expect(host.textContent).not.toContain("Misa Mubashara");
   });
 
   it("maps Livestream detail paths to the fail-closed portal feature gate", () => {

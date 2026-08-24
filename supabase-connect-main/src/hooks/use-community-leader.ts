@@ -13,7 +13,7 @@ export function getCommunityContributionDate(contribution: any) {
   return contribution?.date ?? contribution?.created_at ?? null;
 }
 
-export function useLedCommunities() {
+export function useLedCommunities(enabled = true) {
   const { user, churchId } = useAuth();
   return useQuery({
     queryKey: ["led-communities", user?.id, user?.email, churchId],
@@ -105,7 +105,7 @@ export function useLedCommunities() {
         })
         .filter(Boolean) as LedCommunity[];
     },
-    enabled: !!user,
+    enabled: !!user && enabled,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000,

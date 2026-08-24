@@ -130,7 +130,7 @@ export default function MemberSaintDetailsPage() {
             <BookOpen className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
             <p className="mt-4 text-lg font-semibold">Saint not found.</p>
             <Button asChild className="mt-5 rounded-2xl">
-              <Link to="/member/library">Back to Catholic Library</Link>
+              <Link to="/member/library">Rudi kwa Watakatifu</Link>
             </Button>
           </CardContent>
         </Card>
