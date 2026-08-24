@@ -7,15 +7,22 @@ on:
       - staging
   push:
     branches:
+      - main
       - staging
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  validate:
     name: Build and validate
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: supabase-connect-main
@@ -34,19 +41,34 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Detect TypeScript validation script
-        id: typecheck
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Full test suite
+        run: npm test -- --no-file-parallelism --reporter=dot
+
+      - name: Production build
+        run: npm run build
+
+      - name: Repository sanity check
         shell: bash
         run: |
-          if node -e "const scripts = require('./package.json').scripts || {}; process.exit(scripts.typecheck ? 0 : 1)"; then
-            echo "available=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "available=false" >> "$GITHUB_OUTPUT"
-          fi
+          git diff --check
+          test -z "$(git status --porcelain)"
 
-      - name: Run TypeScript validation
-        if: steps.typecheck.outputs.available == 'true'
-        run: npm run typecheck
-
-      - name: Build application
-        run: npm run build
+      - name: Record validation provenance
+        if: always()
+        working-directory: .
+        shell: bash
+        run: |
+          {
+            echo "### CI validation provenance"
+            echo "- Commit SHA: \`${GITHUB_SHA}\`"
+            echo "- Node: \`$(node --version)\`"
+            echo "- npm: \`$(npm --version)\`"
+            echo "- Package manager: npm (package-lock.json)"
+            echo "- Required job: Build and validate"
+          } >> "$GITHUB_STEP_SUMMARY"
