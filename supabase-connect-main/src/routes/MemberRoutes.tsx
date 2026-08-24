@@ -45,6 +45,7 @@ const MemberRadioPage = lazy(() => import("@/pages/portal/MemberRadioPage"));
 const ParishCalendarPage = lazy(() => import("@/pages/ParishCalendarPage"));
 const KanisaAssistantPage = lazy(() => import("@/pages/portal/KanisaAssistantPage"));
 const MemberMinistriesPage = lazy(() => import("@/pages/portal/MemberMinistriesPage"));
+const MemberNotificationsPage = lazy(() => import("@/pages/portal/MemberNotificationsPage"));
 
 function SectionFallback() {
   return (
@@ -105,6 +106,7 @@ export default function MemberRoutes() {
           <Route path="radio" element={<MemberRadioPage />} />
           <Route path="ministries" element={<MemberMinistriesPage />} />
           <Route path="ministries/:ministryId" element={<MemberMinistriesPage />} />
+          <Route path="notifications" element={<MemberNotificationsPage />} />
         </Route>
         </Routes>
       </Suspense>

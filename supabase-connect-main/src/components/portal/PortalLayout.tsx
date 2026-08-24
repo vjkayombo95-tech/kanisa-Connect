@@ -38,6 +38,8 @@ import { getPortalFeatureForPath, type PortalFeatureKey } from "@/lib/portal-fea
 import { isOrdinaryMemberPathAllowed } from "@/lib/member-service-registry";
 import { AppLink } from "@/components/AppLink";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { MemberNotificationBell } from "@/components/portal/MemberNotificationBell";
+import { useMemberNotifications } from "@/hooks/use-member-notifications";
 import { useTranslation } from "react-i18next";
 import {
   AnnouncementsIcon,
@@ -322,6 +324,9 @@ export function PortalLayout() {
   const memberPortalLocked = memberPortalAccess === "none";
   const memberPortalLimited = memberPortalAccess === "limited";
   const useSimpleMemberNav = !isAdmin;
+  const notificationFeatureState = getFeatureState("notifications");
+  const notificationsVisible = !featuresLoading && notificationFeatureState.exists && notificationFeatureState.visible;
+  const memberNotifications = useMemberNotifications(useSimpleMemberNav && notificationsVisible);
   const mainItems = useMemo(
     () => (useSimpleMemberNav ? SIMPLE_MEMBER_MAIN_ITEMS : memberPortalLimited ? LIMITED_MAIN_ITEMS : FULL_MAIN_ITEMS),
     [memberPortalLimited, useSimpleMemberNav],
@@ -352,8 +357,8 @@ export function PortalLayout() {
   const simpleMemberRouteHidden =
     useSimpleMemberNav &&
     !isOrdinaryMemberPathAllowed(location.pathname);
-  const ministryRouteUnavailable = activeFeatureKey === "ministries" && (!activeFeatureState?.exists || !activeFeatureState.visible);
-  const routeHidden = !featuresLoading && (simpleMemberRouteHidden || ministryRouteUnavailable || (activeFeatureKey && !activeFeatureState?.visible));
+  const explicitFeatureUnavailable = (activeFeatureKey === "ministries" || activeFeatureKey === "notifications") && (!activeFeatureState?.exists || !activeFeatureState.visible);
+  const routeHidden = !featuresLoading && (simpleMemberRouteHidden || explicitFeatureUnavailable || (activeFeatureKey && !activeFeatureState?.visible));
   const routeLocked = !featuresLoading && activeFeatureState?.locked;
 
   const toggleMobileGroup = (groupId: string) => {
@@ -462,6 +467,8 @@ export function PortalLayout() {
 
               <div className="flex items-center gap-2">
                 <LanguageSwitcher className="hidden rounded-2xl border border-border/60 bg-background/40 p-1 md:flex" />
+
+                {useSimpleMemberNav && notificationsVisible ? <MemberNotificationBell notifications={memberNotifications.data ?? []} /> : null}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

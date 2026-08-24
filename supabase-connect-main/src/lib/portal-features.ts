@@ -13,7 +13,8 @@ export type PortalFeatureKey =
   | "kanisa_ai"
   | "radio"
   | "livestream"
-  | "ministries";
+  | "ministries"
+  | "notifications";
 
 export const PORTAL_FEATURE_ROUTE_MAP: Array<{ prefix: string; featureKey: PortalFeatureKey }> = [
   { prefix: "/portal/events", featureKey: "events" },
@@ -32,6 +33,7 @@ export const PORTAL_FEATURE_ROUTE_MAP: Array<{ prefix: string; featureKey: Porta
   { prefix: "/portal/radio", featureKey: "radio" },
   { prefix: "/portal/live", featureKey: "livestream" },
   { prefix: "/portal/ministries", featureKey: "ministries" },
+  { prefix: "/portal/notifications", featureKey: "notifications" },
 ];
 
 export function getPortalFeatureForPath(pathname: string): PortalFeatureKey | null {
