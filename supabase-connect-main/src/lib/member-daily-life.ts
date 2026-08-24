@@ -47,18 +47,20 @@ function hasControlCharacters(value: string) {
 }
 
 export function normalizeParishContact(value: string | null | undefined) {
-  const normalized = value?.trim() ?? "";
+  const normalized = value?.trim().replace(/\s+/gu, " ") ?? "";
   return normalized && !hasControlCharacters(normalized) ? normalized : null;
 }
 
 export function getParishPhoneHref(value: string | null | undefined) {
+  if (!value || hasControlCharacters(value)) return null;
   const normalized = normalizeParishContact(value);
   if (!normalized || !PHONE_CHARACTERS.test(normalized) || !/\d/.test(normalized)) return null;
   const dialValue = normalized.replace(/[\s().-]/g, "");
-  return dialValue ? `tel:${dialValue}` : null;
+  return /^\+?[\d*#,;pPwW]+$/.test(dialValue) ? `tel:${dialValue}` : null;
 }
 
 export function getParishEmailHref(value: string | null | undefined) {
+  if (!value || hasControlCharacters(value)) return null;
   const normalized = normalizeParishContact(value);
   if (!normalized || normalized.includes("?") || normalized.includes("#") || !EMAIL_ADDRESS.test(normalized)) return null;
   return `mailto:${encodeURIComponent(normalized)}`;

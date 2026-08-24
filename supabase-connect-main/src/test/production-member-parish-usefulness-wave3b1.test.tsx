@@ -19,10 +19,13 @@ describe("Wave 3B1 parish usefulness", () => {
   it("normalizes optional contact values and rejects unsafe phone input", () => {
     expect(normalizeParishContact("  St Joseph  ")).toBe("St Joseph");
     expect(normalizeParishContact("   ")).toBeNull();
-    expect(normalizeParishContact("unsafe\nvalue")).toBeNull();
+    expect(normalizeParishContact("unsafe\0value")).toBeNull();
     expect(getParishPhoneHref("+255 (700) 123-456")).toBe("tel:+255700123456");
     expect(getParishPhoneHref("javascript:255700123456")).toBeNull();
     expect(getParishPhoneHref("not-a-number")).toBeNull();
+    expect(getParishPhoneHref("++255700123456")).toBeNull();
+    expect(getParishPhoneHref("255+700123456")).toBeNull();
+    expect(getParishPhoneHref("255\n700123456")).toBeNull();
   });
 
   it("creates query-free email and encoded map actions", () => {
@@ -31,6 +34,10 @@ describe("Wave 3B1 parish usefulness", () => {
     expect(getParishEmailHref("parish@example.test\r\nBcc:test@example.test")).toBeNull();
     expect(getParishMapHref("St Joseph, Dar es Salaam")).toBe(
       "https://www.google.com/maps/search/?api=1&query=St%20Joseph%2C%20Dar%20es%20Salaam",
+    );
+    expect(normalizeParishContact("  St Joseph\nDar es Salaam\tTanzania  ")).toBe("St Joseph Dar es Salaam Tanzania");
+    expect(getParishMapHref("St Joseph\nDar es Salaam")).toBe(
+      "https://www.google.com/maps/search/?api=1&query=St%20Joseph%20Dar%20es%20Salaam",
     );
   });
 
