@@ -36,8 +36,8 @@ type MemberHomeData = {
   memberId: string | null;
   memberName: string;
   churchName: string | null;
-  totalPaid: number;
-  pendingAmount: number;
+  totalPaid: number | null;
+  pendingAmount: number | null;
   lastPayment: {
     amount: number;
     date: string | null;
@@ -83,8 +83,8 @@ const emptyMemberHome = (name: string): MemberHomeData => ({
   memberId: null,
   memberName: name,
   churchName: null,
-  totalPaid: 0,
-  pendingAmount: 0,
+  totalPaid: null,
+  pendingAmount: null,
   lastPayment: null,
   latestAnnouncement: null,
 });
@@ -179,8 +179,8 @@ function useSimpleMemberHomeData() {
         memberId: member.id,
         memberName: member.full_name || fallbackName,
         churchName: churchResult.error ? null : churchResult.data?.name ?? null,
-        totalPaid: 0,
-        pendingAmount: 0,
+        totalPaid: null,
+        pendingAmount: null,
         lastPayment: null,
         latestAnnouncement: latestAnnouncement
           ? {
@@ -211,14 +211,18 @@ function useMemberFinancialData(churchId: string | null, memberId: string | null
       if (contributionTotalResult.error) logMemberDashboardError("contribution total", contributionTotalResult.error);
       if (pledgeBalanceResult.error) logMemberDashboardError("pledge balance", pledgeBalanceResult.error);
 
+      if (latestContributionResult.error || contributionTotalResult.error || pledgeBalanceResult.error) {
+        throw new Error("Member financial summary could not be loaded.");
+      }
+
       const latestContribution = (latestContributionResult.error ? null : latestContributionResult.data?.[0] ?? null) as {
         amount?: number | string | null;
         date?: string | null;
       } | null;
 
       return {
-        totalPaid: contributionTotalResult.error ? 0 : contributionTotalResult.data,
-        pendingAmount: pledgeBalanceResult.error ? 0 : readPendingPledgeBalance(pledgeBalanceResult.data),
+        totalPaid: contributionTotalResult.data,
+        pendingAmount: readPendingPledgeBalance(pledgeBalanceResult.data),
         lastPayment: latestContribution
           ? { amount: Number(latestContribution.amount ?? 0), date: latestContribution.date ?? null, label: "Malipo" }
           : null,
@@ -421,24 +425,33 @@ export default function MemberDashboard() {
           <SummaryTile
             icon={Wallet}
             label="Jumla Uliyolipa"
-            value={formatTZS(home.totalPaid)}
-            hint="Michango iliyorekodiwa"
+            value={financials.isLoading ? "Inapakiwa" : financials.isError || home.totalPaid === null ? "Haipatikani" : formatTZS(home.totalPaid)}
+            hint={financials.isError ? "Jaribu tena baada ya muda" : "Michango iliyorekodiwa"}
             className="sm:col-span-2 lg:col-span-1"
           />
           <SummaryTile
             icon={BellRing}
             label="Kiasi Kinachosubiri"
-            value={formatTZS(home.pendingAmount)}
-            hint="Ahadi ambazo hazijakamilika"
+            value={financials.isLoading ? "Inapakiwa" : financials.isError || home.pendingAmount === null ? "Haipatikani" : formatTZS(home.pendingAmount)}
+            hint={financials.isError ? "Jaribu tena baada ya muda" : "Ahadi ambazo hazijakamilika"}
           />
           <SummaryTile
             icon={CalendarDays}
             label="Malipo ya Mwisho"
-            value={home.lastPayment ? formatTZS(home.lastPayment.amount) : "Hakuna bado"}
-            hint={home.lastPayment ? `${home.lastPayment.label} - ${formatDate(home.lastPayment.date)}` : "Historia itaonekana ukilipa"}
+            value={financials.isLoading ? "Inapakiwa" : financials.isError ? "Haipatikani" : home.lastPayment ? formatTZS(home.lastPayment.amount) : "Hakuna bado"}
+            hint={financials.isError ? "Jaribu tena baada ya muda" : home.lastPayment ? `${home.lastPayment.label} - ${formatDate(home.lastPayment.date)}` : "Historia itaonekana ukilipa"}
             className="sm:col-span-2 lg:col-span-2"
           />
         </section>
+
+        {financials.isError ? (
+          <Card className="rounded-3xl border-destructive/25 bg-destructive/5">
+            <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4" role="alert">
+              <p className="text-sm text-destructive">Taarifa za malipo hazikuweza kupakiwa.</p>
+              <Button type="button" variant="outline" onClick={() => void financials.refetch()}>Jaribu tena</Button>
+            </CardContent>
+          </Card>
+        ) : null}
 
         <Card className="rounded-[28px] border-border/70 bg-card/85 shadow-sm">
           <CardContent className="p-5">
@@ -564,7 +577,7 @@ export default function MemberDashboard() {
               <div>
                 <p className="flex items-center gap-2 text-sm font-medium text-primary">
                   <BookOpen className="h-4 w-4" />
-                  Today's Readings
+                  Masomo ya Leo
                 </p>
                 <h2 className="mt-1 text-2xl font-bold text-foreground">{getReadableReadingDate(todayReading)}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -572,7 +585,7 @@ export default function MemberDashboard() {
                 </p>
               </div>
               <Button asChild variant="outline" className="h-11 rounded-2xl">
-                <AppLink to="/portal/daily-readings">Read More</AppLink>
+                <AppLink to="/portal/daily-readings">Soma Zaidi</AppLink>
               </Button>
             </div>
 
@@ -610,8 +623,8 @@ export default function MemberDashboard() {
           {announcementsVisible ? (
             <BigAction icon={Megaphone} label="Matangazo" hint="Soma taarifa mpya za kanisa" to="/portal/announcements" />
           ) : null}
-          <BigAction icon={BookOpen} label="Daily Readings" hint="The Word of God for today" to="/portal/daily-readings" />
-          <BigAction icon={BookOpen} label="Catholic Library" hint="Lives of saints and prayers" to="/member/library" />
+          <BigAction icon={BookOpen} label="Masomo ya Leo" hint="Neno la Mungu la leo" to="/portal/daily-readings" />
+          <BigAction icon={BookOpen} label="Watakatifu" hint="Maisha ya watakatifu na sala" to="/member/library" />
         </section>
 
         <Card className="rounded-[28px] border-border/70 bg-card/85 shadow-sm">

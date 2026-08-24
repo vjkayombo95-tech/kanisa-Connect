@@ -370,9 +370,9 @@ export default function LiturgicalCalendarPage() {
           <div className="max-w-3xl">
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
               <CalendarDays className="h-4 w-4" aria-hidden="true" />
-              Catholic Library
+              Watakatifu
             </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Liturgical Calendar</h1>
+            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Kalenda ya Liturujia</h1>
             <p className="mt-3 text-base text-muted-foreground">
               Follow the Church's celebration of saints throughout the year.
             </p>

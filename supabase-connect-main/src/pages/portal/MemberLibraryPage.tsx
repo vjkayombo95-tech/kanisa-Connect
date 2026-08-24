@@ -122,7 +122,7 @@ export default function MemberLibraryPage() {
               <BookOpen className="h-4 w-4" aria-hidden="true" />
               Catholic formation
             </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Catholic Library</h1>
+            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Watakatifu</h1>
             <p className="mt-3 text-base text-muted-foreground">Grow in faith through the lives of the saints.</p>
           </div>
           <div className="mt-6 max-w-2xl">
@@ -181,7 +181,7 @@ export default function MemberLibraryPage() {
         ) : isError ? (
           <Card className="rounded-[28px] border-destructive/25 bg-destructive/5">
             <CardContent className="p-6 text-sm text-destructive">
-              Unable to load the Catholic Library: {(error as Error)?.message || "Please try again."}
+              Imeshindikana kupakia Watakatifu: {(error as Error)?.message || "Jaribu tena."}
             </CardContent>
           </Card>
         ) : saints.length === 0 ? (

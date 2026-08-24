@@ -11,7 +11,13 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ churchId: "church-a", user: { id: "user-a" } }) }));
 vi.mock("@/hooks/use-feature-access", () => ({
-  useFeatureAccess: () => ({ isLoading: false, getFeatureState: () => mocks.feature }),
+  useFeatureAccess: () => ({
+    isLoading: false,
+    isResolved: true,
+    error: null,
+    refetch: vi.fn(),
+    getFeatureState: () => mocks.feature,
+  }),
 }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc } }));
 vi.mock("@/lib/church-radio", () => ({ fetchMemberRadioStations: mocks.fetchStations }));

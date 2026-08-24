@@ -154,5 +154,6 @@ export function useFeatureAccess() {
     isFeatureEnabled: (key: string) => getFeatureState(key).enabled,
     isFeatureExplicitlyEnabledForChurch,
     getExplicitChurchFeatureResolution,
+    refetch: () => Promise.all([platformQuery.refetch(), churchQuery.refetch()]),
   };
 }

@@ -78,9 +78,9 @@ type NavGroup = {
 
 const FULL_MAIN_ITEMS: NavItem[] = [
   { titleKey: "home", url: "/portal", icon: DashboardIcon, featureKey: null },
-  { titleKey: "Catholic Library", url: "/member/library", icon: BibleIcon, featureKey: null },
-  { titleKey: "Liturgical Calendar", url: "/portal/liturgical-calendar", icon: LiturgicalCalendarIcon, featureKey: null },
-  { titleKey: "Daily Readings", url: "/portal/daily-readings", icon: BibleIcon, featureKey: null },
+  { titleKey: "Watakatifu", url: "/member/library", icon: BibleIcon, featureKey: null },
+  { titleKey: "Kalenda ya Liturujia", url: "/portal/liturgical-calendar", icon: LiturgicalCalendarIcon, featureKey: null },
+  { titleKey: "Masomo ya Leo", url: "/portal/daily-readings", icon: BibleIcon, featureKey: null },
   { titleKey: "Bible", url: "/portal/bible", icon: BibleIcon, featureKey: null },
   { titleKey: "events", url: "/portal/events", icon: EventsIcon, featureKey: "events" },
   { titleKey: "announcements", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
@@ -125,9 +125,9 @@ const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
   { titleKey: "Parokia Yangu", url: "/portal/my-parish", icon: ParishIcon, featureKey: null },
   { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
   { titleKey: "Huduma", url: "/portal/services", icon: PortalIcon, featureKey: null },
-  { titleKey: "Catholic Library", url: "/member/library", icon: BibleIcon, featureKey: null },
-  { titleKey: "Liturgical Calendar", url: "/portal/liturgical-calendar", icon: LiturgicalCalendarIcon, featureKey: null },
-  { titleKey: "Daily Readings", url: "/portal/daily-readings", icon: BibleIcon, featureKey: null },
+  { titleKey: "Watakatifu", url: "/member/library", icon: BibleIcon, featureKey: null },
+  { titleKey: "Kalenda ya Liturujia", url: "/portal/liturgical-calendar", icon: LiturgicalCalendarIcon, featureKey: null },
+  { titleKey: "Masomo ya Leo", url: "/portal/daily-readings", icon: BibleIcon, featureKey: null },
   { titleKey: "Biblia", url: "/portal/bible", icon: BibleIcon, featureKey: null },
   { titleKey: "Lipa", url: "/portal/give", icon: ContributionsIcon, featureKey: "give" },
   { titleKey: "Nia za Misa", url: "/portal/mass-intentions", icon: MassIntentionsIcon, featureKey: "mass_intentions" },
@@ -305,13 +305,14 @@ function DesktopGroup({
 
 export function PortalLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [mobileExpandedGroups, setMobileExpandedGroups] = useState<string[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, profile, user, userRole } = useAuth();
   const isAdmin = isAdminRole(userRole as AppRole | null);
-  const { data: ledCommunities = [] } = useLedCommunities();
+  const { data: ledCommunities = [] } = useLedCommunities(profileMenuOpen);
   const { memberPortalAccess, isLoading } = useBillingAccess();
   const { getFeatureState, isLoading: featuresLoading } = useFeatureAccess();
   const { t, i18n } = useTranslation();
@@ -470,7 +471,7 @@ export function PortalLayout() {
 
                 {useSimpleMemberNav && notificationsVisible ? <MemberNotificationBell notifications={memberNotifications.data ?? []} /> : null}
 
-                <DropdownMenu>
+                <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full gradient-gold">

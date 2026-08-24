@@ -16,7 +16,7 @@ export function RadioPlayerProvider({children}:{children:ReactNode}) {
   const close=useCallback(()=>{const element=audio.current;if(element){element.pause();element.removeAttribute("src");element.load();}setStation(null);setState("closed")},[]);
   const pause=useCallback(()=>{audio.current?.pause();setState(current=>current==="closed"?current:"paused")},[]);
   const play=useCallback(async(next:ChurchRadioStation)=>{media.activate("radio");const element=audio.current;if(!element)return;if(station?.id!==next.id){element.src=next.streamUrl;setStation(next);}setState("loading");try{await element.play();setState("playing")}catch{setState("error")}},[media,station?.id]);
-  useEffect(()=>media.register("radio",pause),[media,pause]);
+  useEffect(()=>media.register("radio",close),[media,close]);
   useEffect(()=>{if(scope.current.churchId!==churchId||scope.current.user!==user?.id)close();scope.current={churchId,user:user?.id}},[churchId,user?.id,close]);
   useEffect(()=>{if(stations.featureLoading||!stations.featureEnabled||(station&&!stations.data.some(item=>item.id===station.id)))close()},[stations.featureLoading,stations.featureEnabled,stations.data,station,close]);
   useEffect(()=>close,[close]);

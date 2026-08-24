@@ -59,13 +59,11 @@ export function PersistentLivestreamPlayer() {
       </div>
       {player.mode === "mini" ? (
         <div className="flex min-h-14 items-center gap-2 px-3">
-          <button aria-label="Expand live stream" onClick={player.expand} className="min-h-11 min-w-0 flex-1 truncate text-left font-semibold">
-            {player.stream.title}
+          <button aria-label={`Fungua Misa Mubashara: ${player.stream.title}`} onClick={player.expand} className="flex min-h-11 min-w-0 flex-1 items-center gap-2 text-left font-semibold">
+            <span className="min-w-0 flex-1 truncate">{player.stream.title}</span>
+            <Maximize2 className="h-5 w-5 shrink-0" aria-hidden="true" />
           </button>
-          <button aria-label="Expand live stream" onClick={player.expand} className="flex h-11 w-11 items-center justify-center">
-            <Maximize2 className="h-5 w-5" />
-          </button>
-          <button aria-label="Close live stream" onClick={player.close} className="flex h-11 w-11 items-center justify-center">
+          <button aria-label="Funga Misa Mubashara" onClick={player.close} className="flex h-11 w-11 items-center justify-center">
             <X className="h-5 w-5" />
           </button>
         </div>

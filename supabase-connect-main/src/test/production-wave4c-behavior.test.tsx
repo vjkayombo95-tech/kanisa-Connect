@@ -189,7 +189,7 @@ describe("Wave 4C behavioral content boundaries", () => {
   it("mounts the liturgical calendar regression surface", async () => {
     database.saints = [saint];
     mount("/portal/liturgical-calendar", [{ path: "/portal/liturgical-calendar", element: <LiturgicalCalendarPage /> }]);
-    expect(await screen.findByRole("heading", { name: "Liturgical Calendar" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Kalenda ya Liturujia" })).toBeInTheDocument();
   });
 
   it("exposes no audio, import, favorite, history, bookmark, note, or translation controls", async () => {

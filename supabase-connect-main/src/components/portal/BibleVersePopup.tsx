@@ -102,6 +102,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const popupRole = useMemo(() => normalizeRole(userRole), [userRole]);
+  const alreadySeenToday = typeof window !== "undefined" && hasSeenBibleVerseToday(window.localStorage, user?.id);
 
   const { data: resolvedChurchId, isLoading: resolvingChurchId } = useQuery({
     queryKey: ["member-dashboard-verse-popup-church", churchId, user?.id, user?.email],
@@ -137,7 +138,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
 
       return null;
     },
-    enabled: !!user,
+    enabled: !!user && !alreadySeenToday,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -199,7 +200,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
         verseReference: verse?.reference?.trim() || "Daily Verse",
       };
     },
-    enabled: !!resolvedChurchId,
+    enabled: !!resolvedChurchId && !alreadySeenToday,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });

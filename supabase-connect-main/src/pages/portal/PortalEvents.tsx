@@ -6,35 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, CheckCircle2, Clock, Loader2, MapPin, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLinkedMember } from "@/hooks/use-linked-member";
 
 type AttendanceResponse = "yes" | "no";
-
-function useMemberRecord() {
-  const { user, churchId } = useAuth();
-
-  return useQuery({
-    queryKey: ["my-member-record", user?.id, churchId],
-    queryFn: async () => {
-      if (!user || !churchId) return null;
-      const { data } = await supabase
-        .from("members")
-        .select("id, full_name")
-        .eq("user_id", user.id)
-        .eq("church_id", churchId)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!user && !!churchId,
-  });
-}
 
 export default function PortalEvents() {
   const { churchId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { data: member, isLoading: isMemberLoading } = useMemberRecord();
+  const { data: member, isLoading: isMemberLoading } = useLinkedMember();
 
-  const { data: events = [], isLoading } = useQuery({
+  const { data: events = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["portal-events", churchId],
     queryFn: async () => {
       if (!churchId) return [];
@@ -139,7 +121,9 @@ export default function PortalEvents() {
         <p className="text-muted-foreground mb-8">Stay updated with church events and services.</p>
 
         {isLoading ? (
-          <p className="text-muted-foreground">Loading events...</p>
+          <p role="status" aria-live="polite" className="text-muted-foreground">Matukio yanapakiwa...</p>
+        ) : isError ? (
+          <Card className="border-destructive/30"><CardContent className="space-y-3 py-10 text-center" role="alert"><p className="text-destructive">Imeshindikana kupakia matukio.</p><Button type="button" variant="outline" onClick={() => void refetch()}>Jaribu tena</Button></CardContent></Card>
         ) : events.length === 0 ? (
           <Card className="glass-card">
             <CardContent className="py-16 text-center text-muted-foreground">
@@ -157,16 +141,16 @@ export default function PortalEvents() {
               return (
                 <Card key={event.id} className="glass-card hover:gold-glow transition-shadow">
                   <CardContent className="p-6">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex gap-4">
+                    <div className="flex min-w-0 items-start justify-between gap-4">
+                      <div className="flex min-w-0 gap-4">
                         <div className="h-14 w-14 rounded-lg bg-primary/10 flex flex-col items-center justify-center shrink-0 border border-primary/20">
                           <span className="text-xs text-primary font-medium">
                             {new Date(event.start_date).toLocaleDateString("en-US", { month: "short" })}
                           </span>
                           <span className="text-lg font-bold text-primary leading-none">{new Date(event.start_date).getDate()}</span>
                         </div>
-                        <div>
-                          <h3 className="font-semibold">{event.title}</h3>
+                        <div className="min-w-0">
+                          <h3 className="break-words font-semibold">{event.title}</h3>
                           <p className="text-sm text-muted-foreground mt-1">{event.description || "Join us for this event."}</p>
                           <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground flex-wrap">
                             <span className="flex items-center gap-1">

@@ -12,7 +12,7 @@ export function useRadioPermission(action:"view"|"manage") {
     const { data, error } = await supabase.rpc("has_radio_permission" as never, { _user_id:user!.id, _church_id:churchId!, _action:action } as never);
     if (error) throw error;
     return data === true;
-  }, enabled:!!user && !!churchId && !features.isLoading && feature.exists && feature.visible, staleTime:30_000 });
+  }, enabled:!!user && !!churchId && features.isResolved && feature.exists && feature.visible, staleTime:30_000 });
 }
 
 export function useChurchRadioStations() {
@@ -20,7 +20,9 @@ export function useChurchRadioStations() {
   const features = useFeatureAccess();
   const permission = useRadioPermission("view");
   const feature = features.getFeatureState("radio");
-  const enabled = !features.isLoading && feature.exists && feature.visible && permission.data === true;
+  const enabled = features.isResolved && feature.exists && feature.visible && permission.data === true;
   const query = useQuery({ queryKey:["production-radio-stations", churchId], queryFn:()=>fetchMemberRadioStations(churchId!), enabled:!!churchId && !features.isLoading && !permission.isLoading && enabled, staleTime:60_000 });
-  return { ...query, data:enabled ? query.data ?? [] : [], featureEnabled:enabled, featureLoading:features.isLoading || permission.isLoading, churchId };
+  const gateError = features.error ?? permission.error ?? null;
+  const refetch = () => features.error ? features.refetch() : permission.isError ? permission.refetch() : query.refetch();
+  return { ...query, data:enabled ? query.data ?? [] : [], error:gateError ?? query.error, isError:!!gateError || query.isError, refetch, featureEnabled:enabled, featureLoading:features.isLoading || (features.isResolved && feature.exists && feature.visible && permission.isLoading), churchId };
 }

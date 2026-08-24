@@ -169,9 +169,9 @@ export default function DailyReadingsPage() {
           <div className="max-w-3xl">
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
               <BookOpen className="h-4 w-4" aria-hidden="true" />
-              Daily Readings
+              Masomo ya Leo
             </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Today's Readings</h1>
+            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Masomo ya Leo</h1>
             <p className="mt-3 text-base text-muted-foreground">The Word of God for today.</p>
           </div>
         </section>
