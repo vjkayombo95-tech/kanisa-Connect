@@ -41,6 +41,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright Chromium
+        run: npx --no-install playwright install --with-deps chromium
+
       - name: TypeScript
         run: npx tsc --noEmit
 
