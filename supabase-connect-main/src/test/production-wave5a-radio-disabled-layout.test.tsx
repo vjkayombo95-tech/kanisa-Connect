@@ -23,6 +23,9 @@ vi.mock("@/contexts/AuthContext", () => ({
 vi.mock("@/hooks/use-feature-access", () => ({
   useFeatureAccess: () => ({
     isLoading: mocks.featureLoading,
+    isResolved: !mocks.featureLoading,
+    error: null,
+    refetch: vi.fn(),
     getFeatureState: () => mocks.feature,
   }),
 }));
