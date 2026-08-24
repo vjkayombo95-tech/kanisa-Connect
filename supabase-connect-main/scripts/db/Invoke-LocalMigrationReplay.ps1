@@ -1,5 +1,8 @@
 [CmdletBinding()]
-param([string]$TypesOutputPath)
+param(
+  [string]$TypesOutputPath,
+  [switch]$ValidateOutputPathOnly
+)
 
 # Local-only disposable schema replay and type generation. Authoritative
 # migrations and the reusable prerequisite fixture remain unchanged.
@@ -9,7 +12,42 @@ $appRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $supabaseRoot = Join-Path $appRoot 'supabase'
 $migrationRoot = Join-Path $supabaseRoot 'migrations'
 $fixturePath = Join-Path $supabaseRoot 'tests\wave5a_disposable_prereqs.sql'
-$typesPath = if ($TypesOutputPath) { [IO.Path]::GetFullPath($TypesOutputPath, $appRoot) } else { Join-Path $appRoot 'src\integrations\supabase\types.ts' }
+$canonicalTypesPath = [IO.Path]::GetFullPath((Join-Path $appRoot 'src\integrations\supabase\types.ts'))
+$repositoryRoot = $appRoot
+$repositoryCursor = [IO.DirectoryInfo]$appRoot
+while ($null -ne $repositoryCursor) {
+  if (Test-Path -LiteralPath (Join-Path $repositoryCursor.FullName '.git')) {
+    $repositoryRoot = $repositoryCursor.FullName
+    break
+  }
+  $repositoryCursor = $repositoryCursor.Parent
+}
+
+try {
+  if ($PSBoundParameters.ContainsKey('TypesOutputPath') -and [string]::IsNullOrWhiteSpace($TypesOutputPath)) {
+    throw 'The generated-types output path cannot be empty or whitespace.'
+  }
+  $typesPath = if (-not $PSBoundParameters.ContainsKey('TypesOutputPath')) {
+    $canonicalTypesPath
+  } elseif ([IO.Path]::IsPathRooted($TypesOutputPath)) {
+    [IO.Path]::GetFullPath($TypesOutputPath)
+  } else {
+    [IO.Path]::GetFullPath((Join-Path $appRoot $TypesOutputPath))
+  }
+} catch {
+  throw "Invalid generated-types output path. $($_.Exception.Message)"
+}
+
+$repositoryPrefix = $repositoryRoot.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+$insideRepository = $typesPath.Equals($repositoryRoot, [StringComparison]::OrdinalIgnoreCase) -or $typesPath.StartsWith($repositoryPrefix, [StringComparison]::OrdinalIgnoreCase)
+$isCanonicalTypesPath = $typesPath.Equals($canonicalTypesPath, [StringComparison]::OrdinalIgnoreCase)
+if ($insideRepository -and -not $isCanonicalTypesPath) {
+  throw "Refusing generated-types output inside the repository unless it is the canonical types file: $typesPath"
+}
+if ($ValidateOutputPathOnly) {
+  Write-Output $typesPath
+  return
+}
 
 $remoteVariables = @('SUPABASE_DB_URL', 'SUPABASE_PRODUCTION_DB_URL', 'SUPABASE_STAGING_DB_URL', 'DATABASE_URL')
 $presentRemoteVariables = @($remoteVariables | Where-Object { -not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_)) })
@@ -143,7 +181,11 @@ select coalesce(string_agg(name, ', ' order by name) filter (where not ok), '') 
   foreach ($requiredContract in @('prayer_requests:', 'mass_intentions:', 'bible_verses:', 'members:', 'assign_default_member_role:', 'notifications:', 'church_radio_stations:', 'church_livestreams:', 'ministries:')) {
     if (-not $generatedText.Contains($requiredContract)) { throw "Generated types are missing a verified contract: $requiredContract" }
   }
-  [IO.File]::WriteAllText($typesPath, $generatedText, [Text.UTF8Encoding]::new($false))
+  $typesDirectory = Split-Path -Parent $typesPath
+  if (-not (Test-Path -LiteralPath $typesDirectory -PathType Container)) {
+    New-Item -ItemType Directory -Path $typesDirectory -Force | Out-Null
+  }
+  Copy-Item -LiteralPath $generatedCandidate -Destination $typesPath -Force
   $completed = $true
   Write-Host "REPLAY_MIGRATION_COUNT=$ledgerCount"
   Write-Host "REPLAY_FIRST=$ledgerFirst"
