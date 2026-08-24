@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, type Transition } from "framer-motion";
 
 type IconProps = {
   active?: boolean;
@@ -14,7 +14,7 @@ type FillShape =
   | { type: "circle"; cx: number; cy: number; r: number }
   | { type: "path"; d: string };
 
-const iconTransition = {
+const iconTransition: Transition = {
   type: "spring",
   stiffness: 220,
   damping: 24,

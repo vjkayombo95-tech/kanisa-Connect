@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Transition } from "framer-motion";
 import type { ReactNode } from "react";
 
 import { AppLink } from "@/components/AppLink";
@@ -16,7 +16,7 @@ type SidebarItemProps = {
   onClick?: () => void;
 };
 
-const itemSpring = {
+const itemSpring: Transition = {
   type: "spring",
   stiffness: 280,
   damping: 24,

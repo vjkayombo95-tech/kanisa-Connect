@@ -133,13 +133,13 @@ export function renderChurchMessageTemplate(
   const bibleVerse = values.bible_verse || getBibleVerseText(template.default_bible_verse);
 
   return template.body
-    .replaceAll("{church_name}", values.church_name?.trim() || "kanisa")
-    .replaceAll("{member_name}", memberName)
-    .replaceAll("{spouse_name}", spouseName)
-    .replaceAll("{first_name}", firstName)
-    .replaceAll("{date}", values.date?.trim() || new Date().toLocaleDateString("en-TZ"))
-    .replaceAll("{bible_verse}", bibleVerse)
-    .replaceAll("{community_name}", values.community_name?.trim() || "jumuiya");
+    .replace(/\{church_name\}/g, values.church_name?.trim() || "kanisa")
+    .replace(/\{member_name\}/g, memberName)
+    .replace(/\{spouse_name\}/g, spouseName)
+    .replace(/\{first_name\}/g, firstName)
+    .replace(/\{date\}/g, values.date?.trim() || new Date().toLocaleDateString("en-TZ"))
+    .replace(/\{bible_verse\}/g, bibleVerse)
+    .replace(/\{community_name\}/g, values.community_name?.trim() || "jumuiya");
 }
 
 export async function fetchChurchMessageTemplate(

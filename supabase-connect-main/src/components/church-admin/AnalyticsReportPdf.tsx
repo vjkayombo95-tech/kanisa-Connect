@@ -448,7 +448,7 @@ function getSafeCategory(report: AnalyticsResponse) {
 
 function getCategoryLabel(category: AnalyticsCategory) {
   if (category === "all") return "All Categories";
-  return category.replaceAll("_", " ").replace(/\b\w/g, (character) => character.toUpperCase());
+  return category.replace(/_/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 function getFileName(churchName: string, generatedAt: string) {

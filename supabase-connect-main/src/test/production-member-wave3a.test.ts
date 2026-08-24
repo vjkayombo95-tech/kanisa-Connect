@@ -2,14 +2,14 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { vi } from "vitest";
-import { act, createElement } from "react";
+import { act, createElement, type ComponentPropsWithoutRef } from "react";
 import { createRoot } from "react-dom/client";
 import { dailyLifeKeys, normalizeNextMassSummary } from "@/lib/member-daily-life";
 import { getMemberServiceForPath, isOrdinaryMemberPathAllowed, memberServiceRegistry } from "@/lib/member-service-registry";
 import { getDarEsSalaamDateKey, publishedDailyReadingKey } from "@/lib/daily-readings";
 import { MobileMemberHome } from "@/components/portal/MobileMemberHome";
 
-vi.mock("@/components/AppLink", () => ({ AppLink: ({ to, children, ...props }: { to: string; children: unknown }) => createElement("a", { href: to, ...props }, children) }));
+vi.mock("@/components/AppLink", () => ({ AppLink: ({ to, children, ...props }: { to: string } & ComponentPropsWithoutRef<"a">) => createElement("a", { href: to, ...props }, children) }));
 vi.mock("@/components/portal/ProductionLiveMassCard", () => ({ ProductionLiveMassCard: () => null }));
 
 const read = (path: string) => readFileSync(join(process.cwd(), "src", path), "utf8");

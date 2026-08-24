@@ -24,8 +24,9 @@ export function useLedCommunities(enabled = true) {
         _user_id: user.id,
       } as never);
 
-      if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
-        return (rpcData as any[]).map((community) => ({
+      const ledCommunities = Array.isArray(rpcData) ? rpcData : [];
+      if (!rpcError && ledCommunities.length > 0) {
+        return ledCommunities.map((community: any) => ({
           community_id: community.community_id,
           community_name: community.community_name,
           leadership_role: community.leadership_role,

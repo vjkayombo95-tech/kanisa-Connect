@@ -73,7 +73,7 @@ const adminServices: StaffService[] = [
 const pastoralIds = new Set(["mass-intentions", "prayer-requests", "mass-schedule", "mass-timetable", "calendar", "events", "announcements", "sermons", "livestreams"]);
 const financeIds = new Set(["contributions", "pledges", "reports"]);
 
-const pastoralServices = adminServices
+const pastoralServices: StaffService[] = adminServices
   .filter((item) => pastoralIds.has(item.id))
   .map((item, index) => ({ ...item, primary: index < 3 }));
 pastoralServices.splice(2, 0, { id: "community-help", label: "Msaada wa jamii", route: "/church-admin/community-help", group: "Kichungaji", icon: HeartHandshake, featureKey: "community_help", primary: true });

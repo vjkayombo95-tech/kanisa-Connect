@@ -50,8 +50,8 @@ const AlertDialog = ({
 };
 
 const AlertDialogTrigger = React.forwardRef<
-  HTMLElement,
-  React.HTMLAttributes<HTMLElement> & { asChild?: boolean }
+  React.ElementRef<"button">,
+  React.ComponentPropsWithoutRef<"button"> & { asChild?: boolean }
 >(({ asChild = false, onClick, ...props }, ref) => {
   const { setOpen } = useAlertDialog();
   const Comp = asChild ? Slot : "button";
@@ -59,7 +59,7 @@ const AlertDialogTrigger = React.forwardRef<
   return (
     <Comp
       ref={ref}
-      onClick={(event: React.MouseEvent<HTMLElement>) => {
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
         onClick?.(event);
         if (!event.defaultPrevented) {
           setOpen(true);

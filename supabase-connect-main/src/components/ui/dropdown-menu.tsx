@@ -21,7 +21,13 @@ function useDropdownMenu() {
   return context;
 }
 
-const DropdownMenu = ({ children }: { children: React.ReactNode }) => {
+const DropdownMenu = ({
+  children,
+}: {
+  children: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) => {
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -32,8 +38,8 @@ const DropdownMenu = ({ children }: { children: React.ReactNode }) => {
 };
 
 const DropdownMenuTrigger = React.forwardRef<
-  HTMLElement,
-  React.HTMLAttributes<HTMLElement> & { asChild?: boolean }
+  React.ElementRef<"button">,
+  React.ComponentPropsWithoutRef<"button"> & { asChild?: boolean }
 >(({ asChild = false, onClick, ...props }, ref) => {
   const { open, setOpen } = useDropdownMenu();
   const Comp = asChild ? Slot : "button";
@@ -42,7 +48,7 @@ const DropdownMenuTrigger = React.forwardRef<
     <Comp
       ref={ref}
       data-state={open ? "open" : "closed"}
-      onClick={(event: React.MouseEvent<HTMLElement>) => {
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
         onClick?.(event);
         if (!event.defaultPrevented) {
           setOpen((current) => !current);
@@ -109,8 +115,8 @@ const DropdownMenuContent = React.forwardRef<
 DropdownMenuContent.displayName = "DropdownMenuContent";
 
 const DropdownMenuItem = React.forwardRef<
-  HTMLElement,
-  React.HTMLAttributes<HTMLElement> & {
+  React.ElementRef<"button">,
+  React.ComponentPropsWithoutRef<"button"> & {
     asChild?: boolean;
     inset?: boolean;
     disabled?: boolean;
@@ -130,7 +136,7 @@ const DropdownMenuItem = React.forwardRef<
         inset && "pl-8",
         className,
       )}
-      onClick={(event: React.MouseEvent<HTMLElement>) => {
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
         onClick?.(event);
         if (!event.defaultPrevented && !disabled) {
           onSelect?.();
