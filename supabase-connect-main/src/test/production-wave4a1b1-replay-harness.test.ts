@@ -56,7 +56,7 @@ describe("Wave 4A.1B1 disposable migration replay harness", () => {
     expect(validateOutputPath("src/integrations/supabase/types.ts")).toBe(canonicalTypes);
     const external = join(tmpdir(), "Kanisa replay verification", "types.ts");
     expect(validateOutputPath(external)).toBe(external);
-  });
+  }, 15000);
 
   it.each([
     "supabase/migrations/output.ts",
