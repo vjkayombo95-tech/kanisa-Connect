@@ -10,15 +10,16 @@ const fixture = readFileSync(join(root, "supabase/tests/wave5a_disposable_prereq
 const migrations = readdirSync(join(root, "supabase/migrations"));
 const canonicalTypes = join(root, "src/integrations/supabase/types.ts");
 const freshTypesPath = process.env.KANISA_REPLAY_FRESH_TYPES_PATH;
+const powershellExecutable = process.platform === "win32" ? "powershell.exe" : "pwsh";
 
 const validateOutputPath = (candidate: string) => execFileSync(
-  "powershell.exe",
+  powershellExecutable,
   ["-NoProfile", "-File", join(root, "scripts/db/Invoke-LocalMigrationReplay.ps1"), "-TypesOutputPath", candidate, "-ValidateOutputPathOnly"],
   { cwd: tmpdir(), encoding: "utf8" },
 ).trim();
 
 const rejectOutputPath = (candidate: string) => spawnSync(
-  "powershell.exe",
+  powershellExecutable,
   ["-NoProfile", "-File", join(root, "scripts/db/Invoke-LocalMigrationReplay.ps1"), "-TypesOutputPath", candidate, "-ValidateOutputPathOnly"],
   { cwd: tmpdir(), encoding: "utf8" },
 );
