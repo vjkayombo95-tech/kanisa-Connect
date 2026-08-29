@@ -11,20 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, BookMarked, Video, Headphones, Loader2, Pencil, Archive, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import type { Tables } from "@/integrations/supabase/types";
 
-type SermonRecord = {
-  id: string;
-  church_id: string;
-  title: string;
-  preacher: string | null;
-  date: string;
-  content: string | null;
-  video_url: string | null;
-  audio_url: string | null;
-  created_at: string;
-  updated_at: string;
-  archived_at: string | null;
-};
+type SermonRecord = Tables<"sermons">;
 
 const EMPTY_FORM = {
   id: null as string | null,
@@ -191,7 +180,9 @@ export default function SermonsPage() {
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-3">
-            <p className="text-xs text-muted-foreground">{new Date(sermon.date).toLocaleDateString()}</p>
+            <p className="text-xs text-muted-foreground">
+              {new Date(sermon.date ?? sermon.created_at ?? Date.now()).toLocaleDateString()}
+            </p>
             <div className="flex flex-wrap justify-end gap-2">
               <Button variant="outline" size="sm" onClick={() => openEditDialog(sermon)}>
                 <Pencil className="mr-2 h-3.5 w-3.5" />

@@ -146,7 +146,7 @@ export default function LoginPage() {
 
         const normalizedEmail = rawIdentity.toLowerCase();
         const normalizedPhone = normalizeTanzanianPhone(signupPhone);
-        if (!normalizedPhone.valid) {
+        if (normalizedPhone.valid === false) {
           throw new Error(normalizedPhone.error);
         }
 
@@ -185,7 +185,7 @@ export default function LoginPage() {
           authEmail = rawIdentity.toLowerCase();
         } else {
           const normalizedPhone = normalizeTanzanianPhone(rawIdentity);
-          if (!normalizedPhone.valid) {
+          if (normalizedPhone.valid === false) {
             throw new Error(normalizedPhone.error);
           }
           const resolved = await resolveMemberEmailForPhoneLogin(normalizedPhone.e164);

@@ -65,7 +65,7 @@ export async function fetchPublicJoinChurch(slug: string) {
 export async function fetchPublicRegistrationChurch(params: {
   churchCode?: string | null;
   churchId?: string | null;
-}) {
+}): Promise<PublicChurch | null> {
   const churchCode = params.churchCode?.trim() || "";
   const churchId = params.churchId?.trim() || "";
 
@@ -73,10 +73,10 @@ export async function fetchPublicRegistrationChurch(params: {
     return null;
   }
 
-  const rpcResult = await supabase.rpc("get_public_registration_church" as never, {
-    _church_code: churchCode || null,
-    _church_id: churchId || null,
-  } as never);
+  const rpcResult = await supabase.rpc("get_public_registration_church", {
+    _church_code: churchCode || undefined,
+    _church_id: churchId || undefined,
+  });
 
   if (!rpcResult.error) {
     return ((rpcResult.data as PublicChurch[] | null)?.[0] ?? null) as PublicChurch | null;
@@ -85,11 +85,11 @@ export async function fetchPublicRegistrationChurch(params: {
   console.warn("Falling back to direct church lookup:", rpcResult.error.message);
 
   const byIdQuery = churchId
-    ? supabase.from("churches").select("id, name, code").eq("id", churchId).maybeSingle()
+    ? supabase.from("churches").select("id, name, code").eq("id", churchId).eq("status", "active").maybeSingle()
     : Promise.resolve({ data: null, error: null });
 
   const byCodeQuery = !churchId && churchCode
-    ? supabase.from("churches").select("id, name, code").eq("code", churchCode).maybeSingle()
+    ? supabase.from("churches").select("id, name, code").eq("code", churchCode).eq("status", "active").maybeSingle()
     : Promise.resolve({ data: null, error: null });
 
   const fallbackResult = churchId ? await byIdQuery : await byCodeQuery;
@@ -105,6 +105,8 @@ export async function fetchPublicRegistrationChurch(params: {
     id: fallbackResult.data.id,
     name: fallbackResult.data.name,
     code: fallbackResult.data.code,
+    slug: null,
+    logo_url: null,
     metadata: null,
   } satisfies PublicChurch;
 }

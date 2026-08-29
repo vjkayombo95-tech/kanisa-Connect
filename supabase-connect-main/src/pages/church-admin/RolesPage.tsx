@@ -30,6 +30,15 @@ const appRoles: { label: string; value: string }[] = [
 
 type InvitationRow = Tables<"invitations">;
 type InvitationInsert = TablesInsert<"invitations">;
+type SendInvitationData = {
+  success?: boolean;
+  existing_user?: boolean;
+};
+type SendInvitationResult = {
+  sent: boolean;
+  data: SendInvitationData | null;
+  errorMessage: string | null;
+};
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
@@ -179,9 +188,9 @@ export default function RolesPage() {
     return data as InvitationRow;
   };
 
-  const sendInvitationEmail = async ({ email, token }: { email: string; token: string }) => {
+  const sendInvitationEmail = async ({ email, token }: { email: string; token: string }): Promise<SendInvitationResult> => {
     try {
-      const { data, error } = await supabase.functions.invoke("send-invitation", {
+      const { data, error } = await supabase.functions.invoke<SendInvitationData>("send-invitation", {
         body: {
           email: normalizeEmail(email),
           token,
@@ -223,7 +232,7 @@ export default function RolesPage() {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["church-invitations"] });
-      const msg = result?.sendResult?.existing_user
+      const msg = result.sendResult.data?.existing_user
         ? `Invitation created. ${inviteEmail} already has an account — share the invite link with them.`
         : `Invitation email sent to ${inviteEmail}`;
       toast({

@@ -45,7 +45,16 @@ type AnnouncementRecord = {
   archived_at: string | null;
 };
 
-type MessageTemplateRecord = Tables<"message_templates">;
+type MessageTemplateRow = Tables<"message_templates">;
+type MessageTemplateRecord = {
+  id: string;
+  type: string;
+  language: string;
+  title: string | null;
+  content: string;
+  created_at: string;
+  updated_at: string;
+};
 type MessageInsert = TablesInsert<"messages">;
 
 type AIComposerForm = {
@@ -142,7 +151,7 @@ const templateTypeAliases: Record<SuggestionType, string[]> = {
   event: ["event", "special_event"],
 };
 
-type MessageTemplateLike = Partial<MessageTemplateRecord> & {
+type MessageTemplateLike = Partial<MessageTemplateRow> & {
   body?: string | null;
   content?: string | null;
 };

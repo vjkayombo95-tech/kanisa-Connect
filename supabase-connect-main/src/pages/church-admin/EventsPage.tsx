@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { PaginationFooter } from "@/components/ui/pagination-footer";
 import { buildEventShareMessage, openWhatsAppShare } from "@/lib/whatsapp-share";
+import type { Tables } from "@/integrations/supabase/types";
 
 type AttendanceSummaryRow = {
   event_id: string;
@@ -24,20 +25,7 @@ type AttendanceSummaryRow = {
   } | null;
 };
 
-type EventRecord = {
-  id: string;
-  church_id: string;
-  title: string;
-  description: string | null;
-  start_date: string;
-  end_date: string | null;
-  location: string | null;
-  status: string;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-  archived_at: string | null;
-};
+type EventRecord = Tables<"events">;
 
 const EMPTY_FORM = {
   id: null as string | null,
@@ -272,11 +260,26 @@ export default function EventsPage() {
     if (status === "upcoming") return "bg-primary/20 text-primary border-primary/30";
     if (status === "ongoing") return "bg-success/20 text-success border-success/30";
     if (status === "completed") return "bg-muted text-muted-foreground";
+    if (status === "archived") return "bg-muted text-muted-foreground";
     return "bg-destructive/20 text-destructive border-destructive/30";
+  };
+
+  const getEventDisplayStatus = (event: EventRecord) => {
+    if (event.archived_at) return "archived";
+    if (!event.start_date) return "upcoming";
+
+    const now = Date.now();
+    const startTime = new Date(event.start_date).getTime();
+    const endTime = event.end_date ? new Date(event.end_date).getTime() : startTime;
+
+    if (Number.isFinite(startTime) && startTime > now) return "upcoming";
+    if (Number.isFinite(endTime) && endTime >= now) return "ongoing";
+    return "completed";
   };
 
   const EventCard = ({ event }: { event: EventRecord }) => {
     const attendance = attendanceByEvent.get(event.id) ?? { count: 0, names: [] };
+    const displayStatus = getEventDisplayStatus(event);
 
     return (
       <Card key={event.id} className="glass-card hover:gold-glow transition-shadow">
@@ -289,8 +292,8 @@ export default function EventsPage() {
                   Archived
                 </Badge>
               )}
-              <Badge variant="outline" className={statusColor(event.status)}>
-                {event.status}
+              <Badge variant="outline" className={statusColor(displayStatus)}>
+                {displayStatus}
               </Badge>
             </div>
           </div>
@@ -300,7 +303,7 @@ export default function EventsPage() {
           <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              {new Date(event.start_date).toLocaleDateString()}
+              {event.start_date ? new Date(event.start_date).toLocaleDateString() : "Date TBD"}
             </span>
             {event.location && (
               <span className="flex items-center gap-1">
@@ -338,7 +341,7 @@ export default function EventsPage() {
                   buildEventShareMessage({
                     churchName: church?.name,
                     title: event.title,
-                    dateTime: new Date(event.start_date).toLocaleString(),
+                    dateTime: event.start_date ? new Date(event.start_date).toLocaleString() : "Date TBD",
                     location: event.location,
                   }),
                 )

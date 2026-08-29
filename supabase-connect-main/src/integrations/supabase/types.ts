@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
       addons: {
@@ -233,6 +238,1024 @@ export type Database = {
             columns: ["church_id"]
             isOneToOne: false
             referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_assets: {
+        Row: {
+          asset_type: string
+          audio_url: string | null
+          checksum_sha256: string | null
+          church_id: string
+          completed_at: string | null
+          content_type: string | null
+          created_at: string
+          created_by: string | null
+          file_name: string | null
+          file_size: number | null
+          id: string
+          index_url: string | null
+          job_id: string
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          public_url: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          storage_bucket: string
+          storage_path: string
+          text_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          asset_type: string
+          audio_url?: string | null
+          checksum_sha256?: string | null
+          church_id: string
+          completed_at?: string | null
+          content_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          index_url?: string | null
+          job_id: string
+          manifest_url?: string | null
+          processing_stage?: string
+          progress?: number
+          public_url?: string | null
+          report_url?: string | null
+          started_at?: string | null
+          status?: string
+          storage_bucket: string
+          storage_path: string
+          text_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          asset_type?: string
+          audio_url?: string | null
+          checksum_sha256?: string | null
+          church_id?: string
+          completed_at?: string | null
+          content_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          index_url?: string | null
+          job_id?: string
+          manifest_url?: string | null
+          processing_stage?: string
+          progress?: number
+          public_url?: string | null
+          report_url?: string | null
+          started_at?: string | null
+          status?: string
+          storage_bucket?: string
+          storage_path?: string
+          text_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_assets_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_assets_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "audio_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_bookmarks: {
+        Row: {
+          church_id: string
+          content_id: string
+          created_at: string
+          id: string
+          label: string | null
+          metadata: Json
+          note: string | null
+          position_seconds: number
+          track_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          church_id: string
+          content_id: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          metadata?: Json
+          note?: string | null
+          position_seconds: number
+          track_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          church_id?: string
+          content_id?: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          metadata?: Json
+          note?: string | null
+          position_seconds?: number
+          track_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_bookmarks_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_bookmarks_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "audio_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_bookmarks_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "audio_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_content: {
+        Row: {
+          church_id: string
+          content_type: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          external_ref: string | null
+          id: string
+          image_url: string | null
+          language_code: string
+          metadata: Json
+          published_at: string | null
+          source_id: string | null
+          source_table: string | null
+          status: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          church_id: string
+          content_type: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          external_ref?: string | null
+          id?: string
+          image_url?: string | null
+          language_code?: string
+          metadata?: Json
+          published_at?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          church_id?: string
+          content_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          external_ref?: string | null
+          id?: string
+          image_url?: string | null
+          language_code?: string
+          metadata?: Json
+          published_at?: string | null
+          source_id?: string | null
+          source_table?: string | null
+          status?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_content_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_history: {
+        Row: {
+          church_id: string
+          content_id: string
+          created_at: string
+          duration_seconds: number | null
+          event_type: string
+          id: string
+          metadata: Json
+          position_seconds: number
+          session_id: string | null
+          track_id: string | null
+          user_id: string
+        }
+        Insert: {
+          church_id: string
+          content_id: string
+          created_at?: string
+          duration_seconds?: number | null
+          event_type: string
+          id?: string
+          metadata?: Json
+          position_seconds?: number
+          session_id?: string | null
+          track_id?: string | null
+          user_id: string
+        }
+        Update: {
+          church_id?: string
+          content_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          event_type?: string
+          id?: string
+          metadata?: Json
+          position_seconds?: number
+          session_id?: string | null
+          track_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_history_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_history_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "audio_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_history_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "audio_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_job_logs: {
+        Row: {
+          church_id: string
+          created_at: string
+          id: string
+          job_id: string
+          level: string
+          message: string
+          metadata: Json
+          stage: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          id?: string
+          job_id: string
+          level?: string
+          message: string
+          metadata?: Json
+          stage: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          level?: string
+          message?: string
+          metadata?: Json
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_job_logs_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_job_logs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "audio_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_jobs: {
+        Row: {
+          audio_url: string | null
+          book: string
+          cancelled_at: string | null
+          chapter: number
+          church_id: string
+          completed_at: string | null
+          content_type: string
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          id: string
+          index_url: string | null
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          published_at: string | null
+          published_by: string | null
+          queued_at: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          audio_url?: string | null
+          book: string
+          cancelled_at?: string | null
+          chapter: number
+          church_id: string
+          completed_at?: string | null
+          content_type: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          index_url?: string | null
+          manifest_url?: string | null
+          processing_stage?: string
+          progress?: number
+          published_at?: string | null
+          published_by?: string | null
+          queued_at?: string | null
+          report_url?: string | null
+          started_at?: string | null
+          status?: string
+          text_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audio_url?: string | null
+          book?: string
+          cancelled_at?: string | null
+          chapter?: number
+          church_id?: string
+          completed_at?: string | null
+          content_type?: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          index_url?: string | null
+          manifest_url?: string | null
+          processing_stage?: string
+          progress?: number
+          published_at?: string | null
+          published_by?: string | null
+          queued_at?: string | null
+          report_url?: string | null
+          started_at?: string | null
+          status?: string
+          text_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_jobs_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_progress: {
+        Row: {
+          church_id: string
+          completed: boolean
+          completed_at: string | null
+          content_id: string
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          last_played_at: string
+          metadata: Json
+          position_seconds: number
+          track_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          church_id: string
+          completed?: boolean
+          completed_at?: string | null
+          content_id: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          last_played_at?: string
+          metadata?: Json
+          position_seconds?: number
+          track_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          church_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          content_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          last_played_at?: string
+          metadata?: Json
+          position_seconds?: number
+          track_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_progress_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_progress_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "audio_content"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_progress_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "audio_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_review_audit: {
+        Row: {
+          action: string
+          church_id: string
+          created_at: string
+          id: string
+          job_id: string
+          new_values: Json
+          previous_values: Json
+          reason: string | null
+          review_id: string | null
+          reviewer_id: string | null
+          verse_review_id: string | null
+        }
+        Insert: {
+          action: string
+          church_id: string
+          created_at?: string
+          id?: string
+          job_id: string
+          new_values?: Json
+          previous_values?: Json
+          reason?: string | null
+          review_id?: string | null
+          reviewer_id?: string | null
+          verse_review_id?: string | null
+        }
+        Update: {
+          action?: string
+          church_id?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          new_values?: Json
+          previous_values?: Json
+          reason?: string | null
+          review_id?: string | null
+          reviewer_id?: string | null
+          verse_review_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_review_audit_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_review_audit_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "audio_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_review_audit_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "audio_reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_review_audit_verse_review_id_fkey"
+            columns: ["verse_review_id"]
+            isOneToOne: false
+            referencedRelation: "audio_verse_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_reviews: {
+        Row: {
+          audio_url: string | null
+          church_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          index_url: string | null
+          job_id: string
+          manifest_url: string | null
+          notes: string | null
+          processing_stage: string
+          progress: number
+          report_url: string | null
+          reviewer_id: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          audio_url?: string | null
+          church_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          index_url?: string | null
+          job_id: string
+          manifest_url?: string | null
+          notes?: string | null
+          processing_stage?: string
+          progress?: number
+          report_url?: string | null
+          reviewer_id?: string | null
+          started_at?: string | null
+          status?: string
+          text_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audio_url?: string | null
+          church_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          index_url?: string | null
+          job_id?: string
+          manifest_url?: string | null
+          notes?: string | null
+          processing_stage?: string
+          progress?: number
+          report_url?: string | null
+          reviewer_id?: string | null
+          started_at?: string | null
+          status?: string
+          text_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_reviews_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_reviews_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "audio_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_tracks: {
+        Row: {
+          alignment_path: string | null
+          church_id: string
+          content_id: string
+          created_at: string
+          created_by: string | null
+          duration_seconds: number | null
+          file_size_bytes: number | null
+          id: string
+          index_path: string | null
+          metadata: Json
+          mime_type: string | null
+          published_at: string | null
+          status: string
+          storage_bucket: string | null
+          storage_path: string | null
+          stream_url: string | null
+          subtitle: string | null
+          title: string
+          track_number: number
+          transcript_path: string | null
+          updated_at: string
+        }
+        Insert: {
+          alignment_path?: string | null
+          church_id: string
+          content_id: string
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          index_path?: string | null
+          metadata?: Json
+          mime_type?: string | null
+          published_at?: string | null
+          status?: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          stream_url?: string | null
+          subtitle?: string | null
+          title: string
+          track_number?: number
+          transcript_path?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alignment_path?: string | null
+          church_id?: string
+          content_id?: string
+          created_at?: string
+          created_by?: string | null
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          index_path?: string | null
+          metadata?: Json
+          mime_type?: string | null
+          published_at?: string | null
+          status?: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          stream_url?: string | null
+          subtitle?: string | null
+          title?: string
+          track_number?: number
+          transcript_path?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_tracks_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_tracks_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "audio_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_verse_reviews: {
+        Row: {
+          church_id: string
+          confidence: number
+          created_at: string
+          created_by: string | null
+          duration: number
+          end_time: number
+          id: string
+          job_id: string
+          manually_edited: boolean
+          notes: string | null
+          review_id: string | null
+          start_time: number
+          status: string
+          updated_at: string
+          updated_by: string | null
+          verse_number: number
+          verse_text: string
+        }
+        Insert: {
+          church_id: string
+          confidence?: number
+          created_at?: string
+          created_by?: string | null
+          duration?: number
+          end_time?: number
+          id?: string
+          job_id: string
+          manually_edited?: boolean
+          notes?: string | null
+          review_id?: string | null
+          start_time?: number
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          verse_number: number
+          verse_text?: string
+        }
+        Update: {
+          church_id?: string
+          confidence?: number
+          created_at?: string
+          created_by?: string | null
+          duration?: number
+          end_time?: number
+          id?: string
+          job_id?: string
+          manually_edited?: boolean
+          notes?: string | null
+          review_id?: string | null
+          start_time?: number
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+          verse_number?: number
+          verse_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_verse_reviews_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_verse_reviews_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "audio_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_verse_reviews_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "audio_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_version_verses: {
+        Row: {
+          church_id: string
+          confidence: number
+          created_at: string
+          duration: number
+          end_time: number
+          id: string
+          job_id: string
+          manually_edited: boolean
+          notes: string | null
+          start_time: number
+          verse_number: number
+          verse_text: string
+          version_id: string
+        }
+        Insert: {
+          church_id: string
+          confidence?: number
+          created_at?: string
+          duration?: number
+          end_time?: number
+          id?: string
+          job_id: string
+          manually_edited?: boolean
+          notes?: string | null
+          start_time?: number
+          verse_number: number
+          verse_text?: string
+          version_id: string
+        }
+        Update: {
+          church_id?: string
+          confidence?: number
+          created_at?: string
+          duration?: number
+          end_time?: number
+          id?: string
+          job_id?: string
+          manually_edited?: boolean
+          notes?: string | null
+          start_time?: number
+          verse_number?: number
+          verse_text?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_version_verses_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_version_verses_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "audio_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_version_verses_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "audio_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_versions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          audio_url: string | null
+          church_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          index_url: string | null
+          job_id: string
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          published_at: string | null
+          published_by: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+          version_number: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audio_url?: string | null
+          church_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          index_url?: string | null
+          job_id: string
+          manifest_url?: string | null
+          processing_stage?: string
+          progress?: number
+          published_at?: string | null
+          published_by?: string | null
+          report_url?: string | null
+          started_at?: string | null
+          status?: string
+          text_url?: string | null
+          updated_at?: string
+          version_number?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          audio_url?: string | null
+          church_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          index_url?: string | null
+          job_id?: string
+          manifest_url?: string | null
+          processing_stage?: string
+          progress?: number
+          published_at?: string | null
+          published_by?: string | null
+          report_url?: string | null
+          started_at?: string | null
+          status?: string
+          text_url?: string | null
+          updated_at?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_versions_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_versions_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "audio_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audio_worker_heartbeats: {
+        Row: {
+          created_at: string
+          current_job_id: string | null
+          id: string
+          last_seen_at: string
+          metadata: Json
+          status: string
+          updated_at: string
+          worker_id: string
+          worker_type: string
+        }
+        Insert: {
+          created_at?: string
+          current_job_id?: string | null
+          id?: string
+          last_seen_at?: string
+          metadata?: Json
+          status?: string
+          updated_at?: string
+          worker_id: string
+          worker_type?: string
+        }
+        Update: {
+          created_at?: string
+          current_job_id?: string | null
+          id?: string
+          last_seen_at?: string
+          metadata?: Json
+          status?: string
+          updated_at?: string
+          worker_id?: string
+          worker_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_worker_heartbeats_current_job_id_fkey"
+            columns: ["current_job_id"]
+            isOneToOne: false
+            referencedRelation: "audio_jobs"
             referencedColumns: ["id"]
           },
         ]
@@ -996,32 +2019,77 @@ export type Database = {
           },
         ]
       }
+      church_feature_default_provisioning: {
+        Row: {
+          church_id: string
+          feature_id: string
+          provisioned_at: string
+          provisioned_by: string | null
+        }
+        Insert: {
+          church_id: string
+          feature_id: string
+          provisioned_at?: string
+          provisioned_by?: string | null
+        }
+        Update: {
+          church_id?: string
+          feature_id?: string
+          provisioned_at?: string
+          provisioned_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "church_feature_default_provisioning_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "church_feature_default_provisioning_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "platform_features"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       church_features: {
         Row: {
           church_id: string
           created_at: string
           enabled: boolean
+          enabled_at: string | null
+          enabled_by: string | null
           feature_id: string
           id: string
           locked: boolean
+          settings: Json
           updated_at: string
         }
         Insert: {
           church_id: string
           created_at?: string
           enabled?: boolean
+          enabled_at?: string | null
+          enabled_by?: string | null
           feature_id: string
           id?: string
           locked?: boolean
+          settings?: Json
           updated_at?: string
         }
         Update: {
           church_id?: string
           created_at?: string
           enabled?: boolean
+          enabled_at?: string | null
+          enabled_by?: string | null
           feature_id?: string
           id?: string
           locked?: boolean
+          settings?: Json
           updated_at?: string
         }
         Relationships: [
@@ -1050,12 +2118,21 @@ export type Database = {
           created_by: string | null
           id: string
           provider: string
-          provider_external_id: string
+          provider_external_id: string | null
+          provider_failure_count: number
+          provider_last_checked_at: string | null
+          provider_last_error_category: string | null
+          provider_next_sync_at: string | null
+          provider_status: string | null
+          recording_url: string | null
           scheduled_end: string | null
           scheduled_start: string | null
           status: string
+          status_source: string
+          thumbnail_url: string | null
           title: string
           updated_at: string
+          updated_by: string | null
           watch_url: string
         }
         Insert: {
@@ -1066,12 +2143,21 @@ export type Database = {
           created_by?: string | null
           id?: string
           provider?: string
-          provider_external_id: string
+          provider_external_id?: string | null
+          provider_failure_count?: number
+          provider_last_checked_at?: string | null
+          provider_last_error_category?: string | null
+          provider_next_sync_at?: string | null
+          provider_status?: string | null
+          recording_url?: string | null
           scheduled_end?: string | null
           scheduled_start?: string | null
           status?: string
+          status_source?: string
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
+          updated_by?: string | null
           watch_url: string
         }
         Update: {
@@ -1082,17 +2168,76 @@ export type Database = {
           created_by?: string | null
           id?: string
           provider?: string
-          provider_external_id?: string
+          provider_external_id?: string | null
+          provider_failure_count?: number
+          provider_last_checked_at?: string | null
+          provider_last_error_category?: string | null
+          provider_next_sync_at?: string | null
+          provider_status?: string | null
+          recording_url?: string | null
           scheduled_end?: string | null
           scheduled_start?: string | null
           status?: string
+          status_source?: string
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
+          updated_by?: string | null
           watch_url?: string
         }
         Relationships: [
           {
             foreignKeyName: "church_livestreams_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      church_memberships: {
+        Row: {
+          church_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          invited_by: string | null
+          is_primary: boolean
+          joined_at: string
+          membership_source: string | null
+          status: Database["public"]["Enums"]["church_membership_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          invited_by?: string | null
+          is_primary?: boolean
+          joined_at?: string
+          membership_source?: string | null
+          status?: Database["public"]["Enums"]["church_membership_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          invited_by?: string | null
+          is_primary?: boolean
+          joined_at?: string
+          membership_source?: string | null
+          status?: Database["public"]["Enums"]["church_membership_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "church_memberships_church_id_fkey"
             columns: ["church_id"]
             isOneToOne: false
             referencedRelation: "churches"
@@ -1108,6 +2253,7 @@ export type Database = {
           enabled: boolean
           id: string
           is_default: boolean
+          is_featured: boolean
           radio_station_id: string
           sort_order: number
           updated_at: string
@@ -1119,6 +2265,7 @@ export type Database = {
           enabled?: boolean
           id?: string
           is_default?: boolean
+          is_featured?: boolean
           radio_station_id: string
           sort_order?: number
           updated_at?: string
@@ -1130,6 +2277,7 @@ export type Database = {
           enabled?: boolean
           id?: string
           is_default?: boolean
+          is_featured?: boolean
           radio_station_id?: string
           sort_order?: number
           updated_at?: string
@@ -1166,6 +2314,7 @@ export type Database = {
           id: string
           role: string
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
           can_approve?: boolean
@@ -1181,6 +2330,7 @@ export type Database = {
           id?: string
           role: string
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           can_approve?: boolean
@@ -1196,6 +2346,7 @@ export type Database = {
           id?: string
           role?: string
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: [
           {
@@ -1274,6 +2425,8 @@ export type Database = {
           phone: string | null
           short_code: string | null
           slug: string
+          status: string
+          theme_color: string | null
           whatsapp_daily_message_limit: number
           whatsapp_enabled: boolean
           whatsapp_mass_intentions_enabled: boolean
@@ -1300,6 +2453,8 @@ export type Database = {
           phone?: string | null
           short_code?: string | null
           slug: string
+          status?: string
+          theme_color?: string | null
           whatsapp_daily_message_limit?: number
           whatsapp_enabled?: boolean
           whatsapp_mass_intentions_enabled?: boolean
@@ -1326,6 +2481,8 @@ export type Database = {
           phone?: string | null
           short_code?: string | null
           slug?: string
+          status?: string
+          theme_color?: string | null
           whatsapp_daily_message_limit?: number
           whatsapp_enabled?: boolean
           whatsapp_mass_intentions_enabled?: boolean
@@ -1599,6 +2756,59 @@ export type Database = {
           },
         ]
       }
+      content_bookmarks: {
+        Row: {
+          church_id: string | null
+          content_id: string
+          content_type: string
+          created_at: string
+          excerpt: string | null
+          id: string
+          label: string | null
+          metadata: Json
+          reference: string | null
+          segment_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          church_id?: string | null
+          content_id: string
+          content_type: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          label?: string | null
+          metadata?: Json
+          reference?: string | null
+          segment_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          church_id?: string | null
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          label?: string | null
+          metadata?: Json
+          reference?: string | null
+          segment_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_bookmarks_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_categories: {
         Row: {
           color: string | null
@@ -1819,18 +3029,128 @@ export type Database = {
           },
         ]
       }
+      content_favorites: {
+        Row: {
+          church_id: string | null
+          content_id: string
+          content_type: string
+          created_at: string
+          excerpt: string | null
+          id: string
+          label: string | null
+          metadata: Json
+          reference: string | null
+          segment_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          church_id?: string | null
+          content_id: string
+          content_type: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          label?: string | null
+          metadata?: Json
+          reference?: string | null
+          segment_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          church_id?: string | null
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          label?: string | null
+          metadata?: Json
+          reference?: string | null
+          segment_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_favorites_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_highlights: {
+        Row: {
+          church_id: string | null
+          color: string
+          content_id: string
+          content_type: string
+          created_at: string
+          excerpt: string | null
+          id: string
+          metadata: Json
+          reference: string | null
+          segment_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          church_id?: string | null
+          color?: string
+          content_id: string
+          content_type: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          metadata?: Json
+          reference?: string | null
+          segment_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          church_id?: string | null
+          color?: string
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          metadata?: Json
+          reference?: string | null
+          segment_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_highlights_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_import_batches: {
         Row: {
           conflict_strategy: string
           content_type: string
           created_at: string
           date_obtained: string | null
+          executed_by: string | null
           filename: string
           id: string
           imported_at: string | null
           imported_by: string | null
           imported_rows: number
           information_rows: number
+          initiated_by_display_name: string | null
+          initiated_by_email: string | null
+          initiated_by_user_uuid: string | null
           invalid_rows: number
           language_id: string | null
           notes: string | null
@@ -1852,12 +3172,16 @@ export type Database = {
           content_type: string
           created_at?: string
           date_obtained?: string | null
+          executed_by?: string | null
           filename: string
           id?: string
           imported_at?: string | null
           imported_by?: string | null
           imported_rows?: number
           information_rows?: number
+          initiated_by_display_name?: string | null
+          initiated_by_email?: string | null
+          initiated_by_user_uuid?: string | null
           invalid_rows?: number
           language_id?: string | null
           notes?: string | null
@@ -1879,12 +3203,16 @@ export type Database = {
           content_type?: string
           created_at?: string
           date_obtained?: string | null
+          executed_by?: string | null
           filename?: string
           id?: string
           imported_at?: string | null
           imported_by?: string | null
           imported_rows?: number
           information_rows?: number
+          initiated_by_display_name?: string | null
+          initiated_by_email?: string | null
+          initiated_by_user_uuid?: string | null
           invalid_rows?: number
           language_id?: string | null
           notes?: string | null
@@ -1938,6 +3266,65 @@ export type Database = {
         }
         Relationships: []
       }
+      content_notes: {
+        Row: {
+          body: string
+          body_format: string
+          church_id: string | null
+          content_id: string
+          content_type: string
+          created_at: string
+          excerpt: string | null
+          id: string
+          metadata: Json
+          reference: string | null
+          segment_id: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          body_format?: string
+          church_id?: string | null
+          content_id: string
+          content_type: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          metadata?: Json
+          reference?: string | null
+          segment_id?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          body_format?: string
+          church_id?: string | null
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          metadata?: Json
+          reference?: string | null
+          segment_id?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_notes_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_prayer_tags: {
         Row: {
           prayer_id: string
@@ -1970,67 +3357,151 @@ export type Database = {
       }
       content_prayers: {
         Row: {
+          audio_url: string | null
           author: string | null
-          body: string
+          body: string | null
           category_id: string | null
+          church_id: string | null
+          content_edition: string | null
+          content_version_label: string | null
+          copyright_holder: string | null
+          copyright_notice: string | null
           cover_image: string | null
           created_at: string
           created_by: string | null
+          ecclesial_approval_authority: string | null
+          ecclesial_approval_reference: string | null
+          ecclesial_approval_status: string
           estimated_read_time: number | null
           featured: boolean
           id: string
+          is_global: boolean
           language_id: string | null
+          license_reference: string | null
+          license_type: string | null
           liturgical_season: string | null
+          metadata: Json
+          parent_prayer_id: string | null
+          prayer_code: string | null
+          prayer_type: string
+          recommended_time: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           scripture_reference: string | null
           slug: string
+          sort_order: number
           source: string | null
+          source_notes: string | null
+          source_organization: string | null
+          source_reference: string | null
+          source_title: string | null
+          source_type: string | null
+          source_url: string | null
           status: string
           summary: string | null
           title: string
+          translation_group_id: string
+          translation_key: string | null
           updated_at: string
           updated_by: string | null
           visibility: string
         }
         Insert: {
+          audio_url?: string | null
           author?: string | null
-          body: string
+          body?: string | null
           category_id?: string | null
+          church_id?: string | null
+          content_edition?: string | null
+          content_version_label?: string | null
+          copyright_holder?: string | null
+          copyright_notice?: string | null
           cover_image?: string | null
           created_at?: string
           created_by?: string | null
+          ecclesial_approval_authority?: string | null
+          ecclesial_approval_reference?: string | null
+          ecclesial_approval_status?: string
           estimated_read_time?: number | null
           featured?: boolean
           id?: string
+          is_global?: boolean
           language_id?: string | null
+          license_reference?: string | null
+          license_type?: string | null
           liturgical_season?: string | null
+          metadata?: Json
+          parent_prayer_id?: string | null
+          prayer_code?: string | null
+          prayer_type?: string
+          recommended_time?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           scripture_reference?: string | null
           slug: string
+          sort_order?: number
           source?: string | null
+          source_notes?: string | null
+          source_organization?: string | null
+          source_reference?: string | null
+          source_title?: string | null
+          source_type?: string | null
+          source_url?: string | null
           status?: string
           summary?: string | null
           title: string
+          translation_group_id?: string
+          translation_key?: string | null
           updated_at?: string
           updated_by?: string | null
           visibility?: string
         }
         Update: {
+          audio_url?: string | null
           author?: string | null
-          body?: string
+          body?: string | null
           category_id?: string | null
+          church_id?: string | null
+          content_edition?: string | null
+          content_version_label?: string | null
+          copyright_holder?: string | null
+          copyright_notice?: string | null
           cover_image?: string | null
           created_at?: string
           created_by?: string | null
+          ecclesial_approval_authority?: string | null
+          ecclesial_approval_reference?: string | null
+          ecclesial_approval_status?: string
           estimated_read_time?: number | null
           featured?: boolean
           id?: string
+          is_global?: boolean
           language_id?: string | null
+          license_reference?: string | null
+          license_type?: string | null
           liturgical_season?: string | null
+          metadata?: Json
+          parent_prayer_id?: string | null
+          prayer_code?: string | null
+          prayer_type?: string
+          recommended_time?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           scripture_reference?: string | null
           slug?: string
+          sort_order?: number
           source?: string | null
+          source_notes?: string | null
+          source_organization?: string | null
+          source_reference?: string | null
+          source_title?: string | null
+          source_type?: string | null
+          source_url?: string | null
           status?: string
           summary?: string | null
           title?: string
+          translation_group_id?: string
+          translation_key?: string | null
           updated_at?: string
           updated_by?: string | null
           visibility?: string
@@ -2044,10 +3515,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "content_prayers_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "content_prayers_language_id_fkey"
             columns: ["language_id"]
             isOneToOne: false
             referencedRelation: "content_languages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_prayers_parent_prayer_id_fkey"
+            columns: ["parent_prayer_id"]
+            isOneToOne: false
+            referencedRelation: "content_prayers"
             referencedColumns: ["id"]
           },
         ]
@@ -2372,7 +3857,10 @@ export type Database = {
       }
       daily_readings: {
         Row: {
+          celebration: string | null
           created_at: string
+          day_of_week: string | null
+          day_type: string | null
           first_reading: string | null
           first_reading_reference: string | null
           gospel: string | null
@@ -2380,20 +3868,31 @@ export type Database = {
           gospel_reference: string | null
           id: string
           is_published: boolean
+          language_code: string | null
+          liturgical_color: string | null
           liturgical_day_id: string | null
           liturgical_season: string | null
+          liturgical_week: number | null
+          liturgical_year: string | null
           prayer: string | null
           psalm: string | null
           psalm_response: string | null
+          reading_code: string | null
           reading_date: string | null
           reflection: string | null
+          reflection_id: string | null
           responsorial_psalm_reference: string | null
           second_reading: string | null
           second_reading_reference: string | null
+          status: string | null
           updated_at: string
+          weekday_cycle: string | null
         }
         Insert: {
+          celebration?: string | null
           created_at?: string
+          day_of_week?: string | null
+          day_type?: string | null
           first_reading?: string | null
           first_reading_reference?: string | null
           gospel?: string | null
@@ -2401,20 +3900,31 @@ export type Database = {
           gospel_reference?: string | null
           id?: string
           is_published?: boolean
+          language_code?: string | null
+          liturgical_color?: string | null
           liturgical_day_id?: string | null
           liturgical_season?: string | null
+          liturgical_week?: number | null
+          liturgical_year?: string | null
           prayer?: string | null
           psalm?: string | null
           psalm_response?: string | null
+          reading_code?: string | null
           reading_date?: string | null
           reflection?: string | null
+          reflection_id?: string | null
           responsorial_psalm_reference?: string | null
           second_reading?: string | null
           second_reading_reference?: string | null
+          status?: string | null
           updated_at?: string
+          weekday_cycle?: string | null
         }
         Update: {
+          celebration?: string | null
           created_at?: string
+          day_of_week?: string | null
+          day_type?: string | null
           first_reading?: string | null
           first_reading_reference?: string | null
           gospel?: string | null
@@ -2422,17 +3932,25 @@ export type Database = {
           gospel_reference?: string | null
           id?: string
           is_published?: boolean
+          language_code?: string | null
+          liturgical_color?: string | null
           liturgical_day_id?: string | null
           liturgical_season?: string | null
+          liturgical_week?: number | null
+          liturgical_year?: string | null
           prayer?: string | null
           psalm?: string | null
           psalm_response?: string | null
+          reading_code?: string | null
           reading_date?: string | null
           reflection?: string | null
+          reflection_id?: string | null
           responsorial_psalm_reference?: string | null
           second_reading?: string | null
           second_reading_reference?: string | null
+          status?: string | null
           updated_at?: string
+          weekday_cycle?: string | null
         }
         Relationships: [
           {
@@ -2443,6 +3961,108 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      evaluation_benchmark_reports: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json
+          report_payload: Json
+          report_type: string
+          run_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json
+          report_payload: Json
+          report_type: string
+          run_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json
+          report_payload?: Json
+          report_type?: string
+          run_id?: string
+        }
+        Relationships: []
+      }
+      evaluation_golden_references: {
+        Row: {
+          book: string
+          chapter: number
+          chapter_id: string
+          id: string
+          imported_at: string
+          imported_by: string | null
+          metadata: Json
+          reference_payload: Json
+          source_hash: string | null
+          source_name: string | null
+          translation_code: string
+        }
+        Insert: {
+          book: string
+          chapter: number
+          chapter_id: string
+          id?: string
+          imported_at?: string
+          imported_by?: string | null
+          metadata?: Json
+          reference_payload: Json
+          source_hash?: string | null
+          source_name?: string | null
+          translation_code?: string
+        }
+        Update: {
+          book?: string
+          chapter?: number
+          chapter_id?: string
+          id?: string
+          imported_at?: string
+          imported_by?: string | null
+          metadata?: Json
+          reference_payload?: Json
+          source_hash?: string | null
+          source_name?: string | null
+          translation_code?: string
+        }
+        Relationships: []
+      }
+      evaluation_model_outputs: {
+        Row: {
+          chapter_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          model_id: string
+          output_payload: Json
+          provider: string
+          run_id: string
+        }
+        Insert: {
+          chapter_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          model_id: string
+          output_payload: Json
+          provider: string
+          run_id: string
+        }
+        Update: {
+          chapter_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          model_id?: string
+          output_payload?: Json
+          provider?: string
+          run_id?: string
+        }
+        Relationships: []
       }
       event_attendances: {
         Row: {
@@ -3125,6 +4745,95 @@ export type Database = {
         }
         Relationships: []
       }
+      liturgical_calendar: {
+        Row: {
+          calendar_date: string
+          celebration: string | null
+          created_at: string | null
+          day_of_week: string | null
+          id: string
+          liturgical_season: string | null
+          liturgical_week: number | null
+          liturgical_year: string
+          reading_code: string | null
+          weekday_cycle: string
+        }
+        Insert: {
+          calendar_date: string
+          celebration?: string | null
+          created_at?: string | null
+          day_of_week?: string | null
+          id?: string
+          liturgical_season?: string | null
+          liturgical_week?: number | null
+          liturgical_year: string
+          reading_code?: string | null
+          weekday_cycle: string
+        }
+        Update: {
+          calendar_date?: string
+          celebration?: string | null
+          created_at?: string | null
+          day_of_week?: string | null
+          id?: string
+          liturgical_season?: string | null
+          liturgical_week?: number | null
+          liturgical_year?: string
+          reading_code?: string | null
+          weekday_cycle?: string
+        }
+        Relationships: []
+      }
+      liturgical_calendar_overrides: {
+        Row: {
+          calendar_date: string
+          celebration: string | null
+          created_at: string
+          day_type: string | null
+          id: string
+          liturgical_color: string | null
+          liturgical_season: string | null
+          liturgical_week: number | null
+          notes: string | null
+          reading_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          calendar_date: string
+          celebration?: string | null
+          created_at?: string
+          day_type?: string | null
+          id?: string
+          liturgical_color?: string | null
+          liturgical_season?: string | null
+          liturgical_week?: number | null
+          notes?: string | null
+          reading_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          calendar_date?: string
+          celebration?: string | null
+          created_at?: string
+          day_type?: string | null
+          id?: string
+          liturgical_color?: string | null
+          liturgical_season?: string | null
+          liturgical_week?: number | null
+          notes?: string | null
+          reading_code?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "liturgical_calendar_overrides_reading_code_fkey"
+            columns: ["reading_code"]
+            isOneToOne: false
+            referencedRelation: "daily_readings"
+            referencedColumns: ["reading_code"]
+          },
+        ]
+      }
       liturgical_days: {
         Row: {
           celebration: string
@@ -3717,6 +5426,7 @@ export type Database = {
           group_id: string | null
           id: string
           jumuiya_id: string | null
+          membership_id: string | null
           ministry_id: string | null
           phone: string | null
           photo_url: string | null
@@ -3738,6 +5448,7 @@ export type Database = {
           group_id?: string | null
           id?: string
           jumuiya_id?: string | null
+          membership_id?: string | null
           ministry_id?: string | null
           phone?: string | null
           photo_url?: string | null
@@ -3759,6 +5470,7 @@ export type Database = {
           group_id?: string | null
           id?: string
           jumuiya_id?: string | null
+          membership_id?: string | null
           ministry_id?: string | null
           phone?: string | null
           photo_url?: string | null
@@ -3794,6 +5506,13 @@ export type Database = {
             columns: ["jumuiya_id"]
             isOneToOne: false
             referencedRelation: "jumuiya"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "church_memberships"
             referencedColumns: ["id"]
           },
         ]
@@ -4041,38 +5760,110 @@ export type Database = {
           },
         ]
       }
+      operational_events: {
+        Row: {
+          church_id: string | null
+          created_at: string
+          created_by: string | null
+          event_type: string
+          id: string
+          job_id: string | null
+          message: string | null
+          metadata: Json
+          severity: string
+          source: string
+        }
+        Insert: {
+          church_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_type: string
+          id?: string
+          job_id?: string | null
+          message?: string | null
+          metadata?: Json
+          severity?: string
+          source?: string
+        }
+        Update: {
+          church_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_type?: string
+          id?: string
+          job_id?: string | null
+          message?: string | null
+          metadata?: Json
+          severity?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_events_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operational_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "audio_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_features: {
         Row: {
+          available_plans: string[]
+          category: string
+          church_configurable: boolean
           created_at: string
           description: string | null
           globally_enabled: boolean
           globally_locked: boolean
           id: string
           is_global: boolean
+          is_mandatory: boolean
           key: string
+          member_available: boolean
           name: string
+          staff_available: boolean
           updated_at: string
         }
         Insert: {
+          available_plans?: string[]
+          category?: string
+          church_configurable?: boolean
           created_at?: string
           description?: string | null
           globally_enabled?: boolean
           globally_locked?: boolean
           id?: string
           is_global?: boolean
+          is_mandatory?: boolean
           key: string
+          member_available?: boolean
           name: string
+          staff_available?: boolean
           updated_at?: string
         }
         Update: {
+          available_plans?: string[]
+          category?: string
+          church_configurable?: boolean
           created_at?: string
           description?: string | null
           globally_enabled?: boolean
           globally_locked?: boolean
           id?: string
           is_global?: boolean
+          is_mandatory?: boolean
           key?: string
+          member_available?: boolean
           name?: string
+          staff_available?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -4321,6 +6112,67 @@ export type Database = {
           },
         ]
       }
+      prayer_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          prayer_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prayer_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prayer_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prayer_favorites_prayer_id_fkey"
+            columns: ["prayer_id"]
+            isOneToOne: false
+            referencedRelation: "content_prayers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prayer_reading_history: {
+        Row: {
+          id: string
+          last_read_at: string
+          prayer_id: string
+          read_count: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_read_at?: string
+          prayer_id: string
+          read_count?: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_read_at?: string
+          prayer_id?: string
+          read_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prayer_reading_history_prayer_id_fkey"
+            columns: ["prayer_id"]
+            isOneToOne: false
+            referencedRelation: "content_prayers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prayer_request_comments: {
         Row: {
           author_name: string
@@ -4533,11 +6385,16 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          health_status: string | null
           id: string
           is_active: boolean
           is_approved: boolean
+          last_health_checked_at: string | null
           logo_url: string | null
+          metadata_url: string | null
           name: string
+          provider: string | null
+          stream_format: string | null
           stream_url: string
           updated_at: string
           website_url: string | null
@@ -4546,11 +6403,16 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          health_status?: string | null
           id?: string
           is_active?: boolean
           is_approved?: boolean
+          last_health_checked_at?: string | null
           logo_url?: string | null
+          metadata_url?: string | null
           name: string
+          provider?: string | null
+          stream_format?: string | null
           stream_url: string
           updated_at?: string
           website_url?: string | null
@@ -4559,11 +6421,16 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          health_status?: string | null
           id?: string
           is_active?: boolean
           is_approved?: boolean
+          last_health_checked_at?: string | null
           logo_url?: string | null
+          metadata_url?: string | null
           name?: string
+          provider?: string | null
+          stream_format?: string | null
           stream_url?: string
           updated_at?: string
           website_url?: string | null
@@ -4861,6 +6728,7 @@ export type Database = {
           date: string | null
           id: string
           preacher: string | null
+          source_livestream_id: string | null
           title: string | null
           video_url: string | null
         }
@@ -4874,6 +6742,7 @@ export type Database = {
           date?: string | null
           id?: string
           preacher?: string | null
+          source_livestream_id?: string | null
           title?: string | null
           video_url?: string | null
         }
@@ -4887,10 +6756,19 @@ export type Database = {
           date?: string | null
           id?: string
           preacher?: string | null
+          source_livestream_id?: string | null
           title?: string | null
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sermons_source_livestream_same_church_fkey"
+            columns: ["source_livestream_id", "church_id"]
+            isOneToOne: false
+            referencedRelation: "church_livestreams"
+            referencedColumns: ["id", "church_id"]
+          },
+        ]
       }
       subscription_payments: {
         Row: {
@@ -5114,11 +6992,45 @@ export type Database = {
           },
         ]
       }
+      user_role_duplicate_archive: {
+        Row: {
+          archive_reason: string
+          archived_at: string
+          church_id: string | null
+          created_at: string | null
+          id: string
+          normalized_role: string | null
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          archive_reason?: string
+          archived_at?: string
+          church_id?: string | null
+          created_at?: string | null
+          id: string
+          normalized_role?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          archive_reason?: string
+          archived_at?: string
+          church_id?: string | null
+          created_at?: string | null
+          id?: string
+          normalized_role?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           church_id: string | null
           created_at: string
           id: string
+          membership_id: string | null
           role: string | null
           user_id: string | null
         }
@@ -5126,6 +7038,7 @@ export type Database = {
           church_id?: string | null
           created_at?: string
           id?: string
+          membership_id?: string | null
           role?: string | null
           user_id?: string | null
         }
@@ -5133,6 +7046,7 @@ export type Database = {
           church_id?: string | null
           created_at?: string
           id?: string
+          membership_id?: string | null
           role?: string | null
           user_id?: string | null
         }
@@ -5142,6 +7056,13 @@ export type Database = {
             columns: ["church_id"]
             isOneToOne: false
             referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_membership_id_fkey"
+            columns: ["membership_id"]
+            isOneToOne: false
+            referencedRelation: "church_memberships"
             referencedColumns: ["id"]
           },
         ]
@@ -5763,6 +7684,136 @@ export type Database = {
         Returns: number
       }
       accept_invitation: { Args: { _token: string }; Returns: Json }
+      apply_livestream_provider_check: {
+        Args: {
+          _actual_ended_at?: string
+          _actual_started_at?: string
+          _checked_at: string
+          _church_id: string
+          _error_category?: string
+          _livestream_id: string
+          _provider: string
+          _provider_external_id: string
+          _provider_status: string
+          _recording_url?: string
+          _thumbnail_url?: string
+        }
+        Returns: {
+          actual_ended_at: string | null
+          actual_started_at: string | null
+          church_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          provider: string
+          provider_external_id: string | null
+          provider_failure_count: number
+          provider_last_checked_at: string | null
+          provider_last_error_category: string | null
+          provider_next_sync_at: string | null
+          provider_status: string | null
+          recording_url: string | null
+          scheduled_end: string | null
+          scheduled_start: string | null
+          status: string
+          status_source: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+          watch_url: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "church_livestreams"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      apply_staging_prayer_import:
+        | {
+            Args: {
+              _changes: Json
+              _confirmation: string
+              _filename: string
+              _workbook_checksum: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _changes: Json
+              _confirmation: string
+              _filename: string
+              _initiated_by_user_uuid: string
+              _workbook_checksum: string
+            }
+            Returns: Json
+          }
+      approve_audio_review: {
+        Args: { _reason?: string; _review_id: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          audio_url: string | null
+          church_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          index_url: string | null
+          job_id: string
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          published_at: string | null
+          published_by: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+          version_number: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      archive_audio_version: {
+        Args: { _version_id: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          audio_url: string | null
+          church_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          index_url: string | null
+          job_id: string
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          published_at: string | null
+          published_by: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+          version_number: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       assign_church_member_role: {
         Args: { _church_id: string; _role: string; _user_id: string }
         Returns: Json
@@ -5770,6 +7821,11 @@ export type Database = {
       assign_default_member_role:
         | { Args: { _church_id: string; _name: string }; Returns: undefined }
         | { Args: { _church_id: string; _user_id: string }; Returns: undefined }
+      baptism_of_the_lord: { Args: { p_year: number }; Returns: string }
+      can_access_audio_content: {
+        Args: { _content_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_manage_chat_channel: {
         Args: { target_channel_id: string }
         Returns: boolean
@@ -5821,9 +7877,47 @@ export type Database = {
         }
         Returns: boolean
       }
+      cancel_audio_job: {
+        Args: { _job_id: string }
+        Returns: {
+          audio_url: string | null
+          book: string
+          cancelled_at: string | null
+          chapter: number
+          church_id: string
+          completed_at: string | null
+          content_type: string
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          id: string
+          index_url: string | null
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          published_at: string | null
+          published_by: string | null
+          queued_at: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_jobs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       church_code_token: {
         Args: { fallback?: string; value: string }
         Returns: string
+      }
+      church_permission_constraint_rule: {
+        Args: { _action: string; _feature_key: string; _role: string }
+        Returns: Json
       }
       claim_whatsapp_messages: {
         Args: {
@@ -5853,6 +7947,7 @@ export type Database = {
           whatsapp_mass_intentions_enabled: boolean
         }[]
       }
+      compare_my_legacy_and_canonical_context: { Args: never; Returns: Json }
       complete_public_registration: {
         Args: {
           _church_id: string
@@ -5877,6 +7972,45 @@ export type Database = {
           _worker_id: string
         }
         Returns: boolean
+      }
+      create_audio_job_draft: {
+        Args: {
+          _book: string
+          _chapter: number
+          _church_id: string
+          _content_type: string
+        }
+        Returns: {
+          audio_url: string | null
+          book: string
+          cancelled_at: string | null
+          chapter: number
+          church_id: string
+          completed_at: string | null
+          content_type: string
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          id: string
+          index_url: string | null
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          published_at: string | null
+          published_by: string | null
+          queued_at: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_jobs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       create_audit_log: {
         Args: {
@@ -5928,6 +8062,10 @@ export type Database = {
         }
         Returns: Json
       }
+      current_user_has_active_church_membership: {
+        Args: { _church_id: string }
+        Returns: boolean
+      }
       delete_church_announcement: {
         Args: { _announcement_id: string }
         Returns: Json
@@ -5937,6 +8075,7 @@ export type Database = {
         Returns: Json
       }
       delete_old_app_error_logs: { Args: never; Returns: number }
+      easter_sunday: { Args: { p_year: number }; Returns: string }
       enforce_rate_limit: {
         Args: {
           _action: string
@@ -5946,10 +8085,45 @@ export type Database = {
         }
         Returns: undefined
       }
+      enqueue_audio_job: {
+        Args: { _job_id: string }
+        Returns: {
+          audio_url: string | null
+          book: string
+          cancelled_at: string | null
+          chapter: number
+          church_id: string
+          completed_at: string | null
+          content_type: string
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          id: string
+          index_url: string | null
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          published_at: string | null
+          published_by: string | null
+          queued_at: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_jobs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       ensure_birthday_announcements: {
         Args: { _automation_date?: string; _church_id: string }
         Returns: Json
       }
+      epiphany_sunday: { Args: { p_year: number }; Returns: string }
       expire_member_record_subscriptions: { Args: never; Returns: number }
       extend_trial: {
         Args: { _church_id: string; _days: number }
@@ -5970,6 +8144,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      first_sunday_of_advent: { Args: { p_year: number }; Returns: string }
       generate_church_analytics_snapshot: {
         Args: { p_church_id: string }
         Returns: {
@@ -6001,6 +8176,18 @@ export type Database = {
         Args: { p_church_id: string; p_end_date: string; p_start_date: string }
         Returns: number
       }
+      get_audio_dashboard_summary: {
+        Args: { _church_id: string; _recent_limit?: number }
+        Returns: Json
+      }
+      get_audio_operations_health: {
+        Args: { _church_id: string }
+        Returns: Json
+      }
+      get_audio_operations_metrics: {
+        Args: { _church_id: string }
+        Returns: Json
+      }
       get_available_mass_occurrences: {
         Args: { p_church_id: string; p_date?: string }
         Returns: {
@@ -6029,9 +8216,43 @@ export type Database = {
         Args: { p_church_id: string }
         Returns: Json
       }
+      get_church_feature_permission_matrix: {
+        Args: { _church_id: string }
+        Returns: {
+          can_approve: boolean
+          can_create: boolean
+          can_delete: boolean
+          can_edit: boolean
+          can_manage: boolean
+          can_publish: boolean
+          can_view: boolean
+          category: string
+          church_enabled: boolean
+          description: string
+          feature_id: string
+          feature_key: string
+          feature_name: string
+          globally_enabled: boolean
+          globally_locked: boolean
+          member_available: boolean
+          role: string
+          staff_available: boolean
+          subscription_available: boolean
+        }[]
+      }
       get_church_financial_summary: {
         Args: { _church_id: string; _end_date?: string; _start_date?: string }
         Returns: Json
+      }
+      get_church_permission_constraints: {
+        Args: { _church_id: string; _role: string }
+        Returns: {
+          action: string
+          classification: string
+          feature_key: string
+          reason: string
+          record_scope: string
+        }[]
       }
       get_church_pledges_summary: {
         Args: { _church_id: string }
@@ -6091,6 +8312,7 @@ export type Database = {
         }[]
       }
       get_current_user_context: { Args: never; Returns: Json }
+      get_daily_reading_for_date: { Args: { p_date?: string }; Returns: Json }
       get_event_registration_roster: {
         Args: { p_event_id: string }
         Returns: {
@@ -6122,6 +8344,20 @@ export type Database = {
           registration_status: string
           registration_type: string
           verified_revenue: number
+        }[]
+      }
+      get_liturgical_context: {
+        Args: { p_date?: string }
+        Returns: {
+          advent_start: string
+          calendar_date: string
+          context_source: string
+          day_of_week: string
+          easter_date: string
+          liturgical_season: string
+          liturgical_week: number
+          liturgical_year: string
+          weekday_cycle: string
         }[]
       }
       get_mass_intentions_admin_page: {
@@ -6167,8 +8403,74 @@ export type Database = {
           status: string
         }[]
       }
+      get_my_canonical_church_context: { Args: never; Returns: Json }
+      get_my_church_memberships: {
+        Args: never
+        Returns: {
+          baseline_member: boolean
+          church_code: string
+          church_id: string
+          church_name: string
+          effective_compatibility_roles: string[]
+          explicit_roles: string[]
+          is_primary: boolean
+          joined_at: string
+          membership_id: string
+          membership_source: string
+          status: string
+        }[]
+      }
+      get_my_membership_roles: {
+        Args: { _membership_id: string }
+        Returns: {
+          role: string
+        }[]
+      }
+      get_my_primary_church_membership: {
+        Args: never
+        Returns: {
+          baseline_member: boolean
+          church_code: string
+          church_id: string
+          church_name: string
+          effective_compatibility_roles: string[]
+          explicit_roles: string[]
+          is_primary: boolean
+          joined_at: string
+          membership_id: string
+          membership_source: string
+          status: string
+        }[]
+      }
       get_next_mass_summary: { Args: { p_church_id?: string }; Returns: Json }
       get_platform_dashboard_metrics: { Args: never; Returns: Json }
+      get_platform_radio_stations: {
+        Args: never
+        Returns: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          health_status: string | null
+          id: string
+          is_active: boolean
+          is_approved: boolean
+          last_health_checked_at: string | null
+          logo_url: string | null
+          metadata_url: string | null
+          name: string
+          provider: string | null
+          stream_format: string | null
+          stream_url: string
+          updated_at: string
+          website_url: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "radio_stations"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_portal_announcements: {
         Args: { _church_id: string; _limit?: number }
         Returns: {
@@ -6243,6 +8545,21 @@ export type Database = {
           name: string
         }[]
       }
+      get_published_audio_lookup: {
+        Args: {
+          _book_normalized: string
+          _chapter: number
+          _church_id: string
+          _content_type: string
+        }
+        Returns: {
+          audio_url: string
+          job_id: string
+          published_at: string
+          version_id: string
+          version_number: number
+        }[]
+      }
       get_sacramental_records: {
         Args: { _church_id: string; _search?: string }
         Returns: {
@@ -6297,6 +8614,7 @@ export type Database = {
           title: string
         }[]
       }
+      get_today_reading: { Args: never; Returns: Json }
       get_user_church_id: { Args: never; Returns: string }
       get_user_led_communities: {
         Args: { _user_id: string }
@@ -6308,6 +8626,18 @@ export type Database = {
         }[]
       }
       global_search: { Args: { search_text: string }; Returns: Json }
+      has_active_canonical_church_membership: {
+        Args: { _church_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_audio_publisher_role: {
+        Args: { _church_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_audio_reviewer_role: {
+        Args: { _church_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_church_feature_permission: {
         Args: {
           _action: string
@@ -6323,6 +8653,14 @@ export type Database = {
       }
       has_radio_permission: {
         Args: { _action?: string; _church_id: string; _user_id: string }
+        Returns: boolean
+      }
+      has_related_feature_permission: {
+        Args: { _action: string; _row: Json; _table: string }
+        Returns: boolean
+      }
+      is_active_church_member: {
+        Args: { _church_id: string; _user_id: string }
         Returns: boolean
       }
       is_chat_admin_for_church: {
@@ -6341,6 +8679,10 @@ export type Database = {
         Args: { target_church_id: string; target_community_id: string }
         Returns: boolean
       }
+      is_feature_available_for_church: {
+        Args: { _church_id: string; _feature_key: string }
+        Returns: boolean
+      }
       is_platform_super_admin: { Args: { _user_id: string }; Returns: boolean }
       is_pledge_admin_for_church: {
         Args: { _church_id: string }
@@ -6351,7 +8693,11 @@ export type Database = {
         Returns: boolean
       }
       is_pledge_owner: { Args: { _member_id: string }; Returns: boolean }
-      is_safe_radio_url: { Args: { _url: string }; Returns: boolean }
+      is_safe_public_https_url: { Args: { _value: string }; Returns: boolean }
+      is_service_feature_available: {
+        Args: { _church_id: string; _feature_key: string }
+        Returns: boolean
+      }
       is_super_admin:
         | { Args: never; Returns: boolean }
         | { Args: { _user_id: string }; Returns: boolean }
@@ -6368,10 +8714,40 @@ export type Database = {
         }
         Returns: Json
       }
-      livestream_feature_enabled: {
-        Args: { _church_id: string }
-        Returns: boolean
+      list_audio_jobs_page: {
+        Args: {
+          _church_id: string
+          _limit?: number
+          _offset?: number
+          _search?: string
+          _sort_asc?: boolean
+          _status?: string
+        }
+        Returns: {
+          audio_url: string
+          book: string
+          chapter: number
+          church_id: string
+          completed_at: string
+          content_type: string
+          created_at: string
+          created_by: string
+          error_message: string
+          id: string
+          index_url: string
+          manifest_url: string
+          processing_stage: string
+          progress: number
+          report_url: string
+          started_at: string
+          status: string
+          text_url: string
+          total_count: number
+          updated_at: string
+        }[]
       }
+      liturgical_cycle_year: { Args: { p_date: string }; Returns: number }
+      liturgical_year_letter: { Args: { p_date: string }; Returns: string }
       log_app_error: {
         Args: {
           p_browser_info?: string
@@ -6413,6 +8789,18 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      log_operational_event: {
+        Args: {
+          _church_id: string
+          _event_type: string
+          _job_id: string
+          _message?: string
+          _metadata?: Json
+          _severity?: string
+          _source?: string
+        }
+        Returns: string
+      }
       make_church_join_slug: {
         Args: { _church_id?: string; _name: string }
         Returns: string
@@ -6436,7 +8824,85 @@ export type Database = {
         Returns: Json
       }
       notify_mass_rsvp_reminders: { Args: never; Returns: Json }
+      publish_audio_version: {
+        Args: { _version_id: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          audio_url: string | null
+          church_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          index_url: string | null
+          job_id: string
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          published_at: string | null
+          published_by: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+          version_number: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      publish_livestream_as_sermon: {
+        Args: {
+          _content?: string
+          _livestream_id: string
+          _preacher?: string
+          _sermon_date?: string
+          _title: string
+        }
+        Returns: string
+      }
       radio_feature_enabled: { Args: { _church_id: string }; Returns: boolean }
+      recommended_church_feature_permission: {
+        Args: {
+          _action: string
+          _feature_key: string
+          _member_available: boolean
+          _role: string
+          _staff_available: boolean
+        }
+        Returns: boolean
+      }
+      record_audio_worker_heartbeat: {
+        Args: {
+          _current_job_id?: string
+          _metadata?: Json
+          _status?: string
+          _worker_id: string
+          _worker_type?: string
+        }
+        Returns: {
+          created_at: string
+          current_job_id: string | null
+          id: string
+          last_seen_at: string
+          metadata: Json
+          status: string
+          updated_at: string
+          worker_id: string
+          worker_type: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_worker_heartbeats"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       record_contribution_with_key: {
         Args: {
           p_amount: number
@@ -6463,6 +8929,50 @@ export type Database = {
           _phone?: string
         }
         Returns: Json
+      }
+      record_prayer_read: { Args: { _prayer_id: string }; Returns: undefined }
+      register_audio_asset: {
+        Args: {
+          _asset_type: string
+          _content_type?: string
+          _file_name?: string
+          _file_size?: number
+          _job_id: string
+          _storage_bucket: string
+          _storage_path: string
+        }
+        Returns: {
+          asset_type: string
+          audio_url: string | null
+          checksum_sha256: string | null
+          church_id: string
+          completed_at: string | null
+          content_type: string | null
+          created_at: string
+          created_by: string | null
+          file_name: string | null
+          file_size: number | null
+          id: string
+          index_url: string | null
+          job_id: string
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          public_url: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          storage_bucket: string
+          storage_path: string
+          text_url: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_assets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       register_for_event: { Args: { _event_id: string }; Returns: Json }
       remove_church_member_role: { Args: { _role_id: string }; Returns: Json }
@@ -6502,6 +9012,40 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "app_error_logs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      retry_audio_job: {
+        Args: { _job_id: string }
+        Returns: {
+          audio_url: string | null
+          book: string
+          cancelled_at: string | null
+          chapter: number
+          church_id: string
+          completed_at: string | null
+          content_type: string
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          id: string
+          index_url: string | null
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          published_at: string | null
+          published_by: string | null
+          queued_at: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_jobs"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -6573,6 +9117,43 @@ export type Database = {
         }
       }
       run_daily_automations: { Args: never; Returns: undefined }
+      save_audio_verse_review: {
+        Args: {
+          _confidence: number
+          _end_time: number
+          _job_id: string
+          _notes?: string
+          _review_id: string
+          _start_time: number
+          _verse_number: number
+          _verse_text: string
+        }
+        Returns: {
+          church_id: string
+          confidence: number
+          created_at: string
+          created_by: string | null
+          duration: number
+          end_time: number
+          id: string
+          job_id: string
+          manually_edited: boolean
+          notes: string | null
+          review_id: string | null
+          start_time: number
+          status: string
+          updated_at: string
+          updated_by: string | null
+          verse_number: number
+          verse_text: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_verse_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       save_church_announcement: {
         Args: {
           _announcement_id: string
@@ -6593,6 +9174,10 @@ export type Database = {
           _title: string
         }
         Returns: Json
+      }
+      save_church_role_permissions: {
+        Args: { _church_id: string; _permissions: Json; _role: string }
+        Returns: undefined
       }
       save_sacramental_record: {
         Args: {
@@ -6620,13 +9205,38 @@ export type Database = {
         Args: { _announcement_id: string; _archived: boolean }
         Returns: Json
       }
-      set_church_radio_selection: {
+      set_church_feature_enabled: {
+        Args: { _church_id: string; _enabled: boolean; _feature_key: string }
+        Returns: undefined
+      }
+      set_church_radio_selection:
+        | {
+            Args: {
+              _church_id: string
+              _enabled: boolean
+              _is_default?: boolean
+              _radio_station_id: string
+              _sort_order?: number
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _church_id: string
+              _enabled: boolean
+              _is_featured: boolean
+              _legacy_contract?: string
+              _radio_station_id: string
+              _sort_order: number
+            }
+            Returns: undefined
+          }
+      set_super_admin_church_feature: {
         Args: {
           _church_id: string
           _enabled: boolean
-          _is_default?: boolean
-          _radio_station_id: string
-          _sort_order?: number
+          _feature_key: string
+          _locked?: boolean
         }
         Returns: undefined
       }
@@ -6735,11 +9345,12 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      swahili_day_name: { Args: { p_date: string }; Returns: string }
       toggle_system_job: {
         Args: { p_enabled: boolean; p_job_id: string }
         Returns: undefined
       }
-      transition_production_livestream: {
+      transition_church_livestream: {
         Args: { _livestream_id: string; _new_status: string }
         Returns: {
           actual_ended_at: string | null
@@ -6749,12 +9360,21 @@ export type Database = {
           created_by: string | null
           id: string
           provider: string
-          provider_external_id: string
+          provider_external_id: string | null
+          provider_failure_count: number
+          provider_last_checked_at: string | null
+          provider_last_error_category: string | null
+          provider_next_sync_at: string | null
+          provider_status: string | null
+          recording_url: string | null
           scheduled_end: string | null
           scheduled_start: string | null
           status: string
+          status_source: string
+          thumbnail_url: string | null
           title: string
           updated_at: string
+          updated_by: string | null
           watch_url: string
         }
         SetofOptions: {
@@ -6764,9 +9384,70 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      unpublish_audio_version: {
+        Args: { _version_id: string }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          audio_url: string | null
+          church_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          index_url: string | null
+          job_id: string
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          published_at: string | null
+          published_by: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+          version_number: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       update_announcement_lifecycle: {
         Args: { _church_id?: string }
         Returns: Json
+      }
+      update_audio_review_decision: {
+        Args: { _reason?: string; _review_id: string; _status: string }
+        Returns: {
+          audio_url: string | null
+          church_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          index_url: string | null
+          job_id: string
+          manifest_url: string | null
+          notes: string | null
+          processing_stage: string
+          progress: number
+          report_url: string | null
+          reviewer_id: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       update_community_leadership: {
         Args: {
@@ -6790,7 +9471,53 @@ export type Database = {
         }
         Returns: Json
       }
+      weekday_lectionary_cycle: { Args: { p_date: string }; Returns: string }
       whatsapp_dispatch_schema_diagnostics: { Args: never; Returns: Json }
+      worker_update_audio_job: {
+        Args: {
+          _audio_url?: string
+          _error_message?: string
+          _index_url?: string
+          _job_id: string
+          _manifest_url?: string
+          _processing_stage: string
+          _progress: number
+          _report_url?: string
+          _status: string
+          _text_url?: string
+        }
+        Returns: {
+          audio_url: string | null
+          book: string
+          cancelled_at: string | null
+          chapter: number
+          church_id: string
+          completed_at: string | null
+          content_type: string
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          id: string
+          index_url: string | null
+          manifest_url: string | null
+          processing_stage: string
+          progress: number
+          published_at: string | null
+          published_by: string | null
+          queued_at: string | null
+          report_url: string | null
+          started_at: string | null
+          status: string
+          text_url: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "audio_jobs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       write_audit_event: {
         Args: {
           p_action: string
@@ -6804,9 +9531,15 @@ export type Database = {
         }
         Returns: string
       }
-      youtube_livestream_video_id: { Args: { _url: string }; Returns: string }
+      youtube_video_id: { Args: { _url: string }; Returns: string }
     }
     Enums: {
+      church_membership_status:
+        | "pending"
+        | "active"
+        | "suspended"
+        | "revoked"
+        | "left"
       notification_type: "info" | "warning" | "success" | "error"
     }
     CompositeTypes: {
@@ -6935,8 +9668,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      church_membership_status: [
+        "pending",
+        "active",
+        "suspended",
+        "revoked",
+        "left",
+      ],
       notification_type: ["info", "warning", "success", "error"],
     },
   },
 } as const
-

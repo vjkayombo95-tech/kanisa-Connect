@@ -39,8 +39,10 @@ import { optimizeImage, uploadFile, validateFile } from "@/lib/file-upload";
 import { useTranslation } from "react-i18next";
 import { translateContributionCategory } from "@/lib/translation-helpers";
 import { logSupabaseError } from "@/lib/error-logger";
+import type { Tables } from "@/integrations/supabase/types";
 
 const PortalContributionCharts = lazy(() => import("./PortalContributionCharts"));
+type PortalDashboardEvent = Tables<"events">;
 
 const PAGE_SIZE = RECORD_PRESERVATION_PAGE_SIZE;
 const DASHBOARD_QUERY_OPTIONS = {
@@ -654,7 +656,14 @@ export default function PortalDashboard() {
     queryKey: ["dash-events", churchId],
     queryFn: async () => {
       if (!churchId) return [];
-      const { data } = await supabase.from("events").select("*").eq("church_id", churchId).eq("status", "upcoming").order("start_date").limit(3);
+      const { data } = await supabase
+        .from("events")
+        .select("*")
+        .eq("church_id", churchId)
+        .filter("status", "eq", "upcoming")
+        .order("start_date")
+        .limit(3)
+        .returns<PortalDashboardEvent[]>();
       return data ?? [];
     },
     enabled: !!churchId && loadDashboardDetails,
@@ -960,7 +969,7 @@ export default function PortalDashboard() {
               <InfoRow label="Phone" value={member?.phone || profile?.phone} icon={Phone} />
               <InfoRow label="Community" value={community?.name} icon={Users} />
               <InfoRow label="Ministries" value={ministryNames.length > 0 ? ministryNames.join(", ") : null} icon={Heart} />
-              <InfoRow label="Member Since" value={member?.date_joined ? new Date(member.date_joined).toLocaleDateString() : member?.created_at ? new Date(member.created_at).toLocaleDateString() : null} icon={Calendar} />
+              <InfoRow label="Member Since" value={member?.created_at ? new Date(member.created_at).toLocaleDateString() : null} icon={Calendar} />
             </CardContent>
           </Card>
 
@@ -1064,7 +1073,7 @@ export default function PortalDashboard() {
                 <InfoRow label="Email" value={member?.email} icon={Mail} />
                 <InfoRow label="Phone" value={member?.phone} icon={Phone} />
                 <InfoRow label="Gender" value={member?.gender ? (member.gender === "male" ? "Male" : "Female") : null} icon={Users} />
-                <InfoRow label="Date Joined" value={member?.date_joined ? new Date(member.date_joined).toLocaleDateString() : member?.created_at ? new Date(member.created_at).toLocaleDateString() : null} icon={Calendar} />
+                <InfoRow label="Date Joined" value={member?.created_at ? new Date(member.created_at).toLocaleDateString() : null} icon={Calendar} />
                 <InfoRow label="Member ID" value={member?.id?.slice(0, 8).toUpperCase()} icon={Shield} />
               </CardContent>
             </Card>
@@ -1180,7 +1189,7 @@ export default function PortalDashboard() {
         <SummaryCard icon={HandCoins} label="Total Given" value={formatTZS(stats.total)} />
         <SummaryCard icon={TrendingUp} label="This Month" value={formatTZS(stats.monthTotal)} />
         <SummaryCard icon={BarChart3} label="This Year" value={formatTZS(stats.yearTotal)} />
-        <SummaryCard icon={Calendar} label="Member Since" value={member?.date_joined ? new Date(member.date_joined).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : member?.created_at ? new Date(member.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "—"} />
+        <SummaryCard icon={Calendar} label="Member Since" value={member?.created_at ? new Date(member.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "—"} />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <SummaryCard icon={Gift} label="Today" value={formatTZS(stats.todayTotal)} subtle />

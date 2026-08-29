@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { logWarning } from "@/lib/error-logger";
+import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type ChurchMessageTemplateType =
   | "birthday_wish"
@@ -17,6 +18,34 @@ export type ChurchMessageTemplate = {
   default_bible_verse: string | null;
   is_active: boolean;
 };
+
+type MessageTemplateRow = Tables<"message_templates">;
+type MessageTemplateSelection = Pick<
+  MessageTemplateRow,
+  "id" | "church_id" | "template_type" | "title" | "body" | "default_bible_verse" | "is_active"
+>;
+
+function isChurchMessageTemplateType(value: string | null | undefined): value is ChurchMessageTemplateType {
+  return (
+    value === "birthday_wish" ||
+    value === "wedding_anniversary" ||
+    value === "wedding_anniversary_wish" ||
+    value === "service_recognition" ||
+    value === "contribution_appreciation"
+  );
+}
+
+function toChurchMessageTemplate(row: MessageTemplateSelection, fallbackType: ChurchMessageTemplateType): ChurchMessageTemplate {
+  return {
+    id: row.id,
+    church_id: row.church_id,
+    template_type: isChurchMessageTemplateType(row.template_type) ? row.template_type : fallbackType,
+    title: row.title,
+    body: row.body,
+    default_bible_verse: row.default_bible_verse,
+    is_active: row.is_active,
+  };
+}
 
 export const birthdayBibleVerseOptions = [
   { reference: "Yeremia 29:11", text: "Maana nayajua mawazo ninayowawazia ninyi, asema Bwana, ni mawazo ya amani wala si ya mabaya." },
@@ -145,12 +174,12 @@ export function renderChurchMessageTemplate(
 export async function fetchChurchMessageTemplate(
   churchId: string | null | undefined,
   templateType: ChurchMessageTemplateType,
-) {
+): Promise<ChurchMessageTemplate> {
   const fallback = getDefaultTemplate(templateType, churchId ?? null);
   if (!churchId) return fallback;
 
   const { data, error } = await supabase
-    .from("message_templates" as never)
+    .from("message_templates")
     .select("id, church_id, template_type, title, body, default_bible_verse, is_active")
     .eq("church_id", churchId)
     .eq("template_type", templateType)
@@ -165,18 +194,18 @@ export async function fetchChurchMessageTemplate(
     return fallback;
   }
 
-  if (data) return data as ChurchMessageTemplate;
+  if (data) return toChurchMessageTemplate(data, templateType);
 
   if (templateType === "wedding_anniversary") {
     const { data: legacyData, error: legacyError } = await supabase
-      .from("message_templates" as never)
+      .from("message_templates")
       .select("id, church_id, template_type, title, body, default_bible_verse, is_active")
       .eq("church_id", churchId)
       .eq("template_type", "wedding_anniversary_wish")
       .maybeSingle();
 
     if (!legacyError && legacyData) {
-      return { ...(legacyData as ChurchMessageTemplate), template_type: "wedding_anniversary" };
+      return { ...toChurchMessageTemplate(legacyData, "wedding_anniversary_wish"), template_type: "wedding_anniversary" };
     }
   }
 
@@ -186,16 +215,18 @@ export async function fetchChurchMessageTemplate(
 export async function saveChurchMessageTemplate(template: ChurchMessageTemplate) {
   if (!template.church_id) throw new Error("Church is required.");
 
-  const existing = template.id
-    ? { id: template.id }
-    : await supabase
-        .from("message_templates" as never)
+  const existingId = template.id
+    ? template.id
+    : (
+      await supabase
+        .from("message_templates")
         .select("id")
         .eq("church_id", template.church_id)
         .eq("template_type", template.template_type)
-        .maybeSingle();
+        .maybeSingle()
+    ).data?.id;
 
-  const payload = {
+  const payload: TablesInsert<"message_templates"> = {
     church_id: template.church_id,
     template_type: template.template_type,
     title: template.title.trim(),
@@ -208,18 +239,12 @@ export async function saveChurchMessageTemplate(template: ChurchMessageTemplate)
     updated_at: new Date().toISOString(),
   };
 
-  if ("data" in existing && existing.data?.id) {
-    const { error } = await supabase.from("message_templates" as never).update(payload as never).eq("id", existing.data.id);
+  if (existingId) {
+    const { error } = await supabase.from("message_templates").update(payload).eq("id", existingId);
     if (error) throw error;
     return;
   }
 
-  if ("id" in existing && existing.id) {
-    const { error } = await supabase.from("message_templates" as never).update(payload as never).eq("id", existing.id);
-    if (error) throw error;
-    return;
-  }
-
-  const { error } = await supabase.from("message_templates" as never).insert(payload as never);
+  const { error } = await supabase.from("message_templates").insert(payload);
   if (error) throw error;
 }
