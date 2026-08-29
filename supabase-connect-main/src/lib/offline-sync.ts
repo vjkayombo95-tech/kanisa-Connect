@@ -6,7 +6,7 @@ import { submitCommunityHelpRequest, submitPortalMassIntention } from "@/lib/mem
 
 const OFFLINE_SYNC_QUEUE_KEY = "offline-sync-queue";
 const OFFLINE_SYNC_EVENT = "offline-sync-queue-changed";
-type OfflineSyncAction =
+export type OfflineSyncAction =
   | {
       id: string;
       type: "church_contribution_create";
@@ -62,6 +62,16 @@ type OfflineSyncAction =
         targetAmount: number | null;
       };
     };
+
+export type OfflineSyncActionType = OfflineSyncAction["type"];
+export type OfflineSyncActionOfType<TType extends OfflineSyncActionType> = Extract<OfflineSyncAction, { type: TType }>;
+
+export function isOfflineSyncActionType<TType extends OfflineSyncActionType>(
+  action: OfflineSyncAction,
+  type: TType,
+): action is OfflineSyncActionOfType<TType> {
+  return action.type === type;
+}
 
 function readQueue(): OfflineSyncAction[] {
   if (typeof window === "undefined") return [];

@@ -34,7 +34,7 @@ import { ContributionForm, type ContributionFormValues } from "@/components/chur
 import { formatTZS } from "@/lib/currency";
 import { useToast } from "@/hooks/use-toast";
 import { clearOfflineDraft } from "@/lib/offline-drafts";
-import { enqueueOfflineSyncAction, processOfflineSyncQueue, removeOfflineSyncAction } from "@/lib/offline-sync";
+import { enqueueOfflineSyncAction, isOfflineSyncActionType, processOfflineSyncQueue, removeOfflineSyncAction } from "@/lib/offline-sync";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { useOfflineSyncQueue } from "@/hooks/useOfflineSyncQueue";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
@@ -366,7 +366,8 @@ export default function ContributionsPage() {
 
   const pendingOfflineContributions = useMemo(() => {
     return offlineQueue
-      .filter((item) => item.type === "church_contribution_create" && item.payload.churchId === churchId)
+      .filter((item) => isOfflineSyncActionType(item, "church_contribution_create"))
+      .filter((item) => item.payload.churchId === churchId)
       .map((item) => {
         const memberName = item.payload.donorName || null;
         const categoryName = item.payload.categoryId

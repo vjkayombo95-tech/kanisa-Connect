@@ -17,7 +17,7 @@ import { MASS_INTENTION_SELECT, mapMassIntentionRecord, submitPortalMassIntentio
 import type { MassOccurrence } from "@/lib/mass-timetable";
 import { clearOfflineDraft, readOfflineDraft, writeOfflineDraft } from "@/lib/offline-drafts";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { enqueueOfflineSyncAction, processOfflineSyncQueue, removeOfflineSyncAction } from "@/lib/offline-sync";
+import { enqueueOfflineSyncAction, isOfflineSyncActionType, processOfflineSyncQueue, removeOfflineSyncAction } from "@/lib/offline-sync";
 import { useOfflineSyncQueue } from "@/hooks/useOfflineSyncQueue";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { useTranslation } from "react-i18next";
@@ -84,12 +84,13 @@ export default function PortalMassIntentions() {
   const myIntentionsCacheKey = member?.id ? `offline-cache:my-mass-intentions:${member.id}:${churchId || "church"}` : null;
   const pendingMassIntentions = useMemo(
     () =>
-      offlineQueue.filter(
-        (item) =>
-          item.type === "mass_intention_create" &&
-          item.payload.churchId === churchId &&
-          item.payload.memberId === member?.id,
-      ),
+      offlineQueue
+        .filter((item) => isOfflineSyncActionType(item, "mass_intention_create"))
+        .filter(
+          (item) =>
+            item.payload.churchId === churchId &&
+            item.payload.memberId === member?.id,
+        ),
     [churchId, member?.id, offlineQueue],
   );
   const { data: availableMasses = [], isLoading: massesLoading } = useQuery({

@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { COMMUNITY_HELP_SELECT, enrichCommunityHelpRequests, submitCommunityHelpRequest, type CommunityHelpRequestWithMember } from "@/lib/member-linked-requests";
 import { clearOfflineDraft, readOfflineDraft, writeOfflineDraft } from "@/lib/offline-drafts";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { enqueueOfflineSyncAction, processOfflineSyncQueue, removeOfflineSyncAction } from "@/lib/offline-sync";
+import { enqueueOfflineSyncAction, isOfflineSyncActionType, processOfflineSyncQueue, removeOfflineSyncAction } from "@/lib/offline-sync";
 import { useOfflineSyncQueue } from "@/hooks/useOfflineSyncQueue";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { CommentThread, type CommentReactionSummary, type ThreadComment } from "@/components/portal/CommentThread";
@@ -64,12 +64,13 @@ export default function PortalCommunityHelp() {
   const myHelpCacheKey = member?.id ? `offline-cache:my-help-requests:${member.id}:${churchId || "church"}` : null;
   const pendingHelpRequests = useMemo(
     () =>
-    offlineQueue.filter(
-      (item) =>
-        item.type === "community_help_request_create" &&
-        item.payload.churchId === churchId &&
-        item.payload.memberId === member?.id,
-    ),
+      offlineQueue
+        .filter((item) => isOfflineSyncActionType(item, "community_help_request_create"))
+        .filter(
+          (item) =>
+            item.payload.churchId === churchId &&
+            item.payload.memberId === member?.id,
+        ),
     [churchId, member?.id, offlineQueue],
   );
   const [isSyncingPending, setIsSyncingPending] = useState(false);

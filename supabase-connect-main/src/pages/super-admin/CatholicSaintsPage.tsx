@@ -109,8 +109,8 @@ type ImportSummary = {
 type SeedSource = {
   filename: string;
   saint: SeedSaint;
-  rowNumber?: number;
-  imageFilename?: string | null;
+  rowNumber: number | undefined;
+  imageFilename: string | null;
 };
 
 type UploadedSeedFile = {

@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PRAYER_REQUEST_SELECT, mapPrayerRequestRecord, submitPortalPrayerRequest, type PrayerRequestPrivacy, type PrayerRequestWithMember } from "@/lib/prayer-requests";
 import { clearOfflineDraft, readOfflineDraft, writeOfflineDraft } from "@/lib/offline-drafts";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
-import { enqueueOfflineSyncAction, processOfflineSyncQueue, removeOfflineSyncAction } from "@/lib/offline-sync";
+import { enqueueOfflineSyncAction, isOfflineSyncActionType, processOfflineSyncQueue, removeOfflineSyncAction } from "@/lib/offline-sync";
 import { useOfflineSyncQueue } from "@/hooks/useOfflineSyncQueue";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { CommentThread, type CommentReactionSummary, type ThreadComment } from "@/components/portal/CommentThread";
@@ -323,12 +323,13 @@ export default function PortalPrayerRequests() {
   const myPrayerCacheKey = member?.id ? `offline-cache:my-prayer-requests:${member.id}` : null;
   const pendingPrayerRequests = useMemo(
     () =>
-      offlineQueue.filter(
-        (item) =>
-          item.type === "prayer_request_create" &&
-          item.payload.churchId === churchId &&
-          item.payload.memberId === member?.id,
-      ),
+      offlineQueue
+        .filter((item) => isOfflineSyncActionType(item, "prayer_request_create"))
+        .filter(
+          (item) =>
+            item.payload.churchId === churchId &&
+            item.payload.memberId === member?.id,
+        ),
     [churchId, member?.id, offlineQueue],
   );
   const [isSyncingPending, setIsSyncingPending] = useState(false);
