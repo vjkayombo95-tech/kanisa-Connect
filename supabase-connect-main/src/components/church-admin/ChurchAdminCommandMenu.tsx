@@ -4,14 +4,17 @@ import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { useVisibleStaffServices } from "@/components/staff-mobile/StaffMobileExperience";
+import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { STAFF_MOBILE_CONFIGS } from "@/lib/staff-mobile-registry";
+import { getStaffMobileConfig } from "@/lib/staff-mobile-registry";
 
 export function ChurchAdminCommandMenu() {
   const navigate = useNavigate();
+  const { staffWorkspace } = useAuth();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const { services } = useVisibleStaffServices(STAFF_MOBILE_CONFIGS.admin);
+  const workspaceConfig = getStaffMobileConfig(staffWorkspace);
+  const { services } = useVisibleStaffServices(workspaceConfig);
   const results = useMemo(() => { const value = query.trim().toLocaleLowerCase(); return services.filter((service) => !value || `${service.label} ${service.id} ${service.group}`.toLocaleLowerCase().includes(value)); }, [query, services]);
   useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase() === "k") { event.preventDefault(); setOpen((current) => !current); } }; window.addEventListener("keydown", onKeyDown); return () => window.removeEventListener("keydown", onKeyDown); }, []);
 

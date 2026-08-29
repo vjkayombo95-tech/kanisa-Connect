@@ -43,6 +43,12 @@ export function ChurchAdminLayout() {
   const pageSegment = location.pathname.split("/").filter(Boolean).at(-1)?.replace(/-/g, " ") ?? "dashboard";
   const mobileTitle = pageSegment;
   const pageTitle = pageSegment.replace(/\b\w/g, (character) => character.toUpperCase());
+  const workspaceLabel =
+    staffWorkspace === "admin" ? "Church Admin Workspace" :
+    staffWorkspace === "finance" ? "Finance Workspace" :
+    staffWorkspace === "pastoral" ? "Pastoral Workspace" :
+    staffWorkspace === "super_admin" ? "Super Admin Workspace" :
+    "Staff Workspace";
 
   const handleSignOut = async () => {
     await signOut();
@@ -71,7 +77,7 @@ export function ChurchAdminLayout() {
                   <Building2 className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-foreground">Church Admin Workspace</p>
+                  <p className="truncate text-sm font-semibold text-foreground">{workspaceLabel}</p>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground"><span className="truncate">{profile?.church_name ?? profile?.church?.name ?? "Kanisa Connect"}</span><ChevronRight className="h-3 w-3 shrink-0" /><span className="truncate text-foreground/70">{pageTitle}</span></div>
                 </div>
               </div>
@@ -121,7 +127,7 @@ export function ChurchAdminLayout() {
               ) : (
                 <>
                   <div>
-                    {!isHome ? <div className="mx-auto mb-5 flex w-full max-w-[1600px] items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Church Admin Workspace</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{pageTitle}</h1></div><p className="hidden text-sm text-muted-foreground md:block">{profile?.church_name ?? profile?.church?.name ?? "Parish operations"}</p></div> : null}
+                    {!isHome ? <div className="mx-auto mb-5 flex w-full max-w-[1600px] items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{workspaceLabel}</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{pageTitle}</h1></div><p className="hidden text-sm text-muted-foreground md:block">{profile?.church_name ?? profile?.church?.name ?? "Parish operations"}</p></div> : null}
                     <div className="mx-auto w-full max-w-[1600px]"><Outlet /></div>
                   </div>
                 </>

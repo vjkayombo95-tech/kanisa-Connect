@@ -6,7 +6,7 @@ import { useVisibleStaffServices } from "@/components/staff-mobile/StaffMobileEx
 import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBillingAccess } from "@/hooks/use-billing-access";
-import { STAFF_MOBILE_CONFIGS } from "@/lib/staff-mobile-registry";
+import { getStaffMobileConfig } from "@/lib/staff-mobile-registry";
 import { cn } from "@/lib/utils";
 
 function isActive(pathname: string, route: string) {
@@ -17,9 +17,16 @@ export function ChurchAdminSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { profile } = useAuth();
+  const { profile, staffWorkspace } = useAuth();
   const billing = useBillingAccess();
-  const { services, isLoading } = useVisibleStaffServices(STAFF_MOBILE_CONFIGS.admin);
+  const workspaceConfig = getStaffMobileConfig(staffWorkspace);
+  const workspaceLabel =
+    staffWorkspace === "admin" ? "Church Admin Workspace" :
+    staffWorkspace === "finance" ? "Finance Workspace" :
+    staffWorkspace === "pastoral" ? "Pastoral Workspace" :
+    staffWorkspace === "super_admin" ? "Super Admin Workspace" :
+    "Staff Workspace";
+  const { services, isLoading } = useVisibleStaffServices(workspaceConfig);
   const churchName = profile?.church_name ?? profile?.church?.name ?? "Kanisa Connect";
   const groups = useMemo(() => {
     const result = new Map<string, typeof services>();
@@ -32,10 +39,10 @@ export function ChurchAdminSidebar() {
       <div className="relative flex h-full flex-col overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,0.09),transparent_24%)]">
         <div className="flex h-[76px] shrink-0 items-center gap-3 border-b border-white/[0.07] px-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary"><Building2 className="h-5 w-5" /></div>
-          {!collapsed ? <div className="min-w-0"><p className="truncate text-[10px] font-bold uppercase tracking-[0.24em] text-primary/80">Kanisa Connect</p><p className="mt-1 truncate text-sm font-semibold text-white">{churchName}</p><p className="truncate text-xs text-white/45">Church Admin Workspace</p></div> : null}
+          {!collapsed ? <div className="min-w-0"><p className="truncate text-[10px] font-bold uppercase tracking-[0.24em] text-primary/80">Kanisa Connect</p><p className="mt-1 truncate text-sm font-semibold text-white">{churchName}</p><p className="truncate text-xs text-white/45">{workspaceLabel}</p></div> : null}
         </div>
         <SidebarContent className="premium-scrollbar px-3 py-4">
-          <nav aria-label="Church Admin workspace" className="space-y-5">
+          <nav aria-label={workspaceLabel} className="space-y-5">
             <section className="space-y-1">
               {!collapsed ? <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">Home</p> : null}
               <WorkspaceLink route="/church-admin" label="Dashboard" icon={LayoutDashboard} active={isActive(location.pathname, "/church-admin")} collapsed={collapsed} />

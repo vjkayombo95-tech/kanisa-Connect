@@ -16,11 +16,11 @@ function MobileLink({ to, className, children }: { to: string; className?: strin
   return <Link to={to} state={{ from: location.pathname }} className={className}>{children}</Link>;
 }
 
-export function useVisibleStaffServices(config: StaffMobileConfig) {
+export function useVisibleStaffServices(config: StaffMobileConfig | null) {
   const features = useFeatureAccess();
   const livestream = useLivestreamPermission("manage");
   const radio = useRadioPermission("manage");
-  const services = useMemo(() => config.services.filter((service) => {
+  const services = useMemo(() => (config?.services ?? []).filter((service) => {
     if (service.featureKey) {
       const state = features.getFeatureState(service.featureKey);
       if (!state.exists || !state.visible) return false;
@@ -28,8 +28,8 @@ export function useVisibleStaffServices(config: StaffMobileConfig) {
     if (service.livestreamPermission && livestream.data !== true) return false;
     if (service.radioPermission && radio.data !== true) return false;
     return true;
-  }), [config.services, features, livestream.data, radio.data]);
-  return { services, isLoading: features.isLoading || (config.services.some((service) => service.livestreamPermission) && livestream.isLoading) || (config.services.some((service) => service.radioPermission) && radio.isLoading) };
+  }), [config, features, livestream.data, radio.data]);
+  return { services, isLoading: features.isLoading || ((config?.services.some((service) => service.livestreamPermission) ?? false) && livestream.isLoading) || ((config?.services.some((service) => service.radioPermission) ?? false) && radio.isLoading) };
 }
 
 export function StaffMobileHome({ config, contextLabel }: { config: StaffMobileConfig; contextLabel?: string | null }) {

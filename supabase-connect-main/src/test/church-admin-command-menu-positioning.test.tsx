@@ -6,6 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChurchAdminCommandMenu } from "@/components/church-admin/ChurchAdminCommandMenu";
 
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({ staffWorkspace: "admin" }),
+}));
+
 vi.mock("@/components/staff-mobile/StaffMobileExperience", () => ({
   useVisibleStaffServices: () => ({
     services: [
@@ -42,7 +46,7 @@ afterEach(() => {
 
 const openMenu = (modifier: "ctrlKey" | "metaKey") => {
   act(() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", [modifier]: true, bubbles: true })));
-  return document.querySelector<HTMLInputElement>('input[placeholder="Search approved services…"]')!;
+  return document.querySelector<HTMLInputElement>("div.fixed input")!;
 };
 
 describe("Church Admin command menu viewport positioning", () => {
@@ -57,7 +61,7 @@ describe("Church Admin command menu viewport positioning", () => {
     expect(document.documentElement.scrollWidth).toBe(document.documentElement.clientWidth);
 
     act(() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
-    expect(document.querySelector('input[placeholder="Search approved services…"]')).toBeNull();
+    expect(document.querySelector("div.fixed input")).toBeNull();
   });
 
   it.each([

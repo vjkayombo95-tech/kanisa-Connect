@@ -31,7 +31,8 @@ describe("Release A Church Admin desktop UI parity boundaries", () => {
   });
 
   it("keeps feature-gated production navigation and media destinations", () => {
-    expect(sidebar).toContain("useVisibleStaffServices(STAFF_MOBILE_CONFIGS.admin)");
+    expect(sidebar).toContain("getStaffMobileConfig(staffWorkspace)");
+    expect(sidebar).toContain("useVisibleStaffServices(workspaceConfig");
     expect(mobile).toContain("features.getFeatureState(service.featureKey)");
     expect(mobile).toContain("livestream.data !== true");
     expect(mobile).toContain("radio.data !== true");
