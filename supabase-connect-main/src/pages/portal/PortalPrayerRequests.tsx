@@ -157,7 +157,7 @@ function PrayerRequestCard({
         church_id: churchId,
         operation: "insert",
         table: "prayer_requests",
-        metadata: { member_id: member?.id, has_offering: Number(offeringAmount || 0) > 0 },
+        metadata: { member_id: member?.id, has_offering: Number(request.offering_amount || 0) > 0 },
       });
       toast({ title: "Error", description: error.message, variant: "destructive" });
     },

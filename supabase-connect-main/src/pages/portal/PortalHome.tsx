@@ -435,7 +435,7 @@ export default function PortalHome() {
       return;
     }
 
-    let swapTimer: ReturnType<typeof setTimeout> | null = null;
+    let swapTimer: number | null = null;
     const cycleTimer = window.setInterval(() => {
       setIsVerseVisible(false);
       charsSinceSoundRef.current = 0;

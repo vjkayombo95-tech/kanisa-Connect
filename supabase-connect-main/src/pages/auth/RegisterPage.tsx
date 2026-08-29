@@ -21,6 +21,7 @@ import {
   removeRegistrationPhoto,
   uploadRegistrationPhoto,
   validateRegistrationPhoto,
+  type PublicChurch,
 } from "@/lib/public-registration";
 import { clearOfflineDraft, readOfflineDraft, writeOfflineDraft } from "@/lib/offline-drafts";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,10 +30,7 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { assertPhoneIsAvailable, normalizeTanzanianPhone } from "@/lib/phone-auth";
 import { logSupabaseError } from "@/lib/error-logger";
 
-type ChurchRow = Pick<Tables<"churches">, "id" | "name" | "code" | "metadata"> & {
-  slug?: string | null;
-  logo_url?: string | null;
-};
+type ChurchRow = PublicChurch;
 type CommunityRow = Pick<Tables<"communities">, "id" | "name">;
 type MinistryRow = Pick<Tables<"ministries">, "id" | "name">;
 const SIGNUP_RATE_LIMIT_FALLBACK_SECONDS = 60;
@@ -297,7 +295,7 @@ export default function RegisterPage() {
       const normalizedEmail = (user?.email || email).trim().toLowerCase();
       if (!normalizedEmail) throw new Error("Email is required.");
       const normalizedPhone = normalizeTanzanianPhone(phone);
-      if (!normalizedPhone.valid) throw new Error(normalizedPhone.error);
+      if (normalizedPhone.valid === false) throw new Error(normalizedPhone.error);
       await assertPhoneIsAvailable(normalizedPhone.e164, church.id);
 
       const persistedCooldown = !user ? readSignupCooldown(normalizedEmail) : null;

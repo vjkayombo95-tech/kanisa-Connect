@@ -412,7 +412,7 @@ export default function SystemHealthPage() {
                       <TableRow><TableCell colSpan={3} className="py-12 text-center text-muted-foreground">No automation activity has been recorded yet.</TableCell></TableRow>
                     ) : logs.map((log) => (
                       <TableRow key={log.id}>
-                        <TableCell className="font-medium capitalize">{log.automation_type?.replaceAll("_", " ") || "Automation"}</TableCell>
+                        <TableCell className="font-medium capitalize">{log.automation_type?.replace(/_/g, " ") || "Automation"}</TableCell>
                         <TableCell className="whitespace-nowrap text-sm text-muted-foreground">{formatDateTime(log.sent_at)}</TableCell>
                         <TableCell className="max-w-xl truncate text-sm text-muted-foreground" title={log.message ?? undefined}>{log.message || "—"}</TableCell>
                       </TableRow>

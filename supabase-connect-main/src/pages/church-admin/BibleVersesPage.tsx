@@ -74,6 +74,7 @@ export default function BibleVersesPage() {
       .insert({
         church_id: churchId,
         reference: reference.trim(),
+        verse_text: verseText.trim(),
         text: verseText.trim(),
         is_active: true,
       });

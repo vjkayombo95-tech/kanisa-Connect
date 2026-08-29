@@ -50,8 +50,8 @@ const Dialog = ({
 };
 
 const DialogTrigger = React.forwardRef<
-  HTMLElement,
-  React.HTMLAttributes<HTMLElement> & { asChild?: boolean }
+  React.ElementRef<"button">,
+  React.ComponentPropsWithoutRef<"button"> & { asChild?: boolean }
 >(({ asChild = false, onClick, ...props }, ref) => {
   const { setOpen } = useDialog();
   const Comp = asChild ? Slot : "button";
@@ -59,7 +59,7 @@ const DialogTrigger = React.forwardRef<
   return (
     <Comp
       ref={ref}
-      onClick={(event: React.MouseEvent<HTMLElement>) => {
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
         onClick?.(event);
         if (!event.defaultPrevented) {
           setOpen(true);
@@ -85,8 +85,8 @@ const DialogOverlay = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
 DialogOverlay.displayName = "DialogOverlay";
 
 const DialogClose = React.forwardRef<
-  HTMLElement,
-  React.HTMLAttributes<HTMLElement> & { asChild?: boolean }
+  React.ElementRef<"button">,
+  React.ComponentPropsWithoutRef<"button"> & { asChild?: boolean }
 >(({ asChild = false, onClick, ...props }, ref) => {
   const { setOpen } = useDialog();
   const Comp = asChild ? Slot : "button";
@@ -94,7 +94,7 @@ const DialogClose = React.forwardRef<
   return (
     <Comp
       ref={ref}
-      onClick={(event: React.MouseEvent<HTMLElement>) => {
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
         onClick?.(event);
         if (!event.defaultPrevented) {
           setOpen(false);

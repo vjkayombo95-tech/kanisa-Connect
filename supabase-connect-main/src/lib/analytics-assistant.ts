@@ -784,7 +784,7 @@ async function fetchContributionRows(input: {
   const category = input.filters?.category || input.intent.category;
   const memberName = input.filters?.memberName?.toLowerCase().trim();
   return normalized
-    .filter((row) => (category === "all" ? true : row.categoryName.toLowerCase().includes(category.replaceAll("_", " "))))
+    .filter((row) => (category === "all" ? true : row.categoryName.toLowerCase().includes(category.replace(/_/g, " "))))
     .filter((row) => (memberName ? row.memberName.toLowerCase().includes(memberName) : true));
 }
 

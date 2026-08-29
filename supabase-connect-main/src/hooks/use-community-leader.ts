@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import type { Tables } from "@/integrations/supabase/types";
+import type { PostgrestError } from "@supabase/supabase-js";
 
 export interface LedCommunity {
   community_id: string;
@@ -9,7 +11,87 @@ export interface LedCommunity {
   church_id: string;
 }
 
-export function getCommunityContributionDate(contribution: any) {
+type CommunityContributionRow = Tables<"contributions"> & {
+  members: { full_name: string | null } | null;
+  contribution_categories: { name: string | null } | null;
+};
+
+type CommunityContributionRecordRow = Pick<
+  Tables<"contributions">,
+  "id" | "member_id" | "category_id" | "donor_name" | "amount" | "date" | "created_at" | "notes"
+>;
+
+type CommunityContributionSummaryRow = Pick<Tables<"contributions">, "amount" | "date" | "created_at">;
+
+type RecentCommunityContributionRow = Pick<
+  Tables<"contributions">,
+  "id" | "amount" | "date" | "created_at" | "donor_name"
+> & {
+  members: { full_name: string | null } | null;
+  contribution_categories: { name: string | null } | null;
+};
+
+type ContributionDateSource = {
+  date?: string | null;
+  created_at?: string | null;
+};
+
+type CommunityContributionQueryBuilder = {
+  select: (columns: string) => {
+    eq: (column: "community_id", value: string) => {
+      order: (
+        column: "created_at",
+        options: { ascending: boolean }
+      ) => PromiseLike<{ data: CommunityContributionRow[] | null; error: PostgrestError | null }>;
+    };
+  };
+};
+
+type OrderedCommunityContributionRecordQuery =
+  PromiseLike<{ data: CommunityContributionRecordRow[] | null; error: PostgrestError | null }> & {
+    limit: (count: number) => PromiseLike<{ data: CommunityContributionRecordRow[] | null; error: PostgrestError | null }>;
+  };
+
+type CommunityContributionRecordQueryBuilder = {
+  select: (columns: string) => {
+    eq: (column: "community_id", value: string) => {
+      order: (
+        column: "created_at",
+        options: { ascending: boolean }
+      ) => OrderedCommunityContributionRecordQuery;
+    };
+  };
+};
+
+type CommunityContributionSummaryQueryBuilder = {
+  select: (columns: string) => {
+    eq: (
+      column: "community_id",
+      value: string
+    ) => PromiseLike<{ data: CommunityContributionSummaryRow[] | null; error: PostgrestError | null }>;
+  };
+};
+
+type OrderedRecentCommunityContributionQuery = {
+  limit: (count: number) => PromiseLike<{ data: RecentCommunityContributionRow[] | null; error: PostgrestError | null }>;
+};
+
+type RecentCommunityContributionQueryBuilder = {
+  select: (columns: string) => {
+    eq: (column: "community_id", value: string) => {
+      order: (
+        column: "created_at",
+        options: { ascending: boolean }
+      ) => OrderedRecentCommunityContributionQuery;
+    };
+  };
+};
+
+function fromContributions<TBuilder>(table: "contributions"): TBuilder {
+  return Reflect.apply(Reflect.get(supabase, "from"), supabase, [table]) as TBuilder;
+}
+
+export function getCommunityContributionDate(contribution: ContributionDateSource | null | undefined) {
   return contribution?.date ?? contribution?.created_at ?? null;
 }
 
@@ -24,8 +106,9 @@ export function useLedCommunities(enabled = true) {
         _user_id: user.id,
       } as never);
 
-      if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
-        return (rpcData as any[]).map((community) => ({
+      const ledCommunities = Array.isArray(rpcData) ? rpcData : [];
+      if (!rpcError && ledCommunities.length > 0) {
+        return ledCommunities.map((community: any) => ({
           community_id: community.community_id,
           community_name: community.community_name,
           leadership_role: community.leadership_role,
@@ -134,9 +217,9 @@ export function useCommunityContributions(communityId: string) {
   return useQuery({
     queryKey: ["community-contributions", communityId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("contributions")
-        .select("*, members:member_id(full_name), contribution_categories:category_id(name)")
+      const contributionQuery = fromContributions<CommunityContributionQueryBuilder>("contributions");
+      const { data, error } = await contributionQuery
+        .select("id, member_id, category_id, donor_name, amount, date, created_at, notes, church_id, created_by, payment_reference, phone, members:member_id(full_name), contribution_categories:category_id(name)")
         .eq("community_id", communityId)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -150,17 +233,14 @@ export function useCommunityContributionRecords(communityId: string, limit?: num
   return useQuery({
     queryKey: ["community-contribution-records", communityId, limit ?? "all"],
     queryFn: async () => {
-      let query = supabase
-        .from("contributions")
+      const recordsQuery = fromContributions<CommunityContributionRecordQueryBuilder>("contributions")
         .select("id, member_id, category_id, donor_name, amount, date, created_at, notes")
         .eq("community_id", communityId)
         .order("created_at", { ascending: false });
 
-      if (typeof limit === "number") {
-        query = query.limit(limit);
-      }
-
-      const { data, error } = await query;
+      const { data, error } = typeof limit === "number"
+        ? await recordsQuery.limit(limit)
+        : await recordsQuery;
       if (error) throw error;
       return data || [];
     },
@@ -215,8 +295,7 @@ export function useCommunityContributionSummary(communityId: string) {
   return useQuery({
     queryKey: ["community-contribution-summary", communityId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("contributions")
+      const { data, error } = await fromContributions<CommunityContributionSummaryQueryBuilder>("contributions")
         .select("amount, date, created_at")
         .eq("community_id", communityId);
       if (error) throw error;
@@ -234,8 +313,7 @@ export function useRecentCommunityContributions(communityId: string, limit = 5) 
   return useQuery({
     queryKey: ["recent-community-contributions", communityId, limit],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("contributions")
+      const { data, error } = await fromContributions<RecentCommunityContributionQueryBuilder>("contributions")
         .select("id, amount, date, created_at, donor_name, members:member_id(full_name), contribution_categories:category_id(name)")
         .eq("community_id", communityId)
         .order("created_at", { ascending: false })

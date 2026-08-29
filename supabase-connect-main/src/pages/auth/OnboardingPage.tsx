@@ -38,7 +38,7 @@ function InputWithIcon({ label, icon: Icon, className, ...props }: React.Compone
       <Label>{label}</Label>
       <div className="group relative">
         <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
-        <Input {...props} className={cn("h-12 rounded-xl border-border/70 bg-background/60 pl-10 shadow-sm transition-all duration-200 hover:border-primary/40 hover:bg-background/80 focus-visible:border-primary/60 focus-visible:ring-primary/30", props.className)} />
+        <Input {...props} className="h-12 rounded-xl border-border/70 bg-background/60 pl-10 shadow-sm transition-all duration-200 hover:border-primary/40 hover:bg-background/80 focus-visible:border-primary/60 focus-visible:ring-primary/30" />
       </div>
     </div>
   );

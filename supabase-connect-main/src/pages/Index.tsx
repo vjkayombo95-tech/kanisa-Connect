@@ -125,14 +125,22 @@ const pricingPlans = [
   },
 ];
 
-const sectionLinks = [
+type SectionId = "hero" | "features" | "how-it-works" | "preview" | "pricing" | "faq";
+
+type SectionLink = {
+  id: SectionId;
+  label: string;
+  shortLabel: string;
+};
+
+const sectionLinks: readonly SectionLink[] = [
   { id: "hero", label: "Home", shortLabel: "01" },
   { id: "features", label: "Features", shortLabel: "02" },
   { id: "how-it-works", label: "How it Works", shortLabel: "03" },
   { id: "preview", label: "Preview", shortLabel: "04" },
   { id: "pricing", label: "Pricing", shortLabel: "05" },
   { id: "faq", label: "FAQ", shortLabel: "06" },
-] as const;
+];
 
 const faqs = [
   {
@@ -160,7 +168,7 @@ const faqs = [
 export default function Index() {
   const prefersReducedMotion = useReducedMotion();
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const [activeSection, setActiveSection] = useState<(typeof sectionLinks)[number]["id"]>("hero");
+  const [activeSection, setActiveSection] = useState<SectionId>("hero");
   const [isScrolled, setIsScrolled] = useState(false);
   const [memberCount, setMemberCount] = useState(0);
   const [givingAmount, setGivingAmount] = useState(0);

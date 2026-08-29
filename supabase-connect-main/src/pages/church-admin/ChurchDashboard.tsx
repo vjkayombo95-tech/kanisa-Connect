@@ -36,6 +36,23 @@ type MonthlyGivingRow = {
   amount: number;
 };
 
+type RecentActivityBase = {
+  kind: "record";
+  id: string;
+  title: string;
+  detail: string;
+  date: string;
+};
+
+type RecentMessageActivity = Omit<RecentActivityBase, "kind"> & {
+  kind: "message";
+  memberName: string;
+  spouseName: string | null;
+  messageType: "birthday" | "anniversary";
+};
+
+type RecentActivityItem = RecentActivityBase | RecentMessageActivity;
+
 type ChurchDashboardMetrics = {
   total_members: number;
   active_members: number;
@@ -322,26 +339,30 @@ export default function ChurchDashboard() {
     }));
   }, [monthlyGiving]);
 
-  const recentActivity = useMemo(() => {
+  const recentActivity = useMemo<RecentActivityItem[]>(() => {
     const payments = recentContributions.map((item) => ({
+      kind: "record" as const,
       id: `payment-${item.id}`,
       title: `${item.donor_name || "Member"} recorded a contribution`,
       detail: formatTZS(Number(item.amount || 0)),
       date: item.created_at,
     }));
     const notices = (data?.announcements ?? []).slice(0, 5).map((item) => ({
+      kind: "record" as const,
       id: `announcement-${item.id}`,
       title: item.title,
       detail: "Announcement published",
       date: item.created_at,
     }));
     const events = deferredData.upcomingEvents.slice(0, 5).map((item) => ({
+      kind: "record" as const,
       id: `event-${item.id}`,
       title: item.title,
       detail: "Upcoming event scheduled",
       date: item.created_at,
     }));
     const birthdays = deferredData.birthdayMembers.map((member) => ({
+      kind: "message" as const,
       id: `birthday-${member.id}`,
       title: `${member.full_name} has a birthday today`,
       detail: "Birthday reminder",
@@ -351,6 +372,7 @@ export default function ChurchDashboard() {
       messageType: "birthday" as const,
     }));
     const anniversaries = deferredData.anniversaryMembers.map((member) => ({
+      kind: "message" as const,
       id: `anniversary-${member.id}`,
       title: `${member.full_name} has a wedding anniversary today`,
       detail: "Wedding anniversary reminder",
@@ -602,7 +624,7 @@ export default function ChurchDashboard() {
                   <p className="text-sm font-medium text-white">{item.title}</p>
                   <p className="mt-1 text-sm text-white/58">{item.detail}</p>
                   <p className="mt-2 text-xs text-white/40">{relativeDate(item.date)}</p>
-                  {"memberName" in item && item.memberName ? (
+                  {item.kind === "message" && item.memberName ? (
                     <Button
                       type="button"
                       size="sm"

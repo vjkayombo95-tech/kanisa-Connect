@@ -43,7 +43,7 @@ export const isInvitePending = (invite: Pick<InviteRecord, "status" | "expires_a
 export async function getInviteByToken(token: string) {
   for (const table of INVITE_TABLES) {
     const { data, error } = await supabase
-      .from(table as never)
+      .from(table)
       .select("*")
       .eq("token", token)
       .maybeSingle();
@@ -144,10 +144,15 @@ export async function acceptInviteForUser(invite: InviteRecord, userId: string) 
     member = createdMember as MemberRow;
   }
 
-  const { error: updateInviteError } = await supabase
-    .from(invite.sourceTable as never)
-    .update({ status: "accepted" })
-    .eq("token", invite.token);
+  const { error: updateInviteError } = invite.sourceTable === "invites"
+    ? await supabase
+        .from("invites")
+        .update({ status: "accepted" })
+        .eq("token", invite.token)
+    : await supabase
+        .from("invitations")
+        .update({ status: "accepted" })
+        .eq("token", invite.token);
 
   if (updateInviteError) throw updateInviteError;
 

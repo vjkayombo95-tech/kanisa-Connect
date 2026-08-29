@@ -33,6 +33,10 @@ type ChatMessage =
   | { id: string; role: "assistant"; text: string; report?: AnalyticsResponse }
   | { id: string; role: "user"; text: string };
 
+function hasAnalyticsReport(message: ChatMessage): message is Extract<ChatMessage, { role: "assistant" }> & { report: AnalyticsResponse } {
+  return message.role === "assistant" && Boolean(message.report);
+}
+
 const SUGGESTED_QUERIES = [
   "Show top contributors",
   "Why did giving change this month?",
@@ -135,7 +139,7 @@ export default function AnalyticsAssistantPage() {
   ]);
 
   const latestReport = useMemo(
-    () => [...messages].reverse().find((message) => message.role === "assistant" && message.report)?.report ?? null,
+    () => [...messages].reverse().find(hasAnalyticsReport)?.report ?? null,
     [messages],
   );
   const exportReport = async (report: AnalyticsResponse) => {
@@ -408,7 +412,7 @@ export default function AnalyticsAssistantPage() {
 
                       <p className="text-sm leading-6 text-foreground">{message.text}</p>
 
-                      {message.report ? (() => {
+                      {hasAnalyticsReport(message) ? (() => {
                         const report = message.report;
                         const reportArrays = getReportArrays(report);
                         const comparison = report.comparison;
@@ -444,7 +448,7 @@ export default function AnalyticsAssistantPage() {
                           <div className="grid gap-2 rounded-2xl border border-white/8 bg-background/50 p-4 text-xs text-muted-foreground sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                               <p className="uppercase tracking-[0.18em] text-muted-foreground/80">Intent</p>
-                              <p className="mt-1 text-foreground">{report.intent?.type?.replaceAll("_", " ") || "Unknown"}</p>
+                              <p className="mt-1 text-foreground">{report.intent?.type?.replace(/_/g, " ") || "Unknown"}</p>
                             </div>
                             <div>
                               <p className="uppercase tracking-[0.18em] text-muted-foreground/80">Date Range</p>
