@@ -89,6 +89,18 @@ export function ChurchDashboardExperience({
   const priorities = visiblePendingActions(counts, intelligence.staffWorkspace);
   const pendingTotal = priorities.reduce((sum, item) => sum + item.count, 0);
   const quickActionConfig = getStaffMobileConfig(intelligence.staffWorkspace);
+  const workspaceLabel =
+    intelligence.staffWorkspace === "admin" ? "Church Admin Workspace" :
+    intelligence.staffWorkspace === "finance" ? "Finance Workspace" :
+    intelligence.staffWorkspace === "pastoral" ? "Pastoral Workspace" :
+    intelligence.staffWorkspace === "super_admin" ? "Super Admin Workspace" :
+    "Staff Workspace";
+  const briefingLabel =
+    intelligence.staffWorkspace === "admin" ? "Church Admin" :
+    intelligence.staffWorkspace === "finance" ? "Finance" :
+    intelligence.staffWorkspace === "pastoral" ? "Pastoral" :
+    intelligence.staffWorkspace === "super_admin" ? "Super Admin" :
+    "Staff";
 
   const briefingRows = [
     {
@@ -146,9 +158,9 @@ export function ChurchDashboardExperience({
             </span>
             <div className="min-w-0">
               <p className="font-serif text-2xl font-bold text-foreground">{greeting}, {administratorName.split(" ")[0]}.</p>
-              <p className="mt-1 text-sm text-muted-foreground">Here is your Church Admin briefing for today at {churchName || "your parish"}.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Here is your {briefingLabel} briefing for today at {churchName || "your parish"}.</p>
               <p className="mt-3 inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                Church Admin Workspace · Role: church admin
+                {workspaceLabel}
               </p>
             </div>
           </div>

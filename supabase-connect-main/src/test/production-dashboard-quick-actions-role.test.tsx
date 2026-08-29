@@ -83,6 +83,8 @@ describe("Dashboard Parity D role-aware Quick Actions", () => {
   });
 
   it("fails closed for unknown and member-only workspaces", () => {
+    expect(getStaffMobileConfig(null)).toBeNull();
+    expect(renderedRoutes(null)).toEqual([]);
     expect(renderedRoutes(getStaffMobileConfig(resolveStaffMobileWorkspace(["unexpected-role"])))).toEqual([]);
     expect(renderedRoutes(getStaffMobileConfig(resolveStaffMobileWorkspace(["member"])))).toEqual([]);
   });
