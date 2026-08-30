@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { isStaffRouteAllowed } from "@/lib/staff-mobile-registry";
 
 const root = process.cwd();
 const read = (relative: string) => fs.readFileSync(path.join(root, relative), "utf8");
@@ -10,6 +11,8 @@ describe("Production workspace UI parity C boundaries", () => {
   const sidebar = read("src/components/church-admin/ChurchAdminSidebar.tsx");
   const command = read("src/components/church-admin/ChurchAdminCommandMenu.tsx");
   const dashboardExperience = read("src/components/church-admin/ChurchDashboardExperience.tsx");
+  const portalGive = read("src/pages/portal/PortalGive.tsx");
+  const portalPrayerRequests = read("src/pages/portal/PortalPrayerRequests.tsx");
   const routes = read("src/routes/AdminRoutes.tsx");
 
   it("uses the compact grouped shell and production-approved registry", () => {
@@ -42,6 +45,35 @@ describe("Production workspace UI parity C boundaries", () => {
     }
     expect(dashboardExperience).toContain('"Staff"');
     expect(dashboardExperience).not.toContain(': "Church Admin"');
+  });
+
+  it("keeps portal giving categories church scoped", () => {
+    expect(portalGive).toContain('.from("contribution_categories")');
+    expect(portalGive).toContain('.eq("church_id", churchId)');
+    expect(portalGive).toContain("enabled: !!churchId");
+  });
+
+  it("logs prayer toggle failures against the actual prayer marker mutation", () => {
+    expect(portalPrayerRequests).toContain('function: "togglePrayer"');
+    expect(portalPrayerRequests).toContain('table: "prayer_request_prayers"');
+    expect(portalPrayerRequests).toContain('attemptedPrayerOperation.current = prayerStats.prayedByMe ? "delete" : "insert"');
+    expect(portalPrayerRequests).toContain("operation: attemptedPrayerOperation.current");
+    expect(portalPrayerRequests).toContain("prayer_request_id: request.id");
+  });
+
+  it("hides fixed desktop links denied to the active workspace", () => {
+    const fixedRoutes = ["/church-admin/notifications", "/church-admin/settings", "/church-admin/billing"];
+
+    expect(fixedRoutes.every((route) => isStaffRouteAllowed("admin", route))).toBe(true);
+    expect(fixedRoutes.some((route) => isStaffRouteAllowed("finance", route))).toBe(false);
+    expect(fixedRoutes.some((route) => isStaffRouteAllowed("pastoral", route))).toBe(false);
+    expect(fixedRoutes.some((route) => isStaffRouteAllowed(null, route))).toBe(false);
+    expect(layout).toContain('isStaffRouteAllowed(staffWorkspace, "/church-admin/notifications")');
+    expect(layout).toContain('isStaffRouteAllowed(staffWorkspace, "/church-admin/settings")');
+    expect(layout).toContain("canOpenNotifications ? (");
+    expect(layout).toContain("canOpenSettings ? (");
+    expect(sidebar).toContain('isStaffRouteAllowed(staffWorkspace, "/church-admin/billing")');
+    expect(sidebar).toContain("canOpenBilling ? <div");
   });
 
   it("does not add staging-only route topology", () => {

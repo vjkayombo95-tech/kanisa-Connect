@@ -49,6 +49,8 @@ export function ChurchAdminLayout() {
     staffWorkspace === "pastoral" ? "Pastoral Workspace" :
     staffWorkspace === "super_admin" ? "Super Admin Workspace" :
     "Staff Workspace";
+  const canOpenNotifications = isStaffRouteAllowed(staffWorkspace, "/church-admin/notifications");
+  const canOpenSettings = isStaffRouteAllowed(staffWorkspace, "/church-admin/settings");
 
   const handleSignOut = async () => {
     await signOut();
@@ -85,9 +87,11 @@ export function ChurchAdminLayout() {
                 <ChurchAdminCommandMenu />
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <Button aria-label="Fungua arifa" variant="ghost" size="icon" className="rounded-xl text-muted-foreground hover:bg-white/[0.05] hover:text-foreground" onClick={() => navigate("/church-admin/notifications")}>
-                  <Bell className="h-4 w-4" />
-                </Button>
+                {canOpenNotifications ? (
+                  <Button aria-label="Fungua arifa" variant="ghost" size="icon" className="rounded-xl text-muted-foreground hover:bg-white/[0.05] hover:text-foreground" onClick={() => navigate("/church-admin/notifications")}>
+                    <Bell className="h-4 w-4" />
+                  </Button>
+                ) : null}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button aria-label="Fungua wasifu" variant="ghost" size="icon" className="rounded-xl hover:bg-white/[0.05]">
@@ -99,8 +103,12 @@ export function ChurchAdminLayout() {
                   <DropdownMenuContent align="end" className="z-[70] w-48">
                     <DropdownMenuItem disabled className="text-xs text-muted-foreground">{profile?.full_name || "Admin"}</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate("/church-admin/settings")}>Church Settings</DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    {canOpenSettings ? (
+                      <>
+                        <DropdownMenuItem onClick={() => navigate("/church-admin/settings")}>Church Settings</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    ) : null}
                     <DropdownMenuItem onClick={handleSignOut} className="text-destructive">Sign Out</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

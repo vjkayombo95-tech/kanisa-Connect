@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -61,6 +61,7 @@ function PrayerRequestCard({
 }) {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const attemptedPrayerOperation = useRef<"insert" | "delete">("insert");
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -123,6 +124,8 @@ function PrayerRequestCard({
 
   const togglePrayer = useMutation({
     mutationFn: async () => {
+      attemptedPrayerOperation.current = prayerStats.prayedByMe ? "delete" : "insert";
+
       if (!churchId) throw new Error("No church context");
       if (!member?.id) throw new Error("Your member profile is required");
 
@@ -153,11 +156,15 @@ function PrayerRequestCard({
       logSupabaseError(error, {
         page: "Portal Prayer Requests",
         component: "PortalPrayerRequests",
-        function: "submitPrayerRequest",
+        function: "togglePrayer",
         church_id: churchId,
-        operation: "insert",
-        table: "prayer_requests",
-        metadata: { member_id: member?.id, has_offering: Number(request.offering_amount || 0) > 0 },
+        operation: attemptedPrayerOperation.current,
+        table: "prayer_request_prayers",
+        metadata: {
+          member_id: member?.id,
+          prayer_request_id: request.id,
+          prayed_by_me: prayerStats.prayedByMe,
+        },
       });
       toast({ title: "Error", description: error.message, variant: "destructive" });
     },

@@ -2,7 +2,7 @@ import { act, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   featureLoading: false,
@@ -79,16 +79,25 @@ function Application({ initialPath, client }: { initialPath: string; client: Que
   );
 }
 
+const preloadMemberShell = async () => {
+  await Promise.all([
+    import("@/components/portal/PortalLayout"),
+    import("@/components/portal/MemberDashboard"),
+    import("@/pages/portal/MemberServicesPage"),
+    import("@/pages/portal/MemberRadioPage"),
+  ]);
+};
+
 const radioAudioCount = () => document.querySelectorAll('[data-testid="persistent-radio-audio"]').length;
 const waitForText = async (host: HTMLElement, text: string) => {
-  for (let attempt = 0; attempt < 50; attempt += 1) {
-    if (host.textContent?.includes(text)) return;
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
-  }
-  throw new Error(`Timed out waiting for ${text}`);
+  await vi.waitFor(() => expect(host).toHaveTextContent(text));
 };
 
 describe("Wave 5A disabled Radio real member layout", () => {
+  beforeAll(async () => {
+    await preloadMemberShell();
+  });
+
   beforeEach(() => {
     mocks.featureLoading = false;
     mocks.feature = { key: "radio", exists: true, enabled: false, visible: false, locked: false };

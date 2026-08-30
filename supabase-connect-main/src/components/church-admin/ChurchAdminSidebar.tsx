@@ -6,7 +6,7 @@ import { useVisibleStaffServices } from "@/components/staff-mobile/StaffMobileEx
 import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBillingAccess } from "@/hooks/use-billing-access";
-import { getStaffMobileConfig } from "@/lib/staff-mobile-registry";
+import { getStaffMobileConfig, isStaffRouteAllowed } from "@/lib/staff-mobile-registry";
 import { cn } from "@/lib/utils";
 
 function isActive(pathname: string, route: string) {
@@ -27,6 +27,7 @@ export function ChurchAdminSidebar() {
     staffWorkspace === "super_admin" ? "Super Admin Workspace" :
     "Staff Workspace";
   const { services, isLoading } = useVisibleStaffServices(workspaceConfig);
+  const canOpenBilling = isStaffRouteAllowed(staffWorkspace, "/church-admin/billing");
   const churchName = profile?.church_name ?? profile?.church?.name ?? "Kanisa Connect";
   const groups = useMemo(() => {
     const result = new Map<string, typeof services>();
@@ -54,11 +55,11 @@ export function ChurchAdminSidebar() {
             </section>) : null}
           </nav>
         </SidebarContent>
-        <div className="shrink-0 border-t border-white/[0.07] p-3">
+        {canOpenBilling ? <div className="shrink-0 border-t border-white/[0.07] p-3">
           {!collapsed ? <div className={cn("rounded-2xl border p-3", billing.isExpired ? "border-amber-400/25 bg-amber-400/[0.07]" : "border-white/[0.08] bg-white/[0.03]")}>
             <div className="flex items-start gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">{billing.isExpired ? <LockKeyhole className="h-4 w-4" /> : <CreditCard className="h-4 w-4" />}</span><div className="min-w-0"><p className="text-xs font-semibold text-white">{billing.isLoading ? "Checking access…" : billing.isExpired ? "Workspace access limited" : `${billing.currentPlanDefinition.name} plan`}</p><p className="mt-1 text-[11px] leading-4 text-white/45">{billing.isExpired ? "Renew the parish subscription to restore approved services." : "Production feature access remains enforced."}</p><Link to="/church-admin/billing" className="mt-2 inline-block text-[11px] font-semibold text-primary">View billing</Link></div></div>
           </div> : <Link aria-label="View billing" to="/church-admin/billing" className="flex h-10 items-center justify-center rounded-xl text-primary hover:bg-primary/10"><CreditCard className="h-4 w-4" /></Link>}
-        </div>
+        </div> : null}
       </div>
     </Sidebar>
   );
