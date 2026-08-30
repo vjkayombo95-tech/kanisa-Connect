@@ -77,10 +77,16 @@ export default function PortalGive() {
   const { data: categories = [] } = useQuery({
     queryKey: ["portal-categories", churchId],
     queryFn: async () => {
-      const { data } = await supabase.from("contribution_categories").select("*").order("name");
+      if (!churchId) return [];
+
+      const { data } = await supabase
+        .from("contribution_categories")
+        .select("*")
+        .eq("church_id", churchId)
+        .order("name");
       return data ?? [];
     },
-    enabled: true,
+    enabled: !!churchId,
   });
 
   const give = useMutation({
