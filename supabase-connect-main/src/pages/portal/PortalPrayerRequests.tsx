@@ -81,7 +81,7 @@ function PrayerRequestCard({
       const commentIds = (commentRows ?? []).map((comment) => comment.id);
       const { data: reactionRows, error: reactionsError } = commentIds.length
         ? await supabase
-            .from("prayer_request_comment_reactions" as never)
+            .from("prayer_request_comment_reactions")
             .select("comment_id, user_id, emoji")
             .in("comment_id", commentIds)
         : { data: [], error: null };
@@ -92,7 +92,7 @@ function PrayerRequestCard({
 
       const groupedReactions = new Map<string, Map<string, Set<string>>>();
 
-      ((reactionRows as any[]) ?? []).forEach((reaction) => {
+      (reactionRows ?? []).forEach((reaction) => {
         if (!groupedReactions.has(reaction.comment_id)) {
           groupedReactions.set(reaction.comment_id, new Map());
         }
@@ -210,7 +210,7 @@ function PrayerRequestCard({
 
       if (reacted) {
         const { error } = await supabase
-          .from("prayer_request_comment_reactions" as never)
+          .from("prayer_request_comment_reactions")
           .delete()
           .eq("comment_id", commentId)
           .eq("user_id", user.id);
@@ -220,8 +220,8 @@ function PrayerRequestCard({
       }
 
       const { error } = await supabase
-        .from("prayer_request_comment_reactions" as never)
-        .upsert({ comment_id: commentId, user_id: user.id, emoji } as never, {
+        .from("prayer_request_comment_reactions")
+        .upsert({ comment_id: commentId, user_id: user.id, emoji }, {
           onConflict: "comment_id,user_id",
         });
 
