@@ -2,7 +2,7 @@ import { act, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   resolution: "loading" as "loading" | "enabled" | "disabled" | "error",
@@ -82,6 +82,14 @@ function Application({ client, revision }: { client: QueryClient; revision: stri
   );
 }
 
+const preloadUlizaShell = async () => {
+  await Promise.all([
+    import("@/components/portal/PortalLayout"),
+    import("@/pages/portal/KanisaAssistantPage"),
+    import("@/components/portal/MemberDashboard"),
+  ]);
+};
+
 const flush = async () => {
   for (let attempt = 0; attempt < 5; attempt += 1) {
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
@@ -89,18 +97,21 @@ const flush = async () => {
 };
 
 const waitForAssistant = async (host: HTMLElement) => {
-  for (let attempt = 0; attempt < 50; attempt += 1) {
+  return vi.waitFor(() => {
     const element = host.querySelector('[data-testid="assistant-content"], [data-testid="uliza-kanisa-page"]');
-    if (element) return element;
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
-  }
-  throw new Error(`Timed out waiting for assistant: ${host.textContent}`);
+    expect(element, `Timed out waiting for assistant: ${host.textContent}`).toBeInTheDocument();
+    return element;
+  });
 };
 
 describe("Wave 5B Uliza cold-load feature gate", () => {
   let host: HTMLDivElement;
   let root: Root;
   let client: QueryClient;
+
+  beforeAll(async () => {
+    await preloadUlizaShell();
+  });
 
   beforeEach(() => {
     mocks.resolution = "loading";
