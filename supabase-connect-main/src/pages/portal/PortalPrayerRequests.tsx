@@ -372,10 +372,27 @@ export default function PortalPrayerRequests() {
             .from("prayer_requests")
             .select(PRAYER_REQUEST_SELECT)
             .eq("church_id", churchId)
+            .eq("status", "approved")
+            .in("privacy", ["public_to_church", "anonymous_public"])
             .order("created_at", { ascending: false })
             .limit(25);
 
-          if (error) throw error;
+          if (error) {
+            logSupabaseError(error, {
+              page: "Portal Prayer Requests",
+              component: "PortalPrayerRequests",
+              function: "communityPrayerRequestsQuery",
+              church_id: churchId,
+              operation: "select",
+              table: "prayer_requests",
+              metadata: {
+                code: error.code,
+                details: error.details,
+                hint: error.hint,
+              },
+            });
+            throw error;
+          }
 
           return (data ?? [])
             .sort((a: any, b: any) => {
@@ -693,7 +710,15 @@ export default function PortalPrayerRequests() {
           </Card>
         ) : null}
 
-        <Tabs value={tab} onValueChange={setTab}>
+        <Tabs
+          value={tab}
+          onValueChange={(nextTab) => {
+            setTab(nextTab);
+            if (nextTab === "community" && churchId) {
+              void queryClient.refetchQueries({ queryKey: ["portal-prayer-requests", churchId], exact: true });
+            }
+          }}
+        >
           <TabsList className="mb-4 bg-secondary">
             <TabsTrigger value="community">Community Prayers</TabsTrigger>
             <TabsTrigger value="mine">My Requests ({myRequests.length})</TabsTrigger>

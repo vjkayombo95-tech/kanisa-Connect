@@ -61,6 +61,14 @@ describe("Production workspace UI parity C boundaries", () => {
     expect(portalPrayerRequests).toContain("prayer_request_id: request.id");
   });
 
+  it("keeps community prayer reads scoped to approved public requests and refreshes on tab activation", () => {
+    expect(portalPrayerRequests).toContain('.eq("church_id", churchId)');
+    expect(portalPrayerRequests).toContain('.eq("status", "approved")');
+    expect(portalPrayerRequests).toContain('.in("privacy", ["public_to_church", "anonymous_public"])');
+    expect(portalPrayerRequests).toContain('function: "communityPrayerRequestsQuery"');
+    expect(portalPrayerRequests).toContain('queryClient.refetchQueries({ queryKey: ["portal-prayer-requests", churchId], exact: true })');
+  });
+
   it("hides fixed desktop links denied to the active workspace", () => {
     const fixedRoutes = ["/church-admin/notifications", "/church-admin/settings", "/church-admin/billing"];
 
