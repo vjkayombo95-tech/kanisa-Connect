@@ -6225,6 +6225,35 @@ export type Database = {
           },
         ]
       }
+      prayer_request_comment_reactions: {
+        Row: {
+          comment_id: string
+          created_at: string
+          emoji: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          emoji: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          emoji?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prayer_request_comment_reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "prayer_request_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prayer_request_prayers: {
         Row: {
           church_id: string
