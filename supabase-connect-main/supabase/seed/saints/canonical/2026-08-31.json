@@ -1,0 +1,152 @@
+{
+  "package_date": "2026-08-31",
+  "production_import_status": "blocked_pending_editorial_approval",
+  "production_import_blockers": [
+    "editorial_author is a placeholder",
+    "editorial_reviewer is a placeholder",
+    "editorial_approval_date uses the schema-compatible sentinel 1900-01-01",
+    "content_license_basis is pending and not verified"
+  ],
+  "editorial_approval": {
+    "status": "PENDING_NOT_VERIFIED",
+    "source_organization": "Vatican News",
+    "source_publication": "Saint of the Day",
+    "source_url": "https://www.vaticannews.va/en/saints/08/31.html",
+    "source_checked_date": "2026-08-31",
+    "editorial_author": "PENDING_EDITORIAL_AUTHOR",
+    "editorial_reviewer": "PENDING_EDITORIAL_REVIEWER",
+    "editorial_approval_date": "1900-01-01",
+    "content_license_basis": "PENDING_NOT_VERIFIED"
+  },
+  "saints": [
+    {
+      "slug": "st-raymond-nonnato",
+      "name": "St. Raymond Nonnato",
+      "title": "Cardinal, Mercedarian",
+      "feast_month": 8,
+      "feast_day": 31,
+      "patron_of": null,
+      "birth_year": null,
+      "death_year": null,
+      "country": null,
+      "biography_short": "St. Raymond Nonnato is remembered as a Mercedarian witness associated with mercy, sacrifice, and service to captives. His August 31 commemoration invites the Church to honor courage shaped by charity.",
+      "biography_long": "St. Raymond Nonnato stands in the memory of the Church as a Mercedarian whose vocation was marked by costly compassion. Remembered on August 31 as a cardinal and religious, he points believers toward a freedom rooted in Christ: freedom from fear, freedom for service, and freedom expressed through practical mercy. His witness encourages Christian communities to protect the vulnerable and to spend themselves for those whose dignity is threatened.",
+      "quote": null,
+      "reflection": "Mercy is not only a feeling; it becomes Christian when it takes shape as service. St. Raymond Nonnato reminds us that faith can make room for the suffering of others and respond with brave, concrete love.",
+      "prayer": "Lord Jesus, form in us the generous mercy shown by St. Raymond Nonnato. Teach us to defend the dignity of those who are forgotten, to serve without counting the cost, and to trust that your love is stronger than fear. Amen.",
+      "image_url": null,
+      "color_theme": null,
+      "liturgical_rank": null,
+      "is_featured": true,
+      "scripture_reference": null,
+      "tags": [
+        "august",
+        "mercedarian",
+        "cardinal",
+        "mercy",
+        "captives"
+      ],
+      "is_active": true,
+      "provenance": [
+        {
+          "source_organization": "Vatican News",
+          "source_publication": "Saint of the Day",
+          "source_url": "https://www.vaticannews.va/en/saints/08/31.html",
+          "source_checked_date": "2026-08-31",
+          "source_role": "factual_reference",
+          "editorial_author": "PENDING_EDITORIAL_AUTHOR",
+          "editorial_reviewer": "PENDING_EDITORIAL_REVIEWER",
+          "editorial_approval_date": "1900-01-01",
+          "content_license_basis": "PENDING_NOT_VERIFIED",
+          "factual_notes": "Verifies the August 31 listing, name, and title as St. Raymond Nonnato, Cardinal, Mercedarian."
+        }
+      ]
+    },
+    {
+      "slug": "sts-joseph-of-arimathea-and-nicodemus",
+      "name": "Sts. Joseph of Arimathea and Nicodemus",
+      "title": "Disciples of the Lord",
+      "feast_month": 8,
+      "feast_day": 31,
+      "patron_of": null,
+      "birth_year": null,
+      "death_year": null,
+      "country": null,
+      "biography_short": "Sts. Joseph of Arimathea and Nicodemus are honored as disciples who cared for Jesus after his death. Their August 31 remembrance highlights reverence, courage, and love at a moment of sorrow.",
+      "biography_long": "Sts. Joseph of Arimathea and Nicodemus appear in the Gospel story as respected men whose discipleship becomes visible in the hour of the Lord's death. When many were afraid, they stepped forward to honor Jesus with reverent care. Their shared commemoration on August 31 reminds the faithful that grace can draw cautious hearts into courageous love. They teach that even hidden discipleship must one day become a work of mercy.",
+      "quote": null,
+      "reflection": "Joseph and Nicodemus show that holiness can begin quietly and still become courageous. Their care for the body of Jesus asks us where love is calling us to step out of hesitation and act.",
+      "prayer": "Crucified and risen Lord, give us the reverence and courage of Sts. Joseph of Arimathea and Nicodemus. When faith is costly, help us to stand near you, honor you, and serve your wounded body in our neighbors. Amen.",
+      "image_url": null,
+      "color_theme": null,
+      "liturgical_rank": null,
+      "is_featured": false,
+      "scripture_reference": null,
+      "tags": [
+        "august",
+        "disciples",
+        "gospel",
+        "burial-of-jesus",
+        "courage"
+      ],
+      "is_active": true,
+      "provenance": [
+        {
+          "source_organization": "Vatican News",
+          "source_publication": "Saint of the Day",
+          "source_url": "https://www.vaticannews.va/en/saints/08/31.html",
+          "source_checked_date": "2026-08-31",
+          "source_role": "factual_reference",
+          "editorial_author": "PENDING_EDITORIAL_AUTHOR",
+          "editorial_reviewer": "PENDING_EDITORIAL_REVIEWER",
+          "editorial_approval_date": "1900-01-01",
+          "content_license_basis": "PENDING_NOT_VERIFIED",
+          "factual_notes": "Verifies the August 31 listing, names, title, and discipleship reference for Sts. Joseph of Arimathea and Nicodemus."
+        }
+      ]
+    },
+    {
+      "slug": "blessed-alfred-ildefonso-schuster",
+      "name": "Blessed Alfred Ildefonso Schuster",
+      "title": "Cardinal, Archbishop of Milan",
+      "feast_month": 8,
+      "feast_day": 31,
+      "patron_of": null,
+      "birth_year": null,
+      "death_year": null,
+      "country": null,
+      "biography_short": "Blessed Alfred Ildefonso Schuster is remembered on August 31 as a cardinal and Archbishop of Milan. His witness points to pastoral leadership shaped by prayer and service.",
+      "biography_long": "Blessed Alfred Ildefonso Schuster is honored in the Church's August 31 calendar as a cardinal and Archbishop of Milan. His remembrance invites reflection on the responsibility of Christian leadership: to guide with humility, to remain rooted in worship, and to serve the people entrusted to one's care. For parish communities, his example encourages leaders to seek holiness not as status, but as faithful stewardship before God.",
+      "quote": null,
+      "reflection": "The Church needs leaders whose authority is purified by prayer. Blessed Alfred Ildefonso Schuster reminds us that pastoral responsibility becomes fruitful when it is offered as service.",
+      "prayer": "God of wisdom and mercy, guide all who serve your Church in leadership. Through the example of Blessed Alfred Ildefonso Schuster, teach us humility, fidelity, and love for your people. Amen.",
+      "image_url": null,
+      "color_theme": null,
+      "liturgical_rank": null,
+      "is_featured": false,
+      "scripture_reference": null,
+      "tags": [
+        "august",
+        "blessed",
+        "cardinal",
+        "archbishop",
+        "milan"
+      ],
+      "is_active": true,
+      "provenance": [
+        {
+          "source_organization": "Vatican News",
+          "source_publication": "Saint of the Day",
+          "source_url": "https://www.vaticannews.va/en/saints/08/31.html",
+          "source_checked_date": "2026-08-31",
+          "source_role": "factual_reference",
+          "editorial_author": "PENDING_EDITORIAL_AUTHOR",
+          "editorial_reviewer": "PENDING_EDITORIAL_REVIEWER",
+          "editorial_approval_date": "1900-01-01",
+          "content_license_basis": "PENDING_NOT_VERIFIED",
+          "factual_notes": "Verifies the August 31 listing, name, and title as Blessed Alfred Ildefonso Schuster, Cardinal, Archbishop of Milan."
+        }
+      ]
+    }
+  ]
+}
