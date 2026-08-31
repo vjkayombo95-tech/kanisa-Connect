@@ -1,5 +1,6 @@
 import type { DailyReadingBibleReference } from "./daily-reading-references";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 export { formatReference, resolveReference, toReferenceValues } from "./daily-reading-references";
 export type {
@@ -56,6 +57,19 @@ export type DailyReadingRecord = {
   passages?: DailyReadingPassageRecord[];
 };
 
+type CmsDailyReadingRecord = Pick<
+  Database["public"]["Tables"]["content_daily_readings"]["Row"],
+  | "id"
+  | "reading_date"
+  | "liturgical_season"
+  | "first_reading_reference"
+  | "responsorial_psalm_reference"
+  | "second_reading_reference"
+  | "gospel_reference"
+  | "reflection"
+  | "prayer"
+>;
+
 export const READING_PLACEHOLDER =
   "Reading text has not been populated yet. This section is ready for the approved daily readings source.";
 
@@ -86,7 +100,69 @@ function getPassageBibleReference(passage: DailyReadingPassageRecord | undefined
   };
 }
 
+function getCmsReference(value: string | null | undefined, kind: DailyReadingKind) {
+  const reference = value?.trim();
+  return reference || READING_SECTION_META[kind].reference;
+}
+
+function mapCmsDailyReading(record: CmsDailyReadingRecord): DailyReadingEntry {
+  const readings: DailyReadingSection[] = [
+    {
+      id: "first",
+      title: READING_SECTION_META.first.title,
+      reference: getCmsReference(record.first_reading_reference, "first"),
+      text: null,
+    },
+    {
+      id: "psalm",
+      title: READING_SECTION_META.psalm.title,
+      reference: getCmsReference(record.responsorial_psalm_reference, "psalm"),
+      text: null,
+    },
+  ];
+
+  if (record.second_reading_reference?.trim()) {
+    readings.push({
+      id: "second",
+      title: READING_SECTION_META.second.title,
+      reference: record.second_reading_reference.trim(),
+      text: null,
+    });
+  }
+
+  readings.push({
+    id: "gospel",
+    title: READING_SECTION_META.gospel.title,
+    reference: getCmsReference(record.gospel_reference, "gospel"),
+    text: null,
+  });
+
+  return {
+    id: record.id,
+    date: record.reading_date,
+    liturgicalSeason: record.liturgical_season || null,
+    reflection: record.reflection ?? "",
+    prayer: record.prayer ?? "",
+    readings,
+  };
+}
+
 export async function fetchPublishedDailyReading(date: string): Promise<DailyReadingEntry | null> {
+  const cmsResult = await supabase
+    .from("content_daily_readings")
+    .select("id, reading_date, liturgical_season, first_reading_reference, responsorial_psalm_reference, second_reading_reference, gospel_reference, reflection, prayer, status, updated_at, created_at")
+    .eq("reading_date", date)
+    .in("status", ["featured", "published"])
+    .order("status", { ascending: true })
+    .order("updated_at", { ascending: false })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: true })
+    .limit(1);
+  if (cmsResult.error) throw cmsResult.error;
+
+  const cmsRecord = cmsResult.data?.[0];
+  if (cmsRecord) return mapCmsDailyReading(cmsRecord);
+
   const { data, error } = await supabase
     .from("daily_readings" as never)
     .select("id, reading_date, liturgical_season, first_reading, psalm, second_reading, gospel, reflection, prayer, is_published")
