@@ -124,6 +124,16 @@ Before moving a saint from `draft/` to `published/`, confirm:
 - The file name matches the `slug`.
 - Any image URL is licensed or approved for use.
 
+## Provenance Review
+
+Current provenance status: PENDING / NOT VERIFIED
+
+- Source organization/publication: to be recorded
+- Reviewer: to be recorded
+- Review date: to be recorded
+- Text/content approval: pending
+- Image licensing approval: not applicable for current packs because no image URLs are present
+
 ## Future Ready
 
 The folder structure leaves room for:
