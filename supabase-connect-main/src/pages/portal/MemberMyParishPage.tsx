@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, CalendarDays, Check, Church, Clipboard, HandCoins, HeartHandshake, Mail, MapPin, Megaphone, Phone, Radio, Users } from "lucide-react";
 
@@ -14,6 +14,14 @@ import { getYouTubeEmbedUrl, presentation } from "@/lib/church-livestreams";
 import { dailyLifeKeys, fetchLatestAnnouncement, fetchNextMassSummary, fetchParishEvents, fetchParishIdentity, getParishEmailHref, getParishMapHref, getParishPhoneHref, isUpcomingEvent } from "@/lib/member-daily-life";
 import { fetchMemberMinistries, memberMinistriesQueryKey } from "@/lib/member-ministries";
 import type { PortalFeatureKey } from "@/lib/portal-features";
+
+function SectionTitle({ title, action }: { title: string; action?: ReactNode }) {
+  return <div className="mb-3 flex min-w-0 items-center justify-between gap-3"><h2 className="min-w-0 break-words text-xl font-bold">{title}</h2>{action}</div>;
+}
+
+function EmptyCard({ children }: { children: ReactNode }) {
+  return <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="p-4 text-sm text-muted-foreground">{children}</CardContent></Card>;
+}
 
 function LinkCard({ to, title, detail, icon: Icon }: { to: string; title: string; detail: string; icon: typeof Church }) {
   return <AppLink to={to} className="flex min-h-24 items-center gap-4 rounded-[24px] border border-border/70 bg-card/85 p-4 shadow-sm"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span><span className="min-w-0"><span className="block break-words font-bold">{title}</span><span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">{detail}</span></span></AppLink>;
@@ -61,21 +69,29 @@ export default function MemberMyParishPage() {
   };
 
   return <main data-testid="member-my-parish-page" className="min-h-full overflow-x-hidden bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-5 pb-28 lg:px-8 lg:pb-10"><div className="mx-auto max-w-6xl space-y-5">
-    {parish.isLoading ? <Skeleton className="h-36 rounded-[30px]" /> : parish.data ? <section className="grid min-w-0 gap-5 rounded-[30px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.14),hsl(var(--card))_65%)] p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)] lg:items-center">
-      <div className="flex min-w-0 items-center gap-4">{parish.data.logoUrl ? <img src={parish.data.logoUrl} alt={`${parish.data.name} logo`} className="h-16 w-16 shrink-0 rounded-2xl object-cover" /> : <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><Church className="h-8 w-8" /></span>}<div className="min-w-0"><p className="text-sm font-bold text-primary">Parokia Yangu</p><h1 className="mt-1 break-words text-2xl font-bold sm:text-3xl">{parish.data.name}</h1>{member.data ? <p className="mt-1 break-words text-sm text-muted-foreground">{member.data.full_name}</p> : null}</div></div>
-      {(phoneHref || emailHref || mapHref) ? <div className="grid min-w-0 gap-2 sm:grid-cols-2" aria-label="Mawasiliano ya parokia">
-        {phoneHref ? <a href={phoneHref} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/65 px-3 py-2 text-sm"><Phone className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-all">{parish.data.phone}</span></a> : null}
-        {emailHref ? <a href={emailHref} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/65 px-3 py-2 text-sm"><Mail className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-all">{parish.data.email}</span></a> : null}
-        {mapHref ? <button type="button" onClick={() => void copyAddress()} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/65 px-3 py-2 text-left text-sm"><Clipboard className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">Nakili anwani</span></button> : null}
-        {mapHref ? <a href={mapHref} target="_blank" rel="noopener noreferrer" className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/65 px-3 py-2 text-sm"><MapPin className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">Fungua ramani</span></a> : null}
-        {mapHref ? <p className="min-w-0 break-words text-xs text-muted-foreground sm:col-span-2">{parish.data.address}</p> : null}
-        {copyStatus !== "idle" ? <p role="status" className="flex items-center gap-1 text-xs text-muted-foreground sm:col-span-2">{copyStatus === "copied" ? <><Check className="h-3.5 w-3.5" />Anwani imenakiliwa.</> : "Anwani haikuweza kunakiliwa."}</p> : null}
-      </div> : null}
+    {parish.isLoading ? <Skeleton className="h-36 rounded-[30px]" /> : parish.data ? <section className="flex min-w-0 items-center gap-4 rounded-[30px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.14),hsl(var(--card))_65%)] p-5 sm:p-6">
+      {parish.data.logoUrl ? <img src={parish.data.logoUrl} alt={`${parish.data.name} logo`} className="h-16 w-16 shrink-0 rounded-2xl object-cover" /> : <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><Church className="h-8 w-8" /></span>}
+      <div className="min-w-0"><p className="text-sm font-bold text-primary">Parokia Yangu</p><h1 className="mt-1 break-words text-2xl font-bold sm:text-3xl">{parish.data.name}</h1>{member.data ? <p className="mt-1 break-words text-sm text-muted-foreground">{member.data.full_name}</p> : null}</div>
     </section> : <p className="rounded-2xl border p-4 text-sm text-muted-foreground">Taarifa za parokia hazikupatikana.</p>}
-    <div className="grid gap-4 md:grid-cols-2">{mass.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : mass.data?.mass ? <LinkCard to="/portal/calendar" title={mass.data.mass.title} detail={new Date(`${mass.data.mass.massDate}T${mass.data.mass.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })} icon={Church} /> : null}{announcement.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : announcement.data ? <LinkCard to="/portal/announcements" title={announcement.data.title} detail={announcement.data.content || "Tangazo la karibuni"} icon={Megaphone} /> : null}</div>
-    {upcoming.length ? <section><h2 className="mb-3 text-xl font-bold">Matukio yajayo</h2><div className="grid gap-3 md:grid-cols-3">{upcoming.map((event) => <LinkCard key={event.id} to="/portal/events" title={event.title} detail={new Date(event.startDate).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })} icon={CalendarDays} />)}</div></section> : null}
-    {ministries.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : !ministries.isError ? <section><div className="mb-3 flex items-center justify-between gap-3"><h2 className="text-xl font-bold">Huduma zangu</h2><AppLink to="/portal/ministries" className="text-sm font-bold text-primary">Huduma zote</AppLink></div>{joined.length ? <div className="grid gap-3 md:grid-cols-2">{joined.slice(0, 4).map((ministry) => <LinkCard key={ministry.id} to={`/portal/ministries/${ministry.id}`} title={ministry.name} detail="Umejiunga" icon={Users} />)}</div> : <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-muted-foreground"><span>Bado hujajiunga na huduma ya parokia.</span><AppLink to="/portal/ministries" className="font-bold text-primary">Angalia huduma</AppLink></CardContent></Card>}</section> : null}
-    <section><h2 className="mb-3 text-xl font-bold">Njia za haraka</h2><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+
+    <section>
+      <SectionTitle title="Misa ijayo" action={<AppLink to="/portal/calendar" className="text-sm font-bold text-primary">Kalenda</AppLink>} />
+      {mass.isLoading ? <Skeleton className="h-32 rounded-[24px]" /> : mass.data?.mass ? <AppLink to="/portal/calendar" className="block rounded-[28px] border border-primary/20 bg-card/90 p-5 shadow-sm"><div className="flex min-w-0 items-start gap-4"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Church className="h-5 w-5" /></span><div className="min-w-0"><p className="break-words text-xl font-bold">{mass.data.mass.title}</p>{mass.data.mass.description ? <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{mass.data.mass.description}</p> : null}<p className="mt-3 text-sm font-semibold text-primary">{new Date(`${mass.data.mass.massDate}T${mass.data.mass.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })}</p></div></div></AppLink> : <EmptyCard>Hakuna Misa ijayo iliyopangwa kwa sasa.</EmptyCard>}
+    </section>
+
+    <section>
+      <SectionTitle title="Tangazo la karibuni" action={<AppLink to="/portal/announcements" className="text-sm font-bold text-primary">Matangazo yote</AppLink>} />
+      {announcement.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : announcement.data ? <LinkCard to="/portal/announcements" title={announcement.data.title} detail={announcement.data.content || "Tangazo la karibuni"} icon={Megaphone} /> : <EmptyCard>Hakuna tangazo jipya kwa sasa.</EmptyCard>}
+    </section>
+
+    <section>
+      <SectionTitle title="Matukio yajayo" action={<AppLink to="/portal/events" className="text-sm font-bold text-primary">Matukio yote</AppLink>} />
+      {events.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : upcoming.length ? <div className="grid gap-3 md:grid-cols-3">{upcoming.map((event) => <LinkCard key={event.id} to="/portal/events" title={event.title} detail={new Date(event.startDate).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })} icon={CalendarDays} />)}</div> : <EmptyCard>Hakuna tukio lijalo lililochapishwa kwa sasa.</EmptyCard>}
+    </section>
+
+    {ministries.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : !ministries.isError ? <section><SectionTitle title="Huduma zangu" action={<AppLink to="/portal/ministries" className="text-sm font-bold text-primary">Huduma zote</AppLink>} />{joined.length ? <div className="grid gap-3 md:grid-cols-2">{joined.slice(0, 4).map((ministry) => <LinkCard key={ministry.id} to={`/portal/ministries/${ministry.id}`} title={ministry.name} detail={ministry.description || "Umejiunga"} icon={Users} />)}</div> : <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-muted-foreground"><span>Bado hujajiunga na huduma ya parokia.</span><AppLink to="/portal/ministries" className="font-bold text-primary">Angalia huduma</AppLink></CardContent></Card>}</section> : null}
+
+    <section aria-label="Njia za haraka"><SectionTitle title="Njia za haraka" /><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
       {eligibleLivestream && livestream.data ? <Shortcut to={`/portal/live/${livestream.data.id}`} title="Misa Mubashara" icon={Church} /> : null}
       {radio.featureEnabled && !radio.isError && radio.data.length ? <Shortcut to="/portal/radio" title="Radio" icon={Radio} /> : null}
       {featureVisible(getFeatureState, "give") ? <Shortcut to="/portal/give" title="Michango" icon={HandCoins} /> : null}
@@ -85,6 +101,16 @@ export default function MemberMyParishPage() {
       {featureVisible(getFeatureState, "events") ? <Shortcut to="/portal/calendar" title="Kalenda" icon={CalendarDays} /> : null}
       <Shortcut to="/portal/library" title="Maktaba" icon={BookOpen} />
     </div></section>
+
+    {(phoneHref || emailHref || mapHref) ? <section aria-label="Mawasiliano ya parokia"><SectionTitle title="Mawasiliano ya parokia" /><div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      {phoneHref ? <a href={phoneHref} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 text-sm"><Phone className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-all">{parish.data?.phone}</span></a> : null}
+      {emailHref ? <a href={emailHref} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 text-sm"><Mail className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-all">{parish.data?.email}</span></a> : null}
+      {mapHref ? <button type="button" onClick={() => void copyAddress()} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 text-left text-sm"><Clipboard className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">Nakili anwani</span></button> : null}
+      {mapHref ? <a href={mapHref} target="_blank" rel="noopener noreferrer" className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 text-sm"><MapPin className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">Fungua ramani</span></a> : null}
+      {mapHref ? <p className="min-w-0 break-words text-xs text-muted-foreground sm:col-span-2 lg:col-span-4">{parish.data?.address}</p> : null}
+      {copyStatus !== "idle" ? <p role="status" className="flex items-center gap-1 text-xs text-muted-foreground sm:col-span-2 lg:col-span-4">{copyStatus === "copied" ? <><Check className="h-3.5 w-3.5" />Anwani imenakiliwa.</> : "Anwani haikuweza kunakiliwa."}</p> : null}
+    </div></section> : null}
+
     {(parish.isError || member.isError || mass.isError || announcement.isError || events.isError || ministries.isError) ? <p className="rounded-2xl border border-border/70 bg-card p-4 text-sm text-muted-foreground">Baadhi ya taarifa za parokia hazikupatikana. Njia nyingine bado zinaweza kutumika.</p> : null}
   </div></main>;
 }

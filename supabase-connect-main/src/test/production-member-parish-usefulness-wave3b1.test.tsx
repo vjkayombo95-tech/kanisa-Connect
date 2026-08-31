@@ -50,14 +50,20 @@ describe("Wave 3B1 parish usefulness", () => {
   });
 
   it("orders parish priorities and uses compact eligible media shortcuts", () => {
-    const identity = parishPage.indexOf('aria-label="Mawasiliano ya parokia"');
+    const identity = parishPage.indexOf("Parokia Yangu");
+    const mass = parishPage.indexOf('title="Misa ijayo"');
+    const announcement = parishPage.indexOf('title="Tangazo la karibuni"');
     const events = parishPage.indexOf("Matukio yajayo");
     const ministries = parishPage.indexOf("Huduma zangu");
     const shortcuts = parishPage.indexOf("Njia za haraka");
+    const contact = parishPage.indexOf('aria-label="Mawasiliano ya parokia"');
     expect(identity).toBeGreaterThan(-1);
-    expect(events).toBeGreaterThan(identity);
+    expect(mass).toBeGreaterThan(identity);
+    expect(announcement).toBeGreaterThan(mass);
+    expect(events).toBeGreaterThan(announcement);
     expect(ministries).toBeGreaterThan(events);
     expect(shortcuts).toBeGreaterThan(ministries);
+    expect(contact).toBeGreaterThan(shortcuts);
     expect(parishPage).toContain('title="Radio"');
     expect(parishPage).toContain('title="Misa Mubashara"');
   });
