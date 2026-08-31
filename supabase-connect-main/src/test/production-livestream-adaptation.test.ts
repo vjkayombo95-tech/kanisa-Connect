@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe,expect,it } from "vitest";
-import { extractYouTubeVideoId } from "@/lib/church-livestreams";
+import { extractYouTubeVideoId, presentation, selectMemberLivestream, type ChurchLivestream } from "@/lib/church-livestreams";
 const read=(path:string)=>readFileSync(path,"utf8");
 const migration=read("supabase/migrations/20260813120000_production_livestream_adaptation.sql");
 const routes=read("src/routes/MemberRoutes.tsx");
@@ -10,6 +10,21 @@ const player=read("src/components/portal/PersistentLivestreamPlayer.tsx");
 const card=read("src/components/portal/ProductionLiveMassCard.tsx");
 const hook=read("src/hooks/use-church-livestream.ts");
 const app=read("src/App.tsx");
+const baseStream: ChurchLivestream = {
+  id: "stream-a",
+  churchId: "church-a",
+  status: "live",
+  title: "Sunday Mass",
+  provider: "youtube",
+  watchUrl: "https://www.youtube.com/watch?v=M7lc1UVf-VE",
+  providerExternalId: "M7lc1UVf-VE",
+  scheduledStart: "2026-08-31T08:00:00.000Z",
+  scheduledEnd: "2026-08-31T10:00:00.000Z",
+  actualStartedAt: "2026-08-31T08:00:00.000Z",
+  actualEndedAt: null,
+};
+const atNine = new Date("2026-08-31T09:00:00.000Z").getTime();
+const afterEnd = new Date("2026-08-31T10:01:00.000Z").getTime();
 describe("minimal production livestream adaptation",()=>{
   it("adds only the livestream database surface",()=>{expect(migration).toContain("create table public.church_livestreams");expect(migration).toContain("has_livestream_permission");expect(migration).toContain("enable row level security");expect(migration).toContain("one_live_per_church");expect(migration).not.toMatch(/radio|ministries/i)});
   it("uses explicit generic feature/action permissions",()=>{expect(migration).toContain("create table public.church_role_permissions");expect(migration).toContain("has_church_feature_permission");expect(migration).toContain("when 'view' then crp.can_view");expect(migration).not.toMatch(/_action = 'view'.*ur\.role/s)});
@@ -23,5 +38,9 @@ describe("minimal production livestream adaptation",()=>{
   it("clears on user or tenant scope change while shared links own SPA navigation",()=>{expect(context).toContain("scope.current.churchId!==churchId");expect(context).toContain("scope.current.user!==user?.id");expect(context).not.toContain('document.addEventListener("click"');expect(appLink).toContain("useNavigate");expect(appLink).toContain("url.origin !== window.location.origin");expect(appLink).toContain("props.download !== undefined")});
   it("validates supported YouTube identities",()=>{expect(extractYouTubeVideoId("https://www.youtube.com/watch?v=M7lc1UVf-VE")).toBe("M7lc1UVf-VE");expect(extractYouTubeVideoId("https://youtu.be/M7lc1UVf-VE")).toBe("M7lc1UVf-VE");expect(extractYouTubeVideoId("https://example.com/M7lc1UVf-VE")).toBeNull()});
   it("rejects malformed and incomplete YouTube sources",()=>{expect(extractYouTubeVideoId("not-a-url")).toBeNull();expect(extractYouTubeVideoId("https://youtube.com/watch?v=short")).toBeNull();expect(extractYouTubeVideoId("https://vimeo.com/M7lc1UVf-VE")).toBeNull()});
+  it("presents a valid live stream as live",()=>{expect(presentation(baseStream,atNine)).toBe("live")});
+  it("ignores an expired live stream",()=>{expect(presentation(baseStream,afterEnd)).toBeNull();expect(selectMemberLivestream([baseStream],afterEnd)).toBeNull()});
+  it("ignores a live stream with an actual end timestamp",()=>{const ended={...baseStream,actualEndedAt:"2026-08-31T09:30:00.000Z"};expect(presentation(ended,atNine)).toBeNull();expect(selectMemberLivestream([ended],atNine)).toBeNull()});
+  it("selects a valid scheduled stream when a stale live row exists",()=>{const scheduled={...baseStream,id:"stream-b",status:"scheduled" as const,scheduledStart:"2026-08-31T09:15:00.000Z",scheduledEnd:"2026-08-31T10:15:00.000Z",actualStartedAt:null};expect(selectMemberLivestream([baseStream,scheduled],afterEnd)).toBe(scheduled);expect(presentation(scheduled,atNine)).toBe("upcoming")});
   it("keeps member and admin routes behind their authenticated shells",()=>{expect(app).toMatch(/path="\/portal\/\*"[\s\S]*?<ProtectedRoute requireChurch>/);expect(app).toMatch(/path="\/member\/\*"[\s\S]*?<ProtectedRoute requireChurch>/);expect(app).toMatch(/path="\/church-admin\/\*"[\s\S]*?<ProtectedRoute requireChurch requireAdmin>/);expect(read("src/routes/AdminRoutes.tsx")).toContain('path="livestreams"')});
 });
