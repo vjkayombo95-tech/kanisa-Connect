@@ -8,10 +8,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChurchLivestream } from "@/hooks/use-church-livestream";
 import { useChurchRadioStations } from "@/hooks/use-church-radio";
+import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { useLinkedMember } from "@/hooks/use-linked-member";
 import { getYouTubeEmbedUrl, presentation } from "@/lib/church-livestreams";
 import { dailyLifeKeys, fetchLatestAnnouncement, fetchNextMassSummary, fetchParishEvents, fetchParishIdentity, getParishEmailHref, getParishMapHref, getParishPhoneHref, isUpcomingEvent } from "@/lib/member-daily-life";
 import { fetchMemberMinistries, memberMinistriesQueryKey } from "@/lib/member-ministries";
+import type { PortalFeatureKey } from "@/lib/portal-features";
 
 function LinkCard({ to, title, detail, icon: Icon }: { to: string; title: string; detail: string; icon: typeof Church }) {
   return <AppLink to={to} className="flex min-h-24 items-center gap-4 rounded-[24px] border border-border/70 bg-card/85 p-4 shadow-sm"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span><span className="min-w-0"><span className="block break-words font-bold">{title}</span><span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">{detail}</span></span></AppLink>;
@@ -21,9 +23,15 @@ function Shortcut({ to, title, icon: Icon }: { to: string; title: string; icon: 
   return <AppLink to={to} className="flex min-h-14 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2.5 text-sm font-bold shadow-sm"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-4 w-4" /></span><span className="min-w-0 break-words">{title}</span></AppLink>;
 }
 
+const featureVisible = (
+  getFeatureState: ReturnType<typeof useFeatureAccess>["getFeatureState"],
+  featureKey: PortalFeatureKey,
+) => getFeatureState(featureKey).visible;
+
 export default function MemberMyParishPage() {
   const { churchId } = useAuth();
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const { getFeatureState } = useFeatureAccess();
   const parish = useQuery({ queryKey: dailyLifeKeys.parish(churchId), queryFn: () => fetchParishIdentity(churchId!), enabled: !!churchId, staleTime: 5 * 60_000 });
   const member = useLinkedMember();
   const mass = useQuery({ queryKey: dailyLifeKeys.nextMass(churchId), queryFn: () => fetchNextMassSummary(churchId!), enabled: !!churchId, staleTime: 60_000 });
@@ -70,7 +78,12 @@ export default function MemberMyParishPage() {
     <section><h2 className="mb-3 text-xl font-bold">Njia za haraka</h2><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
       {eligibleLivestream && livestream.data ? <Shortcut to={`/portal/live/${livestream.data.id}`} title="Misa Mubashara" icon={Church} /> : null}
       {radio.featureEnabled && !radio.isError && radio.data.length ? <Shortcut to="/portal/radio" title="Radio" icon={Radio} /> : null}
-      <Shortcut to="/portal/give" title="Michango" icon={HandCoins} /><Shortcut to="/portal/mass-intentions" title="Nia za Misa" icon={HeartHandshake} /><Shortcut to="/portal/prayer-requests" title="Maombi" icon={HeartHandshake} /><Shortcut to="/portal/sermons" title="Mahubiri" icon={Church} /><Shortcut to="/portal/calendar" title="Kalenda" icon={CalendarDays} /><Shortcut to="/portal/library" title="Maktaba" icon={BookOpen} />
+      {featureVisible(getFeatureState, "give") ? <Shortcut to="/portal/give" title="Michango" icon={HandCoins} /> : null}
+      {featureVisible(getFeatureState, "mass_intentions") ? <Shortcut to="/portal/mass-intentions" title="Nia za Misa" icon={HeartHandshake} /> : null}
+      {featureVisible(getFeatureState, "prayer_requests") ? <Shortcut to="/portal/prayer-requests" title="Maombi" icon={HeartHandshake} /> : null}
+      {featureVisible(getFeatureState, "sermons") ? <Shortcut to="/portal/sermons" title="Mahubiri" icon={Church} /> : null}
+      {featureVisible(getFeatureState, "events") ? <Shortcut to="/portal/calendar" title="Kalenda" icon={CalendarDays} /> : null}
+      <Shortcut to="/portal/library" title="Maktaba" icon={BookOpen} />
     </div></section>
     {(parish.isError || member.isError || mass.isError || announcement.isError || events.isError || ministries.isError) ? <p className="rounded-2xl border border-border/70 bg-card p-4 text-sm text-muted-foreground">Baadhi ya taarifa za parokia hazikupatikana. Njia nyingine bado zinaweza kutumika.</p> : null}
   </div></main>;
