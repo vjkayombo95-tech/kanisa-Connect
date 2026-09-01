@@ -17,7 +17,7 @@ import {
   CalendarDays,
   Radio,
 } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   DropdownMenu,
@@ -197,6 +197,10 @@ function isActive(pathname: string, url: string) {
   return url === "/portal" ? pathname === "/portal" : pathname.startsWith(url);
 }
 
+function findDesktopGroupForPath(groups: NavGroup[], pathname: string) {
+  return groups.find((group) => group.id !== "primary" && group.items.some((item) => isActive(pathname, item.url)))?.id ?? null;
+}
+
 function DesktopSidebarLink({
   item,
   pathname,
@@ -262,7 +266,7 @@ function MemberDesktopSidebar({
       data-testid="member-desktop-sidebar"
       data-collapsed={collapsed ? "true" : "false"}
       className={cn(
-        "sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 border-r border-border/50 bg-[linear-gradient(180deg,rgba(17,24,39,0.9),rgba(11,15,20,0.96))] px-3 py-3 shadow-[22px_0_70px_-55px_rgba(0,0,0,0.95)] backdrop-blur-2xl lg:flex lg:flex-col",
+        "relative sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 border-r border-primary/10 bg-[linear-gradient(180deg,rgba(17,24,39,0.9),rgba(11,15,20,0.96))] px-3 py-3 shadow-[22px_0_70px_-55px_rgba(0,0,0,0.95)] backdrop-blur-2xl after:absolute after:inset-y-0 after:-right-px after:w-px after:bg-[linear-gradient(180deg,transparent,rgba(250,204,21,0.22),rgba(148,163,184,0.12),transparent)] after:content-[''] lg:flex lg:flex-col",
         collapsed ? "w-[5.25rem]" : "w-60",
       )}
     >
@@ -301,7 +305,7 @@ function MemberDesktopSidebar({
         {groups.map((group) => {
           const activeWithin = group.items.some((item) => isActive(pathname, item.url));
           const primaryGroup = group.id === "primary";
-          const groupOpen = collapsed || primaryGroup || activeWithin || expandedGroups.includes(group.id);
+          const groupOpen = collapsed || primaryGroup || expandedGroups.includes(group.id);
 
           return (
             <section key={group.id} aria-label={group.label} className="space-y-1">
@@ -410,6 +414,7 @@ export function PortalLayout() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
   const [desktopExpandedGroups, setDesktopExpandedGroups] = useState<string[]>([]);
+  const [lastDesktopActiveGroup, setLastDesktopActiveGroup] = useState<string | null>(null);
   const [mobileExpandedGroups, setMobileExpandedGroups] = useState<string[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
@@ -465,6 +470,24 @@ export function PortalLayout() {
         .filter((group) => group.items.length > 0),
     [getFeatureState],
   );
+  const activeDesktopGroup = useMemo(
+    () => findDesktopGroupForPath(visibleDesktopSidebarGroups, location.pathname),
+    [location.pathname, visibleDesktopSidebarGroups],
+  );
+
+  useEffect(() => {
+    if (!activeDesktopGroup) {
+      setLastDesktopActiveGroup(null);
+      return;
+    }
+
+    if (activeDesktopGroup === lastDesktopActiveGroup) return;
+
+    setDesktopExpandedGroups((current) =>
+      current.includes(activeDesktopGroup) ? current : [...current, activeDesktopGroup],
+    );
+    setLastDesktopActiveGroup(activeDesktopGroup);
+  }, [activeDesktopGroup, lastDesktopActiveGroup]);
 
   const activeFeatureKey = getPortalFeatureForPath(location.pathname);
   const activeFeatureState = activeFeatureKey ? getFeatureState(activeFeatureKey) : null;
@@ -757,7 +780,7 @@ export function PortalLayout() {
               />
             ) : null}
 
-            <main className="min-w-0 flex-1 lg:h-full lg:overflow-y-auto">
+            <main className="member-main-scrollbar min-w-0 flex-1 lg:h-full lg:overflow-y-auto">
               {routeLocked ? (
                 <div className="container mx-auto px-4 py-16">
                   <div className="mx-auto max-w-2xl">
