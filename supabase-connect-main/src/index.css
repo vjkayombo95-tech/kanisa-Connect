@@ -578,6 +578,32 @@
       linear-gradient(180deg, hsl(0 0% 100% / 0.12), transparent) border-box;
   }
 
+  @media (min-width: 1024px) {
+    .member-main-scrollbar {
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--muted-foreground) / 0.5) hsl(var(--background) / 0.45);
+    }
+
+    .member-main-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .member-main-scrollbar::-webkit-scrollbar-track {
+      background: hsl(var(--background) / 0.45);
+    }
+
+    .member-main-scrollbar::-webkit-scrollbar-thumb {
+      border: 2px solid hsl(var(--background) / 0.45);
+      border-radius: 9999px;
+      background: hsl(var(--muted-foreground) / 0.42);
+    }
+
+    .member-main-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--muted-foreground) / 0.62);
+    }
+  }
+
   .scrollbar-gutter-stable {
     scrollbar-gutter: stable;
   }

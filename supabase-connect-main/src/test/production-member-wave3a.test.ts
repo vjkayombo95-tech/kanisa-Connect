@@ -94,6 +94,7 @@ describe("Wave 3A member reliability contracts", () => {
     for (const source of [dashboard, today, parish]) expect(source).toContain("fetchNextMassSummary");
     expect(today).toContain("fetchPublishedDailyReading");
     expect(readings).toContain("fetchPublishedDailyReading");
+    expect(dashboard).not.toContain("getTodayReadingEntry");
     expect(today).not.toContain("getTodayReadingEntry");
   });
 
@@ -102,7 +103,46 @@ describe("Wave 3A member reliability contracts", () => {
     expect(dashboard).toContain('["simple-member-home", user?.id, user?.email, churchId]');
     expect(dashboard).toContain('["member-home-financials", churchId, memberId]');
     expect(dashboard).toContain("enabled: enabled && !!churchId && !!memberId");
-    expect(dashboard).toContain("enabled: isDesktop");
+    expect(dashboard).toContain("useMemberFinancialData(churchId, data?.memberId ?? null, isDesktop)");
     expect(dashboard).toContain("useIsDesktop");
+  });
+
+  it("keeps desktop Home focused on parish identity, finance, Mass, one announcement, and up to three actions", () => {
+    const dashboard = read("components/portal/MemberDashboard.tsx");
+    expect(dashboard).toContain("Karibu");
+    expect(dashboard).toContain("Muhtasari wa michango");
+    expect(dashboard).toContain("FinancialSummarySurface");
+    expect(dashboard).toContain("xl:divide-x xl:divide-border/60");
+    expect(dashboard).toContain("Misa ijayo");
+    expect(dashboard).toContain("Hakuna misa iliyopangwa kwa sasa.");
+    expect(dashboard).toContain("Ratiba mpya itaonekana hapa itakapochapishwa.");
+    expect(dashboard).toContain("Tangazo la Karibuni");
+    expect(dashboard).toContain("Hatua za haraka");
+    expect(dashboard).toContain("<ProductionLiveMassCard />");
+    expect((dashboard.match(/label: "(?:Lipa Sasa|Nia ya Misa|Matangazo)"/g) ?? [])).toHaveLength(3);
+    expect((dashboard.match(/quickActions\.push/g) ?? [])).toHaveLength(3);
+    expect(dashboard).toContain("submitMassResponse.mutate(response)");
+    expect(dashboard).toContain('queryFn: () => fetchNextMassSummary(churchId!)');
+    expect(dashboard).toContain("fetchPortalAnnouncements(member.church_id, 1)");
+    expect(dashboard).not.toContain('label="Historia Yangu"');
+    expect(dashboard).not.toContain('label="Masomo ya Leo"');
+    expect(dashboard).not.toContain('label="Watakatifu"');
+    expect(dashboard).not.toContain('to="/member/library"');
+    expect(dashboard).not.toContain("get_saint_of_the_day");
+    expect(dashboard).not.toContain("Saint of the Day");
+    expect(dashboard).not.toContain("Watakatifu");
+    expect(dashboard).not.toContain("Wasifu na malipo yako");
+    expect(dashboard).not.toContain("MemberDesktopSidebar");
+    expect(dashboard).not.toContain("member-desktop-sidebar");
+  });
+
+  it("preserves desktop Home feature gates for the remaining quick actions", () => {
+    const dashboard = read("components/portal/MemberDashboard.tsx");
+    expect(dashboard).toContain('const giveVisible = getFeatureState("give").visible;');
+    expect(dashboard).toContain('const massVisible = getFeatureState("mass_intentions").visible;');
+    expect(dashboard).toContain('const announcementsVisible = getFeatureState("announcements").visible;');
+    expect(dashboard).toContain("if (giveVisible) quickActions.push({ icon: HandCoins");
+    expect(dashboard).toContain("if (massVisible) quickActions.push({ icon: HeartHandshake");
+    expect(dashboard).toContain("if (announcementsVisible) quickActions.push({ icon: Megaphone");
   });
 });

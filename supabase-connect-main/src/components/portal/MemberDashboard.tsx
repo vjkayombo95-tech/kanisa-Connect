@@ -1,20 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BellRing,
-  BookOpen,
   CalendarDays,
   Church,
   HandCoins,
   HeartHandshake,
-  History,
   Megaphone,
-  Sparkles,
-  UserRound,
   Wallet,
+  type LucideIcon,
 } from "lucide-react";
 
 import { AppLink } from "@/components/AppLink";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,7 +20,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatTZS } from "@/lib/currency";
 import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
 import { cn } from "@/lib/utils";
-import { getReadableReadingDate, getTodayReadingEntry } from "@/lib/daily-readings";
 import { logWarning } from "@/lib/error-logger";
 import { ProductionLiveMassCard } from "@/components/portal/ProductionLiveMassCard";
 import { MobileMemberHome } from "@/components/portal/MobileMemberHome";
@@ -50,24 +45,12 @@ type MemberHomeData = {
   } | null;
 };
 
-type SaintOfDay = {
-  id: string;
-  slug: string;
-  name: string;
-  title: string | null;
-  feast_month: number;
-  feast_day: number;
-  patron_of: string | null;
-  birth_year: number | null;
-  death_year: number | null;
-  country: string | null;
-  biography_short: string;
-  biography_long: string;
-  quote: string | null;
-  reflection: string;
-  prayer: string;
-  image_url: string | null;
-  color_theme: string | null;
+type HomeQuickAction = {
+  icon: LucideIcon;
+  label: string;
+  hint: string;
+  to: string;
+  primary?: boolean;
 };
 
 function readPendingPledgeBalance(rows: unknown) {
@@ -108,13 +91,6 @@ function formatMassTime(value: string | null) {
     hour: "numeric",
     minute: "2-digit",
   });
-}
-
-function formatFeastDay(month: number, day: number) {
-  return new Intl.DateTimeFormat("en-TZ", {
-    month: "long",
-    day: "numeric",
-  }).format(new Date(2026, month - 1, day));
 }
 
 function isDeadlinePassed(value: string | null) {
@@ -250,28 +226,65 @@ function DashboardLoadingState() {
   );
 }
 
-function SummaryTile({
+function FinancialMetric({
   icon: Icon,
   label,
   value,
   hint,
-  className,
 }: {
-  icon: typeof HandCoins;
+  icon: LucideIcon;
   label: string;
   value: string;
   hint: string;
-  className?: string;
 }) {
   return (
-    <Card className={cn("rounded-[28px] border-border/70 bg-card/85 shadow-sm", className)}>
+    <div className="flex min-w-0 items-start gap-3">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="mt-1 break-words text-xl font-bold tracking-tight text-foreground">{value}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+      </div>
+    </div>
+  );
+}
+
+function FinancialSummarySurface({
+  financials,
+  home,
+}: {
+  financials: ReturnType<typeof useMemberFinancialData>;
+  home: MemberHomeData;
+}) {
+  return (
+    <Card className="rounded-[28px] border-border/60 bg-card/80 shadow-sm">
       <CardContent className="p-4">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <Icon className="h-5 w-5" />
+        <div className="grid gap-4 xl:grid-cols-3 xl:divide-x xl:divide-border/60">
+          <FinancialMetric
+            icon={Wallet}
+            label="Jumla Uliyolipa"
+            value={financials.isLoading ? "Inapakiwa" : financials.isError || home.totalPaid === null ? "Haipatikani" : formatTZS(home.totalPaid)}
+            hint={financials.isError ? "Jaribu tena baada ya muda" : "Michango iliyorekodiwa"}
+          />
+          <div className="xl:pl-4">
+            <FinancialMetric
+              icon={BellRing}
+              label="Kiasi Kinachosubiri"
+              value={financials.isLoading ? "Inapakiwa" : financials.isError || home.pendingAmount === null ? "Haipatikani" : formatTZS(home.pendingAmount)}
+              hint={financials.isError ? "Jaribu tena baada ya muda" : "Ahadi ambazo hazijakamilika"}
+            />
+          </div>
+          <div className="xl:pl-4">
+            <FinancialMetric
+              icon={CalendarDays}
+              label="Malipo ya Mwisho"
+              value={financials.isLoading ? "Inapakiwa" : financials.isError ? "Haipatikani" : home.lastPayment ? formatTZS(home.lastPayment.amount) : "Hakuna bado"}
+              hint={financials.isError ? "Jaribu tena baada ya muda" : home.lastPayment ? `${home.lastPayment.label} - ${formatDate(home.lastPayment.date)}` : "Historia itaonekana ukilipa"}
+            />
+          </div>
         </div>
-        <p className="mt-4 text-sm text-muted-foreground">{label}</p>
-        <p className="mt-1 break-words text-2xl font-bold tracking-tight text-foreground">{value}</p>
-        <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
       </CardContent>
     </Card>
   );
@@ -284,7 +297,7 @@ function BigAction({
   to,
   primary,
 }: {
-  icon: typeof HandCoins;
+  icon: LucideIcon;
   label: string;
   hint: string;
   to: string;
@@ -294,7 +307,7 @@ function BigAction({
     <AppLink
       to={to}
       className={cn(
-        "flex min-h-24 items-center gap-4 rounded-[28px] border p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
+        "flex min-h-14 items-center gap-3 rounded-2xl border px-3 py-2.5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
         primary
           ? "border-primary/25 bg-primary text-primary-foreground"
           : "border-border/70 bg-card/85 text-foreground hover:border-primary/30",
@@ -302,15 +315,15 @@ function BigAction({
     >
       <span
         className={cn(
-          "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl",
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
           primary ? "bg-primary-foreground/15" : "bg-primary/10 text-primary",
         )}
       >
-        <Icon className="h-7 w-7" />
+        <Icon className="h-5 w-5" />
       </span>
       <span className="min-w-0">
-        <span className="block text-xl font-bold leading-tight">{label}</span>
-        <span className={cn("mt-1 block text-sm", primary ? "text-primary-foreground/80" : "text-muted-foreground")}>
+        <span className="block text-sm font-bold leading-tight">{label}</span>
+        <span className={cn("mt-1 block text-xs", primary ? "text-primary-foreground/80" : "text-muted-foreground")}>
           {hint}
         </span>
       </span>
@@ -332,17 +345,6 @@ export default function MemberDashboard() {
     queryFn: () => fetchNextMassSummary(churchId!),
     enabled: !!churchId,
     staleTime: 60 * 1000,
-  });
-
-  const { data: saintsOfDay = [], isLoading: saintLoading } = useQuery({
-    queryKey: ["saint-of-the-day"],
-    queryFn: async () => {
-      const { data: saints, error } = await supabase.rpc("get_saint_of_the_day" as never);
-      if (error) throw error;
-      return (saints ?? []) as unknown as SaintOfDay[];
-    },
-    enabled: isDesktop,
-    staleTime: 6 * 60 * 60 * 1000,
   });
 
   const submitMassResponse = useMutation({
@@ -374,14 +376,12 @@ export default function MemberDashboard() {
   const massVisible = getFeatureState("mass_intentions").visible;
   const announcementsVisible = getFeatureState("announcements").visible;
   const nextMass = massSummary?.mass ?? null;
-  const saintOfDay = saintsOfDay[0] ?? null;
-  const todayReading = getTodayReadingEntry();
-  const firstReading = todayReading.readings.find((reading) => reading.id === "first");
-  const psalmReading = todayReading.readings.find((reading) => reading.id === "psalm");
-  const secondReading = todayReading.readings.find((reading) => reading.id === "second");
-  const gospelReading = todayReading.readings.find((reading) => reading.id === "gospel");
   const deadlinePassed = isDeadlinePassed(nextMass?.responseDeadline ?? null);
   const rsvpDisabled = !nextMass?.askForRsvp || deadlinePassed || !home.memberId || submitMassResponse.isPending;
+  const quickActions: HomeQuickAction[] = [];
+  if (giveVisible) quickActions.push({ icon: HandCoins, label: "Lipa Sasa", hint: "Toa mchango au sadaka", to: "/portal/give", primary: true });
+  if (massVisible) quickActions.push({ icon: HeartHandshake, label: "Nia ya Misa", hint: "Wasilisha nia ya Misa", to: "/portal/mass-intentions" });
+  if (announcementsVisible) quickActions.push({ icon: Megaphone, label: "Matangazo", hint: "Soma taarifa mpya", to: "/portal/announcements" });
 
   return (
     <div className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-5 pb-28 lg:px-8 lg:pb-8">
@@ -396,17 +396,16 @@ export default function MemberDashboard() {
         nextMassError={massError}
         nextMassLoading={massLoading}
       />
-      <div className="mx-auto hidden max-w-5xl space-y-5 lg:block">
-        <ProductionLiveMassCard />
-        <section className="overflow-hidden rounded-[32px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.15),hsl(var(--card))_58%,hsl(var(--card)))] p-5 shadow-sm sm:p-7">
+      <div className="mx-auto hidden max-w-6xl space-y-3.5 lg:block">
+        <section className="overflow-hidden rounded-[28px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.12),hsl(var(--card))_68%,hsl(var(--card)))] p-4 shadow-sm">
           <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-              <Church className="h-7 w-7" />
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+              <Church className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-muted-foreground">Karibu</p>
-              <h1 className="mt-1 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{home.memberName}</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <h1 className="mt-0.5 text-3xl font-bold tracking-tight text-foreground">{home.memberName}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
                 {home.churchName ? home.churchName : "Huduma yako ya kanisa iko hapa kwa urahisi."}
               </p>
             </div>
@@ -421,27 +420,8 @@ export default function MemberDashboard() {
           </Card>
         ) : null}
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <SummaryTile
-            icon={Wallet}
-            label="Jumla Uliyolipa"
-            value={financials.isLoading ? "Inapakiwa" : financials.isError || home.totalPaid === null ? "Haipatikani" : formatTZS(home.totalPaid)}
-            hint={financials.isError ? "Jaribu tena baada ya muda" : "Michango iliyorekodiwa"}
-            className="sm:col-span-2 lg:col-span-1"
-          />
-          <SummaryTile
-            icon={BellRing}
-            label="Kiasi Kinachosubiri"
-            value={financials.isLoading ? "Inapakiwa" : financials.isError || home.pendingAmount === null ? "Haipatikani" : formatTZS(home.pendingAmount)}
-            hint={financials.isError ? "Jaribu tena baada ya muda" : "Ahadi ambazo hazijakamilika"}
-          />
-          <SummaryTile
-            icon={CalendarDays}
-            label="Malipo ya Mwisho"
-            value={financials.isLoading ? "Inapakiwa" : financials.isError ? "Haipatikani" : home.lastPayment ? formatTZS(home.lastPayment.amount) : "Hakuna bado"}
-            hint={financials.isError ? "Jaribu tena baada ya muda" : home.lastPayment ? `${home.lastPayment.label} - ${formatDate(home.lastPayment.date)}` : "Historia itaonekana ukilipa"}
-            className="sm:col-span-2 lg:col-span-2"
-          />
+        <section aria-label="Muhtasari wa michango">
+          <FinancialSummarySurface financials={financials} home={home} />
         </section>
 
         {financials.isError ? (
@@ -453,17 +433,18 @@ export default function MemberDashboard() {
           </Card>
         ) : null}
 
-        <Card className="rounded-[28px] border-border/70 bg-card/85 shadow-sm">
-          <CardContent className="p-5">
+        <Card className="rounded-[28px] border-border/60 bg-card/80 shadow-sm">
+          <CardContent className="p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-muted-foreground">Upcoming Mass</p>
+                <p className="text-sm font-semibold text-primary">Misa ijayo</p>
                 {nextMass ? (
                   <>
-                    <h2 className="mt-1 text-2xl font-bold text-foreground">{nextMass.title}</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <h2 className="mt-1 text-xl font-bold text-foreground">{nextMass.title}</h2>
+                    <p className="mt-1 text-base font-semibold text-foreground">
                       {formatDate(nextMass.massDate)} · {formatMassTime(nextMass.startTime)}
                     </p>
+                    {nextMass.description ? <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{nextMass.description}</p> : null}
                     {nextMass.responseDeadline ? (
                       <p className="mt-2 text-xs text-muted-foreground">
                         RSVP deadline: {new Date(nextMass.responseDeadline).toLocaleString("en-TZ")}
@@ -471,12 +452,15 @@ export default function MemberDashboard() {
                     ) : null}
                   </>
                 ) : (
-                  <p className="mt-2 text-sm text-muted-foreground">No upcoming Mass scheduled.</p>
+                  <div className="mt-2 space-y-1">
+                    <p className="text-sm font-medium text-foreground">Hakuna misa iliyopangwa kwa sasa.</p>
+                    <p className="text-sm text-muted-foreground">Ratiba mpya itaonekana hapa itakapochapishwa.</p>
+                  </div>
                 )}
               </div>
 
               {nextMass ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <p className="text-sm font-medium text-foreground">Will you attend?</p>
                   <div className="flex flex-wrap gap-2">
                     {(["yes", "maybe", "no"] as const).map((response) => (
@@ -503,175 +487,52 @@ export default function MemberDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden rounded-[28px] border-primary/20 bg-card/85 shadow-sm">
-          <CardContent className="p-0">
-            {saintLoading ? (
-              <div className="p-5">
-                <Skeleton className="h-36 rounded-3xl" />
-              </div>
-            ) : saintOfDay ? (
-              <div className="grid gap-0 md:grid-cols-[220px_1fr]">
-                {saintOfDay.image_url ? (
-                  <img
-                    src={saintOfDay.image_url}
-                    alt={saintOfDay.name}
-                    className="h-56 w-full object-cover md:h-full"
-                  />
-                ) : (
-                  <div className="flex h-56 w-full items-center justify-center bg-primary/10 text-primary md:h-full">
-                    <Sparkles className="h-12 w-12" />
-                  </div>
-                )}
-                <div className="space-y-4 p-5">
-                  <div>
-                    <p className="flex items-center gap-2 text-sm font-medium text-primary">
-                      <span aria-hidden="true">🌟</span>
-                      Saint of the Day
-                    </p>
-                    <h2 className="mt-1 text-2xl font-bold text-foreground">{saintOfDay.name}</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Feast Day: {formatFeastDay(saintOfDay.feast_month, saintOfDay.feast_day)}
-                    </p>
-                  </div>
-                  <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">{saintOfDay.biography_short}</p>
-                  <div className="grid gap-3 lg:grid-cols-2">
-                    <div className="rounded-2xl bg-muted/50 p-3">
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Reflection</p>
-                      <p className="mt-1 line-clamp-3 text-sm leading-6 text-foreground">{saintOfDay.reflection}</p>
-                    </div>
-                    <div className="rounded-2xl bg-muted/50 p-3">
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Prayer</p>
-                      <p className="mt-1 line-clamp-3 text-sm leading-6 text-foreground">{saintOfDay.prayer}</p>
-                    </div>
-                  </div>
-                  {saintOfDay.quote ? (
-                    <blockquote className="rounded-2xl border-l-4 border-primary bg-primary/5 p-3 text-sm italic text-foreground">
-                      "{saintOfDay.quote}"
-                    </blockquote>
-                  ) : null}
-                  <Button asChild variant="outline" className="h-11 rounded-2xl">
-                    <Link to={`/member/library/${saintOfDay.slug}`}>Read More</Link>
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-start gap-4 p-5">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <Sparkles className="h-6 w-6" />
-                </div>
-                <div>
-                  <p className="flex items-center gap-2 text-sm font-medium text-primary">
-                    <span aria-hidden="true">🌟</span>
-                    Saint of the Day
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">No saint has been configured for today.</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[28px] border-border/70 bg-card/85 shadow-sm">
-          <CardContent className="space-y-4 p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="flex items-center gap-2 text-sm font-medium text-primary">
-                  <BookOpen className="h-4 w-4" />
-                  Masomo ya Leo
-                </p>
-                <h2 className="mt-1 text-2xl font-bold text-foreground">{getReadableReadingDate(todayReading)}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {todayReading.liturgicalSeason || "Liturgical season pending"}
-                </p>
-              </div>
-              <Button asChild variant="outline" className="h-11 rounded-2xl">
-                <AppLink to="/portal/daily-readings">Soma Zaidi</AppLink>
-              </Button>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-2">
-              {[
-                firstReading,
-                psalmReading,
-                secondReading,
-                gospelReading,
-              ]
-                .filter(Boolean)
-                .map((reading) => (
-                  <div key={reading!.id} className="rounded-2xl border border-border/60 bg-background/50 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{reading!.title}</p>
-                    <p className="mt-1 text-sm font-medium text-foreground">{reading!.reference}</p>
-                  </div>
-                ))}
-            </div>
-
-            <div className="rounded-2xl bg-primary/5 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Reflection</p>
-              <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">{todayReading.reflection}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <section className="grid gap-3 md:grid-cols-2">
-          {giveVisible ? (
-            <BigAction icon={HandCoins} label="Lipa Sasa" hint="Toa mchango au sadaka" to="/portal/give" primary />
-          ) : null}
-          {massVisible ? (
-            <BigAction icon={HeartHandshake} label="Nia za Misa" hint="Wasilisha nia ya Misa na sadaka" to="/portal/mass-intentions" />
-          ) : null}
-          <BigAction icon={History} label="Historia Yangu" hint="Angalia malipo na wasifu" to="/portal/dashboard" />
-          {announcementsVisible ? (
-            <BigAction icon={Megaphone} label="Matangazo" hint="Soma taarifa mpya za kanisa" to="/portal/announcements" />
-          ) : null}
-          <BigAction icon={BookOpen} label="Masomo ya Leo" hint="Neno la Mungu la leo" to="/portal/daily-readings" />
-          <BigAction icon={BookOpen} label="Watakatifu" hint="Maisha ya watakatifu na sala" to="/member/library" />
-        </section>
-
-        <Card className="rounded-[28px] border-border/70 bg-card/85 shadow-sm">
-          <CardHeader className="pb-3">
+        <Card className="rounded-[28px] border-border/60 bg-card/80 shadow-sm">
+          <CardHeader className="pb-2 pt-4">
             <CardTitle className="flex items-center gap-3 text-lg">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Megaphone className="h-5 w-5" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Megaphone className="h-4 w-4" />
               </span>
               Tangazo la Karibuni
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 pb-4">
             {home.latestAnnouncement ? (
               <div>
-                <p className="text-xl font-bold text-foreground">{home.latestAnnouncement.title}</p>
+                <p className="text-lg font-bold text-foreground">{home.latestAnnouncement.title}</p>
                 {home.latestAnnouncement.content ? (
-                  <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">
+                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
                     {home.latestAnnouncement.content}
                   </p>
                 ) : null}
-                <p className="mt-3 text-xs text-muted-foreground">{formatDate(home.latestAnnouncement.date)}</p>
+                <p className="mt-2 text-xs text-muted-foreground">{formatDate(home.latestAnnouncement.date)}</p>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">Hakuna tangazo jipya kwa sasa.</p>
             )}
             {announcementsVisible ? (
-              <Button asChild variant="outline" className="h-12 rounded-2xl px-5">
+              <Button asChild variant="outline" className="h-10 rounded-xl px-4">
                 <AppLink to="/portal/announcements">Fungua Matangazo</AppLink>
               </Button>
             ) : null}
           </CardContent>
         </Card>
 
-        <Card className="rounded-[28px] border-border/70 bg-card/85 shadow-sm">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
-              <UserRound className="h-6 w-6" />
+        {quickActions.length > 0 ? (
+          <section aria-label="Hatua za haraka" className="space-y-3">
+            <div>
+              <h2 className="text-lg font-bold tracking-tight text-foreground">Hatua za haraka</h2>
+              <p className="text-sm text-muted-foreground">Huduma chache muhimu kwa leo.</p>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-foreground">Wasifu na malipo yako</p>
-              <p className="mt-1 text-sm text-muted-foreground">Taarifa zaidi zipo kwenye Historia Yangu.</p>
+            <div className="grid gap-3 xl:grid-cols-3">
+              {quickActions.map((action) => (
+                <BigAction key={action.to} {...action} />
+              ))}
             </div>
-            <Button asChild size="sm" className="h-10 shrink-0 rounded-xl">
-              <AppLink to="/portal/dashboard">Fungua</AppLink>
-            </Button>
-          </CardContent>
-        </Card>
+          </section>
+        ) : null}
+
+        <ProductionLiveMassCard />
       </div>
 
     </div>
