@@ -32,6 +32,53 @@ describe("production Wave 1 member services", () => {
     expect(services).toContain("state.visible");
     expect(services).toContain('placeholder="Tafuta huduma..."');
     expect(services).toContain("normalizeSearch");
-    expect(services).toContain("memberServiceGroups.map");
+    expect(services).toContain("presentationGroups");
+    expect(services).toContain("groupedServices.map");
+  });
+
+  it("renders Zaidi as a calm grouped secondary navigation hub", () => {
+    expect(services).toContain("<h1");
+    expect(services).toContain("Zaidi");
+    expect(services).toContain("Pata huduma na maeneo mengine ya Kanisa Connect.");
+    expect(services).toContain('label: "Huduma za Parokia"');
+    expect(services).toContain('label: "Kiroho"');
+    expect(services).toContain('label: "Media"');
+    expect(services).toContain('label: "Akaunti / Nyingine"');
+    expect(services).toContain("rounded-[22px]");
+    expect(services).toContain("min-h-[68px]");
+  });
+
+  it("omits redundant primary entries and preserves ordinary-member restrictions", () => {
+    expect(services).toContain('const OMITTED_ZAIDI_SERVICE_IDS = new Set(["home", "services", "today", "my-parish"]);');
+    expect(services).toContain("!OMITTED_ZAIDI_SERVICE_IDS.has(item.id)");
+    expect(services).toContain("if (!item.ordinaryMemberAllowed) return false;");
+    expect(registry).not.toContain('path: "/portal/channels", label:');
+    expect(registry).not.toContain('path: "/portal/community-help", label:');
+    expect(registry).not.toContain('path: "/portal/event-requests", label:');
+  });
+
+  it("keeps feature gating after eligibility and search cannot reveal hidden services", () => {
+    expect(services).toContain("if (!item.featureKey) return true;");
+    expect(services).toContain("if (item.requiresExplicitChurchEnable) return isFeatureExplicitlyEnabledForChurch(item.featureKey);");
+    expect(services).toContain("return (!item.requiresExistingFeature || state.exists) && state.visible;");
+    expect(services).toContain("const filtered = query ? visibleServices.filter");
+    expect(services).toContain("normalizeSearch(`${item.label} ${item.description}`).includes(query)");
+  });
+
+  it("keeps livestream dynamic and never exposes a generic livestream destination", () => {
+    expect(services).toContain("const livestreamService = useMemo<MemberServiceDefinition | null>");
+    expect(services).toContain("path: `/portal/live/${stream.id}`");
+    expect(services).toContain("showInServices: true");
+    expect(services).toContain("!presentation(stream) || !getYouTubeEmbedUrl(stream)");
+    expect(services).not.toContain('to="/portal/live"');
+    expect(services).not.toContain('path: "/portal/live", showInServices: true');
+  });
+
+  it("keeps mobile-friendly single-column services structure without touching PortalLayout", () => {
+    expect(services).toContain("max-w-4xl");
+    expect(services).toContain("space-y-5");
+    expect(services).toContain("overflow-x-hidden");
+    expect(services).toContain("<ServiceRows items={group.items} />");
+    expect(services).not.toContain("grid-cols-");
   });
 });

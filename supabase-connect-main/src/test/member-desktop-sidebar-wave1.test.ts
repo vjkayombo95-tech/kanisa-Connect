@@ -25,6 +25,7 @@ describe("member desktop sidebar Wave 1", () => {
       "/portal",
       "/portal/today",
       "/portal/my-parish",
+      "/portal/services",
       "/portal/give",
       "/portal/mass-intentions",
       "/portal/calendar",
@@ -41,6 +42,22 @@ describe("member desktop sidebar Wave 1", () => {
 
     expect(routes).toContain('path="radio"');
     expect(routes).toContain('path="live/:streamId"');
+  });
+
+  it("adds Zaidi as a standalone desktop sidebar item after collapsible groups", () => {
+    const groupDefinition = layout.slice(
+      layout.indexOf("const DESKTOP_SIDEBAR_GROUPS"),
+      layout.indexOf("const DESKTOP_SIDEBAR_MORE_ITEM"),
+    );
+    const moreItemDefinition = layout.slice(layout.indexOf("const DESKTOP_SIDEBAR_MORE_ITEM"));
+
+    expect(moreItemDefinition).toContain("const DESKTOP_SIDEBAR_MORE_ITEM: NavItem");
+    expect(moreItemDefinition).toContain('titleKey: "Zaidi"');
+    expect(moreItemDefinition).toContain('url: "/portal/services"');
+    expect(moreItemDefinition).toContain("icon: PortalIcon");
+    expect(groupDefinition).not.toContain('url: "/portal/services"');
+    expect(layout).toContain("border-t border-border/45 pt-2");
+    expect(layout).toContain("item={DESKTOP_SIDEBAR_MORE_ITEM}");
   });
 
   it("preserves feature gating and omits a dead generic livestream link", () => {
@@ -65,6 +82,7 @@ describe("member desktop sidebar Wave 1", () => {
     expect(layout).toContain("aria-label={collapsed ? label : undefined}");
     expect(layout).toContain("title={collapsed ? label : undefined}");
     expect(layout).toContain('data-active={active ? "true" : "false"}');
+    expect(layout).toContain("item={DESKTOP_SIDEBAR_MORE_ITEM}");
   });
 
   it("keeps the visual polish compact without blocking sidebar scrolling", () => {
@@ -149,6 +167,8 @@ describe("member desktop sidebar Wave 1", () => {
   it("keeps the existing mobile bottom navigation contract unchanged", () => {
     expect(layout).toContain('style={{ gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}');
     expect(layout).toContain('["/portal", "/portal/give", "/portal/mass-intentions", "/portal/announcements", "/portal/services"]');
+    expect(layout).toContain('{ titleKey: "Zaidi", url: "/portal/services", icon: PortalIcon, featureKey: null }');
+    expect(layout).not.toContain('{ titleKey: "Huduma", url: "/portal/services", icon: PortalIcon, featureKey: null }');
     expect(layout).toContain("lg:hidden");
   });
 });
