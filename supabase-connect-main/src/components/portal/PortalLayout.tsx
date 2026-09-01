@@ -7,10 +7,13 @@ import {
   Lock,
   LogOut,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Sparkles,
   User,
   X,
   ChevronDown,
+  ChevronRight,
   CalendarDays,
   Radio,
 } from "lucide-react";
@@ -150,163 +153,263 @@ const LIMITED_GROUPS: NavGroup[] = [
   },
 ];
 
+const DESKTOP_SIDEBAR_GROUPS: NavGroup[] = [
+  {
+    id: "primary",
+    label: "Primary",
+    items: [
+      { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
+      { titleKey: "Leo", url: "/portal/today", icon: BibleIcon, featureKey: null },
+      { titleKey: "Parokia Yangu", url: "/portal/my-parish", icon: ParishIcon, featureKey: null },
+    ],
+  },
+  {
+    id: "services",
+    label: "Huduma",
+    items: [
+      { titleKey: "Michango", url: "/portal/give", icon: ContributionsIcon, featureKey: "give" },
+      { titleKey: "Nia za Misa", url: "/portal/mass-intentions", icon: MassIntentionsIcon, featureKey: "mass_intentions" },
+      { titleKey: "Kalenda", url: "/portal/calendar", icon: EventsIcon, featureKey: "events" },
+      { titleKey: "Matangazo", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
+      { titleKey: "Huduma", url: "/portal/ministries", icon: CommunitiesIcon, featureKey: "ministries" },
+    ],
+  },
+  {
+    id: "spiritual",
+    label: "Kiroho",
+    items: [
+      { titleKey: "Biblia", url: "/portal/bible", icon: BibleIcon, featureKey: null },
+      { titleKey: "Masomo ya Leo", url: "/portal/daily-readings", icon: BibleIcon, featureKey: null },
+      { titleKey: "Sala", url: "/portal/prayers", icon: PrayerIcon, featureKey: null },
+      { titleKey: "Mahubiri", url: "/portal/sermons", icon: SermonsIcon, featureKey: "sermons" },
+    ],
+  },
+  {
+    id: "media",
+    label: "Media",
+    items: [
+      { titleKey: "Radio", url: "/portal/radio", icon: RadioIcon, featureKey: "radio" },
+    ],
+  },
+];
+
 function isActive(pathname: string, url: string) {
   return url === "/portal" ? pathname === "/portal" : pathname.startsWith(url);
 }
 
-function DesktopNavLink({
+function DesktopSidebarLink({
   item,
   pathname,
-  getFeatureState,
   t,
+  collapsed,
 }: {
   item: NavItem;
   pathname: string;
-  getFeatureState: ReturnType<typeof useFeatureAccess>["getFeatureState"];
   t: ReturnType<typeof useTranslation>["t"];
+  collapsed: boolean;
 }) {
-  const state = item.featureKey ? getFeatureState(item.featureKey) : null;
-  const itemLocked = !!state?.locked;
   const active = isActive(pathname, item.url);
   const Icon = item.icon;
+  const label = t(item.titleKey);
 
   return (
     <AppLink
       to={item.url}
+      aria-label={collapsed ? label : undefined}
+      title={collapsed ? label : undefined}
+      data-active={active ? "true" : "false"}
       className={cn(
-        "group relative overflow-hidden rounded-2xl border px-3 py-2 text-sm transition-all duration-300",
-        "border-white/8 bg-white/[0.03] text-muted-foreground hover:border-primary/20 hover:bg-white/[0.05] hover:text-foreground",
-        active && "border-primary/20 bg-primary/10 text-primary shadow-[0_18px_36px_-28px_rgba(250,204,21,0.55)]",
-        itemLocked && "border-primary/20 bg-primary/5 text-primary",
+        "group flex min-h-11 items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm font-semibold transition-all",
+        "border-transparent text-muted-foreground hover:border-primary/20 hover:bg-primary/8 hover:text-foreground",
+        active && "border-primary/25 bg-primary/12 text-primary shadow-[0_18px_38px_-30px_rgba(250,204,21,0.75)]",
+        collapsed && "justify-center px-2",
       )}
     >
-      <span className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.05),transparent_38%,rgba(250,204,21,0.08))] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      <span className="relative flex items-center gap-2.5">
-        <span
-          className={cn(
-            "hidden h-9 w-9 shrink-0 items-center justify-center rounded-2xl border transition-all min-[1700px]:flex",
-            active
-              ? "border-primary/20 bg-primary/10 text-primary"
-              : "border-border/60 bg-background/40 text-muted-foreground group-hover:border-primary/10 group-hover:text-foreground",
-          )}
-        >
-          <Icon active={active} className="h-4.5 w-4.5" />
-        </span>
-        <span className="font-medium">{t(item.titleKey)}</span>
-        {itemLocked ? <Lock className="h-3.5 w-3.5" /> : null}
+      <span
+        className={cn(
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-colors",
+          active
+            ? "border-primary/25 bg-primary/15 text-primary"
+            : "border-border/50 bg-background/35 text-muted-foreground group-hover:border-primary/20 group-hover:text-foreground",
+        )}
+      >
+        <Icon active={active} className="h-4 w-4" />
       </span>
+      {!collapsed ? <span className="min-w-0 truncate">{label}</span> : null}
     </AppLink>
   );
 }
 
-function DesktopGroup({
-  group,
+function MemberDesktopSidebar({
+  groups,
   pathname,
-  getFeatureState,
   t,
-  openGroup,
-  setOpenGroup,
+  collapsed,
+  setCollapsed,
+  expandedGroups,
+  toggleGroup,
 }: {
-  group: NavGroup;
+  groups: NavGroup[];
   pathname: string;
-  getFeatureState: ReturnType<typeof useFeatureAccess>["getFeatureState"];
   t: ReturnType<typeof useTranslation>["t"];
-  openGroup: string | null;
-  setOpenGroup: (groupId: string | null) => void;
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
+  expandedGroups: string[];
+  toggleGroup: (groupId: string) => void;
 }) {
-  const activeWithin = group.items.some((item) => isActive(pathname, item.url));
-  const isOpen = openGroup === group.id;
-
   return (
-    <div
-      className="relative"
-      onMouseEnter={() => setOpenGroup(group.id)}
-      onMouseLeave={() => setOpenGroup(null)}
+    <aside
+      data-testid="member-desktop-sidebar"
+      data-collapsed={collapsed ? "true" : "false"}
+      className={cn(
+        "sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 border-r border-border/50 bg-[linear-gradient(180deg,rgba(17,24,39,0.9),rgba(11,15,20,0.96))] px-3 py-3 shadow-[22px_0_70px_-55px_rgba(0,0,0,0.95)] backdrop-blur-2xl lg:flex lg:flex-col",
+        collapsed ? "w-[5.25rem]" : "w-60",
+      )}
     >
-      <button
-        type="button"
-        onClick={() => setOpenGroup(isOpen ? null : group.id)}
-        className={cn(
-          "group relative flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm transition-all duration-300",
-          "border-white/8 bg-white/[0.03] text-muted-foreground hover:border-primary/20 hover:bg-white/[0.05] hover:text-foreground",
-          activeWithin && "border-primary/20 bg-primary/10 text-primary",
-        )}
-      >
-        <span className="font-medium">{group.label}</span>
-        <motion.span
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-          className="text-muted-foreground/80 group-hover:text-primary"
+      <div className={cn("mb-3 flex items-center gap-2 px-1", collapsed ? "justify-center" : "justify-between")}>
+        <div className={cn("flex min-w-0 items-center gap-3", collapsed && "hidden")}>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl gradient-gold shadow-[0_18px_32px_-22px_rgba(250,204,21,0.8)]">
+            <Church className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold font-serif text-foreground">Kanisa Connect</p>
+            <p className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/70">Member</p>
+          </div>
+        </div>
+        {collapsed ? (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl gradient-gold shadow-[0_18px_32px_-22px_rgba(250,204,21,0.8)]">
+            <Church className="h-5 w-5 text-primary-foreground" />
+          </div>
+        ) : null}
+        <button
+          type="button"
+          aria-label={collapsed ? "Expand member sidebar" : "Collapse member sidebar"}
+          onClick={() => setCollapsed(!collapsed)}
+          className={cn(
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/55 bg-background/30 text-muted-foreground transition-colors hover:border-primary/25 hover:bg-primary/8 hover:text-primary",
+            collapsed && "absolute left-[4.1rem] z-10 bg-background/90 shadow-lg",
+          )}
         >
-          <ChevronDown className="h-4 w-4" />
-        </motion.span>
-      </button>
+          {collapsed ? <PanelLeftOpen className="h-4.5 w-4.5" /> : <PanelLeftClose className="h-4.5 w-4.5" />}
+        </button>
+      </div>
 
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 6 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute left-0 top-[calc(100%+12px)] z-50 w-72"
-          >
-            <div className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,24,39,0.86),rgba(11,15,20,0.94))] p-2 shadow-[0_28px_80px_-34px_rgba(0,0,0,0.88)] backdrop-blur-2xl">
-              <div className="rounded-[20px] border border-white/8 bg-white/[0.025] p-2">
-                <div className="px-2 pb-2 pt-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary/75">
-                    {group.label}
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  {group.items.map((item) => {
-                    const state = item.featureKey ? getFeatureState(item.featureKey) : null;
-                    const itemLocked = !!state?.locked;
-                    const active = isActive(pathname, item.url);
-                    const Icon = item.icon;
+      <nav
+        aria-label="Member desktop navigation"
+        className="min-h-0 flex-1 space-y-2 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {groups.map((group) => {
+          const activeWithin = group.items.some((item) => isActive(pathname, item.url));
+          const primaryGroup = group.id === "primary";
+          const groupOpen = collapsed || primaryGroup || activeWithin || expandedGroups.includes(group.id);
 
-                    return (
-                      <AppLink
-                        key={`${group.id}-${item.titleKey}`}
-                        to={item.url}
-                        className={cn(
-                          "group/item flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-sm transition-all duration-300",
-                          "border-transparent text-muted-foreground hover:border-primary/15 hover:bg-primary/8 hover:text-foreground",
-                          active && "border-primary/18 bg-primary/10 text-primary",
-                          itemLocked && "text-primary",
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-colors",
-                            active
-                              ? "border-primary/20 bg-primary/10 text-primary"
-                              : "border-border/50 bg-background/30 text-muted-foreground group-hover/item:border-primary/12 group-hover/item:text-foreground",
-                          )}
-                        >
-                          <Icon active={active} className="h-4 w-4" />
-                        </span>
-                        <span className="flex min-w-0 flex-1 items-center justify-between gap-3">
-                          <span className="truncate">{t(item.titleKey)}</span>
-                          {itemLocked ? <Lock className="h-3.5 w-3.5 shrink-0" /> : null}
-                        </span>
-                      </AppLink>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </motion.div>
+          return (
+            <section key={group.id} aria-label={group.label} className="space-y-1">
+              {!collapsed && primaryGroup ? (
+                <p className="px-3 pt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/45">
+                  {group.label}
+                </p>
+              ) : null}
+              {!collapsed && !primaryGroup ? (
+                <button
+                  type="button"
+                  aria-expanded={groupOpen}
+                  onClick={() => toggleGroup(group.id)}
+                  className={cn(
+                    "flex min-h-8 w-full items-center justify-between gap-2 rounded-xl px-3 py-1.5 text-left text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50 transition-colors hover:bg-primary/6 hover:text-muted-foreground",
+                    activeWithin && "text-primary/75",
+                  )}
+                >
+                  <span className="min-w-0 truncate">{group.label}</span>
+                  {groupOpen ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+                </button>
+              ) : null}
+              {groupOpen
+                ? group.items.map((item) => (
+                    <DesktopSidebarLink
+                      key={`${group.id}-${item.url}`}
+                      item={item}
+                      pathname={pathname}
+                      t={t}
+                      collapsed={collapsed}
+                    />
+                  ))
+                : null}
+            </section>
+          );
+        })}
+      </nav>
+
+    </aside>
+  );
+}
+
+function ProfileMenu({
+  profileMenuOpen,
+  setProfileMenuOpen,
+  profile,
+  ledCommunities,
+  handleSignOut,
+  setMobileOpen,
+  t,
+}: {
+  profileMenuOpen: boolean;
+  setProfileMenuOpen: (open: boolean) => void;
+  profile: ReturnType<typeof useAuth>["profile"];
+  ledCommunities: Awaited<ReturnType<typeof useLedCommunities>["data"]>;
+  handleSignOut: () => Promise<void>;
+  setMobileOpen: (open: boolean) => void;
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
+  return (
+    <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="rounded-full">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full gradient-gold">
+            <User className="h-4 w-4 text-primary-foreground" />
+          </div>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+          {profile?.full_name || t("member")}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <AppLink to="/portal/dashboard" onClick={() => setMobileOpen(false)}>
+            Historia Yangu
+          </AppLink>
+        </DropdownMenuItem>
+        {ledCommunities.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            {ledCommunities.map((community) => (
+              <DropdownMenuItem key={community.community_id} asChild>
+                <AppLink to={`/community/${community.community_id}`} className="flex items-center gap-2">
+                  <Building2 className="h-3.5 w-3.5 text-primary" />
+                  <span className="truncate">
+                    {t("view_as_community_leader")}
+                    {ledCommunities.length > 1 ? ` - ${community.community_name}` : ""}
+                  </span>
+                </AppLink>
+              </DropdownMenuItem>
+            ))}
+          </>
         )}
-      </AnimatePresence>
-    </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+          <LogOut className="mr-2 h-4 w-4" /> {t("sign_out")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
 export function PortalLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
+  const [desktopExpandedGroups, setDesktopExpandedGroups] = useState<string[]>([]);
   const [mobileExpandedGroups, setMobileExpandedGroups] = useState<string[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
@@ -352,6 +455,16 @@ export function PortalLayout() {
         .filter((group) => group.items.length > 0),
     [dropdownGroups, getFeatureState],
   );
+  const visibleDesktopSidebarGroups = useMemo(
+    () =>
+      DESKTOP_SIDEBAR_GROUPS
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => !item.featureKey || getFeatureState(item.featureKey).visible),
+        }))
+        .filter((group) => group.items.length > 0),
+    [getFeatureState],
+  );
 
   const activeFeatureKey = getPortalFeatureForPath(location.pathname);
   const activeFeatureState = activeFeatureKey ? getFeatureState(activeFeatureKey) : null;
@@ -364,6 +477,12 @@ export function PortalLayout() {
 
   const toggleMobileGroup = (groupId: string) => {
     setMobileExpandedGroups((current) =>
+      current.includes(groupId) ? current.filter((id) => id !== groupId) : [...current, groupId],
+    );
+  };
+
+  const toggleDesktopGroup = (groupId: string) => {
+    setDesktopExpandedGroups((current) =>
       current.includes(groupId) ? current.filter((id) => id !== groupId) : [...current, groupId],
     );
   };
@@ -435,82 +554,34 @@ export function PortalLayout() {
 
           <header className="sticky top-0 z-50 border-b border-border/50 bg-[linear-gradient(180deg,rgba(17,24,39,0.78),rgba(11,15,20,0.86))] backdrop-blur-2xl">
             <div className="container mx-auto flex h-16 items-center justify-between px-4">
-              <AppLink to="/portal" className="flex items-center gap-3">
+              <AppLink to="/portal" className="flex items-center gap-3 lg:hidden">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-gold shadow-[0_14px_28px_-18px_rgba(250,204,21,0.65)]">
                   <Church className="h-5 w-5 text-primary-foreground" />
                 </div>
                 <span className="text-lg font-bold font-serif">Kanisa Connect</span>
               </AppLink>
 
-              <nav className="hidden items-center gap-2 lg:flex">
-                {visibleMainItems.map((item) => (
-                  <DesktopNavLink
-                    key={item.url}
-                    item={item}
-                    pathname={location.pathname}
-                    getFeatureState={getFeatureState}
-                    t={t}
-                  />
-                ))}
-
-                {visibleGroups.map((group) => (
-                  <DesktopGroup
-                    key={group.id}
-                    group={group}
-                    pathname={location.pathname}
-                    getFeatureState={getFeatureState}
-                    t={t}
-                    openGroup={openGroup}
-                    setOpenGroup={setOpenGroup}
-                  />
-                ))}
-              </nav>
+              <div className="hidden min-w-0 lg:block">
+                <p className="truncate text-sm font-semibold text-foreground">
+                  {profile?.full_name || t("member")}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">Member Portal</p>
+              </div>
 
               <div className="flex items-center gap-2">
                 <LanguageSwitcher className="hidden rounded-2xl border border-border/60 bg-background/40 p-1 md:flex" />
 
                 {useSimpleMemberNav && notificationsVisible ? <MemberNotificationBell notifications={memberNotifications.data ?? []} /> : null}
 
-                <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full gradient-gold">
-                        <User className="h-4 w-4 text-primary-foreground" />
-                      </div>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem disabled className="text-xs text-muted-foreground">
-                      {profile?.full_name || t("member")}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <AppLink to="/portal/dashboard" onClick={() => setMobileOpen(false)}>
-                        Historia Yangu
-                      </AppLink>
-                    </DropdownMenuItem>
-                    {ledCommunities.length > 0 && (
-                      <>
-                        <DropdownMenuSeparator />
-                        {ledCommunities.map((community) => (
-                          <DropdownMenuItem key={community.community_id} asChild>
-                            <AppLink to={`/community/${community.community_id}`} className="flex items-center gap-2">
-                              <Building2 className="h-3.5 w-3.5 text-primary" />
-                              <span className="truncate">
-                                {t("view_as_community_leader")}
-                                {ledCommunities.length > 1 ? ` - ${community.community_name}` : ""}
-                              </span>
-                            </AppLink>
-                          </DropdownMenuItem>
-                        ))}
-                      </>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                      <LogOut className="mr-2 h-4 w-4" /> {t("sign_out")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <ProfileMenu
+                  profileMenuOpen={profileMenuOpen}
+                  setProfileMenuOpen={setProfileMenuOpen}
+                  profile={profile}
+                  ledCommunities={ledCommunities}
+                  handleSignOut={handleSignOut}
+                  setMobileOpen={setMobileOpen}
+                  t={t}
+                />
 
                 <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen((current) => !current)}>
                   {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -673,30 +744,44 @@ export function PortalLayout() {
             </AnimatePresence>
           </header>
 
-          <main className="flex-1">
-            {routeLocked ? (
-              <div className="container mx-auto px-4 py-16">
-                <div className="mx-auto max-w-2xl">
-                  <Card className="glass-card border-primary/20">
-                    <CardContent className="space-y-5 p-8 text-center">
-                      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                        <Lock className="h-6 w-6 text-primary" />
-                      </div>
-                      <div className="space-y-2">
-                        <h1 className="text-2xl font-bold font-serif">{t("this_feature_is_locked")}</h1>
-                        <p className="text-sm text-muted-foreground">{t("super_admin_locked_feature")}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+          <div className="flex min-w-0 flex-1 lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
+            {!isAdmin ? (
+              <MemberDesktopSidebar
+                groups={visibleDesktopSidebarGroups}
+                pathname={location.pathname}
+                t={t}
+                collapsed={desktopSidebarCollapsed}
+                setCollapsed={setDesktopSidebarCollapsed}
+                expandedGroups={desktopExpandedGroups}
+                toggleGroup={toggleDesktopGroup}
+              />
+            ) : null}
+
+            <main className="min-w-0 flex-1 lg:h-full lg:overflow-y-auto">
+              {routeLocked ? (
+                <div className="container mx-auto px-4 py-16">
+                  <div className="mx-auto max-w-2xl">
+                    <Card className="glass-card border-primary/20">
+                      <CardContent className="space-y-5 p-8 text-center">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                          <Lock className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="space-y-2">
+                          <h1 className="text-2xl font-bold font-serif">{t("this_feature_is_locked")}</h1>
+                          <p className="text-sm text-muted-foreground">{t("super_admin_locked_feature")}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <>
-                {!isAdmin ? <MemberMobileBackHeader /> : null}
-                <Outlet />
-              </>
-            )}
-          </main>
+              ) : (
+                <>
+                  {!isAdmin ? <MemberMobileBackHeader /> : null}
+                  <Outlet />
+                </>
+              )}
+            </main>
+          </div>
 
           {!isAdmin && (
             <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 px-2 py-2 shadow-[0_-18px_48px_-32px_rgba(0,0,0,0.75)] backdrop-blur-xl lg:hidden">
