@@ -194,6 +194,47 @@ describe("My Parish feature-aware quick links", () => {
     expect(host.textContent).not.toContain("Wanawake");
   });
 
+  it("keeps Mass and event information while hiding event route actions when events are unavailable", () => {
+    state.features.set("events", false);
+    state.mass = {
+      mass: {
+        id: "mass-a",
+        title: "Misa ya Asubuhi",
+        description: null,
+        massDate: "2026-09-06",
+        startTime: "07:00",
+        endTime: null,
+        responseDeadline: null,
+        askForRsvp: false,
+        memberId: null,
+        memberResponse: null,
+      },
+    };
+    state.events = [
+      { id: "event-a", churchId: "church-a", title: "Semina ya familia", description: null, startDate: "2099-09-06T09:00:00Z", location: "Ukumbi" },
+    ];
+    renderPage();
+    expect(host.textContent).toContain("Misa ya Asubuhi");
+    expect(host.textContent).toContain("Semina ya familia");
+    expect(host.querySelector('a[href="/portal/calendar"]')).toBeNull();
+    expect(host.querySelector('a[href="/portal/events"]')).toBeNull();
+    expect(quickActionsText()).not.toContain("Kalenda");
+  });
+
+  it("keeps announcement information while hiding announcement route actions when unavailable", () => {
+    state.features.set("announcements", false);
+    state.announcement = {
+      id: "announcement-a",
+      church_id: "church-a",
+      title: "Tangazo la sadaka",
+      content: "Ofisi itakuwa wazi leo.",
+    };
+    renderPage();
+    expect(host.textContent).toContain("Tangazo la sadaka");
+    expect(host.textContent).toContain("Ofisi itakuwa wazi leo.");
+    expect(host.querySelector('a[href="/portal/announcements"]')).toBeNull();
+  });
+
   it("renders joined ministries and safe empty optional sections", () => {
     state.ministries = [
       { id: "ministry-a", name: "Kwaya ya Mt. Cecilia", description: "Mazoezi ya kila wiki", joined: true },
@@ -207,6 +248,18 @@ describe("My Parish feature-aware quick links", () => {
     expect(host.textContent).toContain("Hakuna Misa ijayo iliyopangwa kwa sasa.");
     expect(host.textContent).toContain("Hakuna tangazo jipya kwa sasa.");
     expect(host.textContent).toContain("Hakuna tukio lijalo lililochapishwa kwa sasa.");
+  });
+
+  it("keeps joined ministry information while hiding ministry route actions when unavailable", () => {
+    state.features.set("ministries", false);
+    state.ministries = [
+      { id: "ministry-a", name: "Kwaya ya Mt. Cecilia", description: "Mazoezi ya kila wiki", joined: true },
+    ];
+    renderPage();
+    expect(host.textContent).toContain("Kwaya ya Mt. Cecilia");
+    expect(host.textContent).toContain("Mazoezi ya kila wiki");
+    expect(host.querySelector('a[href="/portal/ministries"]')).toBeNull();
+    expect(host.querySelector('a[href="/portal/ministries/ministry-a"]')).toBeNull();
   });
 
   it("hides unavailable livestream and radio quick actions", () => {
