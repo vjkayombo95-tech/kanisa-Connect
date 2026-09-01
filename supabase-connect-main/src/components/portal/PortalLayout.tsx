@@ -127,7 +127,7 @@ const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
   { titleKey: "Leo", url: "/portal/today", icon: BibleIcon, featureKey: null },
   { titleKey: "Parokia Yangu", url: "/portal/my-parish", icon: ParishIcon, featureKey: null },
   { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
-  { titleKey: "Huduma", url: "/portal/services", icon: PortalIcon, featureKey: null },
+  { titleKey: "Zaidi", url: "/portal/services", icon: PortalIcon, featureKey: null },
   { titleKey: "Watakatifu", url: "/member/library", icon: BibleIcon, featureKey: null },
   { titleKey: "Kalenda ya Liturujia", url: "/portal/liturgical-calendar", icon: LiturgicalCalendarIcon, featureKey: null },
   { titleKey: "Masomo ya Leo", url: "/portal/daily-readings", icon: BibleIcon, featureKey: null },
@@ -192,6 +192,13 @@ const DESKTOP_SIDEBAR_GROUPS: NavGroup[] = [
     ],
   },
 ];
+
+const DESKTOP_SIDEBAR_MORE_ITEM: NavItem = {
+  titleKey: "Zaidi",
+  url: "/portal/services",
+  icon: PortalIcon,
+  featureKey: null,
+};
 
 function isActive(pathname: string, url: string) {
   return url === "/portal" ? pathname === "/portal" : pathname.startsWith(url);
@@ -342,6 +349,14 @@ function MemberDesktopSidebar({
             </section>
           );
         })}
+        <div className="border-t border-border/45 pt-2">
+          <DesktopSidebarLink
+            item={DESKTOP_SIDEBAR_MORE_ITEM}
+            pathname={pathname}
+            t={t}
+            collapsed={collapsed}
+          />
+        </div>
       </nav>
 
     </aside>
