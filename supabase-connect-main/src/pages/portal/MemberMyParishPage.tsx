@@ -23,8 +23,10 @@ function EmptyCard({ children }: { children: ReactNode }) {
   return <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="p-4 text-sm text-muted-foreground">{children}</CardContent></Card>;
 }
 
-function LinkCard({ to, title, detail, icon: Icon }: { to: string; title: string; detail: string; icon: typeof Church }) {
-  return <AppLink to={to} className="flex min-h-24 items-center gap-4 rounded-[24px] border border-border/70 bg-card/85 p-4 shadow-sm"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span><span className="min-w-0"><span className="block break-words font-bold">{title}</span><span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">{detail}</span></span></AppLink>;
+function LinkCard({ to, title, detail, icon: Icon }: { to?: string; title: string; detail: string; icon: typeof Church }) {
+  const content = <><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span><span className="min-w-0"><span className="block break-words font-bold">{title}</span><span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">{detail}</span></span></>;
+  const className = "flex min-h-24 items-center gap-4 rounded-[24px] border border-border/70 bg-card/85 p-4 shadow-sm";
+  return to ? <AppLink to={to} className={className}>{content}</AppLink> : <div className={className}>{content}</div>;
 }
 
 function Shortcut({ to, title, icon: Icon }: { to: string; title: string; icon: typeof Church }) {
@@ -53,6 +55,9 @@ export default function MemberMyParishPage() {
   const phoneHref = getParishPhoneHref(parish.data?.phone);
   const emailHref = getParishEmailHref(parish.data?.email);
   const mapHref = getParishMapHref(parish.data?.address);
+  const announcementsVisible = featureVisible(getFeatureState, "announcements");
+  const eventsVisible = featureVisible(getFeatureState, "events");
+  const ministriesVisible = featureVisible(getFeatureState, "ministries");
   const eligibleLivestream = !!(livestream.featureEnabled && !livestream.error && livestream.data && livestream.data.churchId === livestream.churchId && presentation(livestream.data) && getYouTubeEmbedUrl(livestream.data));
 
   const copyAddress = async () => {
@@ -75,21 +80,21 @@ export default function MemberMyParishPage() {
     </section> : <p className="rounded-2xl border p-4 text-sm text-muted-foreground">Taarifa za parokia hazikupatikana.</p>}
 
     <section>
-      <SectionTitle title="Misa ijayo" action={<AppLink to="/portal/calendar" className="text-sm font-bold text-primary">Kalenda</AppLink>} />
-      {mass.isLoading ? <Skeleton className="h-32 rounded-[24px]" /> : mass.data?.mass ? <AppLink to="/portal/calendar" className="block rounded-[28px] border border-primary/20 bg-card/90 p-5 shadow-sm"><div className="flex min-w-0 items-start gap-4"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Church className="h-5 w-5" /></span><div className="min-w-0"><p className="break-words text-xl font-bold">{mass.data.mass.title}</p>{mass.data.mass.description ? <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{mass.data.mass.description}</p> : null}<p className="mt-3 text-sm font-semibold text-primary">{new Date(`${mass.data.mass.massDate}T${mass.data.mass.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })}</p></div></div></AppLink> : <EmptyCard>Hakuna Misa ijayo iliyopangwa kwa sasa.</EmptyCard>}
+      <SectionTitle title="Misa ijayo" action={eventsVisible ? <AppLink to="/portal/calendar" className="text-sm font-bold text-primary">Kalenda</AppLink> : undefined} />
+      {mass.isLoading ? <Skeleton className="h-32 rounded-[24px]" /> : mass.data?.mass ? <LinkCard to={eventsVisible ? "/portal/calendar" : undefined} title={mass.data.mass.title} detail={`${mass.data.mass.description ? `${mass.data.mass.description} - ` : ""}${new Date(`${mass.data.mass.massDate}T${mass.data.mass.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })}`} icon={Church} /> : <EmptyCard>Hakuna Misa ijayo iliyopangwa kwa sasa.</EmptyCard>}
     </section>
 
     <section>
-      <SectionTitle title="Tangazo la karibuni" action={<AppLink to="/portal/announcements" className="text-sm font-bold text-primary">Matangazo yote</AppLink>} />
-      {announcement.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : announcement.data ? <LinkCard to="/portal/announcements" title={announcement.data.title} detail={announcement.data.content || "Tangazo la karibuni"} icon={Megaphone} /> : <EmptyCard>Hakuna tangazo jipya kwa sasa.</EmptyCard>}
+      <SectionTitle title="Tangazo la karibuni" action={announcementsVisible ? <AppLink to="/portal/announcements" className="text-sm font-bold text-primary">Matangazo yote</AppLink> : undefined} />
+      {announcement.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : announcement.data ? <LinkCard to={announcementsVisible ? "/portal/announcements" : undefined} title={announcement.data.title} detail={announcement.data.content || "Tangazo la karibuni"} icon={Megaphone} /> : <EmptyCard>Hakuna tangazo jipya kwa sasa.</EmptyCard>}
     </section>
 
     <section>
-      <SectionTitle title="Matukio yajayo" action={<AppLink to="/portal/events" className="text-sm font-bold text-primary">Matukio yote</AppLink>} />
-      {events.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : upcoming.length ? <div className="grid gap-3 md:grid-cols-3">{upcoming.map((event) => <LinkCard key={event.id} to="/portal/events" title={event.title} detail={new Date(event.startDate).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })} icon={CalendarDays} />)}</div> : <EmptyCard>Hakuna tukio lijalo lililochapishwa kwa sasa.</EmptyCard>}
+      <SectionTitle title="Matukio yajayo" action={eventsVisible ? <AppLink to="/portal/events" className="text-sm font-bold text-primary">Matukio yote</AppLink> : undefined} />
+      {events.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : upcoming.length ? <div className="grid gap-3 md:grid-cols-3">{upcoming.map((event) => <LinkCard key={event.id} to={eventsVisible ? "/portal/events" : undefined} title={event.title} detail={new Date(event.startDate).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })} icon={CalendarDays} />)}</div> : <EmptyCard>Hakuna tukio lijalo lililochapishwa kwa sasa.</EmptyCard>}
     </section>
 
-    {ministries.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : !ministries.isError ? <section><SectionTitle title="Huduma zangu" action={<AppLink to="/portal/ministries" className="text-sm font-bold text-primary">Huduma zote</AppLink>} />{joined.length ? <div className="grid gap-3 md:grid-cols-2">{joined.slice(0, 4).map((ministry) => <LinkCard key={ministry.id} to={`/portal/ministries/${ministry.id}`} title={ministry.name} detail={ministry.description || "Umejiunga"} icon={Users} />)}</div> : <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-muted-foreground"><span>Bado hujajiunga na huduma ya parokia.</span><AppLink to="/portal/ministries" className="font-bold text-primary">Angalia huduma</AppLink></CardContent></Card>}</section> : null}
+    {ministries.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : !ministries.isError ? <section><SectionTitle title="Huduma zangu" action={ministriesVisible ? <AppLink to="/portal/ministries" className="text-sm font-bold text-primary">Huduma zote</AppLink> : undefined} />{joined.length ? <div className="grid gap-3 md:grid-cols-2">{joined.slice(0, 4).map((ministry) => <LinkCard key={ministry.id} to={ministriesVisible ? `/portal/ministries/${ministry.id}` : undefined} title={ministry.name} detail={ministry.description || "Umejiunga"} icon={Users} />)}</div> : <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-muted-foreground"><span>Bado hujajiunga na huduma ya parokia.</span>{ministriesVisible ? <AppLink to="/portal/ministries" className="font-bold text-primary">Angalia huduma</AppLink> : null}</CardContent></Card>}</section> : null}
 
     <section aria-label="Njia za haraka"><SectionTitle title="Njia za haraka" /><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
       {eligibleLivestream && livestream.data ? <Shortcut to={`/portal/live/${livestream.data.id}`} title="Misa Mubashara" icon={Church} /> : null}
