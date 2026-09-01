@@ -4,7 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, CheckCircle2, Clock, Loader2, MapPin, XCircle } from "lucide-react";
+import { AlertCircle, Calendar, CheckCircle2, Clock, Loader2, MapPin, XCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useLinkedMember } from "@/hooks/use-linked-member";
 
@@ -115,20 +116,41 @@ export default function PortalEvents() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-10 animate-fade-in">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-bold font-serif mb-2">Events</h1>
-        <p className="text-muted-foreground mb-8">Stay updated with church events and services.</p>
+    <main className="min-h-full overflow-x-hidden bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.28))] px-4 py-5 pb-28 lg:px-8 lg:pb-10">
+      <div className="mx-auto max-w-5xl space-y-5">
+        <header className="space-y-1">
+          <p className="text-sm font-bold text-primary">Kanisa Connect</p>
+          <h1 className="break-words font-serif text-2xl font-bold md:text-3xl">Matukio</h1>
+          <p className="max-w-2xl text-sm text-muted-foreground">Angalia matukio yajayo ya parokia.</p>
+        </header>
 
         {isLoading ? (
-          <p role="status" aria-live="polite" className="text-muted-foreground">Matukio yanapakiwa...</p>
+          <div role="status" aria-live="polite" className="space-y-3">
+            <Skeleton className="h-32 rounded-[24px]" />
+            <Skeleton className="h-32 rounded-[24px]" />
+            <span className="sr-only">Matukio yanapakiwa...</span>
+          </div>
         ) : isError ? (
-          <Card className="border-destructive/30"><CardContent className="space-y-3 py-10 text-center" role="alert"><p className="text-destructive">Imeshindikana kupakia matukio.</p><Button type="button" variant="outline" onClick={() => void refetch()}>Jaribu tena</Button></CardContent></Card>
+          <Card className="rounded-[24px] border-destructive/30 bg-card/85">
+            <CardContent className="flex flex-col items-center gap-3 px-5 py-8 text-center" role="alert">
+              <AlertCircle className="h-9 w-9 text-destructive" />
+              <div>
+                <p className="font-semibold text-destructive">Imeshindikana kupakia matukio.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Jaribu tena kuona matukio mapya ya parokia.</p>
+              </div>
+              <Button type="button" variant="outline" onClick={() => void refetch()}>Jaribu tena</Button>
+            </CardContent>
+          </Card>
         ) : events.length === 0 ? (
-          <Card className="glass-card">
-            <CardContent className="py-16 text-center text-muted-foreground">
-              <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
-              No events at this time. Check back soon!
+          <Card className="rounded-[24px] border-border/70 bg-card/80">
+            <CardContent className="flex items-start gap-4 p-5 text-muted-foreground">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Calendar className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-semibold text-foreground">Hakuna matukio yajayo kwa sasa.</p>
+                <p className="mt-1 text-sm">Matukio mapya yataonekana hapa yatakapochapishwa.</p>
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -139,8 +161,8 @@ export default function PortalEvents() {
               const isSaving = respondToEvent.isPending && respondToEvent.variables?.eventId === event.id;
 
               return (
-                <Card key={event.id} className="glass-card hover:gold-glow transition-shadow">
-                  <CardContent className="p-6">
+                <Card key={event.id} className="rounded-[24px] border-border/70 bg-card/85 shadow-sm transition-shadow hover:border-primary/25">
+                  <CardContent className="p-5 sm:p-6">
                     <div className="flex min-w-0 items-start justify-between gap-4">
                       <div className="flex min-w-0 gap-4">
                         <div className="h-14 w-14 rounded-lg bg-primary/10 flex flex-col items-center justify-center shrink-0 border border-primary/20">
@@ -175,9 +197,9 @@ export default function PortalEvents() {
                       <div className="mt-5 rounded-xl border border-border/60 bg-muted/20 p-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div>
-                            <p className="text-sm font-medium">Will you attend {event.title}?</p>
+                            <p className="text-sm font-medium">Utahudhuria {event.title}?</p>
                             <p className="text-xs text-muted-foreground">
-                              Tap yes to register automatically for this event.
+                              Bonyeza ndiyo ili kusajiliwa kwa tukio hili.
                             </p>
                           </div>
                           {member ? (
@@ -193,7 +215,7 @@ export default function PortalEvents() {
                                 ) : (
                                   <CheckCircle2 className="mr-2 h-4 w-4" />
                                 )}
-                                Yes
+                                Ndiyo
                               </Button>
                               <Button
                                 size="sm"
@@ -206,7 +228,7 @@ export default function PortalEvents() {
                                 ) : (
                                   <XCircle className="mr-2 h-4 w-4" />
                                 )}
-                                No
+                                Hapana
                               </Button>
                             </div>
                           ) : (
@@ -217,7 +239,7 @@ export default function PortalEvents() {
                         </div>
                         {response && (
                           <p className="mt-3 text-xs text-muted-foreground">
-                            Your current response: <span className="font-medium text-foreground">{response === "yes" ? "Attending" : "Not attending"}</span>
+                            Jibu lako: <span className="font-medium text-foreground">{response === "yes" ? "Utahudhuria" : "Hutahudhuria"}</span>
                           </p>
                         )}
                       </div>
@@ -229,6 +251,6 @@ export default function PortalEvents() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

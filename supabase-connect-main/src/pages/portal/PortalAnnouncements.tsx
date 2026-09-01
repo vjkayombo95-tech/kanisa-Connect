@@ -5,7 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Megaphone } from "lucide-react";
+import { AlertCircle, Megaphone } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { CommentThread, type CommentReactionSummary } from "@/components/portal/CommentThread";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
@@ -32,7 +33,7 @@ export default function PortalAnnouncements() {
   const queryClient = useQueryClient();
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
 
-  const { data: announcements = [], isLoading } = useQuery({
+  const { data: announcements = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["portal-announcements-all", user?.id, churchId],
     queryFn: async () => {
       if (!churchId) return [];
@@ -265,31 +266,58 @@ export default function PortalAnnouncements() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-10 animate-fade-in">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-bold font-serif mb-2">Announcements</h1>
-        <p className="text-muted-foreground mb-8">Important updates and news from your church.</p>
+    <main className="min-h-full overflow-x-hidden bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.28))] px-4 py-5 pb-28 lg:px-8 lg:pb-10">
+      <div className="mx-auto max-w-5xl space-y-5">
+        <header className="space-y-1">
+          <p className="text-sm font-bold text-primary">Kanisa Connect</p>
+          <h1 className="break-words font-serif text-2xl font-bold md:text-3xl">Matangazo</h1>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            Pata taarifa na habari mpya kutoka parokiani.
+          </p>
+        </header>
 
         {isLoading ? (
-          <p className="text-muted-foreground">Loading...</p>
+          <div role="status" aria-live="polite" className="space-y-3">
+            <Skeleton className="h-28 rounded-[24px]" />
+            <Skeleton className="h-28 rounded-[24px]" />
+            <span className="sr-only">Matangazo yanapakiwa...</span>
+          </div>
+        ) : isError ? (
+          <Card className="rounded-[24px] border-destructive/30 bg-card/85">
+            <CardContent className="flex flex-col items-center gap-3 px-5 py-8 text-center" role="alert">
+              <AlertCircle className="h-9 w-9 text-destructive" />
+              <div>
+                <p className="font-semibold text-destructive">Imeshindikana kupakia matangazo.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Jaribu tena kupata taarifa mpya za parokia.</p>
+              </div>
+              <Button type="button" variant="outline" onClick={() => void refetch()}>
+                Jaribu tena
+              </Button>
+            </CardContent>
+          </Card>
         ) : announcements.length === 0 ? (
-          <Card className="glass-card">
-            <CardContent className="py-16 text-center text-muted-foreground">
-              <Megaphone className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
-              No announcements at the moment.
+          <Card className="rounded-[24px] border-border/70 bg-card/80">
+            <CardContent className="flex items-start gap-4 p-5 text-muted-foreground">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Megaphone className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-semibold text-foreground">Hakuna matangazo kwa sasa.</p>
+                <p className="mt-1 text-sm">Matangazo mapya yataonekana hapa yatakapochapishwa.</p>
+              </div>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-4">
             {announcements.map((announcement: any) => (
-              <Card key={announcement.id} className="glass-card">
-                <CardContent className="p-6">
+              <Card key={announcement.id} className="rounded-[24px] border-border/70 bg-card/85 shadow-sm">
+                <CardContent className="p-5 sm:p-6">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="font-semibold text-lg">{announcement.title}</h3>
                       {announcement.isCelebration && (
                         <Badge variant="outline" className="mt-2 border-primary/30 bg-primary/10 text-primary">
-                          Celebration
+                          Sherehe
                         </Badge>
                       )}
                     </div>
@@ -368,8 +396,8 @@ export default function PortalAnnouncements() {
                         reactionPending={toggleCommentReaction.isPending}
                         quickEmojis={ANNOUNCEMENT_COMMENT_EMOJIS}
                         reactionEmojis={ANNOUNCEMENT_COMMENT_EMOJIS}
-                        draftPlaceholder="Write a kind message..."
-                        emptyState="No comments yet. Be the first to celebrate."
+                        draftPlaceholder="Andika ujumbe mwema..."
+                        emptyState="Hakuna maoni bado. Kuwa wa kwanza kusherehekea."
                         className="mt-0 border-white/10 bg-white/[0.03]"
                         onToggleReaction={(commentId, emoji, reacted) =>
                           toggleCommentReaction.mutate({ commentId, emoji, reacted })
@@ -385,10 +413,10 @@ export default function PortalAnnouncements() {
 
         {!isLoading && celebrationAnnouncements.length === 0 && announcements.length > 0 && (
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Comments and emoji reactions appear automatically on birthday and wedding anniversary announcements.
+            Maoni na hisia za emoji huonekana kwenye matangazo ya siku za kuzaliwa na maadhimisho ya ndoa.
           </p>
         )}
       </div>
-    </div>
+    </main>
   );
 }
