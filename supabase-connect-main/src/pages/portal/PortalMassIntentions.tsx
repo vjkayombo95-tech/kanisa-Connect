@@ -32,7 +32,7 @@ const intentionTypeOptions = [
   { value: "wagonjwa", label: "Wagonjwa", description: "Kwa uponyaji na faraja" },
   { value: "safari", label: "Safari", description: "Kwa ulinzi na baraka safarini" },
   { value: "mtakatifu_wa_familia", label: "Mtakatifu wa Familia", description: "Kwa maombezi ya mtakatifu wa familia" },
-  { value: "other", label: "Other", description: "Nia nyingine ya Misa" },
+  { value: "other", label: "Nyingine", description: "Nia nyingine ya Misa" },
 ] as const;
 
 type IntentionTypeValue = (typeof intentionTypeOptions)[number]["value"];
@@ -262,18 +262,18 @@ export default function PortalMassIntentions() {
   const IntentionList = ({ items }: { items: MassIntentionWithMember[] }) => (
     <div className="space-y-3">
       {items.map((intention) => (
-        <Card key={intention.id} className="glass-card">
+        <Card key={intention.id} className="rounded-2xl border-border/70 bg-card/90 shadow-sm">
           <CardContent className="p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
+            <div className="flex min-w-0 items-start justify-between gap-3">
+              <div className="min-w-0">
                 <div className="mb-1 flex items-center gap-2">
-                  <p className="text-sm font-medium">{intention.member_name}</p>
+                  <p className="truncate text-sm font-medium">{intention.member_name}</p>
                   <Badge variant="outline" className={statusColor(intention.status)}>
                     {translateStatus(t, intention.status)}
                   </Badge>
                 </div>
                 <p className="mb-1 text-xs text-primary">{getIntentionTypeLabel(intention.intention_type)}</p>
-                <p className="text-sm text-muted-foreground">{intention.message}</p>
+                <p className="break-words text-sm leading-6 text-muted-foreground">{intention.message}</p>
                 {intention.offering_amount && (
                   <p className="mt-2 text-xs text-primary">{t("mass_intentions_form.offering", { amount: formatTZS(intention.offering_amount) })}</p>
                 )}
@@ -287,21 +287,27 @@ export default function PortalMassIntentions() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-10 animate-fade-in">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="font-serif text-2xl font-bold md:text-3xl">Nia za Misa</h1>
-            <p className="mt-1 text-muted-foreground">Wasilisha nia ya Misa kwa faragha; unaona nia zako pekee.</p>
+    <div className="container mx-auto px-4 pb-28 pt-6 animate-fade-in lg:px-8 lg:py-10">
+      <div className="mx-auto max-w-6xl min-w-0">
+        <div className="mb-7 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+              <Heart className="h-6 w-6" />
+            </div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-primary">Kanisa Connect</p>
+            <h1 className="mt-1 font-serif text-3xl font-bold tracking-normal text-foreground sm:text-4xl">Nia za Misa</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+              Wasilisha nia yako kwa Misa utakayochagua, kisha parokia itaipokea kwa ajili ya maandalizi na kumbukumbu.
+            </p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="min-h-12 w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Wasilisha Nia
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="font-serif">Wasilisha Nia ya Misa</DialogTitle>
               </DialogHeader>
@@ -313,14 +319,14 @@ export default function PortalMassIntentions() {
                 }}
               >
                 {member && (
-                  <div className="flex items-center gap-3 rounded-lg border border-primary/10 bg-primary/5 p-3">
+                  <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-primary/10 bg-primary/5 p-3">
                     <User className="h-4 w-4 shrink-0 text-primary" />
-                    <p className="text-sm font-medium">{member.full_name}</p>
+                    <p className="truncate text-sm font-medium">{member.full_name}</p>
                   </div>
                 )}
                 <div className="space-y-2">
                   <Label>Aina ya Nia ya Misa *</Label>
-                  <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="grid min-w-0 gap-2 sm:grid-cols-2">
                     {intentionTypeOptions.map((option) => {
                       const selected = intentionType === option.value;
 
@@ -330,7 +336,7 @@ export default function PortalMassIntentions() {
                           type="button"
                           onClick={() => setIntentionType(option.value)}
                           className={[
-                            "rounded-2xl border p-3 text-left transition-all",
+                            "min-w-0 rounded-2xl border p-3 text-left transition-all",
                             selected
                               ? "border-primary/40 bg-primary/10 shadow-[0_16px_36px_-28px_hsl(var(--primary))]"
                               : "border-border/70 bg-background/60 hover:border-primary/25 hover:bg-primary/5",
@@ -345,7 +351,7 @@ export default function PortalMassIntentions() {
                             >
                               <Heart className="h-4 w-4" />
                             </span>
-                            <span>
+                            <span className="min-w-0">
                               <span className="block text-sm font-semibold">{option.label}</span>
                               <span className="mt-1 block text-xs leading-5 text-muted-foreground">{option.description}</span>
                             </span>
@@ -359,7 +365,7 @@ export default function PortalMassIntentions() {
                   <Label htmlFor="mass_occurrence">Chagua Misa *</Label>
                   <div className="relative">
                     <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <select id="mass_occurrence" value={massOccurrenceId} onChange={(event) => { const selected = availableMasses.find(item => item.id === event.target.value); setMassOccurrenceId(event.target.value); setMassDate(selected?.occurrence_date ?? ""); setOfferingAmount(String(selected?.intention_fee ?? 0)); }} className="h-11 w-full rounded-md border bg-background pl-9 pr-3" required disabled={massesLoading || !isOnline}>
+                    <select id="mass_occurrence" value={massOccurrenceId} onChange={(event) => { const selected = availableMasses.find(item => item.id === event.target.value); setMassOccurrenceId(event.target.value); setMassDate(selected?.occurrence_date ?? ""); setOfferingAmount(String(selected?.intention_fee ?? 0)); }} className="h-12 w-full min-w-0 rounded-md border bg-background pl-9 pr-3" required disabled={massesLoading || !isOnline}>
                       <option value="">{massesLoading ? "Inapakia Misa..." : "Chagua Misa inayopatikana"}</option>
                       {availableMasses.filter(item => !item.is_full).map(item => <option key={item.id} value={item.id}>{item.occurrence_date} · {item.start_time.slice(0,5)} · {item.name}{item.remaining_slots == null ? "" : ` · nafasi ${item.remaining_slots}`}</option>)}
                     </select>
@@ -373,17 +379,19 @@ export default function PortalMassIntentions() {
                     placeholder="Andika jina, familia, au ujumbe wa nia ya Misa..."
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
+                    className="min-h-32"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Kiasi cha Sadaka ya Misa *</Label>
+                  <Label>Kiasi cha sadaka ya Misa *</Label>
                   <Input
                     type="number"
                     min="1000"
                     placeholder="5000"
                     value={offeringAmount}
                     onChange={(event) => setOfferingAmount(event.target.value)}
+                    className="h-12"
                     required
                   />
                   <p className="text-xs text-muted-foreground">
@@ -407,11 +415,11 @@ export default function PortalMassIntentions() {
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">{t("mass_intentions_form.draft_saved")}</p>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <Button variant="outline" type="button" className="min-h-11" onClick={() => setDialogOpen(false)}>
                     {t("common.cancel")}
                   </Button>
-                  <Button type="submit" disabled={submit.isPending || !message.trim() || !massOccurrenceId || !member?.id || !isOnline}>
+                  <Button type="submit" className="min-h-11" disabled={submit.isPending || !message.trim() || !massOccurrenceId || !member?.id || !isOnline}>
                     {submit.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {t("mass_intentions_form.submit_and_pay", { amount: formatTZS(grossAmount) })}
                   </Button>
@@ -421,15 +429,17 @@ export default function PortalMassIntentions() {
           </Dialog>
         </div>
 
+        <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+          <section className="min-w-0">
         {pendingMassIntentions.length > 0 ? (
-          <Card className="mb-6 border-primary/20 bg-primary/5">
+          <Card className="mb-6 rounded-2xl border-primary/20 bg-primary/5">
             <CardContent className="space-y-3 p-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
                   <p className="text-sm font-medium">{t("mass_intentions_form.pending_offline_title")}</p>
                   <p className="text-sm text-muted-foreground">{t("mass_intentions_form.pending_offline_description")}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline">{t("mass_intentions_form.pending_count", { count: pendingMassIntentions.length })}</Badge>
                   <Button
                     size="sm"
@@ -451,14 +461,14 @@ export default function PortalMassIntentions() {
               </div>
               <div className="space-y-2">
                 {pendingMassIntentions.map((item) => (
-                  <div key={item.id} className="rounded-lg border border-border/60 bg-background/70 p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
+                  <div key={item.id} className="rounded-2xl border border-border/60 bg-background/70 p-3">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
                         <p className="text-sm font-medium">{getIntentionTypeLabel(item.payload.intentionType)}</p>
                         {item.payload.requestedMassDate ? (
                           <p className="mt-1 text-xs text-muted-foreground">Tarehe ya Misa: {item.payload.requestedMassDate}</p>
                         ) : null}
-                        <p className="mt-1 text-sm text-muted-foreground">{item.payload.message}</p>
+                        <p className="mt-1 break-words text-sm text-muted-foreground">{item.payload.message}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {t("mass_intentions_form.saved_at", { date: new Date(item.createdAt).toLocaleString() })}
                         </p>
@@ -466,7 +476,7 @@ export default function PortalMassIntentions() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-destructive"
+                        className="shrink-0 text-destructive"
                         onClick={() => removeOfflineSyncAction(item.id)}
                       >
                         {t("common.remove")}
@@ -485,7 +495,7 @@ export default function PortalMassIntentions() {
           </TabsList>
           <TabsContent value="mine">
             {myIntentions.length === 0 ? (
-              <Card className="glass-card">
+              <Card className="rounded-2xl border-border/70 bg-card/90 shadow-sm">
                 <CardContent className="py-16 text-center text-muted-foreground">
                   <Flame className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
                   {t("mass_intentions_form.empty_mine")}
@@ -496,6 +506,31 @@ export default function PortalMassIntentions() {
             )}
           </TabsContent>
         </Tabs>
+          </section>
+
+          <aside className="min-w-0 space-y-4">
+            {member && (
+              <div className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border/60">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                    <User className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{member.full_name}</p>
+                    <p className="text-xs text-muted-foreground">Nia zako zinaunganishwa na ushiriki wako wa parokia.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-2xl bg-muted/50 p-5">
+              <h2 className="text-sm font-semibold text-foreground">Kabla ya kuwasilisha</h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Chagua Misa yenye nafasi, andika nia yako kwa utulivu, na hakiki kiasi cha sadaka kinachoonekana kwenye ratiba ya parokia.
+              </p>
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   );
