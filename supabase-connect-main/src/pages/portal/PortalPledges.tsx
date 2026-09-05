@@ -18,6 +18,12 @@ import { useToast } from "@/hooks/use-toast";
 
 const PLEDGE_PLATFORM_FEE_PERCENT = 1;
 
+const pledgeStatusLabels = {
+  pending: "Inasubiri",
+  partial: "Inaendelea",
+  completed: "Imekamilika",
+} as const;
+
 export default function PortalPledges() {
   const { user, churchId } = useAuth();
   const { toast } = useToast();
@@ -130,221 +136,260 @@ export default function PortalPledges() {
   const overallProgress = totals.pledged ? Math.min(100, (totals.paid / totals.pledged) * 100) : 0;
   const numericPledgeAmount = Number(amountPledged || 0);
   const cannotCreatePledge = !member?.id || !churchId || !memberCommunity?.id;
-  const canOpenCreateDialog = !!member?.id && !!churchId;
+  const canOpenCreateDialog = !cannotCreatePledge;
 
   return (
-    <div className="container mx-auto px-4 py-10 space-y-6 animate-fade-in">
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-serif">My Pledges</h1>
-          <p className="text-muted-foreground mt-2">Track your church commitments and add a personal pledge to your community.</p>
+    <div className="container mx-auto px-4 pb-28 pt-6 animate-fade-in lg:px-8 lg:py-10">
+      <div className="mx-auto max-w-6xl min-w-0 space-y-6">
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+              <Target className="h-6 w-6" />
+            </div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-primary">Kanisa Connect</p>
+            <h1 className="mt-1 font-serif text-3xl font-bold tracking-normal text-foreground sm:text-4xl">Ahadi za Michango</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+              Fuatilia ahadi zako na maendeleo ya michango yako.
+            </p>
+          </div>
+          <Dialog open={createOpen} onOpenChange={handleCreateDialogChange}>
+            <DialogTrigger asChild>
+              <Button className="min-h-12 w-full sm:w-auto" disabled={!canOpenCreateDialog}>
+                <Plus className="mr-2 h-4 w-4" />
+                Weka Ahadi
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="font-serif">Weka Ahadi</DialogTitle>
+              </DialogHeader>
+              <form
+                className="space-y-4"
+                onSubmit={async (event) => {
+                  event.preventDefault();
+                  if (!member?.id || !churchId || !memberCommunity?.id || numericPledgeAmount <= 0) return;
+
+                  try {
+                    await createPledge.mutateAsync({
+                      memberId: member.id,
+                      churchId,
+                      communityId: memberCommunity.id,
+                      amountPledged: numericPledgeAmount,
+                    });
+
+                    queryClient.invalidateQueries({ queryKey: ["member-pledges", member.id] });
+                    queryClient.invalidateQueries({ queryKey: ["church-pledges-summary", churchId] });
+                    queryClient.invalidateQueries({ queryKey: ["community-pledges", memberCommunity.id] });
+                    toast({
+                      title: "Ahadi imewekwa",
+                      description: `${formatTZS(numericPledgeAmount)} imeongezwa kwenye ${memberCommunity.name}.`,
+                    });
+                    handleCreateDialogChange(false);
+                  } catch (error: any) {
+                    toast({
+                      title: "Ahadi haikuwekwa",
+                      description: error?.message || "Tatizo limetokea wakati wa kuweka ahadi.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+              >
+                <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm">
+                  <p className="font-medium">{member?.full_name || "Mwanachama"}</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Jumuiya: {isCommunityLoading ? "Inatafutwa..." : memberCommunity?.name || "Hujaunganishwa na Jumuiya"}
+                  </p>
+                </div>
+                {cannotCreatePledge && (
+                  <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm leading-6 text-muted-foreground">
+                    {isMemberLoading || isCommunityLoading
+                      ? "Tunakagua taarifa ya Jumuiya yako..."
+                      : "Unahitaji kuunganishwa na Jumuiya kabla ya kuweka ahadi ya mchango."}
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label>Kiasi cha Ahadi (TZS)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={amountPledged}
+                    onChange={(event) => setAmountPledged(event.target.value)}
+                    placeholder="Weka kiasi"
+                    className="h-12 text-base"
+                    required
+                  />
+                </div>
+                <p className="text-xs leading-5 text-muted-foreground">
+                  Weka kiasi unachoahidi kuchangia. Malipo yatarekodiwa kando baada ya kuwasilishwa na kuthibitishwa.
+                </p>
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <Button variant="outline" type="button" className="min-h-11" onClick={() => handleCreateDialogChange(false)}>
+                    Ghairi
+                  </Button>
+                  <Button type="submit" className="min-h-11" disabled={createPledge.isPending || numericPledgeAmount <= 0 || !memberCommunity?.id || !member?.id || !churchId}>
+                    {createPledge.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Weka Ahadi
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
-        <Dialog open={createOpen} onOpenChange={handleCreateDialogChange}>
-          <DialogTrigger asChild>
-            <Button disabled={!canOpenCreateDialog}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Pledge
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="font-serif">Add My Pledge</DialogTitle>
-            </DialogHeader>
-            <form
-              className="space-y-4"
-              onSubmit={async (event) => {
-                event.preventDefault();
-                if (!member?.id || !churchId || !memberCommunity?.id || numericPledgeAmount <= 0) return;
 
-                try {
-                  await createPledge.mutateAsync({
-                    memberId: member.id,
-                    churchId,
-                    communityId: memberCommunity.id,
-                    amountPledged: numericPledgeAmount,
-                  });
+        {cannotCreatePledge && (
+          <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4 text-sm leading-6 text-muted-foreground">
+            {isMemberLoading || isCommunityLoading
+              ? "Tunakagua taarifa ya Jumuiya yako..."
+              : "Unahitaji kuunganishwa na Jumuiya kabla ya kuweka ahadi inayojumuishwa kwenye takwimu za Jumuiya."}
+          </div>
+        )}
 
-                  queryClient.invalidateQueries({ queryKey: ["member-pledges", member.id] });
-                  queryClient.invalidateQueries({ queryKey: ["church-pledges-summary", churchId] });
-                  queryClient.invalidateQueries({ queryKey: ["community-pledges", memberCommunity.id] });
-                  toast({
-                    title: "Pledge added",
-                    description: `${formatTZS(numericPledgeAmount)} has been added to ${memberCommunity.name}.`,
-                  });
-                  handleCreateDialogChange(false);
-                } catch (error: any) {
-                  toast({
-                    title: "Unable to add pledge",
-                    description: error?.message || "Something went wrong while creating the pledge.",
-                    variant: "destructive",
-                  });
-                }
-              }}
-            >
-              <div className="rounded-lg border border-primary/10 bg-primary/5 p-3 text-sm">
-                <p className="font-medium">{member?.full_name || "Member"}</p>
-                <p className="mt-1 text-muted-foreground">
-                  Community: {isCommunityLoading ? "Loading..." : memberCommunity?.name || "No community assigned"}
+        <section className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-stretch">
+          <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4">
+            <SummaryCard icon={Target} label="Jumla ya Ahadi" value={formatTZS(totals.pledged)} />
+            <SummaryCard icon={HandCoins} label="Niliyolipa" value={formatTZS(totals.paid)} />
+            <SummaryCard icon={Wallet} label="Salio" value={formatTZS(totals.balance)} />
+            <SummaryCard icon={CircleDollarSign} label="Maendeleo" value={`${overallProgress.toFixed(0)}%`} />
+          </div>
+
+          <Card className="min-w-0 rounded-2xl border-border/70 bg-card/95 shadow-sm">
+            <CardContent className="flex h-full min-w-0 flex-col justify-between p-5">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Maendeleo ya Ahadi</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">{formatTZS(totals.paid)}</span> / {formatTZS(totals.pledged)}
                 </p>
               </div>
-              {cannotCreatePledge && (
-                <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-muted-foreground">
-                  {isMemberLoading || isCommunityLoading
-                    ? "Checking your community assignment..."
-                    : "You need to be assigned to a community before this pledge can be created."}
+              <div className="mt-5 space-y-3">
+                <Progress value={overallProgress} className="h-3" />
+                <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                  <span>{overallProgress.toFixed(0)}% imetimia</span>
+                  <span className="text-right">Salio {formatTZS(totals.balance)}</span>
                 </div>
-              )}
-              <div className="space-y-2">
-                <Label>Amount Pledged (TZS)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={amountPledged}
-                  onChange={(event) => setAmountPledged(event.target.value)}
-                  placeholder="Enter pledge amount"
-                  required
-                />
               </div>
-              <p className="text-xs text-muted-foreground">
-                This pledge will be counted under your community and will update the church admin pledge summary.
-              </p>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" type="button" onClick={() => handleCreateDialogChange(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createPledge.isPending || numericPledgeAmount <= 0 || !memberCommunity?.id || !member?.id || !churchId}>
-                  {createPledge.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Add Pledge
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </CardContent>
+          </Card>
+        </section>
 
-      {cannotCreatePledge && (
-        <Card className="glass-card border-primary/20">
-          <CardContent className="p-4 text-sm text-muted-foreground">
-            {isMemberLoading || isCommunityLoading
-              ? "Checking your community assignment..."
-              : "You need to be assigned to a community before you can add a pledge that rolls up into community totals."}
+        <Card className="rounded-2xl border-border/70 bg-card/95 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Ahadi Zinazoendelea</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {isLoading ? (
+              <div className="flex min-h-32 items-center justify-center rounded-2xl bg-muted/40 text-sm text-muted-foreground">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Inapakia ahadi zako...
+              </div>
+            ) : pledges.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-6 text-center">
+                <Target className="mx-auto mb-3 h-10 w-10 text-muted-foreground/35" />
+                <p className="font-medium text-foreground">Bado hujaweka ahadi ya mchango.</p>
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+                  Unaweza kuweka ahadi mpya na kufuatilia maendeleo yake hapa.
+                </p>
+                <Button className="mt-5 min-h-11" disabled={!canOpenCreateDialog} onClick={() => {
+                  if (canOpenCreateDialog) setCreateOpen(true);
+                }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Weka Ahadi
+                </Button>
+              </div>
+            ) : (
+              pledges.map((pledge) => {
+                const progress = getPledgeProgress(pledge);
+
+                return (
+                  <div key={pledge.id} className="min-w-0 rounded-2xl border border-border/70 bg-background/70 p-4 shadow-sm">
+                    <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1 space-y-3">
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <p className="min-w-0 truncate text-sm font-semibold">
+                            {pledge.community_name || "Ahadi ya Parokia"}
+                          </p>
+                          <Badge variant={pledge.status === "completed" ? "default" : "secondary"}>
+                            {pledgeStatusLabels[pledge.status] ?? pledge.status}
+                          </Badge>
+                        </div>
+                        <div className="grid min-w-0 grid-cols-1 gap-2 text-sm text-muted-foreground sm:grid-cols-3">
+                          <Metric label="Ahadi" value={formatTZS(pledge.amount_pledged)} />
+                          <Metric label="Imelipwa" value={formatTZS(pledge.amount_paid)} />
+                          <Metric label="Salio" value={formatTZS(pledge.balance)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Progress value={progress} className="h-2" />
+                          <p className="text-xs text-muted-foreground">{progress.toFixed(0)}% imetimia</p>
+                        </div>
+                      </div>
+                      <Button
+                        className="min-h-11 w-full sm:w-auto"
+                        onClick={() => setActivePledge(pledge)}
+                        disabled={pledge.balance <= 0}
+                      >
+                        Wasilisha Malipo
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </CardContent>
         </Card>
-      )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <SummaryCard icon={Target} label="Total Pledged" value={formatTZS(totals.pledged)} />
-        <SummaryCard icon={HandCoins} label="Paid So Far" value={formatTZS(totals.paid)} />
-        <SummaryCard icon={Wallet} label="Balance" value={formatTZS(totals.balance)} />
-        <SummaryCard icon={CircleDollarSign} label="Progress" value={`${overallProgress.toFixed(0)}%`} />
+        <PledgePaymentDialog
+          open={!!activePledge}
+          onOpenChange={(open) => {
+            if (!open) setActivePledge(null);
+          }}
+          title={activePledge ? `Wasilisha malipo ya ${activePledge.community_name || "ahadi"}` : "Wasilisha Malipo ya Ahadi"}
+          maxAmount={activePledge?.balance ?? 0}
+          feePercentage={PLEDGE_PLATFORM_FEE_PERCENT}
+          isSubmitting={paymentMutation.isPending}
+          onSubmit={async (amount, paymentMethod, transactionId, proofUrl) => {
+            if (!activePledge) return;
+            const result = await paymentMutation.mutateAsync({
+              pledgeId: activePledge.id,
+              amount,
+              paymentMethod,
+              transactionId,
+              proofUrl,
+            });
+            queryClient.invalidateQueries({ queryKey: ["member-pledges", member?.id] });
+            queryClient.invalidateQueries({ queryKey: ["church-pledges-summary", churchId] });
+            queryClient.invalidateQueries({ queryKey: ["community-pledges", activePledge.community_id] });
+            const fee = Number((result as any)?.fee_amount ?? 0);
+            const net = Number((result as any)?.net_amount ?? 0);
+            const gross = Number((result as any)?.gross_amount ?? amount);
+            toast({
+              title: "Malipo yametumwa kwa uthibitisho",
+              description: "Salio la ahadi litasasishwa baada ya msimamizi wa kanisa au padre kuthibitisha malipo.",
+            });
+          }}
+        />
       </div>
+    </div>
+  );
+}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Commitment Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Progress value={overallProgress} className="h-3" />
-          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-            <span>{formatTZS(totals.paid)} paid</span>
-            <span>{formatTZS(totals.pledged)} pledged</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">My Active Pledges</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading pledges...</p>
-          ) : pledges.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No pledges recorded yet.</p>
-          ) : (
-            pledges.map((pledge) => {
-              const progress = getPledgeProgress(pledge);
-
-              return (
-                <div key={pledge.id} className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                    <div className="space-y-2 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold">
-                          {pledge.community_name || "Church Pledge"}
-                        </p>
-                        <Badge variant={pledge.status === "completed" ? "default" : "secondary"}>
-                          {pledge.status}
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-muted-foreground">
-                        <span>Pledged: <strong className="text-foreground">{formatTZS(pledge.amount_pledged)}</strong></span>
-                        <span>Paid: <strong className="text-foreground">{formatTZS(pledge.amount_paid)}</strong></span>
-                        <span>Balance: <strong className="text-foreground">{formatTZS(pledge.balance)}</strong></span>
-                      </div>
-                      <div className="space-y-2">
-                        <Progress value={progress} className="h-2" />
-                        <p className="text-xs text-muted-foreground">{progress.toFixed(0)}% complete</p>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => setActivePledge(pledge)}
-                      disabled={pledge.balance <= 0}
-                    >
-                      Pay Now
-                    </Button>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </CardContent>
-      </Card>
-
-      <PledgePaymentDialog
-        open={!!activePledge}
-        onOpenChange={(open) => {
-          if (!open) setActivePledge(null);
-        }}
-        title={activePledge ? `Pay ${activePledge.community_name || "Pledge"}` : "Pay Pledge"}
-        maxAmount={activePledge?.balance ?? 0}
-        feePercentage={PLEDGE_PLATFORM_FEE_PERCENT}
-        isSubmitting={paymentMutation.isPending}
-        onSubmit={async (amount, paymentMethod, transactionId, proofUrl) => {
-          if (!activePledge) return;
-          const result = await paymentMutation.mutateAsync({
-            pledgeId: activePledge.id,
-            amount,
-            paymentMethod,
-            transactionId,
-            proofUrl,
-          });
-          queryClient.invalidateQueries({ queryKey: ["member-pledges", member?.id] });
-          queryClient.invalidateQueries({ queryKey: ["church-pledges-summary", churchId] });
-          queryClient.invalidateQueries({ queryKey: ["community-pledges", activePledge.community_id] });
-          const fee = Number((result as any)?.fee_amount ?? 0);
-          const net = Number((result as any)?.net_amount ?? 0);
-          const gross = Number((result as any)?.gross_amount ?? amount);
-          toast({
-            title: "Payment submitted for approval",
-            description: "Your pledge balance will update after a church admin or pastor verifies the payment.",
-          });
-        }}
-      />
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-xl bg-muted/45 px-3 py-2">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 truncate text-sm font-semibold text-foreground">{value}</p>
     </div>
   );
 }
 
 function SummaryCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <Card className="glass-card">
-      <CardContent className="p-5 flex items-center justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="text-xl font-bold font-serif mt-1">{value}</p>
+    <Card className="min-w-0 rounded-2xl border-border/70 bg-card/95 shadow-sm">
+      <CardContent className="flex min-w-0 items-center justify-between gap-3 p-4 sm:p-5">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground sm:text-sm">{label}</p>
+          <p className="mt-1 truncate font-serif text-lg font-bold text-foreground sm:text-xl">{value}</p>
         </div>
-        <div className="h-11 w-11 rounded-lg gradient-gold flex items-center justify-center">
-          <Icon className="h-5 w-5 text-primary-foreground" />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm sm:h-11 sm:w-11">
+          <Icon className="h-5 w-5" />
         </div>
       </CardContent>
     </Card>
