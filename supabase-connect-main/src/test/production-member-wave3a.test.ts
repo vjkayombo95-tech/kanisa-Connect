@@ -81,7 +81,7 @@ describe("Wave 3A member reliability contracts", () => {
     expect(container.querySelector('[data-testid="mobile-next-mass"]')).not.toBeNull();
     const links = [...container.querySelectorAll("a")];
     expect(links.filter((link) => ["Michango", "Nia za Misa", "Matangazo", "Historia Yangu"].some((label) => link.textContent?.includes(label)))).toHaveLength(4);
-    expect(links.filter((link) => link.textContent === "Kalenda")).toHaveLength(1);
+    expect(links.filter((link) => link.textContent === "Ratiba")).toHaveLength(1);
     act(() => root.unmount());
     container.remove();
   });
