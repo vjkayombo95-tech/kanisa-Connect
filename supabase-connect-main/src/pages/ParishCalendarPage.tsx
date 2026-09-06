@@ -9,6 +9,7 @@ import { formatMassDate, formatMassTime, type MassOccurrence } from "@/lib/mass-
 
 const db = supabase as unknown as SupabaseClient;
 type CalendarEvent = { id: string; church_id: string; title: string; description: string | null; start_date: string; end_date: string | null; location: string | null; event_type: string | null; registration_type: string | null; archived_at: string | null };
+type CalendarMass = Pick<MassOccurrence, "id" | "occurrence_date" | "start_time" | "name" | "location_name" | "status">;
 type Props = { workspace: "member" | "admin" };
 
 export default function ParishCalendarPage({ workspace }: Props) {
@@ -16,7 +17,10 @@ export default function ParishCalendarPage({ workspace }: Props) {
   const calendar = useQuery({ queryKey: ["wave4a-parish-calendar", workspace, churchId], enabled: !!churchId, queryFn: async () => {
     const now = new Date().toISOString(); const today = now.slice(0, 10);
     const eventsQuery = db.from("events").select("id,church_id,title,description,start_date,end_date,location,event_type,registration_type,archived_at").eq("church_id", churchId).gte("start_date", now).is("archived_at", null).order("start_date").limit(100);
-    const [events, masses] = await Promise.all([eventsQuery, db.from("mass_occurrences").select("*").eq("church_id", churchId).gte("occurrence_date", today).in("status", ["scheduled", "rescheduled"]).order("occurrence_date").order("start_time").limit(100)]);
+    const massesQuery = workspace === "member"
+      ? db.rpc("get_member_parish_schedule_masses", { p_church_id: churchId, p_from_date: today })
+      : db.from("mass_occurrences").select("*").eq("church_id", churchId).gte("occurrence_date", today).in("status", ["scheduled", "rescheduled"]).order("occurrence_date").order("start_time").limit(100);
+    const [events, masses] = await Promise.all([eventsQuery, massesQuery]);
     if (events.error) throw events.error; if (masses.error) throw masses.error;
     const eventRows = events.data as CalendarEvent[];
     const registrationByEvent = new Map<string, string>();
@@ -29,7 +33,7 @@ export default function ParishCalendarPage({ workspace }: Props) {
         for (const row of registrations.data ?? []) registrationByEvent.set(row.event_id, row.payment_status === "paid" ? "Umesajiliwa · imelipwa" : `Umesajiliwa · ${row.registration_status}`);
       }
     }
-    return { events: eventRows, masses: masses.data as MassOccurrence[], registrationByEvent };
+    return { events: eventRows, masses: masses.data as CalendarMass[], registrationByEvent };
   }});
   const items = [
     ...(calendar.data?.events ?? []).map(event => ({ id: `event-${event.id}`, at: event.start_date, title: event.title, kind: event.event_type || "Tukio", detail: event.location, status: calendar.data?.registrationByEvent.get(event.id) ?? (event.registration_type === "paid" ? "Usajili wa malipo" : "Tukio la parokia") })),
