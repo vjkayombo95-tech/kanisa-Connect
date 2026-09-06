@@ -235,44 +235,61 @@ function PrayerRequestCard({
     },
   });
 
-  const statusColor = (status: string) => {
-    if (status === "approved") return "bg-success/20 text-success border-success/30";
-    if (status === "pending") return "bg-primary/20 text-primary border-primary/30";
-    return "bg-destructive/10 text-destructive border-destructive/20";
+  const statusTone = (status: string) => {
+    if (status === "approved") return "border-success/30 bg-success/10 text-success";
+    if (status === "pending") return "border-primary/25 bg-primary/10 text-primary";
+    return "border-muted-foreground/20 bg-muted text-muted-foreground";
   };
 
+  const statusLabel = (status: string) => {
+    if (status === "approved") return "Imepokelewa";
+    if (status === "pending") return "Inasubiri mapitio";
+    if (status === "rejected") return "Haikuchapishwa";
+    return status;
+  };
+
+  const statusHelp = (status: string) => {
+    if (status === "pending") {
+      return "Ombi lako limepokelewa na linasubiri mapitio kabla ya kuonekana kwa waumini.";
+    }
+    if (status === "rejected") {
+      return "Ombi hili halijawekwa kwenye maombi ya waumini, lakini bado lipo kwenye historia yako.";
+    }
+    return null;
+  };
+
+  const requesterName = request.privacy === "anonymous_public" ? "Muumini" : request.member_name;
+  const helpText = statusHelp(request.status);
+
   return (
-    <Card className="glass-card">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="mb-1 flex items-center gap-2">
-              <p className="text-sm font-medium">{request.privacy === "anonymous_public" ? "Anonymous" : request.member_name}</p>
-              <Badge variant="outline" className={statusColor(request.status)}>
-                {request.status}
-              </Badge>
-              {Number(request.offering_amount) > 0 && (
-                <Badge variant="outline" className="border-primary/20 bg-primary/10 text-xs text-primary">
-                  <Star className="mr-1 h-3 w-3" />
-                  Priority
-                </Badge>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground">{request.request_text}</p>
+    <Card className="min-w-0 max-w-full border-border/70 bg-card/90 shadow-sm">
+      <CardContent className="min-w-0 max-w-full space-y-4 p-4 sm:p-5">
+        <div className="min-w-0 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="min-w-0 break-words text-sm font-semibold text-foreground">{requesterName}</span>
+            <Badge variant="outline" className={`max-w-full whitespace-normal ${statusTone(request.status)}`}>
+              {statusLabel(request.status)}
+            </Badge>
             {Number(request.offering_amount) > 0 && (
-              <p className="mt-1 text-xs text-primary">Offering: {formatTZS(request.offering_amount)}</p>
+              <Badge variant="outline" className="max-w-full whitespace-normal border-primary/20 bg-primary/5 text-xs text-primary">
+                <Star className="mr-1 h-3 w-3" />
+                Sadaka ya hiari
+              </Badge>
             )}
-            <p className="mt-2 text-xs text-muted-foreground/60">
-              {new Date(request.created_at).toLocaleDateString()}
-            </p>
           </div>
+          <p className="whitespace-pre-wrap break-words text-base leading-7 text-foreground">{request.request_text}</p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <span>{new Date(request.created_at).toLocaleDateString()}</span>
+            {Number(request.offering_amount) > 0 && <span>Sadaka: {formatTZS(request.offering_amount)}</span>}
+          </div>
+          {helpText && <p className="rounded-lg bg-muted/60 px-3 py-2 text-xs leading-5 text-muted-foreground">{helpText}</p>}
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">
+        <div className="grid min-w-0 grid-cols-1 gap-2 border-t border-border/60 pt-3 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap sm:items-center">
           <Button
             size="sm"
             variant={prayerStats.prayedByMe ? "default" : "outline"}
-            className="gap-1.5"
+            className="min-h-10 min-w-0 max-w-full whitespace-normal text-center leading-snug"
             onClick={() => togglePrayer.mutate()}
             disabled={togglePrayer.isPending || !member?.id}
           >
@@ -281,17 +298,19 @@ function PrayerRequestCard({
             ) : (
               <Heart className={`h-3.5 w-3.5 ${prayerStats.prayedByMe ? "fill-current" : ""}`} />
             )}
-            {prayerStats.prayedByMe ? "Prayed" : "Mark as Prayed"} ({prayerStats.count})
+            {prayerStats.prayedByMe ? "Umeombea" : "Nimeombea"} ({prayerStats.count})
           </Button>
 
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowComments((current) => !current)}>
+          <Button size="sm" variant="outline" className="min-h-10 min-w-0 max-w-full whitespace-normal text-center leading-snug" onClick={() => setShowComments((current) => !current)}>
             <MessageCircle className="h-3.5 w-3.5" />
-            Comments {comments.length > 0 ? `(${comments.length})` : ""}
+            Ujumbe wa Faraja {comments.length > 0 ? `(${comments.length})` : ""}
           </Button>
         </div>
 
         {showComments && (
           <CommentThread
+            className="min-w-0 max-w-full"
+            headingLabel="Ujumbe wa Faraja"
             comments={comments}
             draft={commentText}
             onDraftChange={setCommentText}
@@ -301,8 +320,8 @@ function PrayerRequestCard({
             reactionPending={toggleCommentReaction.isPending}
             quickEmojis={QUICK_COMMENT_EMOJIS}
             reactionEmojis={QUICK_COMMENT_EMOJIS}
-            draftPlaceholder="Share encouragement or pray with them in words..."
-            emptyState="No comments yet. Leave a prayer or a word of encouragement."
+            draftPlaceholder="Andika ujumbe wa faraja au sala fupi..."
+            emptyState="Hakuna ujumbe bado. Unaweza kuacha faraja au sala fupi."
             onToggleReaction={(commentId, emoji, reacted) =>
               toggleCommentReaction.mutate({ commentId, emoji, reacted })
             }
@@ -526,12 +545,12 @@ export default function PortalPrayerRequests() {
       const gross = offering > 0 ? Number((offering / (1 - PLATFORM_FEE_PERCENT / 100)).toFixed(2)) : 0;
       const fee = gross > 0 ? Number((gross - offering).toFixed(2)) : 0;
       toast({
-        title: result?.queuedOffline ? "Prayer request queued" : "Prayer request submitted",
+        title: result?.queuedOffline ? "Ombi la maombi limesubiri kutumwa" : "Ombi la maombi limetumwa",
         description: result?.queuedOffline
-          ? "Your prayer request will sync automatically when internet returns."
+          ? "Ombi lako litatumwa kiotomatiki mtandao utakaporudi."
           : offering > 0
-            ? `${formatTZS(offering)} will go to the church. Total paid was ${formatTZS(gross)}, including a ${formatTZS(fee)} platform fee.`
-            : "Your prayer has been shared.",
+            ? `${formatTZS(offering)} itaenda kanisani. Jumla iliyolipwa ni ${formatTZS(gross)}, ikijumuisha ada ya mfumo ya ${formatTZS(fee)}.`
+            : "Ombi lako limepokelewa kwa maombi.",
       });
       setDialogOpen(false);
       setRequestText("");
@@ -544,109 +563,125 @@ export default function PortalPrayerRequests() {
   });
 
   return (
-    <div className="container mx-auto px-4 py-10 animate-fade-in">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="font-serif text-2xl font-bold md:text-3xl">Prayer Requests</h1>
-            <p className="mt-1 text-muted-foreground">Share your prayer needs with the community.</p>
+    <div className="mx-auto min-w-0 w-full max-w-full animate-fade-in px-4 py-5 pb-28 sm:max-w-4xl sm:px-6 lg:px-8 lg:py-8 lg:pb-12">
+      <div className="min-w-0 space-y-5">
+        <div className="flex min-w-0 max-w-full flex-col gap-4 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="min-w-0 space-y-2">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Kanisa Connect</p>
+            <h1 className="font-serif text-3xl font-bold leading-tight text-foreground md:text-4xl">Maombi</h1>
+            <p className="max-w-2xl break-words text-sm leading-6 text-muted-foreground">
+              Shiriki ombi lako la maombi au ungana na waumini wengine katika kuwaombea.
+            </p>
           </div>
 
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="min-h-12 w-full min-w-0 max-w-full whitespace-normal text-center leading-snug sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
-                Submit Request
+                Tuma Ombi la Maombi
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle className="font-serif">Submit Prayer Request</DialogTitle>
+                <DialogTitle className="font-serif text-2xl">Tuma Ombi la Maombi</DialogTitle>
               </DialogHeader>
 
               <form
-                className="space-y-4"
+                className="space-y-5"
                 onSubmit={(event) => {
                   event.preventDefault();
                   submit.mutate();
                 }}
               >
                 {member && (
-                  <div className="flex items-center gap-3 rounded-lg border border-primary/10 bg-primary/5 p-3">
+                  <div className="flex items-center gap-3 rounded-xl border border-primary/10 bg-primary/5 p-3">
                     <User className="h-4 w-4 shrink-0 text-primary" />
-                    <p className="text-sm font-medium">{member.full_name}</p>
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">Unatuma kama</p>
+                      <p className="truncate text-sm font-medium">{member.full_name}</p>
+                    </div>
                   </div>
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="request_text">Prayer Request *</Label>
+                  <Label htmlFor="request_text">Ombi lako la Maombi *</Label>
                   <Textarea
                     id="request_text"
-                    rows={4}
-                    placeholder="Share your prayer need..."
+                    rows={5}
+                    placeholder="Andika unachohitaji kuombewa kwa utulivu..."
                     value={requestText}
                     onChange={(event) => setRequestText(event.target.value)}
                     required
+                    className="min-h-32 resize-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="prayer_privacy">Who can see this request?</Label>
+                  <Label htmlFor="prayer_privacy">Nani anaweza kuona ombi hili?</Label>
                   <select
                     id="prayer_privacy"
                     value={privacy}
                     onChange={(event) => setPrivacy(event.target.value as PrayerRequestPrivacy)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="flex min-h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
                   >
-                    <option value="public_to_church">Share with church after pastor/admin approval</option>
-                    <option value="private_to_pastor_admin">Private to pastor and church admin</option>
-                    <option value="anonymous_public">Share anonymously after pastor/admin approval</option>
+                    <option value="public_to_church">Waumini wa Kanisa</option>
+                    <option value="private_to_pastor_admin">Mchungaji/Uongozi pekee</option>
+                    <option value="anonymous_public">Bila kutaja jina</option>
                   </select>
-                  <p className="text-xs text-muted-foreground">All new requests are private while pending review.</p>
+                  <div className="space-y-1 rounded-xl bg-muted/60 p-3 text-xs leading-5 text-muted-foreground">
+                    <p>Waumini wa Kanisa: litaonekana kwa waumini baada ya mapitio.</p>
+                    <p>Mchungaji/Uongozi pekee: halitakuwa ombi la waumini wote.</p>
+                    <p>Bila kutaja jina: linaweza kuonekana baada ya mapitio bila kuonyesha jina lako kwa waumini.</p>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="offering_amount">Offering Amount (TZS)</Label>
+                <div className="space-y-3 rounded-xl border border-border/70 bg-muted/30 p-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="offering_amount">Sadaka ya Hiari (TZS)</Label>
+                    <p className="text-xs leading-5 text-muted-foreground">
+                      Sadaka ni ya hiari kabisa na si sharti la kutuma ombi la maombi.
+                    </p>
+                  </div>
                   <Input
                     id="offering_amount"
                     type="number"
-                    placeholder="Optional - amount church should receive"
+                    placeholder="Hiari - kiasi kitakachopokelewa na kanisa"
                     value={offeringAmount}
                     onChange={(event) => setOfferingAmount(event.target.value)}
                   />
-                  <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <p className="flex items-start gap-1.5 text-xs leading-5 text-muted-foreground">
                     <Star className="h-3 w-3 text-primary" />
-                    Offering is optional. Paid requests receive higher priority with the pastor.
+                    Maombi yako yatapokelewa hata kama hutachagua kutoa sadaka.
                   </p>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  This draft is saved on this device while you type.
+                  Rasimu hii inahifadhiwa kwenye kifaa hiki unapoandika.
                 </p>
 
                 {requestedChurchAmount > 0 && (
-                  <div className="space-y-1 rounded-lg border border-border bg-muted/50 p-3">
+                  <div className="space-y-1 rounded-xl border border-border bg-background/80 p-3">
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Church receives</span>
+                      <span>Kanisa linapokea</span>
                       <span>{formatTZS(requestedChurchAmount)}</span>
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Platform fee ({PLATFORM_FEE_PERCENT}%)</span>
+                      <span>Ada ya mfumo ({PLATFORM_FEE_PERCENT}%)</span>
                       <span>{formatTZS(feeAmount)}</span>
                     </div>
                     <div className="flex justify-between border-t border-border pt-1 text-sm font-medium">
-                      <span>You pay</span>
+                      <span>Jumla</span>
                       <span className="text-primary">{formatTZS(grossOffering)}</span>
                     </div>
                   </div>
                 )}
 
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>
-                    Cancel
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <Button variant="outline" type="button" className="min-w-0 whitespace-normal" onClick={() => setDialogOpen(false)}>
+                    Ghairi
                   </Button>
-                  <Button type="submit" disabled={submit.isPending || !requestText.trim() || !member?.id}>
+                  <Button type="submit" className="min-w-0 whitespace-normal text-center leading-snug" disabled={submit.isPending || !requestText.trim() || !member?.id}>
                     {submit.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {requestedChurchAmount > 0 ? `Submit & Pay ${formatTZS(grossOffering)}` : "Submit"}
+                    {requestedChurchAmount > 0 ? `Tuma Ombi na Sadaka ${formatTZS(grossOffering)}` : "Tuma Ombi"}
                   </Button>
                 </div>
               </form>
@@ -655,52 +690,53 @@ export default function PortalPrayerRequests() {
         </div>
 
         {pendingPrayerRequests.length > 0 ? (
-          <Card className="mb-6 border-primary/20 bg-primary/5">
-            <CardContent className="space-y-3 p-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium">Pending offline prayer requests</p>
-                  <p className="text-sm text-muted-foreground">
-                    These will sync automatically when internet returns.
+          <Card className="min-w-0 max-w-full border-primary/20 bg-primary/5">
+            <CardContent className="min-w-0 max-w-full space-y-3 p-4 sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">Maombi yaliyosubiri kutumwa</p>
+                  <p className="break-words text-sm text-muted-foreground">
+                    Yatatumiwa kiotomatiki mtandao utakaporudi.
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">{pendingPrayerRequests.length} pending</Badge>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <Badge variant="outline" className="max-w-full whitespace-normal">{pendingPrayerRequests.length} imesubiri kutumwa</Badge>
                   <Button
                     size="sm"
                     variant="outline"
+                    className="min-w-0 max-w-full whitespace-normal text-center leading-snug"
                     disabled={!isOnline || isSyncingPending}
                     onClick={async () => {
                       setIsSyncingPending(true);
                       const result = await processOfflineSyncQueue(queryClient);
                       setIsSyncingPending(false);
                       if (result.processedCount === 0 && result.error) {
-                        toast({ title: "Sync failed", description: result.error.message, variant: "destructive" });
+                        toast({ title: "Sawazisho halikufaulu", description: result.error.message, variant: "destructive" });
                       }
                     }}
                   >
                     {isSyncingPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
-                    Sync now
+                    Sawazisha sasa
                   </Button>
                 </div>
               </div>
               <div className="space-y-2">
                 {pendingPrayerRequests.map((item) => (
                   <div key={item.id} className="rounded-lg border border-border/60 bg-background/70 p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm">{item.payload.requestText}</p>
+                    <div className="flex min-w-0 flex-col gap-3 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between">
+                      <div className="min-w-0">
+                        <p className="break-words text-sm">{item.payload.requestText}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Saved {new Date(item.createdAt).toLocaleString()}
+                          Ilihifadhiwa {new Date(item.createdAt).toLocaleString()}
                         </p>
                       </div>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-destructive"
+                        className="w-full min-w-0 max-w-full whitespace-normal text-destructive min-[420px]:w-auto"
                         onClick={() => removeOfflineSyncAction(item.id)}
                       >
-                        Remove
+                        Ondoa
                       </Button>
                     </div>
                   </div>
@@ -711,6 +747,7 @@ export default function PortalPrayerRequests() {
         ) : null}
 
         <Tabs
+          className="min-w-0 max-w-full"
           value={tab}
           onValueChange={(nextTab) => {
             setTab(nextTab);
@@ -719,23 +756,35 @@ export default function PortalPrayerRequests() {
             }
           }}
         >
-          <TabsList className="mb-4 bg-secondary">
-            <TabsTrigger value="community">Community Prayers</TabsTrigger>
-            <TabsTrigger value="mine">My Requests ({myRequests.length})</TabsTrigger>
+          <TabsList className="mb-4 grid h-auto min-w-0 max-w-full grid-cols-2 bg-secondary p-1">
+            <TabsTrigger value="community" className="min-h-11 min-w-0 max-w-full whitespace-normal break-words px-1.5 text-center text-sm leading-snug sm:px-2">Maombi ya Waumini</TabsTrigger>
+            <TabsTrigger value="mine" className="min-h-11 min-w-0 max-w-full whitespace-normal break-words px-1.5 text-center text-sm leading-snug sm:px-2">Maombi Yangu ({myRequests.length})</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="community">
+          <TabsContent value="community" className="mt-0 min-w-0 max-w-full">
             {isLoading ? (
-              <p className="text-muted-foreground">Loading...</p>
+              <Card className="min-w-0 max-w-full border-border/70 bg-card/80">
+                <CardContent className="flex items-center gap-3 p-5 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  Inapakia maombi...
+                </CardContent>
+              </Card>
             ) : requests.length === 0 ? (
-              <Card className="glass-card">
-                <CardContent className="py-16 text-center text-muted-foreground">
+              <Card className="min-w-0 max-w-full border-dashed border-border/80 bg-card/70">
+                <CardContent className="px-4 py-14 text-center sm:px-6">
                   <MessageCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
-                  No prayer requests yet.
+                  <h2 className="text-lg font-semibold">Hakuna maombi yaliyoshirikiwa kwa sasa.</h2>
+                  <p className="mx-auto mt-2 max-w-sm break-words text-sm leading-6 text-muted-foreground">
+                    Unaweza kuwa wa kwanza kushiriki ombi la maombi.
+                  </p>
+                  <Button className="mt-5 min-h-11 min-w-0 max-w-full whitespace-normal text-center leading-snug" onClick={() => setDialogOpen(true)}>
+                    <Plus className="h-4 w-4" />
+                    Tuma Ombi la Maombi
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-3">
+              <div className="min-w-0 space-y-3">
                 {requests.map((request) => (
                   <PrayerRequestCard
                     key={request.id}
@@ -750,16 +799,23 @@ export default function PortalPrayerRequests() {
             )}
           </TabsContent>
 
-          <TabsContent value="mine">
+          <TabsContent value="mine" className="mt-0 min-w-0 max-w-full">
             {myRequests.length === 0 ? (
-              <Card className="glass-card">
-                <CardContent className="py-16 text-center text-muted-foreground">
+              <Card className="min-w-0 max-w-full border-dashed border-border/80 bg-card/70">
+                <CardContent className="px-4 py-14 text-center sm:px-6">
                   <MessageCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
-                  You haven't submitted any prayer requests yet.
+                  <h2 className="text-lg font-semibold">Bado hujatuma ombi la maombi.</h2>
+                  <p className="mx-auto mt-2 max-w-sm break-words text-sm leading-6 text-muted-foreground">
+                    Ukiwa tayari, tuma ombi lako kwa utulivu. Litasubiri mapitio kabla ya kushirikiwa.
+                  </p>
+                  <Button className="mt-5 min-h-11 min-w-0 max-w-full whitespace-normal text-center leading-snug" onClick={() => setDialogOpen(true)}>
+                    <Plus className="h-4 w-4" />
+                    Tuma Ombi la Maombi
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-3">
+              <div className="min-w-0 space-y-3">
                 {myRequests.map((request) => (
                   <PrayerRequestCard
                     key={request.id}

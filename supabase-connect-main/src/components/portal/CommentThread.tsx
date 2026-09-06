@@ -27,6 +27,7 @@ type CommentThreadProps = {
   submitPending?: boolean;
   reactionPending?: boolean;
   className?: string;
+  headingLabel?: string;
   emptyState?: string;
   draftPlaceholder?: string;
   quickEmojis?: readonly string[];
@@ -43,6 +44,7 @@ export function CommentThread({
   submitPending,
   reactionPending,
   className,
+  headingLabel = "Comments",
   emptyState = "No comments yet. Start the conversation.",
   draftPlaceholder = "Write a comment...",
   quickEmojis = [],
@@ -58,7 +60,7 @@ export function CommentThread({
     >
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
         <MessageCircle className="h-4 w-4 text-primary" />
-        <span>Comments</span>
+        <span>{headingLabel}</span>
         <span className="text-muted-foreground">({comments.length})</span>
       </div>
 
