@@ -169,7 +169,7 @@ const DESKTOP_SIDEBAR_GROUPS: NavGroup[] = [
     items: [
       { titleKey: "Michango", url: "/portal/give", icon: ContributionsIcon, featureKey: "give" },
       { titleKey: "Nia za Misa", url: "/portal/mass-intentions", icon: MassIntentionsIcon, featureKey: "mass_intentions" },
-      { titleKey: "Kalenda", url: "/portal/calendar", icon: EventsIcon, featureKey: "events" },
+      { titleKey: "Ratiba", url: "/portal/calendar", icon: EventsIcon, featureKey: "events" },
       { titleKey: "Matangazo", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
       { titleKey: "Huduma", url: "/portal/ministries", icon: CommunitiesIcon, featureKey: "ministries" },
     ],

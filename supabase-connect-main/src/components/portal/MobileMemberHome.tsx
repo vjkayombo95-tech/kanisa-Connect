@@ -83,7 +83,7 @@ export function MobileMemberHome({
         {nextMassLoading ? <Skeleton data-testid="mobile-next-mass-loading" className="h-28 rounded-[24px]" /> : (
           <div data-testid="mobile-next-mass" className="rounded-[24px] border border-border/70 bg-card/85 p-4 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wider text-primary">Misa ijayo</p>
-            {nextMassError ? <p className="mt-2 text-sm text-muted-foreground">Taarifa ya Misa haikupatikana</p> : nextMass ? <div className="mt-2 flex items-start justify-between gap-3"><div className="min-w-0"><h2 className="break-words font-bold">{nextMass.title}</h2><p className="mt-1 text-sm text-muted-foreground">{new Date(`${nextMass.massDate}T${nextMass.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })}</p></div><AppLink to="/portal/calendar" className="shrink-0 rounded-xl px-2 py-2 text-sm font-bold text-primary">Kalenda</AppLink></div> : <p className="mt-2 text-sm text-muted-foreground">Hakuna Misa ijayo iliyopangwa</p>}
+            {nextMassError ? <p className="mt-2 text-sm text-muted-foreground">Taarifa ya Misa haikupatikana</p> : nextMass ? <div className="mt-2 flex items-start justify-between gap-3"><div className="min-w-0"><h2 className="break-words font-bold">{nextMass.title}</h2><p className="mt-1 text-sm text-muted-foreground">{new Date(`${nextMass.massDate}T${nextMass.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })}</p></div><AppLink to="/portal/calendar" className="shrink-0 rounded-xl px-2 py-2 text-sm font-bold text-primary">Ratiba</AppLink></div> : <p className="mt-2 text-sm text-muted-foreground">Hakuna Misa ijayo iliyopangwa</p>}
           </div>
         )}
       </section>

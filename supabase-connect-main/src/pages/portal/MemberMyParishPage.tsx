@@ -80,7 +80,7 @@ export default function MemberMyParishPage() {
     </section> : <p className="rounded-2xl border p-4 text-sm text-muted-foreground">Taarifa za parokia hazikupatikana.</p>}
 
     <section>
-      <SectionTitle title="Misa ijayo" action={eventsVisible ? <AppLink to="/portal/calendar" className="text-sm font-bold text-primary">Kalenda</AppLink> : undefined} />
+      <SectionTitle title="Misa ijayo" action={eventsVisible ? <AppLink to="/portal/calendar" className="text-sm font-bold text-primary">Ratiba</AppLink> : undefined} />
       {mass.isLoading ? <Skeleton className="h-32 rounded-[24px]" /> : mass.data?.mass ? <LinkCard to={eventsVisible ? "/portal/calendar" : undefined} title={mass.data.mass.title} detail={`${mass.data.mass.description ? `${mass.data.mass.description} - ` : ""}${new Date(`${mass.data.mass.massDate}T${mass.data.mass.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })}`} icon={Church} /> : <EmptyCard>Hakuna Misa ijayo iliyopangwa kwa sasa.</EmptyCard>}
     </section>
 
@@ -103,7 +103,7 @@ export default function MemberMyParishPage() {
       {featureVisible(getFeatureState, "mass_intentions") ? <Shortcut to="/portal/mass-intentions" title="Nia za Misa" icon={HeartHandshake} /> : null}
       {featureVisible(getFeatureState, "prayer_requests") ? <Shortcut to="/portal/prayer-requests" title="Maombi" icon={HeartHandshake} /> : null}
       {featureVisible(getFeatureState, "sermons") ? <Shortcut to="/portal/sermons" title="Mahubiri" icon={Church} /> : null}
-      {featureVisible(getFeatureState, "events") ? <Shortcut to="/portal/calendar" title="Kalenda" icon={CalendarDays} /> : null}
+      {featureVisible(getFeatureState, "events") ? <Shortcut to="/portal/calendar" title="Ratiba" icon={CalendarDays} /> : null}
       <Shortcut to="/portal/library" title="Maktaba" icon={BookOpen} />
     </div></section>
 

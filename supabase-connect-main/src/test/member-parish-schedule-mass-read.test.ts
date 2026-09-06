@@ -3,7 +3,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
-const read = (relativePath: string) => readFileSync(join(root, relativePath), "utf8");
+const read = (relativePath: string) =>
+  readFileSync(join(root, relativePath), "utf8").replace(/\r\n/g, "\n");
 
 const calendar = read("src/pages/ParishCalendarPage.tsx");
 const massIntentions = read("src/pages/portal/PortalMassIntentions.tsx");
@@ -19,8 +20,9 @@ describe("member parish schedule Mass read contract", () => {
 
   it("keeps member Calendar off direct mass_occurrences select star", () => {
     expect(calendar).toContain('type CalendarMass = Pick<MassOccurrence, "id" | "occurrence_date" | "start_time" | "name" | "location_name" | "status">');
-    expect(calendar).toContain('const massesQuery = workspace === "member"\n      ? db.rpc("get_member_parish_schedule_masses"');
-    expect(calendar).toContain('\n      : db.from("mass_occurrences").select("*")');
+    expect(calendar).toMatch(
+      /const massesQuery\s*=\s*workspace\s*===\s*"member"\s*\?\s*db\.rpc\("get_member_parish_schedule_masses",\s*\{\s*p_church_id:\s*churchId,\s*p_from_date:\s*today\s*\}\s*\)\s*:\s*db\.from\("mass_occurrences"\)\.select\("\*"\)/,
+    );
   });
 
   it("preserves the admin Calendar direct manager path", () => {
