@@ -94,7 +94,7 @@ describe("canonical Tanzania member date", () => {
     }
   });
 
-  it("documents the future member content contract without implementing the future database RPC", () => {
+  it("documents the member content contract and routes reads through the canonical database RPC", () => {
     expect(DAILY_READINGS_MEMBER_CONTENT_CONTRACT).toMatchObject({
       date: "tanzania-date",
       source: "canonical-cms-read-boundary",
@@ -107,6 +107,6 @@ describe("canonical Tanzania member date", () => {
       saint: "same-tanzania-date-identity",
       missingContent: "explicit-empty-state-no-invented-scripture-no-wrong-day-fallback",
     });
-    expect(read("lib/daily-readings.ts")).not.toContain("get_member_daily_reading");
+    expect(read("lib/daily-readings.ts")).toContain("get_member_daily_reading");
   });
 });
