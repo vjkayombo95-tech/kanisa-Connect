@@ -31,7 +31,15 @@ class QueryMock implements PromiseLike<{ data: unknown; error: null }> {
   }
 }
 
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: (table: string) => new QueryMock(table) } }));
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    from: (table: string) => new QueryMock(table),
+    rpc: (functionName: string, args: Record<string, unknown>) => {
+      queryLog.push({ table: "rpc", operation: "call", args: [functionName, args] });
+      return Promise.resolve({ data: database[functionName] ?? [], error: null });
+    },
+  },
+}));
 
 import ReflectionsPage from "@/pages/portal/ReflectionsPage";
 import ReflectionDetailPage from "@/pages/portal/ReflectionDetailPage";
@@ -180,10 +188,18 @@ describe("Wave 4C behavioral content boundaries", () => {
   });
 
   it("fails closed when no published daily reading exists", async () => {
-    database.daily_readings = [];
+    database.get_member_daily_reading = [];
     mount("/portal/daily-readings", [{ path: "/portal/daily-readings", element: <DailyReadingsPage /> }]);
     expect(await screen.findByRole("heading", { name: "Masomo ya leo hayajapatikana" })).toBeInTheDocument();
-    await waitFor(() => expect(queryLog).toContainEqual(expect.objectContaining({ table: "daily_readings", operation: "eq", args: ["is_published", true] })));
+    await waitFor(() =>
+      expect(queryLog).toContainEqual(
+        expect.objectContaining({
+          table: "rpc",
+          operation: "call",
+          args: ["get_member_daily_reading", expect.objectContaining({ p_reading_date: expect.any(String) })],
+        }),
+      ),
+    );
   });
 
   it("mounts the liturgical calendar regression surface", async () => {

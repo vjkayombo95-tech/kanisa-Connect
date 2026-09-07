@@ -92,6 +92,35 @@ type CmsDailyReadingRecord = Pick<
   | "prayer"
 >;
 
+type CanonicalMemberDailyReadingRecord = {
+  id: string;
+  reading_date: string;
+  source: "cms" | "legacy";
+  language_code: string | null;
+  status: string;
+  liturgical_day_id: string | null;
+  celebration: string | null;
+  liturgical_season: string | null;
+  liturgical_year: string | null;
+  weekday_cycle: string | null;
+  liturgical_color: string | null;
+  rank: string | null;
+  lectionary_number: string | null;
+  first_reading_reference: string | null;
+  responsorial_psalm_reference: string | null;
+  second_reading_reference: string | null;
+  gospel_acclamation_reference: string | null;
+  gospel_reference: string | null;
+  reflection: string | null;
+  prayer: string | null;
+  is_reference_only: boolean;
+  source_attribution: string | null;
+  source_organization: string | null;
+  source_publication: string | null;
+  source_year: number | null;
+  source_edition: string | null;
+};
+
 export const READING_PLACEHOLDER =
   "Reading text has not been populated yet. This section is ready for the approved daily readings source.";
 
@@ -220,7 +249,7 @@ function getCmsReference(value: string | null | undefined, kind: DailyReadingKin
   return reference || READING_SECTION_META[kind].reference;
 }
 
-function mapCmsDailyReading(record: CmsDailyReadingRecord): DailyReadingEntry {
+function mapCmsDailyReading(record: CmsDailyReadingRecord | CanonicalMemberDailyReadingRecord): DailyReadingEntry {
   const readings: DailyReadingSection[] = [
     {
       id: "first",
@@ -263,25 +292,19 @@ function mapCmsDailyReading(record: CmsDailyReadingRecord): DailyReadingEntry {
 }
 
 export async function fetchPublishedDailyReading(date: string): Promise<DailyReadingEntry | null> {
-  const cmsResult = await supabase
-    .from("content_daily_readings")
-    .select("id, reading_date, liturgical_season, first_reading_reference, responsorial_psalm_reference, second_reading_reference, gospel_reference, reflection, prayer, status, updated_at, created_at")
-    .eq("reading_date", date)
-    .in("status", ["featured", "published"])
-    .order("status", { ascending: true })
-    .order("updated_at", { ascending: false })
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: true })
-    .limit(1);
-  if (cmsResult.error) throw cmsResult.error;
+  const canonicalResult = await supabase.rpc("get_member_daily_reading" as never, { p_reading_date: date } as never);
+  if (canonicalResult.error) throw canonicalResult.error;
 
-  const cmsRecord = cmsResult.data?.[0];
-  if (cmsRecord) return mapCmsDailyReading(cmsRecord);
+  const canonicalRows = (canonicalResult.data ?? []) as unknown as CanonicalMemberDailyReadingRecord[];
+  const canonicalRecord = canonicalRows[0];
+  if (!canonicalRecord) return null;
+  if (canonicalRecord.source === "cms") return mapCmsDailyReading(canonicalRecord);
 
   const { data, error } = await supabase
     .from("daily_readings" as never)
     .select("id, reading_date, liturgical_season, first_reading, psalm, second_reading, gospel, reflection, prayer, is_published")
-    .eq("reading_date", date)
+    .eq("id", canonicalRecord.id)
+    .eq("reading_date", canonicalRecord.reading_date)
     .eq("is_published", true)
     .maybeSingle();
   if (error) throw error;
