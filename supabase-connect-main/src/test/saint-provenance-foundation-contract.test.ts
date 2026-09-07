@@ -115,8 +115,9 @@ describe("saint provenance SQL test coverage", () => {
   it("leaves the member Today/Leo saint query unchanged", () => {
     expect(todayPage).toContain('from("saints" as never)');
     expect(todayPage).toContain('.eq("is_active", true)');
-    expect(todayPage).toContain('.eq("feast_month", today.getMonth() + 1)');
-    expect(todayPage).toContain('.eq("feast_day", today.getDate())');
+    expect(todayPage).toContain('.eq("feast_month", today.month)');
+    expect(todayPage).toContain('.eq("feast_day", today.day)');
+    expect(todayPage).not.toMatch(/today\.getMonth\(\)|today\.getDate\(\)/);
     expect(todayPage).not.toContain("saint_provenance");
     expect(todayPage).not.toContain("import_canonical_saints");
   });

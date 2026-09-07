@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { DailyReadingBibleReference } from "./daily-reading-references";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -27,6 +28,27 @@ export type DailyReadingEntry = {
   prayer: string;
   readings: DailyReadingSection[];
 };
+
+export type TanzaniaMemberDate = {
+  dateKey: string;
+  year: number;
+  month: number;
+  day: number;
+  nextMidnightAt: Date;
+};
+
+export const DAILY_READINGS_MEMBER_CONTENT_CONTRACT = {
+  date: "tanzania-date",
+  source: "canonical-cms-read-boundary",
+  language: "sw-first-deterministic-fallback",
+  liturgicalIdentity: "resolved-by-liturgical-days",
+  publication: "member-publishable-only",
+  readings: "reference-only-is-explicit-no-placeholder-scripture",
+  provenance: "source-and-translation-metadata-required",
+  legacy: "temporary-explicit-compatibility-only",
+  saint: "same-tanzania-date-identity",
+  missingContent: "explicit-empty-state-no-invented-scripture-no-wrong-day-fallback",
+} as const;
 
 export type DailyReadingPassageRecord = {
   id: string;
@@ -81,6 +103,99 @@ const READING_SECTION_META: Record<DailyReadingKind, Pick<DailyReadingSection, "
 };
 
 export const publishedDailyReadingKey = (date: string) => ["member-daily-readings", "published", date] as const;
+
+const TANZANIA_TIME_ZONE = "Africa/Dar_es_Salaam";
+
+const TANZANIA_DATE_TIME_FORMAT = new Intl.DateTimeFormat("en-CA", {
+  timeZone: TANZANIA_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+  hourCycle: "h23",
+});
+
+function getTanzaniaDateTimeParts(date: Date) {
+  const parts = TANZANIA_DATE_TIME_FORMAT.formatToParts(date);
+  const value = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value);
+  return {
+    year: value("year"),
+    month: value("month"),
+    day: value("day"),
+    hour: value("hour"),
+    minute: value("minute"),
+    second: value("second"),
+  };
+}
+
+function localTanzaniaTimeToUtc(year: number, month: number, day: number, hour = 0, minute = 0, second = 0) {
+  const targetAsUtc = Date.UTC(year, month - 1, day, hour, minute, second);
+  let guess = targetAsUtc;
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const parts = getTanzaniaDateTimeParts(new Date(guess));
+    const actualAsUtc = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+    const delta = targetAsUtc - actualAsUtc;
+    if (delta === 0) break;
+    guess += delta;
+  }
+
+  return new Date(guess);
+}
+
+function addCalendarDays(year: number, month: number, day: number, days: number) {
+  const next = new Date(Date.UTC(year, month - 1, day + days, 12, 0, 0));
+  return {
+    year: next.getUTCFullYear(),
+    month: next.getUTCMonth() + 1,
+    day: next.getUTCDate(),
+  };
+}
+
+export function getTanzaniaMemberDate(date: Date = new Date()): TanzaniaMemberDate {
+  const { year, month, day } = getTanzaniaDateTimeParts(date);
+  const nextDay = addCalendarDays(year, month, day, 1);
+  const dateKey = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+  return {
+    dateKey,
+    year,
+    month,
+    day,
+    nextMidnightAt: localTanzaniaTimeToUtc(nextDay.year, nextDay.month, nextDay.day),
+  };
+}
+
+export function useTanzaniaMemberDate() {
+  const [memberDate, setMemberDate] = useState(() => getTanzaniaMemberDate());
+
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
+
+    const scheduleNextRollover = () => {
+      const current = getTanzaniaMemberDate();
+      setMemberDate(current);
+
+      const delay = Math.max(1_000, current.nextMidnightAt.getTime() - Date.now() + 1_000);
+      timeoutId = setTimeout(() => {
+        if (!cancelled) scheduleNextRollover();
+      }, delay);
+    };
+
+    scheduleNextRollover();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, []);
+
+  return memberDate;
+}
 
 function getLegacyReadingText(record: DailyReadingRecord, kind: DailyReadingKind) {
   if (kind === "first") return record.first_reading;
@@ -203,14 +318,7 @@ export async function fetchPublishedDailyReading(date: string): Promise<DailyRea
 }
 
 export function getDarEsSalaamDateKey(date: Date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Africa/Dar_es_Salaam",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value;
-  return `${value("year")}-${value("month")}-${value("day")}`;
+  return getTanzaniaMemberDate(date).dateKey;
 }
 
 function formatReadableDate(date: Date) {
@@ -222,11 +330,9 @@ function formatReadableDate(date: Date) {
   }).format(date);
 }
 
-export function getTodayReadingEntry(): DailyReadingEntry {
-  const today = new Date();
-
+export function getTodayReadingEntry(dateKey = getDarEsSalaamDateKey()): DailyReadingEntry {
   return {
-    date: getDarEsSalaamDateKey(today),
+    date: dateKey,
     liturgicalSeason: null,
     reflection:
       "Let the Word of God shape the day before the day shapes you. Read slowly, listen for one phrase that draws your attention, and carry it into prayer, work, family life, and service.",
