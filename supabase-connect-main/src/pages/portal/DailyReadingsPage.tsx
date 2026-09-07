@@ -16,17 +16,10 @@ import {
   fetchPublishedDailyReading,
   publishedDailyReadingKey,
   readingEntryMatchesSearch,
+  useTanzaniaMemberDate,
   type DailyReadingEntry,
 } from "@/lib/daily-readings";
 import { SAINT_SELECT, getSaintImageAlt, type LibrarySaint } from "@/lib/catholic-library";
-
-function getTodayParts() {
-  const today = new Date();
-  return {
-    month: today.getMonth() + 1,
-    day: today.getDate(),
-  };
-}
 
 function TodaySaintCard({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: boolean }) {
   if (isLoading) return <Skeleton className="h-48 rounded-[28px]" />;
@@ -122,18 +115,18 @@ function ReadingSearchResults({ entries }: { entries: DailyReadingEntry[] }) {
 
 export default function DailyReadingsPage() {
   const [search, setSearch] = useState("");
-  const today = useMemo(() => getTodayParts(), []);
-  const fallbackTodayReading = useMemo(() => getTodayReadingEntry(), []);
+  const today = useTanzaniaMemberDate();
+  const fallbackTodayReading = useMemo(() => getTodayReadingEntry(today.dateKey), [today.dateKey]);
   const { data: publishedTodayReading, isLoading: readingLoading, isError: readingError } = useQuery({
-    queryKey: publishedDailyReadingKey(fallbackTodayReading.date),
-    queryFn: () => fetchPublishedDailyReading(fallbackTodayReading.date),
+    queryKey: publishedDailyReadingKey(today.dateKey),
+    queryFn: () => fetchPublishedDailyReading(today.dateKey),
     staleTime: 10 * 60 * 1000,
     retry: false,
   });
   const readingHistory = useMemo(() => publishedTodayReading ? [publishedTodayReading] : [], [publishedTodayReading]);
 
   const { data: todaySaints = [], isLoading: saintLoading } = useQuery({
-    queryKey: ["daily-readings-today-saints", today.month, today.day],
+    queryKey: ["daily-readings-today-saints", today.dateKey, today.month, today.day],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("saints" as never)
