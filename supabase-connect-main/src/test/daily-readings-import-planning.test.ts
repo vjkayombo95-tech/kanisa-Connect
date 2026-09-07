@@ -163,6 +163,23 @@ describe("Daily Readings import planning", () => {
     });
   });
 
+  it("does not treat normalized null values stored as empty CMS text as manual drift", () => {
+    const plan = planDailyReadingImport({
+      source: changedSource(),
+      existing_by_source: existing({
+        last_imported_source_payload: {
+          ...normalizedPayload,
+          liturgical_year: null,
+          celebration: null,
+        },
+        liturgical_year: "",
+        celebration: "",
+      }),
+    });
+
+    expect(plan.decision).toBe("update_draft_from_source");
+  });
+
   it("conflicts instead of silently changing published or featured content whose source changed", () => {
     expect(planDailyReadingImport({ source: changedSource(), existing_by_source: existing({ status: "published" }) }))
       .toMatchObject({
