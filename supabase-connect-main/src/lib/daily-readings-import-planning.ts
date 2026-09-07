@@ -166,7 +166,13 @@ function hasManualDrift(existing: ExistingDailyReadingForImportPlan) {
   if (!last) return false;
 
   const current = currentSourcePayload(existing);
-  return SOURCE_CONTROLLED_FIELDS.some((field) => current[field] !== last[field]);
+  return SOURCE_CONTROLLED_FIELDS.some(
+    (field) => sourceFieldForStoredComparison(current[field]) !== sourceFieldForStoredComparison(last[field]),
+  );
+}
+
+function sourceFieldForStoredComparison(value: string | null | undefined) {
+  return value ?? "";
 }
 
 function plannedValues(input: PlanDailyReadingImportInput): DailyReadingImportPlannedContentValues {
