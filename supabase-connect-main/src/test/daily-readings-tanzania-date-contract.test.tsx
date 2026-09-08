@@ -109,4 +109,10 @@ describe("canonical Tanzania member date", () => {
     });
     expect(read("lib/daily-readings.ts")).toContain("get_member_daily_reading");
   });
+
+  it("keeps synthetic reading content out of member production rendering", () => {
+    expect(read("components/portal/daily-readings/ReadingCard.tsx")).not.toContain("READING_PLACEHOLDER");
+    expect(read("pages/portal/DailyReadingsPage.tsx")).not.toContain("getTodayReadingEntry");
+    expect(read("pages/portal/MemberTodayPage.tsx")).not.toContain("getTodayReadingEntry");
+  });
 });

@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getReadableReadingDate,
-  getTodayReadingEntry,
   fetchPublishedDailyReading,
   publishedDailyReadingKey,
   readingEntryMatchesSearch,
@@ -99,7 +98,7 @@ function ReadingSearchResults({ entries }: { entries: DailyReadingEntry[] }) {
               <div>
                 <p className="font-semibold">{getReadableReadingDate(entry)}</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {entry.readings.map((reading) => reading.reference).join(" | ")}
+                  {entry.readings.map((reading) => reading.reference).filter(Boolean).join(" | ")}
                 </p>
               </div>
               <Badge variant="outline" className="w-fit rounded-full">
@@ -116,7 +115,6 @@ function ReadingSearchResults({ entries }: { entries: DailyReadingEntry[] }) {
 export default function DailyReadingsPage() {
   const [search, setSearch] = useState("");
   const today = useTanzaniaMemberDate();
-  const fallbackTodayReading = useMemo(() => getTodayReadingEntry(today.dateKey), [today.dateKey]);
   const { data: publishedTodayReading, isLoading: readingLoading, isError: readingError } = useQuery({
     queryKey: publishedDailyReadingKey(today.dateKey),
     queryFn: () => fetchPublishedDailyReading(today.dateKey),
@@ -193,11 +191,11 @@ export default function DailyReadingsPage() {
                 <ReadingCard
                   key={reading.id}
                   reading={reading}
-                  reflection={reading.id === "gospel" ? todayReading.reflection : undefined}
+                  reflection={reading.id === "gospel" ? todayReading.reflection ?? undefined : undefined}
                   defaultOpen={index === 0}
                 />
               ))}
-              {secondReading ? <ReadingCard reading={secondReading} reflection={todayReading.reflection} /> : null}
+              {secondReading ? <ReadingCard reading={secondReading} reflection={todayReading.reflection ?? undefined} /> : null}
             </div>
 
             <Card className="rounded-[28px] border-primary/20 bg-primary/5">

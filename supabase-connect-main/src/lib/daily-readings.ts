@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { DailyReadingBibleReference } from "./daily-reading-references";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 
 export { formatReference, resolveReference, toReferenceValues } from "./daily-reading-references";
 export type {
@@ -10,22 +9,40 @@ export type {
   DailyReadingReferenceValues,
 } from "./daily-reading-references";
 
-export type DailyReadingKind = "first" | "psalm" | "second" | "gospel";
+export type DailyReadingKind = "first" | "psalm" | "second" | "gospel_acclamation" | "gospel";
 
 export type DailyReadingSection = {
   id: DailyReadingKind;
   title: string;
-  reference: string;
+  reference: string | null;
   text: string | null;
   bibleReference?: DailyReadingBibleReference | null;
 };
 
+export type DailyReadingSource = "cms" | "legacy";
+
 export type DailyReadingEntry = {
   id?: string;
   date: string;
+  source: DailyReadingSource;
+  languageCode: string | null;
+  status: string | null;
+  liturgicalDayId: string | null;
+  celebration: string | null;
   liturgicalSeason: string | null;
-  reflection: string;
-  prayer: string;
+  liturgicalYear: string | null;
+  weekdayCycle: string | null;
+  liturgicalColor: string | null;
+  rank: string | null;
+  lectionaryNumber: string | null;
+  reflection: string | null;
+  prayer: string | null;
+  isReferenceOnly: boolean | null;
+  sourceAttribution: string | null;
+  sourceOrganization: string | null;
+  sourcePublication: string | null;
+  sourceYear: number | null;
+  sourceEdition: string | null;
   readings: DailyReadingSection[];
 };
 
@@ -79,19 +96,6 @@ export type DailyReadingRecord = {
   passages?: DailyReadingPassageRecord[];
 };
 
-type CmsDailyReadingRecord = Pick<
-  Database["public"]["Tables"]["content_daily_readings"]["Row"],
-  | "id"
-  | "reading_date"
-  | "liturgical_season"
-  | "first_reading_reference"
-  | "responsorial_psalm_reference"
-  | "second_reading_reference"
-  | "gospel_reference"
-  | "reflection"
-  | "prayer"
->;
-
 type CanonicalMemberDailyReadingRecord = {
   id: string;
   reading_date: string;
@@ -121,15 +125,20 @@ type CanonicalMemberDailyReadingRecord = {
   source_edition: string | null;
 };
 
-export const READING_PLACEHOLDER =
-  "Reading text has not been populated yet. This section is ready for the approved daily readings source.";
-
 const READING_SECTION_META: Record<DailyReadingKind, Pick<DailyReadingSection, "id" | "title" | "reference">> = {
-  first: { id: "first", title: "First Reading", reference: "Daily reading reference pending" },
-  psalm: { id: "psalm", title: "Responsorial Psalm", reference: "Psalm reference pending" },
-  second: { id: "second", title: "Second Reading", reference: "Optional reading reference pending" },
-  gospel: { id: "gospel", title: "Gospel", reference: "Gospel reference pending" },
+  first: { id: "first", title: "First Reading", reference: null },
+  psalm: { id: "psalm", title: "Responsorial Psalm", reference: null },
+  second: { id: "second", title: "Second Reading", reference: null },
+  gospel_acclamation: { id: "gospel_acclamation", title: "Gospel Acclamation", reference: null },
+  gospel: { id: "gospel", title: "Gospel", reference: null },
 };
+
+const SYNTHETIC_REFERENCE_VALUES = new Set([
+  "daily reading reference pending",
+  "psalm reference pending",
+  "optional reading reference pending",
+  "gospel reference pending",
+]);
 
 export const publishedDailyReadingKey = (date: string) => ["member-daily-readings", "published", date] as const;
 
@@ -230,6 +239,7 @@ function getLegacyReadingText(record: DailyReadingRecord, kind: DailyReadingKind
   if (kind === "first") return record.first_reading;
   if (kind === "psalm") return record.psalm;
   if (kind === "second") return record.second_reading;
+  if (kind === "gospel_acclamation") return null;
   return record.gospel;
 }
 
@@ -244,49 +254,75 @@ function getPassageBibleReference(passage: DailyReadingPassageRecord | undefined
   };
 }
 
-function getCmsReference(value: string | null | undefined, kind: DailyReadingKind) {
-  const reference = value?.trim();
-  return reference || READING_SECTION_META[kind].reference;
+function normalizeOptionalText(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  return trimmed || null;
 }
 
-function mapCmsDailyReading(record: CmsDailyReadingRecord | CanonicalMemberDailyReadingRecord): DailyReadingEntry {
-  const readings: DailyReadingSection[] = [
-    {
-      id: "first",
-      title: READING_SECTION_META.first.title,
-      reference: getCmsReference(record.first_reading_reference, "first"),
-      text: null,
-    },
-    {
-      id: "psalm",
-      title: READING_SECTION_META.psalm.title,
-      reference: getCmsReference(record.responsorial_psalm_reference, "psalm"),
-      text: null,
-    },
-  ];
+function normalizeReference(value: string | null | undefined) {
+  const reference = normalizeOptionalText(value);
+  if (!reference) return null;
+  return SYNTHETIC_REFERENCE_VALUES.has(reference.toLowerCase()) ? null : reference;
+}
 
-  if (record.second_reading_reference?.trim()) {
-    readings.push({
-      id: "second",
-      title: READING_SECTION_META.second.title,
-      reference: record.second_reading_reference.trim(),
-      text: null,
-    });
-  }
+function hasSectionContent(section: DailyReadingSection) {
+  return Boolean(section.reference || section.text?.trim() || section.bibleReference);
+}
 
-  readings.push({
-    id: "gospel",
-    title: READING_SECTION_META.gospel.title,
-    reference: getCmsReference(record.gospel_reference, "gospel"),
-    text: null,
-  });
+function createReadingSection(
+  kind: DailyReadingKind,
+  reference: string | null | undefined,
+  text: string | null | undefined = null,
+  bibleReference: DailyReadingBibleReference | null = null,
+) {
+  const section: DailyReadingSection = {
+    id: kind,
+    title: READING_SECTION_META[kind].title,
+    reference: normalizeReference(reference),
+    text: normalizeOptionalText(text),
+    bibleReference,
+  };
 
+  return hasSectionContent(section) ? section : null;
+}
+
+function getCanonicalEntryMetadata(record: CanonicalMemberDailyReadingRecord) {
   return {
     id: record.id,
     date: record.reading_date,
-    liturgicalSeason: record.liturgical_season || null,
-    reflection: record.reflection ?? "",
-    prayer: record.prayer ?? "",
+    source: record.source,
+    languageCode: normalizeOptionalText(record.language_code),
+    status: normalizeOptionalText(record.status),
+    liturgicalDayId: normalizeOptionalText(record.liturgical_day_id),
+    celebration: normalizeOptionalText(record.celebration),
+    liturgicalSeason: normalizeOptionalText(record.liturgical_season),
+    liturgicalYear: normalizeOptionalText(record.liturgical_year),
+    weekdayCycle: normalizeOptionalText(record.weekday_cycle),
+    liturgicalColor: normalizeOptionalText(record.liturgical_color),
+    rank: normalizeOptionalText(record.rank),
+    lectionaryNumber: normalizeOptionalText(record.lectionary_number),
+    reflection: normalizeOptionalText(record.reflection),
+    prayer: normalizeOptionalText(record.prayer),
+    isReferenceOnly: record.is_reference_only,
+    sourceAttribution: normalizeOptionalText(record.source_attribution),
+    sourceOrganization: normalizeOptionalText(record.source_organization),
+    sourcePublication: normalizeOptionalText(record.source_publication),
+    sourceYear: record.source_year,
+    sourceEdition: normalizeOptionalText(record.source_edition),
+  } satisfies Omit<DailyReadingEntry, "readings">;
+}
+
+function mapCmsDailyReading(record: CanonicalMemberDailyReadingRecord): DailyReadingEntry {
+  const readings = [
+    createReadingSection("first", record.first_reading_reference),
+    createReadingSection("psalm", record.responsorial_psalm_reference),
+    createReadingSection("second", record.second_reading_reference),
+    createReadingSection("gospel_acclamation", record.gospel_acclamation_reference),
+    createReadingSection("gospel", record.gospel_reference),
+  ].filter((section): section is DailyReadingSection => Boolean(section));
+
+  return {
+    ...getCanonicalEntryMetadata(record),
     readings,
   };
 }
@@ -318,24 +354,38 @@ export async function fetchPublishedDailyReading(date: string): Promise<DailyRea
     .order("sort_order", { ascending: true });
   const passages = (passagesResult.error ? [] : passagesResult.data ?? []) as unknown as DailyReadingPassageRecord[];
   const passagesByKind = new Map(passages.map((passage) => [passage.reading_kind, passage]));
-  const readings = (["first", "psalm", "second", "gospel"] as DailyReadingKind[]).map((kind) => {
+  const canonicalReferences: Record<DailyReadingKind, string | null> = {
+    first: canonicalRecord.first_reading_reference,
+    psalm: canonicalRecord.responsorial_psalm_reference,
+    second: canonicalRecord.second_reading_reference,
+    gospel_acclamation: canonicalRecord.gospel_acclamation_reference,
+    gospel: canonicalRecord.gospel_reference,
+  };
+  const readings = (["first", "psalm", "second", "gospel_acclamation", "gospel"] as DailyReadingKind[]).map((kind) => {
     const passage = passagesByKind.get(kind);
-    const meta = READING_SECTION_META[kind];
-    return {
-      id: kind,
-      title: passage?.title ?? meta.title,
-      reference: passage?.reference ?? meta.reference,
-      text: passage?.text ?? getLegacyReadingText(record, kind) ?? null,
-      bibleReference: getPassageBibleReference(passage),
-    };
-  });
+    const section = createReadingSection(
+      kind,
+      passage?.reference ?? canonicalReferences[kind],
+      passage?.text ?? getLegacyReadingText(record, kind),
+      getPassageBibleReference(passage),
+    );
+
+    return section ? { ...section, title: passage?.title?.trim() || section.title } : null;
+  }).filter((section): section is DailyReadingSection => Boolean(section));
 
   return {
-    id: record.id,
-    date: record.reading_date,
-    liturgicalSeason: record.liturgical_season,
-    reflection: record.reflection ?? "",
-    prayer: record.prayer ?? "",
+    ...getCanonicalEntryMetadata({
+      ...canonicalRecord,
+      language_code: null,
+      source_attribution: null,
+      source_organization: null,
+      source_publication: null,
+      source_year: null,
+      source_edition: null,
+      reflection: record.reflection ?? canonicalRecord.reflection,
+      prayer: record.prayer ?? canonicalRecord.prayer,
+      is_reference_only: canonicalRecord.is_reference_only,
+    }),
     readings,
   };
 }
@@ -351,43 +401,6 @@ function formatReadableDate(date: Date) {
     day: "numeric",
     year: "numeric",
   }).format(date);
-}
-
-export function getTodayReadingEntry(dateKey = getDarEsSalaamDateKey()): DailyReadingEntry {
-  return {
-    date: dateKey,
-    liturgicalSeason: null,
-    reflection:
-      "Let the Word of God shape the day before the day shapes you. Read slowly, listen for one phrase that draws your attention, and carry it into prayer, work, family life, and service.",
-    prayer:
-      "Lord Jesus, open our hearts to your Word today. Teach us to listen with faith, receive with humility, and respond with love. May the Scriptures guide our choices, strengthen our hope, and lead us closer to you. Amen.",
-    readings: [
-      {
-        id: "first",
-        title: "First Reading",
-        reference: "Daily reading reference pending",
-        text: null,
-      },
-      {
-        id: "psalm",
-        title: "Responsorial Psalm",
-        reference: "Psalm reference pending",
-        text: null,
-      },
-      {
-        id: "second",
-        title: "Second Reading",
-        reference: "Optional reading reference pending",
-        text: null,
-      },
-      {
-        id: "gospel",
-        title: "Gospel",
-        reference: "Gospel reference pending",
-        text: null,
-      },
-    ],
-  };
 }
 
 export function getReadableReadingDate(entry: Pick<DailyReadingEntry, "date">) {
