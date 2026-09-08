@@ -1,8 +1,15 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BookOpen, CalendarDays, Search, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, Search, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import {
+  DailyReadingEmptyState,
+  DailyReadingErrorState,
+  DailyReadingLiturgicalHeader,
+  DailyReadingLoadingState,
+  DailyReadingSourceAttribution,
+} from "@/components/portal/daily-readings/DailyReadingPresentation";
 import { ReadingCard } from "@/components/portal/daily-readings/ReadingCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -101,9 +108,11 @@ function ReadingSearchResults({ entries }: { entries: DailyReadingEntry[] }) {
                   {entry.readings.map((reading) => reading.reference).filter(Boolean).join(" | ")}
                 </p>
               </div>
-              <Badge variant="outline" className="w-fit rounded-full">
-                {entry.liturgicalSeason || "Season pending"}
-              </Badge>
+              {entry.liturgicalSeason ? (
+                <Badge variant="outline" className="w-fit rounded-full">
+                  {entry.liturgicalSeason}
+                </Badge>
+              ) : null}
             </div>
           </CardContent>
         </Card>
@@ -115,7 +124,7 @@ function ReadingSearchResults({ entries }: { entries: DailyReadingEntry[] }) {
 export default function DailyReadingsPage() {
   const [search, setSearch] = useState("");
   const today = useTanzaniaMemberDate();
-  const { data: publishedTodayReading, isLoading: readingLoading, isError: readingError } = useQuery({
+  const { data: publishedTodayReading, isLoading: readingLoading, isError: readingError, refetch: refetchReading } = useQuery({
     queryKey: publishedDailyReadingKey(today.dateKey),
     queryFn: () => fetchPublishedDailyReading(today.dateKey),
     staleTime: 10 * 60 * 1000,
@@ -146,8 +155,9 @@ export default function DailyReadingsPage() {
     [readingHistory, search],
   );
 
-  if (readingLoading) return <main className="px-4 py-6"><div className="mx-auto max-w-7xl space-y-4"><Skeleton className="h-40 rounded-[32px]" /><Skeleton className="h-64 rounded-[28px]" /></div></main>;
-  if (readingError || !publishedTodayReading) return <main className="px-4 py-10"><Card className="mx-auto max-w-3xl rounded-[28px]"><CardContent className="p-8 text-center"><h1 className="text-2xl font-bold">Masomo ya leo hayajapatikana</h1><p className="mt-2 text-muted-foreground">Masomo yaliyochapishwa hayapatikani kwa sasa. Tafadhali jaribu tena baadaye.</p></CardContent></Card></main>;
+  if (readingLoading) return <main className="px-4 py-6"><DailyReadingLoadingState /></main>;
+  if (readingError) return <main className="px-4 py-10"><DailyReadingErrorState onRetry={() => void refetchReading()} /></main>;
+  if (!publishedTodayReading) return <main className="px-4 py-10"><DailyReadingEmptyState /></main>;
 
   const todayReading = publishedTodayReading;
   const requiredReadings = todayReading.readings.filter((reading) => reading.id !== "second");
@@ -169,22 +179,7 @@ export default function DailyReadingsPage() {
 
         <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
           <section className="space-y-5" aria-labelledby="readings-title">
-            <Card className="rounded-[28px] border-border/70 bg-card/85">
-              <CardContent className="p-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                      <CalendarDays className="h-4 w-4" aria-hidden="true" />
-                      {getReadableReadingDate(todayReading)}
-                    </p>
-                    <h2 id="readings-title" className="mt-1 text-2xl font-bold">
-                      {todayReading.liturgicalSeason || "Liturgical season pending"}
-                    </h2>
-                  </div>
-                  <Badge className="w-fit rounded-full">Today</Badge>
-                </div>
-              </CardContent>
-            </Card>
+            <DailyReadingLiturgicalHeader reading={todayReading} titleId="readings-title" />
 
             <div className="grid gap-4 xl:grid-cols-2">
               {requiredReadings.map((reading, index) => (
@@ -198,19 +193,25 @@ export default function DailyReadingsPage() {
               {secondReading ? <ReadingCard reading={secondReading} reflection={todayReading.reflection ?? undefined} /> : null}
             </div>
 
-            <Card className="rounded-[28px] border-primary/20 bg-primary/5">
-              <CardContent className="space-y-3 p-5">
-                <h2 className="text-xl font-bold">Reflection</h2>
-                <p className="text-sm leading-7 text-muted-foreground">{todayReading.reflection}</p>
-              </CardContent>
-            </Card>
+            {todayReading.reflection ? (
+              <Card className="rounded-[28px] border-primary/20 bg-primary/5">
+                <CardContent className="space-y-3 p-5">
+                  <h2 className="text-xl font-bold">Reflection</h2>
+                  <p className="text-sm leading-7 text-muted-foreground">{todayReading.reflection}</p>
+                </CardContent>
+              </Card>
+            ) : null}
 
-            <Card className="rounded-[28px] border-border/70 bg-card/85">
-              <CardContent className="space-y-3 p-5">
-                <h2 className="text-xl font-bold">Prayer</h2>
-                <p className="text-sm leading-7 text-muted-foreground">{todayReading.prayer}</p>
-              </CardContent>
-            </Card>
+            {todayReading.prayer ? (
+              <Card className="rounded-[28px] border-border/70 bg-card/85">
+                <CardContent className="space-y-3 p-5">
+                  <h2 className="text-xl font-bold">Prayer</h2>
+                  <p className="text-sm leading-7 text-muted-foreground">{todayReading.prayer}</p>
+                </CardContent>
+              </Card>
+            ) : null}
+
+            <DailyReadingSourceAttribution reading={todayReading} />
           </section>
 
           <aside className="space-y-5">
