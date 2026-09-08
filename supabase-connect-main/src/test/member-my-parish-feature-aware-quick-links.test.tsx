@@ -416,6 +416,7 @@ describe("My Parish feature-aware quick links", () => {
     expect(host.textContent).toContain("Misa ya Jioni");
     expect(host.textContent).toContain("Hatukuweza kupakia tangazo la karibuni kwa sasa.");
     expect(host.textContent).not.toContain("Hakuna tangazo jipya kwa sasa.");
+    expect(host.textContent).not.toMatch(/Supabase|database|RPC|permission denied|stack trace/i);
     expect(host.querySelector('button[aria-label="Jaribu tena: Hatukuweza kupakia tangazo la karibuni kwa sasa."]')).not.toBeNull();
   });
 

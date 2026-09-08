@@ -35,8 +35,6 @@ export async function fetchPortalAnnouncements(churchId: string | null | undefin
         return ((data ?? []) as PortalAnnouncementRecord[]);
       }
 
-      console.warn("Portal announcements RPC failed; using direct Supabase fallback:", error);
-
       const { data: fallbackData, error: fallbackError } = await supabase
         .from("announcements")
         .select("*")
