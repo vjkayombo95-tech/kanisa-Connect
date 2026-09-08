@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { READING_PLACEHOLDER, type DailyReadingBibleReference, type DailyReadingSection } from "@/lib/daily-readings";
+import { type DailyReadingBibleReference, type DailyReadingSection } from "@/lib/daily-readings";
 
 type ReadingCardProps = {
   reading: DailyReadingSection;
@@ -29,6 +29,7 @@ function buildReadInBiblePath(reference: DailyReadingBibleReference) {
 export function ReadingCard({ reading, reflection, defaultOpen = false }: ReadingCardProps) {
   const [open, setOpen] = useState(defaultOpen);
   const readInBiblePath = reading.bibleReference ? buildReadInBiblePath(reading.bibleReference) : null;
+  const readingText = reading.text?.trim();
 
   return (
     <Card className="overflow-hidden rounded-[28px] border-border/70 bg-card/85 shadow-sm">
@@ -44,7 +45,7 @@ export function ReadingCard({ reading, reflection, defaultOpen = false }: Readin
           </span>
           <span className="min-w-0">
             <span className="block text-lg font-bold text-foreground">{reading.title}</span>
-            <span className="mt-1 block truncate text-sm text-muted-foreground">{reading.reference}</span>
+            {reading.reference ? <span className="mt-1 block truncate text-sm text-muted-foreground">{reading.reference}</span> : null}
           </span>
         </span>
         <ChevronDown className={cn("h-5 w-5 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
@@ -52,17 +53,21 @@ export function ReadingCard({ reading, reflection, defaultOpen = false }: Readin
 
       {open ? (
         <CardContent className="space-y-4 border-t border-border/60 p-5 pt-4">
-          <Badge variant="outline" className="rounded-full">
-            {reading.reference}
-          </Badge>
+          {reading.reference ? (
+            <Badge variant="outline" className="rounded-full">
+              {reading.reference}
+            </Badge>
+          ) : null}
           {readInBiblePath ? (
             <Button asChild variant="outline" className="h-10 w-full justify-center rounded-2xl sm:w-fit">
-              <Link to={readInBiblePath}>📖 Read in Bible</Link>
+              <Link to={readInBiblePath}>Read in Bible</Link>
             </Button>
           ) : null}
-          <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
-            {reading.text?.trim() || READING_PLACEHOLDER}
-          </p>
+          {readingText ? (
+            <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">
+              {readingText}
+            </p>
+          ) : null}
           {reflection ? (
             <div className="rounded-2xl bg-primary/5 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-primary">Reflection</p>

@@ -207,8 +207,11 @@ const cmsBase = {
   responsorial_psalm_reference: "Ps 96:1, 3-5, 11-13",
   second_reading_reference: null,
   gospel_reference: "Lk 4:16-30",
+  gospel_acclamation_reference: "Alleluia reference",
   reflection: "CMS reflection",
   prayer: "CMS prayer",
+  source_attribution: "Approved lectionary source",
+  import_batch_id: "batch-1",
   status: "published",
   updated_at: "2026-08-30T12:00:00.000Z",
   created_at: "2026-08-29T12:00:00.000Z",
@@ -246,14 +249,42 @@ beforeEach(() => {
 describe("fetchPublishedDailyReading canonical member behavior", () => {
   it("uses the canonical RPC and returns a CMS reading in the existing DailyReadingEntry shape", async () => {
     database.content_daily_readings = [cmsBase];
+    database.content_import_batches = [
+      {
+        id: "batch-1",
+        source_organization: "Source Org",
+        source_publication: "Source Publication",
+        source_year: 2026,
+        source_edition: "Member edition",
+      },
+    ];
 
     const reading = await fetchPublishedDailyReading("2026-08-31");
 
-    expect(reading).toMatchObject({ id: "cms-published", date: "2026-08-31", liturgicalSeason: "Ordinary Time", reflection: "CMS reflection", prayer: "CMS prayer" });
+    expect(reading).toMatchObject({
+      id: "cms-published",
+      date: "2026-08-31",
+      source: "cms",
+      languageCode: "sw",
+      status: "published",
+      liturgicalSeason: "Ordinary Time",
+      liturgicalYear: "C",
+      liturgicalColor: "green",
+      celebration: "CMS celebration",
+      reflection: "CMS reflection",
+      prayer: "CMS prayer",
+      isReferenceOnly: true,
+      sourceAttribution: "Approved lectionary source",
+      sourceOrganization: "Source Org",
+      sourcePublication: "Source Publication",
+      sourceYear: 2026,
+      sourceEdition: "Member edition",
+    });
     expect(reading?.readings).toEqual([
-      { id: "first", title: "First Reading", reference: "1 Thes 4:13-18", text: null },
-      { id: "psalm", title: "Responsorial Psalm", reference: "Ps 96:1, 3-5, 11-13", text: null },
-      { id: "gospel", title: "Gospel", reference: "Lk 4:16-30", text: null },
+      { id: "first", title: "First Reading", reference: "1 Thes 4:13-18", text: null, bibleReference: null },
+      { id: "psalm", title: "Responsorial Psalm", reference: "Ps 96:1, 3-5, 11-13", text: null, bibleReference: null },
+      { id: "gospel_acclamation", title: "Gospel Acclamation", reference: "Alleluia reference", text: null, bibleReference: null },
+      { id: "gospel", title: "Gospel", reference: "Lk 4:16-30", text: null, bibleReference: null },
     ]);
     expect(queryLog).toContainEqual(expect.objectContaining({ table: "rpc", operation: "get_member_daily_reading", args: [{ p_reading_date: "2026-08-31" }] }));
     expect(queryLog.some((entry) => entry.table === "content_daily_readings")).toBe(false);
@@ -317,6 +348,45 @@ describe("fetchPublishedDailyReading canonical member behavior", () => {
     expect((await fetchPublishedDailyReading("2026-08-31"))?.liturgicalSeason).toBe("Ordinary Time");
   });
 
+  it("preserves canonical liturgical metadata without inventing absent optional fields", async () => {
+    database.content_daily_readings = [{
+      ...cmsBase,
+      second_reading_reference: null,
+      gospel_acclamation_reference: null,
+      source_attribution: null,
+      reflection: "   ",
+      prayer: null,
+    }];
+    database.liturgical_days = [{
+      id: "liturgical-day",
+      date: "2026-08-31",
+      season: "Advent",
+      celebration: "Memorial",
+      liturgical_year: "A",
+      weekday_cycle: "I",
+      liturgical_color: "purple",
+      rank: "optional memorial",
+      lectionary_number: "431",
+    }];
+
+    const reading = await fetchPublishedDailyReading("2026-08-31");
+
+    expect(reading).toMatchObject({
+      liturgicalDayId: "liturgical-day",
+      celebration: "Memorial",
+      liturgicalSeason: "Advent",
+      liturgicalYear: "A",
+      weekdayCycle: "I",
+      liturgicalColor: "purple",
+      rank: "optional memorial",
+      lectionaryNumber: "431",
+      reflection: null,
+      prayer: null,
+      sourceAttribution: null,
+    });
+    expect(reading?.readings.map((item) => item.id)).toEqual(["first", "psalm", "gospel"]);
+  });
+
   it("falls back to explicit legacy compatibility only when no eligible CMS row exists", async () => {
     database.daily_readings = [legacyReading];
     database.daily_reading_passages = [
@@ -326,9 +396,28 @@ describe("fetchPublishedDailyReading canonical member behavior", () => {
     const reading = await fetchPublishedDailyReading("2026-08-31");
 
     expect(reading?.id).toBe("legacy-reading");
+    expect(reading?.source).toBe("legacy");
     expect(reading?.liturgicalSeason).toBe("Legacy Season");
     expect(reading?.readings.find((item) => item.id === "gospel")?.text).toBe("Legacy passage gospel text");
+    expect(reading?.sourceAttribution).toBeNull();
+    expect(reading?.sourceOrganization).toBeNull();
     expect(queryLog).toContainEqual(expect.objectContaining({ table: "daily_readings", operation: "eq", args: ["id", "legacy-reading"] }));
+  });
+
+  it("does not fabricate missing legacy references or CMS provenance", async () => {
+    database.daily_readings = [{ ...legacyReading, first_reading: null, psalm: null, second_reading: null, gospel: null, reflection: null, prayer: null }];
+
+    const reading = await fetchPublishedDailyReading("2026-08-31");
+
+    expect(reading?.source).toBe("legacy");
+    expect(reading?.sourceAttribution).toBeNull();
+    expect(reading?.sourceOrganization).toBeNull();
+    expect(reading?.sourcePublication).toBeNull();
+    expect(reading?.sourceYear).toBeNull();
+    expect(reading?.sourceEdition).toBeNull();
+    expect(reading?.reflection).toBeNull();
+    expect(reading?.prayer).toBeNull();
+    expect(reading?.readings).toEqual([]);
   });
 
   it("never returns unpublished legacy and does not run a duplicate frontend CMS fallback", async () => {
@@ -347,12 +436,36 @@ describe("fetchPublishedDailyReading canonical member behavior", () => {
     expect(queryLog.some((entry) => entry.table === "daily_readings")).toBe(false);
   });
 
+  it("returns null for no published reading instead of throwing", async () => {
+    await expect(fetchPublishedDailyReading("2026-08-31")).resolves.toBeNull();
+  });
+
   it("handles optional second reading only when a CMS reference is present", async () => {
     database.content_daily_readings = [{ ...cmsBase, second_reading_reference: "Heb 12:1-4" }];
-    expect((await fetchPublishedDailyReading("2026-08-31"))?.readings.map((item) => item.id)).toEqual(["first", "psalm", "second", "gospel"]);
+    expect((await fetchPublishedDailyReading("2026-08-31"))?.readings.map((item) => item.id)).toEqual(["first", "psalm", "second", "gospel_acclamation", "gospel"]);
 
     database.content_daily_readings = [{ ...cmsBase, second_reading_reference: "   " }];
+    expect((await fetchPublishedDailyReading("2026-08-31"))?.readings.map((item) => item.id)).toEqual(["first", "psalm", "gospel_acclamation", "gospel"]);
+  });
+
+  it("handles optional gospel acclamation only when a CMS reference is present", async () => {
+    database.content_daily_readings = [{ ...cmsBase, gospel_acclamation_reference: "Jn 6:63c, 68c" }];
+    expect((await fetchPublishedDailyReading("2026-08-31"))?.readings.map((item) => item.id)).toContain("gospel_acclamation");
+
+    database.content_daily_readings = [{ ...cmsBase, gospel_acclamation_reference: "   " }];
     expect((await fetchPublishedDailyReading("2026-08-31"))?.readings.map((item) => item.id)).toEqual(["first", "psalm", "gospel"]);
+  });
+
+  it("does not emit synthetic reference-pending values from canonical data", async () => {
+    database.content_daily_readings = [{
+      ...cmsBase,
+      first_reading_reference: "Daily reading reference pending",
+      responsorial_psalm_reference: "Psalm reference pending",
+      gospel_acclamation_reference: "Optional reading reference pending",
+      gospel_reference: "Gospel reference pending",
+    }];
+
+    expect((await fetchPublishedDailyReading("2026-08-31"))?.readings).toEqual([]);
   });
 
   it("uses the supplied Tanzania date key deterministically", async () => {
