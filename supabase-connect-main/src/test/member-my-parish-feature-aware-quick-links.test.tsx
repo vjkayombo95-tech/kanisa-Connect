@@ -216,6 +216,35 @@ describe("My Parish feature-aware quick links", () => {
     expect(host.textContent).toContain("Umeunganishwa kama Member Test");
   });
 
+  it("does not render a relationship sentence when the member name is null", () => {
+    state.linkedMember = {
+      ...state.linkedMember,
+      data: { id: "member-a", full_name: null, church_id: "church-a" },
+    };
+
+    renderPage();
+
+    expect(host.textContent).toContain("Parokia Yangu");
+    expect(host.textContent).toContain("Parokia Test");
+    expect(host.textContent).toContain("Mawasiliano");
+    expect(host.textContent).toContain("Mahali pa parokia");
+    expect(host.textContent).not.toContain("Umeunganishwa kama");
+    expect(host.textContent).not.toContain("member-a");
+    expect(host.textContent).not.toContain("church-a");
+  });
+
+  it("does not render a relationship sentence when the member name is blank", () => {
+    state.linkedMember = {
+      ...state.linkedMember,
+      data: { id: "member-a", full_name: "   ", church_id: "church-a" },
+    };
+
+    renderPage();
+
+    expect(host.textContent).toContain("Parokia Test");
+    expect(host.textContent).not.toContain("Umeunganishwa kama");
+  });
+
   it("renders real phone and email with safe semantic links", () => {
     state.parish = {
       id: "church-a",

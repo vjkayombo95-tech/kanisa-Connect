@@ -104,6 +104,7 @@ export default function MemberMyParishPage() {
   const phoneHref = getParishPhoneHref(parish.data?.phone);
   const emailHref = getParishEmailHref(parish.data?.email);
   const mapHref = getParishMapHref(parish.data?.address);
+  const memberName = member.data?.full_name?.trim() ?? "";
   const announcementsVisible = featureVisible(getFeatureState, "announcements");
   const eventsVisible = featureVisible(getFeatureState, "events");
   const ministriesVisible = featureVisible(getFeatureState, "ministries");
@@ -125,7 +126,7 @@ export default function MemberMyParishPage() {
   return <main data-testid="member-my-parish-page" className="min-h-full overflow-x-hidden bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-5 pb-28 lg:px-8 lg:pb-10"><div className="mx-auto max-w-6xl space-y-5">
     {parish.isLoading ? <Skeleton className="h-36 rounded-[30px]" /> : parish.isError ? <SectionFeedback title="Hatukuweza kupakia taarifa za parokia kwa sasa." description="Taarifa nyingine bado zinaweza kupatikana. Tafadhali jaribu tena." tone="error" onRetry={() => void parish.refetch()} isRetrying={parish.isFetching} /> : parish.data ? <section className="flex min-w-0 flex-col gap-4 rounded-[30px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.14),hsl(var(--card))_65%)] p-5 sm:flex-row sm:items-center sm:p-6">
       {parish.data.logoUrl ? <img src={parish.data.logoUrl} alt={`Nembo ya ${parish.data.name}`} className="h-16 w-16 shrink-0 rounded-2xl object-cover" /> : <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><Church className="h-8 w-8" aria-hidden="true" /></span>}
-      <div className="min-w-0"><p className="text-sm font-bold text-primary">Parokia Yangu</p><h1 className="mt-1 break-words text-2xl font-bold sm:text-3xl">{parish.data.name}</h1>{member.data ? <p className="mt-1 break-words text-sm text-muted-foreground">Umeunganishwa kama {member.data.full_name}</p> : null}</div>
+      <div className="min-w-0"><p className="text-sm font-bold text-primary">Parokia Yangu</p><h1 className="mt-1 break-words text-2xl font-bold sm:text-3xl">{parish.data.name}</h1>{memberName ? <p className="mt-1 break-words text-sm text-muted-foreground">Umeunganishwa kama {memberName}</p> : null}</div>
     </section> : <SectionFeedback title="Taarifa za parokia bado hazijachapishwa." description="Utaziona hapa mara tu zitakapowekwa kwa waumini." />}
 
     {parish.data ? <section aria-label="Mawasiliano na mahali pa parokia" className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
