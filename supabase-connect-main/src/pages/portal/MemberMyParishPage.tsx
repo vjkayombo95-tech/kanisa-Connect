@@ -24,6 +24,10 @@ function EmptyCard({ children }: { children: ReactNode }) {
   return <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="p-4 text-sm text-muted-foreground">{children}</CardContent></Card>;
 }
 
+function ContactLink({ href, label, value, icon: Icon }: { href: string; label: string; value: string; icon: typeof Church }) {
+  return <a href={href} aria-label={`${label}: ${value}`} className="flex min-h-14 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2.5 text-sm shadow-sm"><Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /><span className="min-w-0"><span className="block font-bold">{label}</span><span className="block break-all text-muted-foreground">{value}</span></span></a>;
+}
+
 function SectionFeedback({
   title,
   description,
@@ -119,10 +123,21 @@ export default function MemberMyParishPage() {
   };
 
   return <main data-testid="member-my-parish-page" className="min-h-full overflow-x-hidden bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-5 pb-28 lg:px-8 lg:pb-10"><div className="mx-auto max-w-6xl space-y-5">
-    {parish.isLoading ? <Skeleton className="h-36 rounded-[30px]" /> : parish.isError ? <SectionFeedback title="Hatukuweza kupakia taarifa za parokia kwa sasa." description="Taarifa nyingine bado zinaweza kupatikana. Tafadhali jaribu tena." tone="error" onRetry={() => void parish.refetch()} isRetrying={parish.isFetching} /> : parish.data ? <section className="flex min-w-0 items-center gap-4 rounded-[30px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.14),hsl(var(--card))_65%)] p-5 sm:p-6">
-      {parish.data.logoUrl ? <img src={parish.data.logoUrl} alt={`${parish.data.name} logo`} className="h-16 w-16 shrink-0 rounded-2xl object-cover" /> : <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><Church className="h-8 w-8" /></span>}
-      <div className="min-w-0"><p className="text-sm font-bold text-primary">Parokia Yangu</p><h1 className="mt-1 break-words text-2xl font-bold sm:text-3xl">{parish.data.name}</h1>{member.data ? <p className="mt-1 break-words text-sm text-muted-foreground">{member.data.full_name}</p> : null}</div>
+    {parish.isLoading ? <Skeleton className="h-36 rounded-[30px]" /> : parish.isError ? <SectionFeedback title="Hatukuweza kupakia taarifa za parokia kwa sasa." description="Taarifa nyingine bado zinaweza kupatikana. Tafadhali jaribu tena." tone="error" onRetry={() => void parish.refetch()} isRetrying={parish.isFetching} /> : parish.data ? <section className="flex min-w-0 flex-col gap-4 rounded-[30px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.14),hsl(var(--card))_65%)] p-5 sm:flex-row sm:items-center sm:p-6">
+      {parish.data.logoUrl ? <img src={parish.data.logoUrl} alt={`Nembo ya ${parish.data.name}`} className="h-16 w-16 shrink-0 rounded-2xl object-cover" /> : <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><Church className="h-8 w-8" aria-hidden="true" /></span>}
+      <div className="min-w-0"><p className="text-sm font-bold text-primary">Parokia Yangu</p><h1 className="mt-1 break-words text-2xl font-bold sm:text-3xl">{parish.data.name}</h1>{member.data ? <p className="mt-1 break-words text-sm text-muted-foreground">Umeunganishwa kama {member.data.full_name}</p> : null}</div>
     </section> : <SectionFeedback title="Taarifa za parokia bado hazijachapishwa." description="Utaziona hapa mara tu zitakapowekwa kwa waumini." />}
+
+    {parish.data ? <section aria-label="Mawasiliano na mahali pa parokia" className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+      <div className="min-w-0"><SectionTitle title="Mawasiliano" />{(phoneHref || emailHref) ? <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-1">
+        {phoneHref && parish.data.phone ? <ContactLink href={phoneHref} label="Piga simu" value={parish.data.phone} icon={Phone} /> : null}
+        {emailHref && parish.data.email ? <ContactLink href={emailHref} label="Tuma barua pepe" value={parish.data.email} icon={Mail} /> : null}
+      </div> : <EmptyCard>Mawasiliano ya parokia bado hayajachapishwa.</EmptyCard>}</div>
+      <div className="min-w-0"><SectionTitle title="Mahali pa parokia" />{mapHref && parish.data.address ? <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="space-y-3 p-4 text-sm"><p className="min-w-0 break-words text-muted-foreground">{parish.data.address}</p><div className="grid gap-2 sm:grid-cols-2">
+        <button type="button" onClick={() => void copyAddress()} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-left font-semibold"><Clipboard className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /><span className="min-w-0 break-words">Nakili anwani</span></button>
+        <a href={mapHref} target="_blank" rel="noopener noreferrer" aria-label={`Fungua ramani: ${parish.data.address}`} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-3 py-2 font-semibold"><MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /><span className="min-w-0 break-words">Fungua ramani</span></a>
+      </div>{copyStatus !== "idle" ? <p role="status" className="flex items-center gap-1 text-xs text-muted-foreground">{copyStatus === "copied" ? <><Check className="h-3.5 w-3.5" aria-hidden="true" />Anwani imenakiliwa.</> : "Anwani haikuweza kunakiliwa."}</p> : null}</CardContent></Card> : <EmptyCard>Mahali pa parokia bado hapajawekwa.</EmptyCard>}</div>
+    </section> : null}
 
     <section>
       <SectionTitle title="Misa ijayo" action={eventsVisible ? <AppLink to="/portal/calendar" className="text-sm font-bold text-primary">Ratiba</AppLink> : undefined} />
@@ -151,15 +166,6 @@ export default function MemberMyParishPage() {
       {featureVisible(getFeatureState, "events") ? <Shortcut to="/portal/calendar" title="Ratiba" icon={CalendarDays} /> : null}
       <Shortcut to="/portal/library" title="Maktaba" icon={BookOpen} />
     </div></section>
-
-    {parish.data ? <section aria-label="Mawasiliano ya parokia"><SectionTitle title="Mawasiliano ya parokia" />{(phoneHref || emailHref || mapHref) ? <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-      {phoneHref ? <a href={phoneHref} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 text-sm"><Phone className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-all">{parish.data?.phone}</span></a> : null}
-      {emailHref ? <a href={emailHref} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 text-sm"><Mail className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-all">{parish.data?.email}</span></a> : null}
-      {mapHref ? <button type="button" onClick={() => void copyAddress()} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 text-left text-sm"><Clipboard className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">Nakili anwani</span></button> : null}
-      {mapHref ? <a href={mapHref} target="_blank" rel="noopener noreferrer" className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 text-sm"><MapPin className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">Fungua ramani</span></a> : null}
-      {mapHref ? <p className="min-w-0 break-words text-xs text-muted-foreground sm:col-span-2 lg:col-span-4">{parish.data?.address}</p> : null}
-      {copyStatus !== "idle" ? <p role="status" className="flex items-center gap-1 text-xs text-muted-foreground sm:col-span-2 lg:col-span-4">{copyStatus === "copied" ? <><Check className="h-3.5 w-3.5" />Anwani imenakiliwa.</> : "Anwani haikuweza kunakiliwa."}</p> : null}
-    </div> : <EmptyCard>Mawasiliano ya parokia bado hayajachapishwa.</EmptyCard>}</section> : null}
 
     {(parish.isError || member.isError || mass.isError || announcement.isError || events.isError || ministries.isError) ? <p className="rounded-2xl border border-border/70 bg-card p-4 text-sm text-muted-foreground">Baadhi ya taarifa za parokia hazikupatikana. Njia nyingine bado zinaweza kutumika.</p> : null}
   </div></main>;
