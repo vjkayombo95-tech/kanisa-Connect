@@ -7,6 +7,31 @@ import type { PortalFeatureKey } from "@/lib/portal-features";
 
 const state = vi.hoisted(() => ({
   features: new Map<string, boolean>(),
+  errors: new Set<string>(),
+  loading: new Set<string>(),
+  refetches: new Map<string, ReturnType<typeof vi.fn>>(),
+  parish: {
+    id: "church-a",
+    name: "Parokia Test",
+    logoUrl: null as string | null,
+    phone: null as string | null,
+    email: null as string | null,
+    address: null as string | null,
+  } as null | {
+    id: string;
+    name: string;
+    logoUrl: string | null;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
+  },
+  linkedMember: {
+    data: { id: "member-a", full_name: "Member Test", church_id: "church-a" } as null | { id: string; full_name: string | null; church_id: string },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    refetch: vi.fn(),
+  },
   livestream: {
     featureEnabled: false,
     error: null as Error | null,
@@ -52,25 +77,34 @@ const state = vi.hoisted(() => ({
 vi.mock("@tanstack/react-query", () => ({
   useQuery: ({ queryKey }: { queryKey: readonly unknown[] }) => {
     const [key] = queryKey;
+    const queryName = String(key);
+    const refetch = state.refetches.get(queryName) ?? vi.fn();
+    state.refetches.set(queryName, refetch);
+    const shell = {
+      isLoading: state.loading.has(queryName),
+      isFetching: state.loading.has(queryName),
+      isError: state.errors.has(queryName),
+      refetch,
+    };
     if (key === "member-parish-identity") {
-      return { data: { id: "church-a", name: "Parokia Test", logoUrl: null, phone: null, email: null, address: null }, isLoading: false, isError: false };
+      return { data: shell.isError || shell.isLoading ? null : state.parish, ...shell };
     }
     if (key === "my-member-record") {
-      return { data: { id: "member-a", full_name: "Member Test", church_id: "church-a" }, isLoading: false, isError: false };
+      return { data: shell.isError || shell.isLoading ? null : { id: "member-a", full_name: "Member Test", church_id: "church-a" }, ...shell };
     }
     if (key === "production-member-ministries") {
-      return { data: state.ministries, isLoading: false, isError: false };
+      return { data: shell.isError || shell.isLoading ? undefined : state.ministries, ...shell };
     }
     if (key === "portal-events") {
-      return { data: state.events, isLoading: false, isError: false };
+      return { data: shell.isError || shell.isLoading ? undefined : state.events, ...shell };
     }
     if (key === "member-daily-life") {
-      return { data: state.mass, isLoading: false, isError: false };
+      return { data: shell.isError || shell.isLoading ? undefined : state.mass, ...shell };
     }
     if (key === "portal-announcements") {
-      return { data: state.announcement, isLoading: false, isError: false };
+      return { data: shell.isError || shell.isLoading ? undefined : state.announcement, ...shell };
     }
-    return { data: null, isLoading: false, isError: false };
+    return { data: null, ...shell };
   },
 }));
 
@@ -98,7 +132,7 @@ vi.mock("@/hooks/use-feature-access", () => ({
 vi.mock("@/hooks/use-church-livestream", () => ({ useChurchLivestream: () => state.livestream }));
 vi.mock("@/hooks/use-church-radio", () => ({ useChurchRadioStations: () => state.radio }));
 vi.mock("@/hooks/use-linked-member", () => ({
-  useLinkedMember: () => ({ data: { id: "member-a", full_name: "Member Test", church_id: "church-a" }, isLoading: false, isError: false }),
+  useLinkedMember: () => state.linkedMember,
 }));
 
 import { isOrdinaryMemberPathAllowed } from "@/lib/member-service-registry";
@@ -110,6 +144,17 @@ describe("My Parish feature-aware quick links", () => {
 
   beforeEach(() => {
     state.features = new Map();
+    state.errors = new Set();
+    state.loading = new Set();
+    state.refetches = new Map();
+    state.parish = { id: "church-a", name: "Parokia Test", logoUrl: null, phone: null, email: null, address: null };
+    state.linkedMember = {
+      data: { id: "member-a", full_name: "Member Test", church_id: "church-a" },
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      refetch: vi.fn(),
+    };
     state.livestream = {
       featureEnabled: false,
       error: null,
@@ -138,6 +183,56 @@ describe("My Parish feature-aware quick links", () => {
     expect(isOrdinaryMemberPathAllowed("/portal/my-parish")).toBe(true);
   });
 
+  it("renders parish identity success without fabricated contact data", () => {
+    renderPage();
+
+    expect(host.textContent).toContain("Parokia Yangu");
+    expect(host.textContent).toContain("Parokia Test");
+    expect(host.textContent).toContain("Member Test");
+    expect(host.textContent).toContain("Mawasiliano ya parokia");
+    expect(host.textContent).toContain("Mawasiliano ya parokia bado hayajachapishwa.");
+    expect(host.querySelector('a[href^="tel:"]')).toBeNull();
+    expect(host.querySelector('a[href^="mailto:"]')).toBeNull();
+    expect(host.querySelector('a[href^="https://www.google.com/maps"]')).toBeNull();
+  });
+
+  it("renders parish identity loading without fake parish information", () => {
+    state.loading.add("member-parish-identity");
+
+    renderPage();
+
+    expect(host.querySelector(".animate-pulse")).not.toBeNull();
+    expect(host.textContent).not.toContain("Parokia Test");
+    expect(host.textContent).not.toContain("Taarifa za parokia bado hazijachapishwa.");
+    expect(host.textContent).not.toContain("Hatukuweza kupakia taarifa za parokia kwa sasa.");
+  });
+
+  it("renders parish identity request failure with retry and no raw backend error", () => {
+    state.errors.add("member-parish-identity");
+    const retry = vi.fn();
+    state.refetches.set("member-parish-identity", retry);
+
+    renderPage();
+
+    expect(host.textContent).toContain("Hatukuweza kupakia taarifa za parokia kwa sasa.");
+    expect(host.textContent).toContain("Tafadhali jaribu tena.");
+    expect(host.textContent).not.toMatch(/Supabase|database|RPC|permission denied|stack trace/i);
+    const button = host.querySelector<HTMLButtonElement>('button[aria-label="Jaribu tena: Hatukuweza kupakia taarifa za parokia kwa sasa."]');
+    expect(button).not.toBeNull();
+    act(() => button!.click());
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders missing parish identity as empty without retry", () => {
+    state.parish = null;
+
+    renderPage();
+
+    expect(host.textContent).toContain("Taarifa za parokia bado hazijachapishwa.");
+    expect(host.textContent).not.toContain("Hatukuweza kupakia taarifa za parokia kwa sasa.");
+    expect(host.querySelector('button[aria-label^="Jaribu tena: Taarifa za parokia"]')).toBeNull();
+  });
+
   it("renders the next Mass section when data exists", () => {
     state.mass = {
       mass: {
@@ -163,6 +258,24 @@ describe("My Parish feature-aware quick links", () => {
   it("keeps the next Mass empty state safe", () => {
     renderPage();
     expect(host.textContent).toContain("Hakuna Misa ijayo iliyopangwa kwa sasa.");
+    expect(host.textContent).not.toContain("Hatukuweza kupakia Misa ijayo kwa sasa.");
+    expect(host.querySelector('button[aria-label^="Jaribu tena: Hakuna Misa"]')).toBeNull();
+  });
+
+  it("renders next Mass request failure as an error with retry while preserving parish identity", () => {
+    state.errors.add("member-daily-life");
+    const retry = vi.fn();
+    state.refetches.set("member-daily-life", retry);
+
+    renderPage();
+
+    expect(host.textContent).toContain("Parokia Test");
+    expect(host.textContent).toContain("Hatukuweza kupakia Misa ijayo kwa sasa.");
+    expect(host.textContent).not.toContain("Hakuna Misa ijayo iliyopangwa kwa sasa.");
+    const button = host.querySelector<HTMLButtonElement>('button[aria-label="Jaribu tena: Hatukuweza kupakia Misa ijayo kwa sasa."]');
+    expect(button).not.toBeNull();
+    act(() => button!.click());
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 
   it("renders the latest announcement", () => {
@@ -179,6 +292,37 @@ describe("My Parish feature-aware quick links", () => {
     expect(host.querySelector('a[href="/portal/announcements"]')).not.toBeNull();
   });
 
+  it("keeps announcement empty state distinct from a request failure", () => {
+    renderPage();
+    expect(host.textContent).toContain("Hakuna tangazo jipya kwa sasa.");
+    expect(host.textContent).not.toContain("Hatukuweza kupakia tangazo la karibuni kwa sasa.");
+  });
+
+  it("renders announcement request failure as an error without hiding successful Mass", () => {
+    state.mass = {
+      mass: {
+        id: "mass-a",
+        title: "Misa ya Jioni",
+        description: null,
+        massDate: "2026-09-06",
+        startTime: "18:00",
+        endTime: null,
+        responseDeadline: null,
+        askForRsvp: false,
+        memberId: null,
+        memberResponse: null,
+      },
+    };
+    state.errors.add("portal-announcements");
+    state.refetches.set("portal-announcements", vi.fn());
+
+    renderPage();
+    expect(host.textContent).toContain("Misa ya Jioni");
+    expect(host.textContent).toContain("Hatukuweza kupakia tangazo la karibuni kwa sasa.");
+    expect(host.textContent).not.toContain("Hakuna tangazo jipya kwa sasa.");
+    expect(host.querySelector('button[aria-label="Jaribu tena: Hatukuweza kupakia tangazo la karibuni kwa sasa."]')).not.toBeNull();
+  });
+
   it("renders compact upcoming events", () => {
     state.events = [
       { id: "event-a", churchId: "church-a", title: "Semina ya familia", description: null, startDate: "2099-09-06T09:00:00Z", location: "Ukumbi" },
@@ -192,6 +336,17 @@ describe("My Parish feature-aware quick links", () => {
     expect(host.textContent).toContain("Kwaya");
     expect(host.textContent).toContain("Vijana");
     expect(host.textContent).not.toContain("Wanawake");
+  });
+
+  it("renders upcoming events request failure as an error with retry", () => {
+    state.errors.add("portal-events");
+    state.refetches.set("portal-events", vi.fn());
+
+    renderPage();
+
+    expect(host.textContent).toContain("Hatukuweza kupakia matukio yajayo kwa sasa.");
+    expect(host.textContent).not.toContain("Hakuna tukio lijalo lililochapishwa kwa sasa.");
+    expect(host.querySelector('button[aria-label="Jaribu tena: Hatukuweza kupakia matukio yajayo kwa sasa."]')).not.toBeNull();
   });
 
   it("keeps Mass and event information while hiding event route actions when events are unavailable", () => {
@@ -248,6 +403,83 @@ describe("My Parish feature-aware quick links", () => {
     expect(host.textContent).toContain("Hakuna Misa ijayo iliyopangwa kwa sasa.");
     expect(host.textContent).toContain("Hakuna tangazo jipya kwa sasa.");
     expect(host.textContent).toContain("Hakuna tukio lijalo lililochapishwa kwa sasa.");
+  });
+
+  it("keeps ministries loading while linked member is still loading", () => {
+    state.linkedMember = {
+      data: null,
+      isLoading: true,
+      isFetching: true,
+      isError: false,
+      refetch: vi.fn(),
+    };
+
+    renderPage();
+
+    expect(host.querySelector(".animate-pulse")).not.toBeNull();
+    expect(host.textContent).toContain("Parokia Test");
+    expect(host.textContent).not.toContain("Bado hujajiunga na huduma ya parokia.");
+    expect(host.textContent).not.toContain("Hatukuweza kuthibitisha taarifa zako za mshiriki kwa sasa.");
+  });
+
+  it("renders linked-member failure as a member-safe ministries error with retry", () => {
+    const retry = vi.fn();
+    state.linkedMember = {
+      data: null,
+      isLoading: false,
+      isFetching: false,
+      isError: true,
+      refetch: retry,
+    };
+
+    renderPage();
+
+    expect(host.textContent).toContain("Parokia Test");
+    expect(host.textContent).toContain("Huduma zangu");
+    expect(host.textContent).toContain("Hatukuweza kuthibitisha taarifa zako za mshiriki kwa sasa.");
+    expect(host.textContent).not.toContain("Bado hujajiunga na huduma ya parokia.");
+    expect(host.textContent).not.toMatch(/Supabase|database|RPC|member-a|church-a|permission denied|stack trace/i);
+    const button = host.querySelector<HTMLButtonElement>('button[aria-label="Jaribu tena: Hatukuweza kuthibitisha taarifa zako za mshiriki kwa sasa."]');
+    expect(button).not.toBeNull();
+    act(() => button!.click());
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables linked-member retry while member refetch is running", () => {
+    state.linkedMember = {
+      data: null,
+      isLoading: false,
+      isFetching: true,
+      isError: true,
+      refetch: vi.fn(),
+    };
+
+    renderPage();
+
+    const button = host.querySelector<HTMLButtonElement>('button[aria-label="Jaribu tena: Hatukuweza kuthibitisha taarifa zako za mshiriki kwa sasa."]');
+    expect(button).not.toBeNull();
+    expect(button).toBeDisabled();
+    expect(button?.textContent).toContain("Inapakia...");
+  });
+
+  it("renders zero joined ministries as a legitimate empty state after linked-member success", () => {
+    renderPage();
+
+    expect(host.textContent).toContain("Huduma zangu");
+    expect(host.textContent).toContain("Bado hujajiunga na huduma ya parokia.");
+    expect(host.textContent).not.toContain("Hatukuweza kuthibitisha taarifa zako za mshiriki kwa sasa.");
+  });
+
+  it("renders ministries request failure as an error with retry", () => {
+    state.errors.add("production-member-ministries");
+    state.refetches.set("production-member-ministries", vi.fn());
+
+    renderPage();
+
+    expect(host.textContent).toContain("Huduma zangu");
+    expect(host.textContent).toContain("Hatukuweza kupakia huduma zako kwa sasa.");
+    expect(host.textContent).not.toContain("Bado hujajiunga na huduma ya parokia.");
+    expect(host.querySelector('button[aria-label="Jaribu tena: Hatukuweza kupakia huduma zako kwa sasa."]')).not.toBeNull();
   });
 
   it("keeps joined ministry information while hiding ministry route actions when unavailable", () => {

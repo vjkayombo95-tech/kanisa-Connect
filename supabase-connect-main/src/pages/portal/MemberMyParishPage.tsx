@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, CalendarDays, Check, Church, Clipboard, HandCoins, HeartHandshake, Mail, MapPin, Megaphone, Phone, Radio, Users } from "lucide-react";
+import { AlertCircle, BookOpen, CalendarDays, Check, Church, Clipboard, HandCoins, HeartHandshake, Mail, MapPin, Megaphone, Phone, Radio, RotateCw, Users } from "lucide-react";
 
 import { AppLink } from "@/components/AppLink";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +22,50 @@ function SectionTitle({ title, action }: { title: string; action?: ReactNode }) 
 
 function EmptyCard({ children }: { children: ReactNode }) {
   return <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="p-4 text-sm text-muted-foreground">{children}</CardContent></Card>;
+}
+
+function SectionFeedback({
+  title,
+  description,
+  tone = "empty",
+  onRetry,
+  isRetrying = false,
+}: {
+  title: string;
+  description: string;
+  tone?: "empty" | "error";
+  onRetry?: () => void;
+  isRetrying?: boolean;
+}) {
+  const error = tone === "error";
+
+  return (
+    <Card className={error ? "rounded-[24px] border-destructive/25 bg-destructive/5" : "rounded-[24px] border-border/70 bg-card/80"}>
+      <CardContent className="flex min-w-0 flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3" role={error ? "alert" : undefined}>
+          {error ? <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0 text-destructive" aria-hidden="true" /> : null}
+          <div className="min-w-0">
+            <p className={error ? "font-semibold text-destructive" : "font-semibold text-foreground"}>{title}</p>
+            <p className="mt-1 break-words text-muted-foreground">{description}</p>
+          </div>
+        </div>
+        {onRetry ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isRetrying}
+            onClick={onRetry}
+            aria-label={`Jaribu tena: ${title}`}
+            className="min-h-10 w-full shrink-0 rounded-2xl sm:w-auto"
+          >
+            <RotateCw className="mr-2 h-4 w-4" aria-hidden="true" />
+            {isRetrying ? "Inapakia..." : "Jaribu tena"}
+          </Button>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
 }
 
 function LinkCard({ to, title, detail, icon: Icon }: { to?: string; title: string; detail: string; icon: typeof Church }) {
@@ -74,27 +119,27 @@ export default function MemberMyParishPage() {
   };
 
   return <main data-testid="member-my-parish-page" className="min-h-full overflow-x-hidden bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-5 pb-28 lg:px-8 lg:pb-10"><div className="mx-auto max-w-6xl space-y-5">
-    {parish.isLoading ? <Skeleton className="h-36 rounded-[30px]" /> : parish.data ? <section className="flex min-w-0 items-center gap-4 rounded-[30px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.14),hsl(var(--card))_65%)] p-5 sm:p-6">
+    {parish.isLoading ? <Skeleton className="h-36 rounded-[30px]" /> : parish.isError ? <SectionFeedback title="Hatukuweza kupakia taarifa za parokia kwa sasa." description="Taarifa nyingine bado zinaweza kupatikana. Tafadhali jaribu tena." tone="error" onRetry={() => void parish.refetch()} isRetrying={parish.isFetching} /> : parish.data ? <section className="flex min-w-0 items-center gap-4 rounded-[30px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.14),hsl(var(--card))_65%)] p-5 sm:p-6">
       {parish.data.logoUrl ? <img src={parish.data.logoUrl} alt={`${parish.data.name} logo`} className="h-16 w-16 shrink-0 rounded-2xl object-cover" /> : <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><Church className="h-8 w-8" /></span>}
       <div className="min-w-0"><p className="text-sm font-bold text-primary">Parokia Yangu</p><h1 className="mt-1 break-words text-2xl font-bold sm:text-3xl">{parish.data.name}</h1>{member.data ? <p className="mt-1 break-words text-sm text-muted-foreground">{member.data.full_name}</p> : null}</div>
-    </section> : <p className="rounded-2xl border p-4 text-sm text-muted-foreground">Taarifa za parokia hazikupatikana.</p>}
+    </section> : <SectionFeedback title="Taarifa za parokia bado hazijachapishwa." description="Utaziona hapa mara tu zitakapowekwa kwa waumini." />}
 
     <section>
       <SectionTitle title="Misa ijayo" action={eventsVisible ? <AppLink to="/portal/calendar" className="text-sm font-bold text-primary">Ratiba</AppLink> : undefined} />
-      {mass.isLoading ? <Skeleton className="h-32 rounded-[24px]" /> : mass.data?.mass ? <LinkCard to={eventsVisible ? "/portal/calendar" : undefined} title={mass.data.mass.title} detail={`${mass.data.mass.description ? `${mass.data.mass.description} - ` : ""}${new Date(`${mass.data.mass.massDate}T${mass.data.mass.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })}`} icon={Church} /> : <EmptyCard>Hakuna Misa ijayo iliyopangwa kwa sasa.</EmptyCard>}
+      {mass.isLoading ? <Skeleton className="h-32 rounded-[24px]" /> : mass.isError ? <SectionFeedback title="Hatukuweza kupakia Misa ijayo kwa sasa." description="Ratiba ya Misa haijapotea. Tafadhali jaribu tena baada ya muda mfupi." tone="error" onRetry={() => void mass.refetch()} isRetrying={mass.isFetching} /> : mass.data?.mass ? <LinkCard to={eventsVisible ? "/portal/calendar" : undefined} title={mass.data.mass.title} detail={`${mass.data.mass.description ? `${mass.data.mass.description} - ` : ""}${new Date(`${mass.data.mass.massDate}T${mass.data.mass.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })}`} icon={Church} /> : <EmptyCard>Hakuna Misa ijayo iliyopangwa kwa sasa.</EmptyCard>}
     </section>
 
     <section>
       <SectionTitle title="Tangazo la karibuni" action={announcementsVisible ? <AppLink to="/portal/announcements" className="text-sm font-bold text-primary">Matangazo yote</AppLink> : undefined} />
-      {announcement.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : announcement.data ? <LinkCard to={announcementsVisible ? "/portal/announcements" : undefined} title={announcement.data.title} detail={announcement.data.content || "Tangazo la karibuni"} icon={Megaphone} /> : <EmptyCard>Hakuna tangazo jipya kwa sasa.</EmptyCard>}
+      {announcement.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : announcement.isError ? <SectionFeedback title="Hatukuweza kupakia tangazo la karibuni kwa sasa." description="Matangazo mengine yanaweza kuendelea kupatikana kwenye ukurasa wake." tone="error" onRetry={() => void announcement.refetch()} isRetrying={announcement.isFetching} /> : announcement.data ? <LinkCard to={announcementsVisible ? "/portal/announcements" : undefined} title={announcement.data.title} detail={announcement.data.content || "Tangazo la karibuni"} icon={Megaphone} /> : <EmptyCard>Hakuna tangazo jipya kwa sasa.</EmptyCard>}
     </section>
 
     <section>
       <SectionTitle title="Matukio yajayo" action={eventsVisible ? <AppLink to="/portal/events" className="text-sm font-bold text-primary">Matukio yote</AppLink> : undefined} />
-      {events.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : upcoming.length ? <div className="grid gap-3 md:grid-cols-3">{upcoming.map((event) => <LinkCard key={event.id} to={eventsVisible ? "/portal/events" : undefined} title={event.title} detail={new Date(event.startDate).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })} icon={CalendarDays} />)}</div> : <EmptyCard>Hakuna tukio lijalo lililochapishwa kwa sasa.</EmptyCard>}
+      {events.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : events.isError ? <SectionFeedback title="Hatukuweza kupakia matukio yajayo kwa sasa." description="Tafadhali jaribu tena ili kuona matukio mapya ya parokia." tone="error" onRetry={() => void events.refetch()} isRetrying={events.isFetching} /> : upcoming.length ? <div className="grid gap-3 md:grid-cols-3">{upcoming.map((event) => <LinkCard key={event.id} to={eventsVisible ? "/portal/events" : undefined} title={event.title} detail={new Date(event.startDate).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })} icon={CalendarDays} />)}</div> : <EmptyCard>Hakuna tukio lijalo lililochapishwa kwa sasa.</EmptyCard>}
     </section>
 
-    {ministries.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : !ministries.isError ? <section><SectionTitle title="Huduma zangu" action={ministriesVisible ? <AppLink to="/portal/ministries" className="text-sm font-bold text-primary">Huduma zote</AppLink> : undefined} />{joined.length ? <div className="grid gap-3 md:grid-cols-2">{joined.slice(0, 4).map((ministry) => <LinkCard key={ministry.id} to={ministriesVisible ? `/portal/ministries/${ministry.id}` : undefined} title={ministry.name} detail={ministry.description || "Umejiunga"} icon={Users} />)}</div> : <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-muted-foreground"><span>Bado hujajiunga na huduma ya parokia.</span>{ministriesVisible ? <AppLink to="/portal/ministries" className="font-bold text-primary">Angalia huduma</AppLink> : null}</CardContent></Card>}</section> : null}
+    {member.isLoading || ministries.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : <section><SectionTitle title="Huduma zangu" action={ministriesVisible ? <AppLink to="/portal/ministries" className="text-sm font-bold text-primary">Huduma zote</AppLink> : undefined} />{member.isError ? <SectionFeedback title="Hatukuweza kuthibitisha taarifa zako za mshiriki kwa sasa." description="Tafadhali jaribu tena ili tuangalie huduma zako za parokia." tone="error" onRetry={() => void member.refetch()} isRetrying={member.isFetching} /> : ministries.isError ? <SectionFeedback title="Hatukuweza kupakia huduma zako kwa sasa." description="Tafadhali jaribu tena ili kuona huduma ulizojiunga nazo." tone="error" onRetry={() => void ministries.refetch()} isRetrying={ministries.isFetching} /> : joined.length ? <div className="grid gap-3 md:grid-cols-2">{joined.slice(0, 4).map((ministry) => <LinkCard key={ministry.id} to={ministriesVisible ? `/portal/ministries/${ministry.id}` : undefined} title={ministry.name} detail={ministry.description || "Umejiunga"} icon={Users} />)}</div> : <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-muted-foreground"><span>Bado hujajiunga na huduma ya parokia.</span>{ministriesVisible ? <AppLink to="/portal/ministries" className="font-bold text-primary">Angalia huduma</AppLink> : null}</CardContent></Card>}</section>}
 
     <section aria-label="Njia za haraka"><SectionTitle title="Njia za haraka" /><div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
       {eligibleLivestream && livestream.data ? <Shortcut to={`/portal/live/${livestream.data.id}`} title="Misa Mubashara" icon={Church} /> : null}
@@ -107,14 +152,14 @@ export default function MemberMyParishPage() {
       <Shortcut to="/portal/library" title="Maktaba" icon={BookOpen} />
     </div></section>
 
-    {(phoneHref || emailHref || mapHref) ? <section aria-label="Mawasiliano ya parokia"><SectionTitle title="Mawasiliano ya parokia" /><div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+    {parish.data ? <section aria-label="Mawasiliano ya parokia"><SectionTitle title="Mawasiliano ya parokia" />{(phoneHref || emailHref || mapHref) ? <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-4">
       {phoneHref ? <a href={phoneHref} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 text-sm"><Phone className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-all">{parish.data?.phone}</span></a> : null}
       {emailHref ? <a href={emailHref} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 text-sm"><Mail className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-all">{parish.data?.email}</span></a> : null}
       {mapHref ? <button type="button" onClick={() => void copyAddress()} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 text-left text-sm"><Clipboard className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">Nakili anwani</span></button> : null}
       {mapHref ? <a href={mapHref} target="_blank" rel="noopener noreferrer" className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-card/80 px-3 py-2 text-sm"><MapPin className="h-4 w-4 shrink-0 text-primary" /><span className="min-w-0 break-words">Fungua ramani</span></a> : null}
       {mapHref ? <p className="min-w-0 break-words text-xs text-muted-foreground sm:col-span-2 lg:col-span-4">{parish.data?.address}</p> : null}
       {copyStatus !== "idle" ? <p role="status" className="flex items-center gap-1 text-xs text-muted-foreground sm:col-span-2 lg:col-span-4">{copyStatus === "copied" ? <><Check className="h-3.5 w-3.5" />Anwani imenakiliwa.</> : "Anwani haikuweza kunakiliwa."}</p> : null}
-    </div></section> : null}
+    </div> : <EmptyCard>Mawasiliano ya parokia bado hayajachapishwa.</EmptyCard>}</section> : null}
 
     {(parish.isError || member.isError || mass.isError || announcement.isError || events.isError || ministries.isError) ? <p className="rounded-2xl border border-border/70 bg-card p-4 text-sm text-muted-foreground">Baadhi ya taarifa za parokia hazikupatikana. Njia nyingine bado zinaweza kutumika.</p> : null}
   </div></main>;
