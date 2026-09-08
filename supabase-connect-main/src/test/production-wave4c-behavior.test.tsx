@@ -353,9 +353,34 @@ describe("Wave 4C behavioral content boundaries", () => {
     expect(screen.getByText("Zaburi ya Kujibu")).toBeInTheDocument();
     expect(screen.getByText("Lk 6:12-19")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Soma yote" })).toHaveAttribute("href", "/portal/daily-readings");
+    expect(screen.queryByText("Somo la Pili")).not.toBeInTheDocument();
+    expect(screen.queryByText("Shangilio la Injili")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Somo la Kwanza[\s\S]*Kol 2:6-15/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Injili[\s\S]*Lk 6:12-19/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Soma kwenye Biblia" })).not.toBeInTheDocument();
+  });
+
+  it("renders optional reference-only Today readings in canonical order when present", async () => {
+    database.get_member_daily_reading = [{
+      ...canonicalDailyReading,
+      second_reading_reference: "1 Kor 12:12-27",
+      gospel_acclamation_reference: "Yn 15:16",
+    }];
+
+    mount("/portal/today", [{ path: "/portal/today", element: <MemberTodayPage /> }]);
+
+    const first = await screen.findByText("Somo la Kwanza");
+    const psalm = screen.getByText("Zaburi ya Kujibu");
+    const second = screen.getByText("Somo la Pili");
+    const acclamation = screen.getByText("Shangilio la Injili");
+    const gospel = screen.getByText("Injili");
+    expect(screen.getByText("1 Kor 12:12-27")).toBeInTheDocument();
+    expect(screen.getByText("Yn 15:16")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Somo la Pili[\s\S]*1 Kor 12:12-27/ })).not.toBeInTheDocument();
+    expect(first.compareDocumentPosition(psalm) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(psalm.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(second.compareDocumentPosition(acclamation) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(acclamation.compareDocumentPosition(gospel) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("keeps actionable daily readings expandable on Today", async () => {
@@ -393,6 +418,52 @@ describe("Wave 4C behavioral content boundaries", () => {
     expect(screen.getByRole("link", { name: "Soma kwenye Biblia" })).toBeInTheDocument();
     expect(screen.getByText("Basi kama mlivyompokea Kristo Yesu Bwana, enendeni vivyo hivyo katika yeye.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Soma yote" })).toHaveAttribute("href", "/portal/daily-readings");
+  });
+
+  it("keeps an actionable optional second reading expandable on Today", async () => {
+    database.get_member_daily_reading = [{
+      ...canonicalDailyReading,
+      source: "legacy",
+      is_reference_only: false,
+      second_reading_reference: "1 Kor 12:12-27",
+      gospel_acclamation_reference: "Yn 15:16",
+    }];
+    database.daily_readings = [{
+      id: canonicalDailyReading.id,
+      reading_date: canonicalDailyReading.reading_date,
+      liturgical_season: "Kipindi cha Kawaida",
+      first_reading: null,
+      psalm: null,
+      second_reading: "Maana kama vile mwili ni mmoja, nao una viungo vingi.",
+      gospel: null,
+      reflection: null,
+      prayer: null,
+      is_published: true,
+    }];
+    database.daily_reading_passages = [{
+      id: "today-second-passage",
+      daily_reading_id: canonicalDailyReading.id,
+      reading_kind: "second",
+      title: "Second Reading",
+      reference: "1 Kor 12:12-27",
+      text: "Maana kama vile mwili ni mmoja, nao una viungo vingi.",
+      book_id: "1-corinthians",
+      chapter_start: 12,
+      verse_start: 12,
+      chapter_end: 12,
+      verse_end: 27,
+      sort_order: 3,
+    }];
+
+    mount("/portal/today", [{ path: "/portal/today", element: <MemberTodayPage /> }]);
+
+    const psalm = await screen.findByText("Zaburi ya Kujibu");
+    const secondButton = screen.getByRole("button", { name: /Somo la Pili[\s\S]*1 Kor 12:12-27/ });
+    const acclamation = screen.getByText("Shangilio la Injili");
+    expect(screen.getByRole("link", { name: "Soma kwenye Biblia" })).toBeInTheDocument();
+    expect(screen.getByText("Maana kama vile mwili ni mmoja, nao una viungo vingi.")).toBeInTheDocument();
+    expect(psalm.compareDocumentPosition(secondButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(secondButton.compareDocumentPosition(acclamation) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("keeps Today mixed reference and actionable sections ordered when entry-level reference-only is true", async () => {

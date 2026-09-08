@@ -39,7 +39,7 @@ function getTodayReadingPreviewItems(readings: DailyReadingSection[]) {
     referenceGroup = [];
   };
 
-  for (const reading of readings.filter((item) => item.id !== "second")) {
+  for (const reading of readings) {
     if (isDailyReadingSectionActionable(reading)) {
       flushReferences();
       items.push({ type: "card", reading, defaultOpen: cardCount === 0 });
