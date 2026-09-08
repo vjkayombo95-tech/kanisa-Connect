@@ -188,12 +188,108 @@ describe("My Parish feature-aware quick links", () => {
 
     expect(host.textContent).toContain("Parokia Yangu");
     expect(host.textContent).toContain("Parokia Test");
-    expect(host.textContent).toContain("Member Test");
-    expect(host.textContent).toContain("Mawasiliano ya parokia");
+    expect(host.textContent).toContain("Umeunganishwa kama Member Test");
+    expect(host.textContent).toContain("Mawasiliano");
     expect(host.textContent).toContain("Mawasiliano ya parokia bado hayajachapishwa.");
+    expect(host.textContent).toContain("Mahali pa parokia");
+    expect(host.textContent).toContain("Mahali pa parokia bado hapajawekwa.");
     expect(host.querySelector('a[href^="tel:"]')).toBeNull();
     expect(host.querySelector('a[href^="mailto:"]')).toBeNull();
     expect(host.querySelector('a[href^="https://www.google.com/maps"]')).toBeNull();
+    expect(host.textContent).not.toContain("church-a");
+    expect(host.textContent).not.toContain("member-a");
+  });
+
+  it("renders a long parish name without dropping identity content", () => {
+    state.parish = {
+      id: "church-a",
+      name: "Parokia ya Mtakatifu Maria Mama wa Kanisa Kuu la Waamini wa Kijiji cha Mlimani",
+      logoUrl: null,
+      phone: null,
+      email: null,
+      address: null,
+    };
+
+    renderPage();
+
+    expect(host.textContent).toContain("Parokia ya Mtakatifu Maria Mama wa Kanisa Kuu la Waamini wa Kijiji cha Mlimani");
+    expect(host.textContent).toContain("Umeunganishwa kama Member Test");
+  });
+
+  it("does not render a relationship sentence when the member name is null", () => {
+    state.linkedMember = {
+      ...state.linkedMember,
+      data: { id: "member-a", full_name: null, church_id: "church-a" },
+    };
+
+    renderPage();
+
+    expect(host.textContent).toContain("Parokia Yangu");
+    expect(host.textContent).toContain("Parokia Test");
+    expect(host.textContent).toContain("Mawasiliano");
+    expect(host.textContent).toContain("Mahali pa parokia");
+    expect(host.textContent).not.toContain("Umeunganishwa kama");
+    expect(host.textContent).not.toContain("member-a");
+    expect(host.textContent).not.toContain("church-a");
+  });
+
+  it("does not render a relationship sentence when the member name is blank", () => {
+    state.linkedMember = {
+      ...state.linkedMember,
+      data: { id: "member-a", full_name: "   ", church_id: "church-a" },
+    };
+
+    renderPage();
+
+    expect(host.textContent).toContain("Parokia Test");
+    expect(host.textContent).not.toContain("Umeunganishwa kama");
+  });
+
+  it("renders real phone and email with safe semantic links", () => {
+    state.parish = {
+      id: "church-a",
+      name: "Parokia Test",
+      logoUrl: null,
+      phone: "+255 712 345 678",
+      email: "ofisi@example.org",
+      address: null,
+    };
+
+    renderPage();
+
+    expect(host.textContent).toContain("Piga simu");
+    expect(host.textContent).toContain("+255 712 345 678");
+    expect(host.textContent).toContain("Tuma barua pepe");
+    expect(host.textContent).toContain("ofisi@example.org");
+    expect(host.querySelector('a[href="tel:+255712345678"]')).not.toBeNull();
+    const emailLink = host.querySelector<HTMLAnchorElement>('a[href^="mailto:"]');
+    expect(emailLink).not.toBeNull();
+    expect(emailLink?.getAttribute("href")).toContain("ofisi");
+    expect(emailLink?.getAttribute("href")).not.toMatch(/^javascript:/i);
+    expect(host.textContent).toContain("Mahali pa parokia bado hapajawekwa.");
+    expect(host.textContent).not.toContain("Mawasiliano ya parokia bado hayajachapishwa.");
+  });
+
+  it("renders real parish location with copy and safe map actions", () => {
+    state.parish = {
+      id: "church-a",
+      name: "Parokia Test",
+      logoUrl: null,
+      phone: null,
+      email: null,
+      address: "Barabara ya Kanisa, Kata ya Mlimani, Dar es Salaam",
+    };
+
+    renderPage();
+
+    expect(host.textContent).toContain("Mahali pa parokia");
+    expect(host.textContent).toContain("Barabara ya Kanisa, Kata ya Mlimani, Dar es Salaam");
+    expect(host.querySelector('button[type="button"]')?.textContent).toContain("Nakili anwani");
+    const mapLink = host.querySelector<HTMLAnchorElement>('a[href^="https://www.google.com/maps/search/?api=1&query="]');
+    expect(mapLink).not.toBeNull();
+    expect(mapLink?.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(mapLink?.getAttribute("href")).not.toMatch(/^javascript:/i);
+    expect(host.textContent).toContain("Mawasiliano ya parokia bado hayajachapishwa.");
   });
 
   it("renders parish identity loading without fake parish information", () => {

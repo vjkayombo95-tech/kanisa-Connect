@@ -42,7 +42,8 @@ describe("Wave 3B1 parish usefulness", () => {
   });
 
   it("keeps contact rendering nullable, compact, and clipboard-safe", () => {
-    expect(parishPage).toContain("(phoneHref || emailHref || mapHref) ?");
+    expect(parishPage).toContain("(phoneHref || emailHref) ?");
+    expect(parishPage).toContain("mapHref && parish.data.address");
     expect(parishPage).toContain("navigator.clipboard?.writeText");
     expect(parishPage).toContain('target="_blank" rel="noopener noreferrer"');
     expect(parishPage).toContain("overflow-x-hidden");
@@ -56,14 +57,14 @@ describe("Wave 3B1 parish usefulness", () => {
     const events = parishPage.indexOf("Matukio yajayo");
     const ministries = parishPage.indexOf("Huduma zangu");
     const shortcuts = parishPage.indexOf("Njia za haraka");
-    const contact = parishPage.indexOf('aria-label="Mawasiliano ya parokia"');
+    const contact = parishPage.indexOf('aria-label="Mawasiliano na mahali pa parokia"');
     expect(identity).toBeGreaterThan(-1);
-    expect(mass).toBeGreaterThan(identity);
+    expect(contact).toBeGreaterThan(identity);
+    expect(mass).toBeGreaterThan(contact);
     expect(announcement).toBeGreaterThan(mass);
     expect(events).toBeGreaterThan(announcement);
     expect(ministries).toBeGreaterThan(events);
     expect(shortcuts).toBeGreaterThan(ministries);
-    expect(contact).toBeGreaterThan(shortcuts);
     expect(parishPage).toContain('title="Radio"');
     expect(parishPage).toContain('title="Misa Mubashara"');
   });
