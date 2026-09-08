@@ -1,6 +1,7 @@
 import { act } from "react";
 import type { ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -11,6 +12,7 @@ import {
   DailyReadingReferenceList,
   DailyReadingSourceAttribution,
 } from "@/components/portal/daily-readings/DailyReadingPresentation";
+import { ReadingCard } from "@/components/portal/daily-readings/ReadingCard";
 import type { DailyReadingEntry, DailyReadingSection } from "@/lib/daily-readings";
 
 let host: HTMLDivElement;
@@ -204,5 +206,42 @@ describe("member Daily Readings presentation components", () => {
     expect(host.textContent).not.toContain("READING_PLACEHOLDER");
     expect(host.textContent).not.toMatch(/reference pending/i);
     expect(host.textContent).not.toContain("In the beginning");
+  });
+
+  it("renders actionable reading cards with Kiswahili labels and untruncated references", () => {
+    const longReference = "Mt 1:1-16, 18-23; Lk 1:26-38; Jn 1:1-18; Rom 8:28-30";
+    render(
+      <MemoryRouter>
+        <ReadingCard
+          defaultOpen
+          reading={{
+            id: "gospel",
+            title: "Gospel",
+            reference: longReference,
+            text: "Neno la Bwana.",
+            bibleReference: {
+              book_id: "luke",
+              chapter_start: 1,
+              verse_start: 26,
+              chapter_end: 1,
+              verse_end: 38,
+            },
+          }}
+          reflection="Tafakari fupi."
+        />
+      </MemoryRouter>,
+    );
+
+    expect(host.textContent).toContain("Injili");
+    expect(host.textContent).toContain(longReference);
+    expect(host.textContent).toContain("Soma kwenye Biblia");
+    expect(host.textContent).toContain("Tafakari");
+    expect(host.textContent).not.toContain("Gospel");
+    expect(host.textContent).not.toContain("Read in Bible");
+    expect(host.textContent).not.toContain("Reflection");
+    expect(host.querySelector('[aria-expanded="true"]')?.getAttribute("aria-controls")).toBe("daily-reading-gospel-content");
+    const reference = [...host.querySelectorAll("span")].find((element) => element.textContent === longReference);
+    expect(reference?.className).toContain("break-words");
+    expect(reference?.className).not.toContain("truncate");
   });
 });

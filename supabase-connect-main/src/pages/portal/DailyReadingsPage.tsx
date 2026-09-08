@@ -8,6 +8,7 @@ import {
   DailyReadingErrorState,
   DailyReadingLiturgicalHeader,
   DailyReadingLoadingState,
+  DailyReadingReferenceList,
   DailyReadingSourceAttribution,
 } from "@/components/portal/daily-readings/DailyReadingPresentation";
 import { ReadingCard } from "@/components/portal/daily-readings/ReadingCard";
@@ -24,6 +25,7 @@ import {
   readingEntryMatchesSearch,
   useTanzaniaMemberDate,
   type DailyReadingEntry,
+  type DailyReadingSection,
 } from "@/lib/daily-readings";
 import { SAINT_SELECT, getSaintImageAlt, type LibrarySaint } from "@/lib/catholic-library";
 
@@ -40,8 +42,8 @@ function TodaySaintCard({ saints, isLoading }: { saints: LibrarySaint[]; isLoadi
             <Sparkles className="h-6 w-6" aria-hidden="true" />
           </div>
           <div>
-            <p className="font-semibold">Today's Saint</p>
-            <p className="mt-1 text-sm text-muted-foreground">No saint is linked to today's feast yet.</p>
+            <p className="font-semibold">Mtakatifu wa Leo</p>
+            <p className="mt-1 text-sm text-muted-foreground">Hakuna mtakatifu aliyeunganishwa na sikukuu ya leo bado.</p>
           </div>
         </CardContent>
       </Card>
@@ -65,7 +67,7 @@ function TodaySaintCard({ saints, isLoading }: { saints: LibrarySaint[]; isLoadi
             </div>
           )}
           <div className="space-y-3 p-5">
-            <p className="text-sm font-medium text-primary">Today's Saint</p>
+            <p className="text-sm font-medium text-primary">Mtakatifu wa Leo</p>
             <div>
               <h2 className="text-2xl font-bold">{saint.name}</h2>
               {saint.title ? <p className="mt-1 text-sm text-muted-foreground">{saint.title}</p> : null}
@@ -73,7 +75,7 @@ function TodaySaintCard({ saints, isLoading }: { saints: LibrarySaint[]; isLoadi
             <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">{saint.biography_short}</p>
             <Button asChild variant="outline" className="rounded-2xl">
               <Link to={`/portal/library/${saint.slug}`}>
-                Read Saint
+                Soma Mtakatifu
                 <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
@@ -90,7 +92,7 @@ function ReadingSearchResults({ entries }: { entries: DailyReadingEntry[] }) {
       <Card className="rounded-[28px] border-border/70 bg-card/85">
         <CardContent className="flex flex-col items-center justify-center px-6 py-12 text-center">
           <Search className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
-          <p className="mt-4 text-lg font-semibold">No readings match your search.</p>
+          <p className="mt-4 text-lg font-semibold">Hakuna masomo yanayolingana na utafutaji wako.</p>
         </CardContent>
       </Card>
     );
@@ -119,6 +121,10 @@ function ReadingSearchResults({ entries }: { entries: DailyReadingEntry[] }) {
       ))}
     </div>
   );
+}
+
+function hasExpandableReadingContent(reading: DailyReadingSection) {
+  return Boolean(reading.text?.trim() || reading.bibleReference);
 }
 
 export default function DailyReadingsPage() {
@@ -160,8 +166,8 @@ export default function DailyReadingsPage() {
   if (!publishedTodayReading) return <main className="px-4 py-10"><DailyReadingEmptyState /></main>;
 
   const todayReading = publishedTodayReading;
-  const requiredReadings = todayReading.readings.filter((reading) => reading.id !== "second");
-  const secondReading = todayReading.readings.find((reading) => reading.id === "second");
+  const actionableReadings = todayReading.readings.filter(hasExpandableReadingContent);
+  const referenceReadings = todayReading.readings.filter((reading) => !hasExpandableReadingContent(reading));
 
   return (
     <main className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-6 pb-28 lg:px-8 lg:pb-10">
@@ -173,7 +179,7 @@ export default function DailyReadingsPage() {
               Masomo ya Leo
             </p>
             <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Masomo ya Leo</h1>
-            <p className="mt-3 text-base text-muted-foreground">The Word of God for today.</p>
+            <p className="mt-3 text-base text-muted-foreground">Neno la Mungu kwa siku ya leo.</p>
           </div>
         </section>
 
@@ -182,7 +188,12 @@ export default function DailyReadingsPage() {
             <DailyReadingLiturgicalHeader reading={todayReading} titleId="readings-title" />
 
             <div className="grid gap-4 xl:grid-cols-2">
-              {requiredReadings.map((reading, index) => (
+              {referenceReadings.length ? (
+                <div className="xl:col-span-2">
+                  <DailyReadingReferenceList readings={referenceReadings} />
+                </div>
+              ) : null}
+              {actionableReadings.map((reading, index) => (
                 <ReadingCard
                   key={reading.id}
                   reading={reading}
@@ -190,13 +201,12 @@ export default function DailyReadingsPage() {
                   defaultOpen={index === 0}
                 />
               ))}
-              {secondReading ? <ReadingCard reading={secondReading} reflection={todayReading.reflection ?? undefined} /> : null}
             </div>
 
             {todayReading.reflection ? (
               <Card className="rounded-[28px] border-primary/20 bg-primary/5">
                 <CardContent className="space-y-3 p-5">
-                  <h2 className="text-xl font-bold">Reflection</h2>
+                  <h2 className="text-xl font-bold">Tafakari</h2>
                   <p className="text-sm leading-7 text-muted-foreground">{todayReading.reflection}</p>
                 </CardContent>
               </Card>
@@ -205,7 +215,7 @@ export default function DailyReadingsPage() {
             {todayReading.prayer ? (
               <Card className="rounded-[28px] border-border/70 bg-card/85">
                 <CardContent className="space-y-3 p-5">
-                  <h2 className="text-xl font-bold">Prayer</h2>
+                  <h2 className="text-xl font-bold">Sala</h2>
                   <p className="text-sm leading-7 text-muted-foreground">{todayReading.prayer}</p>
                 </CardContent>
               </Card>
@@ -220,11 +230,11 @@ export default function DailyReadingsPage() {
             <Card className="rounded-[28px] border-border/70 bg-card/85">
               <CardContent className="space-y-4 p-5">
                 <div>
-                  <h2 className="text-xl font-bold">Search Readings</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">Search by date, scripture reference, book, or keywords.</p>
+                  <h2 className="text-xl font-bold">Tafuta Masomo</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">Tafuta kwa tarehe, rejea ya Biblia, kitabu, au neno.</p>
                 </div>
                 <label htmlFor="daily-reading-search" className="sr-only">
-                  Search previous readings
+                  Tafuta masomo yaliyotangulia
                 </label>
                 <div className="relative">
                   <Search
@@ -235,7 +245,7 @@ export default function DailyReadingsPage() {
                     id="daily-reading-search"
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Date, book, reference, keyword..."
+                    placeholder="Tarehe, kitabu, rejea, neno..."
                     className="h-12 rounded-2xl border-border/70 bg-background/70 pl-12"
                   />
                 </div>

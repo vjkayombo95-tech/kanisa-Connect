@@ -56,6 +56,34 @@ const reflection = { id: "11111111-1111-4111-8111-111111111111", reading_date: "
 const publishedPrayer = { id: "p1", title: "Evening Prayer", slug: "evening-prayer", summary: "At day end", body: "Published prayer body", status: "published", featured: false };
 const draftPrayer = { id: "p2", title: "Draft Secret", slug: "draft-secret", summary: "Hidden", body: "Unpublished secret body", status: "draft", featured: false };
 const saint = { id: "a5a01a73-d580-4669-b372-1c5872fda7bb", slug: "st-paul", name: "Saint Paul", title: "Apostle", feast_month: 6, feast_day: 29, patron_of: "Missionaries", country: "Tarsus", biography_short: "Short life", biography_long: "Long life", quote: null, reflection: "Saint reflection", prayer: "Saint prayer", image_url: null, color_theme: null, liturgical_rank: null, is_featured: false, scripture_reference: "Acts 9", tags: [], is_active: true };
+const canonicalDailyReading = {
+  id: "daily-reading-1",
+  reading_date: "2026-09-08",
+  source: "cms",
+  language_code: "sw",
+  status: "published",
+  liturgical_day_id: null,
+  celebration: "Jumanne ya Juma la Ishirini na Tatu",
+  liturgical_season: "Kipindi cha Kawaida",
+  liturgical_year: "A",
+  weekday_cycle: "II",
+  liturgical_color: "Kijani",
+  rank: "Siku ya kawaida",
+  lectionary_number: "438",
+  first_reading_reference: "Kol 2:6-15",
+  responsorial_psalm_reference: "Zab 145:1-2, 8-9, 10-11",
+  second_reading_reference: null,
+  gospel_acclamation_reference: null,
+  gospel_reference: "Lk 6:12-19",
+  reflection: null,
+  prayer: null,
+  is_reference_only: true,
+  source_attribution: "Baraza la Maaskofu Katoliki Tanzania",
+  source_organization: "TEC",
+  source_publication: "Kalenda ya Liturujia",
+  source_year: 2026,
+  source_edition: "Toleo la waumini",
+};
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
@@ -201,6 +229,108 @@ describe("Wave 4C behavioral content boundaries", () => {
         }),
       ),
     );
+  });
+
+  it("renders reference-only daily readings as readable references without empty accordions", async () => {
+    const longReference = "Mt 1:1-16, 18-23; Lk 1:26-38; Jn 1:1-18; Rom 8:28-30";
+    database.get_member_daily_reading = [{ ...canonicalDailyReading, gospel_reference: longReference }];
+
+    mount("/portal/daily-readings", [{ path: "/portal/daily-readings", element: <DailyReadingsPage /> }]);
+
+    expect(await screen.findByText("Somo la Kwanza")).toBeInTheDocument();
+    expect(screen.getByText("Kol 2:6-15")).toBeInTheDocument();
+    expect(screen.getByText("Zaburi ya Kujibu")).toBeInTheDocument();
+    expect(screen.getByText(longReference)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Somo la Kwanza|Injili|Kol 2:6-15|Mt 1:1-16/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Soma kwenye Biblia/i })).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toContain("READING_PLACEHOLDER");
+    expect(document.body.textContent).not.toMatch(/reference pending/i);
+    await waitFor(() =>
+      expect(queryLog).toContainEqual(
+        expect.objectContaining({
+          table: "rpc",
+          operation: "call",
+          args: ["get_member_daily_reading", expect.objectContaining({ p_reading_date: expect.any(String) })],
+        }),
+      ),
+    );
+  });
+
+  it("preserves expandable cards for actionable daily readings", async () => {
+    database.get_member_daily_reading = [{ ...canonicalDailyReading, source: "legacy", is_reference_only: false }];
+    database.daily_readings = [{
+      id: canonicalDailyReading.id,
+      reading_date: canonicalDailyReading.reading_date,
+      liturgical_season: "Kipindi cha Kawaida",
+      first_reading: "Basi kama mlivyompokea Kristo Yesu Bwana, enendeni vivyo hivyo katika yeye.",
+      psalm: null,
+      second_reading: null,
+      gospel: null,
+      reflection: null,
+      prayer: null,
+      is_published: true,
+    }];
+    database.daily_reading_passages = [{
+      id: "passage-1",
+      daily_reading_id: canonicalDailyReading.id,
+      reading_kind: "first",
+      title: "First Reading",
+      reference: "Kol 2:6-15",
+      text: "Basi kama mlivyompokea Kristo Yesu Bwana, enendeni vivyo hivyo katika yeye.",
+      book_id: "colossians",
+      chapter_start: 2,
+      verse_start: 6,
+      chapter_end: 2,
+      verse_end: 15,
+      sort_order: 1,
+    }];
+
+    mount("/portal/daily-readings", [{ path: "/portal/daily-readings", element: <DailyReadingsPage /> }]);
+
+    expect(await screen.findByRole("button", { name: /Somo la Kwanza[\s\S]*Kol 2:6-15/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Soma kwenye Biblia" })).toBeInTheDocument();
+    expect(screen.getByText("Basi kama mlivyompokea Kristo Yesu Bwana, enendeni vivyo hivyo katika yeye.")).toBeInTheDocument();
+    expect(screen.queryByText("Read in Bible")).not.toBeInTheDocument();
+  });
+
+  it("keeps actionable sections interactive when the entry is marked reference-only", async () => {
+    database.get_member_daily_reading = [{ ...canonicalDailyReading, source: "legacy", is_reference_only: true }];
+    database.daily_readings = [{
+      id: canonicalDailyReading.id,
+      reading_date: canonicalDailyReading.reading_date,
+      liturgical_season: "Kipindi cha Kawaida",
+      first_reading: null,
+      psalm: null,
+      second_reading: null,
+      gospel: null,
+      reflection: null,
+      prayer: null,
+      is_published: true,
+    }];
+    database.daily_reading_passages = [{
+      id: "gospel-passage",
+      daily_reading_id: canonicalDailyReading.id,
+      reading_kind: "gospel",
+      title: "Gospel",
+      reference: "Lk 6:12-19",
+      text: null,
+      book_id: "luke",
+      chapter_start: 6,
+      verse_start: 12,
+      chapter_end: 6,
+      verse_end: 19,
+      sort_order: 3,
+    }];
+
+    mount("/portal/daily-readings", [{ path: "/portal/daily-readings", element: <DailyReadingsPage /> }]);
+
+    expect(await screen.findByText("Somo la Kwanza")).toBeInTheDocument();
+    expect(screen.getByText("Kol 2:6-15")).toBeInTheDocument();
+    expect(screen.getByText("Zaburi ya Kujibu")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Injili[\s\S]*Lk 6:12-19/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Soma kwenye Biblia" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Somo la Kwanza[\s\S]*Kol 2:6-15/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Zaburi ya Kujibu[\s\S]*Zab 145/ })).not.toBeInTheDocument();
   });
 
   it("mounts the liturgical calendar regression surface", async () => {
