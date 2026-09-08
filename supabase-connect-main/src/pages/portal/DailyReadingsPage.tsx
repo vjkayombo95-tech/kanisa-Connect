@@ -21,11 +21,11 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   getReadableReadingDate,
   fetchPublishedDailyReading,
+  isDailyReadingSectionActionable,
   publishedDailyReadingKey,
   readingEntryMatchesSearch,
   useTanzaniaMemberDate,
   type DailyReadingEntry,
-  type DailyReadingSection,
 } from "@/lib/daily-readings";
 import { SAINT_SELECT, getSaintImageAlt, type LibrarySaint } from "@/lib/catholic-library";
 
@@ -123,10 +123,6 @@ function ReadingSearchResults({ entries }: { entries: DailyReadingEntry[] }) {
   );
 }
 
-function hasExpandableReadingContent(reading: DailyReadingSection) {
-  return Boolean(reading.text?.trim() || reading.bibleReference);
-}
-
 export default function DailyReadingsPage() {
   const [search, setSearch] = useState("");
   const today = useTanzaniaMemberDate();
@@ -166,8 +162,8 @@ export default function DailyReadingsPage() {
   if (!publishedTodayReading) return <main className="px-4 py-10"><DailyReadingEmptyState /></main>;
 
   const todayReading = publishedTodayReading;
-  const actionableReadings = todayReading.readings.filter(hasExpandableReadingContent);
-  const referenceReadings = todayReading.readings.filter((reading) => !hasExpandableReadingContent(reading));
+  const actionableReadings = todayReading.readings.filter(isDailyReadingSectionActionable);
+  const referenceReadings = todayReading.readings.filter((reading) => !isDailyReadingSectionActionable(reading));
 
   return (
     <main className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-6 pb-28 lg:px-8 lg:pb-10">
