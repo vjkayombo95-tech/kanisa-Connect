@@ -190,7 +190,8 @@ describe("Wave 4C behavioral content boundaries", () => {
   it("fails closed when no published daily reading exists", async () => {
     database.get_member_daily_reading = [];
     mount("/portal/daily-readings", [{ path: "/portal/daily-readings", element: <DailyReadingsPage /> }]);
-    expect(await screen.findByRole("heading", { name: "Masomo ya leo hayajapatikana" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Masomo ya siku hiyo bado hayajachapishwa." })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /jaribu/i })).not.toBeInTheDocument();
     await waitFor(() =>
       expect(queryLog).toContainEqual(
         expect.objectContaining({
