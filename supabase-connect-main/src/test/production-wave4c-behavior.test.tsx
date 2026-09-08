@@ -293,6 +293,46 @@ describe("Wave 4C behavioral content boundaries", () => {
     expect(screen.queryByText("Read in Bible")).not.toBeInTheDocument();
   });
 
+  it("keeps actionable sections interactive when the entry is marked reference-only", async () => {
+    database.get_member_daily_reading = [{ ...canonicalDailyReading, source: "legacy", is_reference_only: true }];
+    database.daily_readings = [{
+      id: canonicalDailyReading.id,
+      reading_date: canonicalDailyReading.reading_date,
+      liturgical_season: "Kipindi cha Kawaida",
+      first_reading: null,
+      psalm: null,
+      second_reading: null,
+      gospel: null,
+      reflection: null,
+      prayer: null,
+      is_published: true,
+    }];
+    database.daily_reading_passages = [{
+      id: "gospel-passage",
+      daily_reading_id: canonicalDailyReading.id,
+      reading_kind: "gospel",
+      title: "Gospel",
+      reference: "Lk 6:12-19",
+      text: null,
+      book_id: "luke",
+      chapter_start: 6,
+      verse_start: 12,
+      chapter_end: 6,
+      verse_end: 19,
+      sort_order: 3,
+    }];
+
+    mount("/portal/daily-readings", [{ path: "/portal/daily-readings", element: <DailyReadingsPage /> }]);
+
+    expect(await screen.findByText("Somo la Kwanza")).toBeInTheDocument();
+    expect(screen.getByText("Kol 2:6-15")).toBeInTheDocument();
+    expect(screen.getByText("Zaburi ya Kujibu")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Injili[\s\S]*Lk 6:12-19/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Soma kwenye Biblia" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Somo la Kwanza[\s\S]*Kol 2:6-15/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Zaburi ya Kujibu[\s\S]*Zab 145/ })).not.toBeInTheDocument();
+  });
+
   it("mounts the liturgical calendar regression surface", async () => {
     database.saints = [saint];
     mount("/portal/liturgical-calendar", [{ path: "/portal/liturgical-calendar", element: <LiturgicalCalendarPage /> }]);

@@ -168,8 +168,6 @@ export default function DailyReadingsPage() {
   const todayReading = publishedTodayReading;
   const actionableReadings = todayReading.readings.filter(hasExpandableReadingContent);
   const referenceReadings = todayReading.readings.filter((reading) => !hasExpandableReadingContent(reading));
-  const showReferenceOnlyMode = todayReading.isReferenceOnly || actionableReadings.length === 0;
-  const readingsForCards = showReferenceOnlyMode ? [] : actionableReadings;
 
   return (
     <main className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-6 pb-28 lg:px-8 lg:pb-10">
@@ -190,17 +188,12 @@ export default function DailyReadingsPage() {
             <DailyReadingLiturgicalHeader reading={todayReading} titleId="readings-title" />
 
             <div className="grid gap-4 xl:grid-cols-2">
-              {showReferenceOnlyMode ? (
-                <div className="xl:col-span-2">
-                  <DailyReadingReferenceList readings={todayReading.readings} />
-                </div>
-              ) : null}
-              {!showReferenceOnlyMode && referenceReadings.length ? (
+              {referenceReadings.length ? (
                 <div className="xl:col-span-2">
                   <DailyReadingReferenceList readings={referenceReadings} />
                 </div>
               ) : null}
-              {readingsForCards.map((reading, index) => (
+              {actionableReadings.map((reading, index) => (
                 <ReadingCard
                   key={reading.id}
                   reading={reading}
