@@ -269,6 +269,10 @@ function hasSectionContent(section: DailyReadingSection) {
   return Boolean(section.reference || section.text?.trim() || section.bibleReference);
 }
 
+export function isDailyReadingSectionActionable(section: DailyReadingSection) {
+  return Boolean(section.text?.trim() || section.bibleReference);
+}
+
 function createReadingSection(
   kind: DailyReadingKind,
   reference: string | null | undefined,
