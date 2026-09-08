@@ -25,6 +25,13 @@ const state = vi.hoisted(() => ({
     email: string | null;
     address: string | null;
   },
+  linkedMember: {
+    data: { id: "member-a", full_name: "Member Test", church_id: "church-a" } as null | { id: string; full_name: string | null; church_id: string },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    refetch: vi.fn(),
+  },
   livestream: {
     featureEnabled: false,
     error: null as Error | null,
@@ -125,7 +132,7 @@ vi.mock("@/hooks/use-feature-access", () => ({
 vi.mock("@/hooks/use-church-livestream", () => ({ useChurchLivestream: () => state.livestream }));
 vi.mock("@/hooks/use-church-radio", () => ({ useChurchRadioStations: () => state.radio }));
 vi.mock("@/hooks/use-linked-member", () => ({
-  useLinkedMember: () => ({ data: { id: "member-a", full_name: "Member Test", church_id: "church-a" }, isLoading: false, isError: false }),
+  useLinkedMember: () => state.linkedMember,
 }));
 
 import { isOrdinaryMemberPathAllowed } from "@/lib/member-service-registry";
@@ -141,6 +148,13 @@ describe("My Parish feature-aware quick links", () => {
     state.loading = new Set();
     state.refetches = new Map();
     state.parish = { id: "church-a", name: "Parokia Test", logoUrl: null, phone: null, email: null, address: null };
+    state.linkedMember = {
+      data: { id: "member-a", full_name: "Member Test", church_id: "church-a" },
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      refetch: vi.fn(),
+    };
     state.livestream = {
       featureEnabled: false,
       error: null,
@@ -389,6 +403,71 @@ describe("My Parish feature-aware quick links", () => {
     expect(host.textContent).toContain("Hakuna Misa ijayo iliyopangwa kwa sasa.");
     expect(host.textContent).toContain("Hakuna tangazo jipya kwa sasa.");
     expect(host.textContent).toContain("Hakuna tukio lijalo lililochapishwa kwa sasa.");
+  });
+
+  it("keeps ministries loading while linked member is still loading", () => {
+    state.linkedMember = {
+      data: null,
+      isLoading: true,
+      isFetching: true,
+      isError: false,
+      refetch: vi.fn(),
+    };
+
+    renderPage();
+
+    expect(host.querySelector(".animate-pulse")).not.toBeNull();
+    expect(host.textContent).toContain("Parokia Test");
+    expect(host.textContent).not.toContain("Bado hujajiunga na huduma ya parokia.");
+    expect(host.textContent).not.toContain("Hatukuweza kuthibitisha taarifa zako za mshiriki kwa sasa.");
+  });
+
+  it("renders linked-member failure as a member-safe ministries error with retry", () => {
+    const retry = vi.fn();
+    state.linkedMember = {
+      data: null,
+      isLoading: false,
+      isFetching: false,
+      isError: true,
+      refetch: retry,
+    };
+
+    renderPage();
+
+    expect(host.textContent).toContain("Parokia Test");
+    expect(host.textContent).toContain("Huduma zangu");
+    expect(host.textContent).toContain("Hatukuweza kuthibitisha taarifa zako za mshiriki kwa sasa.");
+    expect(host.textContent).not.toContain("Bado hujajiunga na huduma ya parokia.");
+    expect(host.textContent).not.toMatch(/Supabase|database|RPC|member-a|church-a|permission denied|stack trace/i);
+    const button = host.querySelector<HTMLButtonElement>('button[aria-label="Jaribu tena: Hatukuweza kuthibitisha taarifa zako za mshiriki kwa sasa."]');
+    expect(button).not.toBeNull();
+    act(() => button!.click());
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables linked-member retry while member refetch is running", () => {
+    state.linkedMember = {
+      data: null,
+      isLoading: false,
+      isFetching: true,
+      isError: true,
+      refetch: vi.fn(),
+    };
+
+    renderPage();
+
+    const button = host.querySelector<HTMLButtonElement>('button[aria-label="Jaribu tena: Hatukuweza kuthibitisha taarifa zako za mshiriki kwa sasa."]');
+    expect(button).not.toBeNull();
+    expect(button).toBeDisabled();
+    expect(button?.textContent).toContain("Inapakia...");
+  });
+
+  it("renders zero joined ministries as a legitimate empty state after linked-member success", () => {
+    renderPage();
+
+    expect(host.textContent).toContain("Huduma zangu");
+    expect(host.textContent).toContain("Bado hujajiunga na huduma ya parokia.");
+    expect(host.textContent).not.toContain("Hatukuweza kuthibitisha taarifa zako za mshiriki kwa sasa.");
   });
 
   it("renders ministries request failure as an error with retry", () => {
