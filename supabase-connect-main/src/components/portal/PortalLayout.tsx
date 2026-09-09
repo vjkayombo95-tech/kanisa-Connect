@@ -106,8 +106,7 @@ const FULL_GROUPS: NavGroup[] = [
     id: "community",
     label: "Community",
     items: [
-      // This portal currently has no standalone communities page, so channels is used as the member-facing group space.
-      { titleKey: "communities", url: "/portal/channels", icon: CommunitiesIcon, featureKey: "channels" },
+      { titleKey: "Jumuiya Yangu", url: "/portal/jumuiya", icon: CommunitiesIcon, featureKey: null },
       { titleKey: "channels", url: "/portal/channels", icon: ChannelsIcon, featureKey: "channels" },
       { titleKey: "community_help", url: "/portal/community-help", icon: CommunityHelpIcon, featureKey: "community_help" },
     ],
@@ -126,6 +125,7 @@ const FULL_GROUPS: NavGroup[] = [
 const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
   { titleKey: "Leo", url: "/portal/today", icon: BibleIcon, featureKey: null },
   { titleKey: "Parokia Yangu", url: "/portal/my-parish", icon: ParishIcon, featureKey: null },
+  { titleKey: "Jumuiya Yangu", url: "/portal/jumuiya", icon: CommunitiesIcon, featureKey: null },
   { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
   { titleKey: "Zaidi", url: "/portal/services", icon: PortalIcon, featureKey: null },
   { titleKey: "Watakatifu", url: "/member/library", icon: BibleIcon, featureKey: null },
@@ -161,6 +161,7 @@ const DESKTOP_SIDEBAR_GROUPS: NavGroup[] = [
       { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
       { titleKey: "Leo", url: "/portal/today", icon: BibleIcon, featureKey: null },
       { titleKey: "Parokia Yangu", url: "/portal/my-parish", icon: ParishIcon, featureKey: null },
+      { titleKey: "Jumuiya Yangu", url: "/portal/jumuiya", icon: CommunitiesIcon, featureKey: null },
     ],
   },
   {
@@ -171,6 +172,7 @@ const DESKTOP_SIDEBAR_GROUPS: NavGroup[] = [
       { titleKey: "Nia za Misa", url: "/portal/mass-intentions", icon: MassIntentionsIcon, featureKey: "mass_intentions" },
       { titleKey: "Ratiba", url: "/portal/calendar", icon: EventsIcon, featureKey: "events" },
       { titleKey: "Matangazo", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
+      { titleKey: "Jumuiya Yangu", url: "/portal/jumuiya", icon: CommunitiesIcon, featureKey: null },
       { titleKey: "Huduma", url: "/portal/ministries", icon: CommunitiesIcon, featureKey: "ministries" },
     ],
   },
