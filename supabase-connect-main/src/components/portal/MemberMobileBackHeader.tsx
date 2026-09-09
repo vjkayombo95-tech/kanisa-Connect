@@ -11,7 +11,7 @@ const titleByRoute: Record<string, string> = {
   "/portal/mass-intentions": "Nia za Misa",
   "/portal/announcements": "Matangazo",
   "/portal/prayer-requests": "Maombi",
-  "/portal/channels": "Jumuiya",
+  "/portal/channels": "Njia za Mawasiliano",
   "/portal/bible": "Biblia",
   "/portal/library": "Watakatifu",
   "/member/library": "Watakatifu",
@@ -19,6 +19,7 @@ const titleByRoute: Record<string, string> = {
   "/portal/daily-readings": "Masomo ya Leo",
   "/portal/today": "Leo",
   "/portal/my-parish": "Parokia Yangu",
+  "/portal/jumuiya": "Jumuiya Yangu",
   "/portal/ministries": "Huduma za Parokia",
 };
 
