@@ -3,9 +3,25 @@ import { describe, expect, it } from "vitest";
 import { getMemberBackFallback, isPrimaryMemberRoute, resolveMemberBackTarget } from "@/lib/member-mobile-navigation";
 
 describe("production member mobile back navigation", () => {
-  it.each(["/portal", "/portal/services", "/member", "/member/services"])("keeps %s as a primary route", (route) => {
+  it.each([
+    "/portal",
+    "/portal/today",
+    "/portal/my-parish",
+    "/portal/services",
+    "/member",
+    "/member/today",
+    "/member/my-parish",
+    "/member/services",
+  ])("keeps %s as a primary route", (route) => {
     expect(isPrimaryMemberRoute(route)).toBe(true);
   });
+
+  it.each(["/portal/give", "/portal/mass-intentions", "/portal/announcements", "/portal/jumuiya"])(
+    "keeps %s as a secondary route",
+    (route) => {
+      expect(isPrimaryMemberRoute(route)).toBe(false);
+    },
+  );
 
   it("uses a validated member origin when route state exists", () => {
     expect(resolveMemberBackTarget("/portal/mass-intentions", "/portal")).toBe("/portal");

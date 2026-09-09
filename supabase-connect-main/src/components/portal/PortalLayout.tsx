@@ -38,7 +38,7 @@ import { MemberMobileBackHeader } from "@/components/portal/MemberMobileBackHead
 import { formatTZS } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { getPortalFeatureForPath, type PortalFeatureKey } from "@/lib/portal-features";
-import { isOrdinaryMemberPathAllowed } from "@/lib/member-service-registry";
+import { getMemberServiceForPath, isOrdinaryMemberPathAllowed } from "@/lib/member-service-registry";
 import { AppLink } from "@/components/AppLink";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { MemberNotificationBell } from "@/components/portal/MemberNotificationBell";
@@ -123,10 +123,10 @@ const FULL_GROUPS: NavGroup[] = [
 ];
 
 const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
+  { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
   { titleKey: "Leo", url: "/portal/today", icon: BibleIcon, featureKey: null },
   { titleKey: "Parokia Yangu", url: "/portal/my-parish", icon: ParishIcon, featureKey: null },
   { titleKey: "Jumuiya Yangu", url: "/portal/jumuiya", icon: CommunitiesIcon, featureKey: null },
-  { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
   { titleKey: "Zaidi", url: "/portal/services", icon: PortalIcon, featureKey: null },
   { titleKey: "Watakatifu", url: "/member/library", icon: BibleIcon, featureKey: null },
   { titleKey: "Kalenda ya Liturujia", url: "/portal/liturgical-calendar", icon: LiturgicalCalendarIcon, featureKey: null },
@@ -161,7 +161,6 @@ const DESKTOP_SIDEBAR_GROUPS: NavGroup[] = [
       { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
       { titleKey: "Leo", url: "/portal/today", icon: BibleIcon, featureKey: null },
       { titleKey: "Parokia Yangu", url: "/portal/my-parish", icon: ParishIcon, featureKey: null },
-      { titleKey: "Jumuiya Yangu", url: "/portal/jumuiya", icon: CommunitiesIcon, featureKey: null },
     ],
   },
   {
@@ -202,8 +201,31 @@ const DESKTOP_SIDEBAR_MORE_ITEM: NavItem = {
   featureKey: null,
 };
 
+const MOBILE_BOTTOM_PRIMARY_URLS = ["/portal", "/portal/today", "/portal/my-parish", "/portal/services"];
+const MOBILE_BOTTOM_CONTENT_PRIMARY_URLS = ["/portal", "/portal/today", "/portal/my-parish"];
+
 function isActive(pathname: string, url: string) {
   return url === "/portal" ? pathname === "/portal" : pathname.startsWith(url);
+}
+
+function normalizeMemberPortalPath(pathname: string) {
+  const normalized = pathname.replace(/\/$/, "") || "/";
+  return normalized.replace(/^\/member(?=\/|$)/, "/portal");
+}
+
+function isMobileBottomActive(pathname: string, url: string) {
+  const normalizedPathname = normalizeMemberPortalPath(pathname);
+  if (url === "/portal") return normalizedPathname === "/portal";
+  if (url === "/portal/services") {
+    if (normalizedPathname === "/portal/services" || normalizedPathname.startsWith("/portal/services/")) return true;
+    if (!getMemberServiceForPath(normalizedPathname)) return false;
+    return !MOBILE_BOTTOM_CONTENT_PRIMARY_URLS.some((primaryUrl) =>
+      primaryUrl === "/portal"
+        ? normalizedPathname === "/portal"
+        : normalizedPathname === primaryUrl || normalizedPathname.startsWith(`${primaryUrl}/`),
+    );
+  }
+  return normalizedPathname === url || normalizedPathname.startsWith(`${url}/`);
 }
 
 function findDesktopGroupForPath(groups: NavGroup[], pathname: string) {
@@ -827,12 +849,12 @@ export function PortalLayout() {
             <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 px-2 py-2 shadow-[0_-18px_48px_-32px_rgba(0,0,0,0.75)] backdrop-blur-xl lg:hidden">
               <div
                 className="mx-auto grid max-w-md gap-1"
-                style={{ gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}
+                style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}
               >
                 {visibleMainItems
-                  .filter((item) => ["/portal", "/portal/give", "/portal/mass-intentions", "/portal/announcements", "/portal/services"].includes(item.url))
+                  .filter((item) => MOBILE_BOTTOM_PRIMARY_URLS.includes(item.url))
                   .map((item) => {
-                  const active = isActive(location.pathname, item.url);
+                  const active = isMobileBottomActive(location.pathname, item.url);
                   const Icon = item.icon;
 
                   return (

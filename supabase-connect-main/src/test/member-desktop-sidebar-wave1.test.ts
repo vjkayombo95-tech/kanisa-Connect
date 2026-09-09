@@ -60,6 +60,26 @@ describe("member desktop sidebar Wave 1", () => {
     expect(layout).toContain("item={DESKTOP_SIDEBAR_MORE_ITEM}");
   });
 
+  it("keeps desktop Primary focused and moves Jumuiya into Huduma only", () => {
+    const sidebarDefinition = layout.slice(
+      layout.indexOf("const DESKTOP_SIDEBAR_GROUPS"),
+      layout.indexOf("const DESKTOP_SIDEBAR_MORE_ITEM"),
+    );
+    const primaryGroup = sidebarDefinition.slice(sidebarDefinition.indexOf('id: "primary"'), sidebarDefinition.indexOf('id: "services"'));
+    const hudumaGroup = sidebarDefinition.slice(sidebarDefinition.indexOf('id: "services"'), sidebarDefinition.indexOf('id: "spiritual"'));
+
+    for (const route of ["/portal", "/portal/today", "/portal/my-parish"]) {
+      expect(primaryGroup).toContain(`url: "${route}"`);
+    }
+
+    for (const route of ["/portal/jumuiya", "/portal/give", "/portal/mass-intentions", "/portal/announcements"]) {
+      expect(primaryGroup).not.toContain(`url: "${route}"`);
+      expect(hudumaGroup).toContain(`url: "${route}"`);
+    }
+
+    expect(hudumaGroup).toContain('titleKey: "Jumuiya Yangu"');
+  });
+
   it("preserves feature gating and omits a dead generic livestream link", () => {
     expect(layout).toContain("visibleDesktopSidebarGroups");
     expect(layout).toContain("!item.featureKey || getFeatureState(item.featureKey).visible");
@@ -164,9 +184,10 @@ describe("member desktop sidebar Wave 1", () => {
     expect(layout).toContain('url: "/portal/radio"');
   });
 
-  it("keeps the existing mobile bottom navigation contract unchanged", () => {
-    expect(layout).toContain('style={{ gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}');
-    expect(layout).toContain('["/portal", "/portal/give", "/portal/mass-intentions", "/portal/announcements", "/portal/services"]');
+  it("keeps the intended four-item mobile bottom navigation contract", () => {
+    expect(layout).toContain('const MOBILE_BOTTOM_PRIMARY_URLS = ["/portal", "/portal/today", "/portal/my-parish", "/portal/services"];');
+    expect(layout).toContain('style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}');
+    expect(layout).not.toContain('["/portal", "/portal/give", "/portal/mass-intentions", "/portal/announcements", "/portal/services"]');
     expect(layout).toContain('{ titleKey: "Zaidi", url: "/portal/services", icon: PortalIcon, featureKey: null }');
     expect(layout).not.toContain('{ titleKey: "Huduma", url: "/portal/services", icon: PortalIcon, featureKey: null }');
     expect(layout).toContain("lg:hidden");

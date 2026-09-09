@@ -57,13 +57,19 @@ export const memberServiceRegistry: MemberServiceDefinition[] = [
   { id: "dashboard", path: "/portal/dashboard", label: "Historia Yangu", description: "Historia na wasifu", group: "giving", iconKey: "giving", featureKey: null, ordinaryMemberAllowed: true, showInServices: false, backTitle: "Historia Yangu" },
 ];
 
+function normalizeMemberServicePath(pathname: string) {
+  return (pathname.replace(/\/$/, "") || "/").replace(/^\/member(?=\/|$)/, "/portal");
+}
+
 function pathMatches(pathname: string, path: string) {
   return pathname === path || (path !== "/portal" && pathname.startsWith(`${path}/`));
 }
 
 export function getMemberServiceForPath(pathname: string) {
+  const normalizedPathname = normalizeMemberServicePath(pathname);
   return memberServiceRegistry.find((service) =>
-    pathMatches(pathname, service.path) || service.matchPrefixes?.some((prefix) => pathname === prefix || pathname.startsWith(prefix)),
+    pathMatches(normalizedPathname, service.path) ||
+    service.matchPrefixes?.some((prefix) => normalizedPathname === prefix || normalizedPathname.startsWith(prefix)),
   ) ?? null;
 }
 

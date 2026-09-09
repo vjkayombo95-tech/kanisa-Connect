@@ -23,10 +23,10 @@ describe("Wave 2 daily-life discovery", () => {
     }
   });
 
-  it("preserves the four primary actions and unchanged five-item bottom nav", () => {
+  it("preserves the four primary actions and promotes daily-life routes into the four-item bottom nav", () => {
     expect((home.match(/id: "(?:give|mass|announcements|history)"/g) ?? [])).toHaveLength(4);
-    expect(layout).toContain('style={{ gridTemplateColumns: "repeat(5, minmax(0, 1fr))" }}');
-    expect(layout).not.toContain('["/portal", "/portal/today"');
+    expect(layout).toContain('style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}');
+    expect(layout).toContain('const MOBILE_BOTTOM_PRIMARY_URLS = ["/portal", "/portal/today", "/portal/my-parish", "/portal/services"];');
   });
 
   it("keeps internal discovery SPA-native for persistent media", () => {

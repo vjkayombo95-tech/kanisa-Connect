@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { memberServiceRegistry } from "@/lib/member-service-registry";
+import { getMemberServiceForPath, isOrdinaryMemberPathAllowed, memberServiceRegistry } from "@/lib/member-service-registry";
 
 const services = readFileSync(join(process.cwd(), "src/pages/portal/MemberServicesPage.tsx"), "utf8");
 const registry = readFileSync(join(process.cwd(), "src/lib/member-service-registry.ts"), "utf8");
@@ -55,6 +55,20 @@ describe("production Wave 1 member services", () => {
     expect(registry).not.toContain('path: "/portal/channels", label:');
     expect(registry).not.toContain('path: "/portal/community-help", label:');
     expect(registry).not.toContain('path: "/portal/event-requests", label:');
+  });
+
+  it("preserves compatibility lookup for legacy member route aliases", () => {
+    for (const [alias, canonicalId] of [
+      ["/member", "home"],
+      ["/member/today", "today"],
+      ["/member/my-parish", "my-parish"],
+      ["/member/give", "give"],
+      ["/member/mass-intentions", "mass-intentions"],
+      ["/member/announcements", "announcements"],
+    ]) {
+      expect(getMemberServiceForPath(alias)?.id).toBe(canonicalId);
+      expect(isOrdinaryMemberPathAllowed(alias)).toBe(true);
+    }
   });
 
   it("keeps feature gating after eligibility and search cannot reveal hidden services", () => {
