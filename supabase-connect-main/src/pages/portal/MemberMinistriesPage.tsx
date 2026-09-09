@@ -36,6 +36,7 @@ function MinistryCard({ ministry, memberId }: { ministry: MemberMinistry; member
   const { churchId } = useAuth();
   const { toast } = useToast();
   const leaveRequested = useRef(false);
+  const description = ministry.description?.trim();
   const mutation = useMutation({
     mutationFn: () => {
       if (!churchId) throw new Error("Parish context is unavailable.");
@@ -50,7 +51,13 @@ function MinistryCard({ ministry, memberId }: { ministry: MemberMinistry; member
         description: ministry.joined ? "Uanachama wako umesasishwa." : "Parokia itakagua ombi lako.",
       });
     },
-    onError: (error: Error) => toast({ title: "Hatukuweza kusasisha huduma", description: error.message, variant: "destructive" }),
+    onError: () => toast({
+      title: ministry.joined ? "Ombi halijakamilika" : "Ombi halijatumwa",
+      description: ministry.joined
+        ? "Hatukuweza kukamilisha ombi lako kwa sasa. Jaribu tena."
+        : "Hatukuweza kutuma ombi lako kwa sasa. Jaribu tena.",
+      variant: "destructive",
+    }),
     onSettled: () => { leaveRequested.current = false; },
   });
 
@@ -68,7 +75,11 @@ function MinistryCard({ ministry, memberId }: { ministry: MemberMinistry; member
             <h2 className="min-w-0 break-words text-lg font-bold">{ministry.name}</h2>
             {ministry.joined ? <Badge>Umejiunga</Badge> : ministry.requestPending ? <Badge variant="secondary">Ombi linasubiri</Badge> : null}
           </div>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">{ministry.description || "Huduma ya parokia inayokukaribisha kushiriki."}</p>
+          {description ? (
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
+          ) : (
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Maelezo bado hayajawekwa.</p>
+          )}
           <p className="mt-3 text-xs font-semibold text-muted-foreground">Wanachama {ministry.memberCount}</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -131,6 +142,15 @@ export default function MemberMinistriesPage() {
     .filter((ministry) => !ministry.joined)
     .sort((left, right) => Number(right.requestPending) - Number(left.requestPending));
   const selected = ministryId ? (ministries.data ?? []).find(({ id }) => id === ministryId) : null;
+  const detailUnavailable = Boolean(ministryId && ministries.data && !selected);
+  const readFailed = member.isError || ministries.isError;
+  const retrying = member.isFetching || ministries.isFetching;
+  const retryLoad = async () => {
+    const retries: Array<Promise<unknown>> = [];
+    if (member.isError) retries.push(member.refetch());
+    if (ministries.isError) retries.push(ministries.refetch());
+    await Promise.all(retries);
+  };
 
   if (member.isLoading || ministries.isLoading) return <div className="mx-auto max-w-5xl space-y-4 px-4 py-6"><Skeleton className="h-32 rounded-[24px]" /><Skeleton className="h-48 rounded-[24px]" /></div>;
 
@@ -142,15 +162,34 @@ export default function MemberMinistriesPage() {
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Tafuta huduma, soma maelezo yake, na utume ombi la kujiunga.</p>
       </header>
 
-      {member.isError || ministries.isError ? <Card className="border-destructive/30"><CardContent className="p-5 text-sm text-destructive">Huduma hazikuweza kupakiwa. Jaribu tena baadaye.</CardContent></Card> : null}
-      {!member.isError && !member.data ? <Card><CardContent className="p-5 text-sm text-muted-foreground">Wasifu wa mshirika haujapatikana kwa parokia hii.</CardContent></Card> : null}
+      {readFailed ? (
+        <Card className="border-destructive/30">
+          <CardContent className="flex flex-col gap-4 p-5 text-sm text-destructive sm:flex-row sm:items-center sm:justify-between">
+            <p>Huduma hazikuweza kupakiwa kwa sasa. Jaribu tena.</p>
+            <Button type="button" variant="outline" className="min-h-11 rounded-xl" onClick={retryLoad} disabled={retrying}>
+              {retrying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Jaribu tena
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+      {!readFailed && !member.data ? <Card><CardContent className="p-5 text-sm text-muted-foreground">Wasifu wa mshirika haujapatikana kwa parokia hii.</CardContent></Card> : null}
 
-      {selected && member.data ? (
+      {!readFailed && detailUnavailable ? (
+        <Card>
+          <CardContent className="space-y-4 p-6 text-sm text-muted-foreground">
+            <p className="font-medium text-foreground">Huduma hii haipatikani.</p>
+            <Button asChild variant="outline" className="min-h-11 rounded-xl">
+              <AppLink to="/portal/ministries">Rudi kwenye huduma zote</AppLink>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : !readFailed && selected && member.data ? (
         <section className="space-y-4">
           <Button asChild variant="ghost"><AppLink to="/portal/ministries">Huduma zote</AppLink></Button>
           <MinistryCard ministry={selected} memberId={member.data.id} />
         </section>
-      ) : member.data ? (
+      ) : !readFailed && member.data ? (
         <section className="space-y-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
