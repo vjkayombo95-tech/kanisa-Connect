@@ -123,30 +123,34 @@ function useMemberCommunity(member: any | null | undefined) {
       let community: any | null = null;
 
       if (member.community_id) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("communities")
-          .select("id, name, description, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id")
+          .select("id, name, description, church_id, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id")
           .eq("id", member.community_id)
+          .eq("church_id", member.church_id)
           .maybeSingle();
+        if (error) throw error;
 
         community = data ?? null;
       }
 
       if (!community) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("member_communities")
-          .select("community_id, communities(id, name, description, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id)")
+          .select("community_id, communities(id, name, description, church_id, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id)")
           .eq("member_id", member.id)
           .limit(1)
           .maybeSingle();
+        if (error) throw error;
 
-        community = (data?.communities as any) ?? null;
+        const linkedCommunity = (data?.communities as any) ?? null;
+        community = linkedCommunity?.church_id === member.church_id ? linkedCommunity : null;
       }
 
       if (!community && member.church_id) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("communities")
-          .select("id, name, description, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id")
+          .select("id, name, description, church_id, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id")
           .eq("church_id", member.church_id)
           .or([
             `mwenyekiti_id.eq.${member.id}`,
@@ -156,6 +160,7 @@ function useMemberCommunity(member: any | null | undefined) {
           ].join(","))
           .limit(1)
           .maybeSingle();
+        if (error) throw error;
 
         community = data ?? null;
       }
@@ -166,7 +171,13 @@ function useMemberCommunity(member: any | null | undefined) {
       let leaderName: string | null = null;
       const leaderId = community?.mwenyekiti_id;
       if (leaderId) {
-        const { data: ldr } = await supabase.from("members").select("full_name").eq("id", leaderId).maybeSingle();
+        const { data: ldr, error } = await supabase
+          .from("members")
+          .select("full_name")
+          .eq("id", leaderId)
+          .eq("church_id", member.church_id)
+          .maybeSingle();
+        if (error) throw error;
         leaderName = ldr?.full_name ?? null;
       }
       return { ...community, leaderName };
@@ -390,19 +401,6 @@ function useMemberHelpRequests(memberId: string | undefined, enabled = true) {
   });
 }
 
-function useCommunities(churchId: string | null, enabled = true) {
-  return useQuery({
-    queryKey: ["communities-list", churchId],
-    queryFn: async () => {
-      if (!churchId) return [];
-      const { data } = await supabase.from("communities").select("id, name").eq("church_id", churchId).order("name");
-      return data ?? [];
-    },
-    enabled: enabled && !!churchId,
-    ...DASHBOARD_QUERY_OPTIONS,
-  });
-}
-
 function useParticipationAndLeadershipProfile({
   member,
   ministries,
@@ -583,7 +581,13 @@ export default function PortalDashboard() {
   const [page, setPage] = useState(0);
   const [prayerPage, setPrayerPage] = useState(0);
   const [massIntentionPage, setMassIntentionPage] = useState(0);
-  const { data: community } = useMemberCommunity(member);
+  const {
+    data: community,
+    isLoading: communityLoading,
+    isError: communityError,
+    isFetching: communityFetching,
+    refetch: retryCommunity,
+  } = useMemberCommunity(member);
   const { data: ministries = [] } = useMemberMinistries(member);
   const { data: family } = useMemberFamily(member?.id);
   const { data: church } = useChurchSummary(churchId);
@@ -606,7 +610,6 @@ export default function PortalDashboard() {
   const { data: massIntentionPageData = { records: [], totalCount: 0 } } = useMemberMassIntentions(member?.id, loadDashboardDetails, activeRecordPreservation, massIntentionPage);
   const massIntentions = massIntentionPageData.records;
   const { data: helpRequests = [] } = useMemberHelpRequests(member?.id, loadDashboardDetails);
-  const { data: communities = [] } = useCommunities(churchId, loadDashboardDetails);
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -765,12 +768,6 @@ export default function PortalDashboard() {
     return { total, todayTotal, monthTotal, yearTotal, lastMonthTotal, count: visibleContributions.length, lastContrib, categoryBreakdown, monthlyTrend };
   }, [visibleContributions, t]);
 
-  const handleRequestAssignment = useCallback(() => {
-    toast({
-      title: "Assignment request noted",
-      description: "Please contact your church administrator so they can assign you to a Jumuiya.",
-    });
-  }, [toast]);
   const pledgeSummary = useMemo(() => pledges.reduce(
     (acc: { pledged: number; paid: number; balance: number }, pledge: any) => ({
       pledged: acc.pledged + Number(pledge.amount_pledged ?? 0),
@@ -1081,10 +1078,13 @@ export default function PortalDashboard() {
             <div className="space-y-6">
               <MyParticipationCard
                 community={community}
+                communityLoading={communityLoading}
+                communityError={communityError}
+                communityRetrying={communityFetching}
+                onRetryCommunity={() => retryCommunity()}
                 ministries={ministries}
                 family={family}
                 roleLabels={roleProfile?.roleLabels ?? ["Member"]}
-                onRequestAssignment={handleRequestAssignment}
               />
               <LeadershipPanelCard leadershipScopes={roleProfile?.leadershipScopes ?? []} />
             </div>
@@ -1571,72 +1571,6 @@ export default function PortalDashboard() {
 }
 
 // ── Sub Components ──
-function JumuiyaInvolvementCard({ member, community, ministries, family, communities, churchId, queryClient }: any) {
-  const [editing, setEditing] = useState(false);
-  const [selectedCommunity, setSelectedCommunity] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    if (!member?.id || !selectedCommunity) return;
-    setSaving(true);
-    try {
-      // Remove existing community membership
-      await supabase.from("member_communities").delete().eq("member_id", member.id);
-      // Add new
-      if (selectedCommunity !== "none") {
-        await supabase.from("member_communities").insert({ community_id: selectedCommunity, member_id: member.id });
-      }
-      queryClient.invalidateQueries({ queryKey: ["my-community"] });
-      setEditing(false);
-    } catch { /* ignore */ }
-    setSaving(false);
-  };
-
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2"><Church className="h-4 w-4 text-primary" /> Church Involvement</CardTitle>
-          {member && !editing && (
-            <Button variant="ghost" size="sm" onClick={() => { setSelectedCommunity(community?.id || ""); setEditing(true); }}>
-              <Pencil className="h-3.5 w-3.5 mr-1" /> Edit Jumuiya
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-1">
-        {editing ? (
-          <div className="space-y-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
-            <Label className="text-xs">Select your Jumuiya</Label>
-            <Select value={selectedCommunity} onValueChange={setSelectedCommunity}>
-              <SelectTrigger><SelectValue placeholder="Choose Jumuiya" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                {communities.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={handleSave} disabled={saving}>
-                {saving && <Loader2 className="mr-1 h-3 w-3 animate-spin" />} Save
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <InfoRow label="Jumuiya / Community" value={community?.name} icon={Users} />
-            <InfoRow label="Jumuiya Leader" value={community?.leaderName} icon={User} />
-          </>
-        )}
-        <InfoRow label="Ministries" value={ministries?.length ? ministries.map((ministry: any) => ministry.name).join(", ") : null} icon={Heart} />
-        <InfoRow label="Ministry Leaders" value={ministries?.length ? ministries.map((ministry: any) => ministry.leaderName).filter(Boolean).join(", ") : null} icon={User} />
-        <InfoRow label="Family" value={family?.name} icon={Users} />
-        <InfoRow label="Family Role" value={family?.role ? family.role.charAt(0).toUpperCase() + family.role.slice(1) : null} icon={Shield} />
-      </CardContent>
-    </Card>
-  );
-}
-
 function ParticipationItem({
   label,
   value,
@@ -1672,18 +1606,56 @@ function ParticipationItem({
 
 function MyParticipationCard({
   community,
+  communityLoading,
+  communityError,
+  communityRetrying,
+  onRetryCommunity,
   ministries,
   family,
   roleLabels,
-  onRequestAssignment,
 }: {
   community: any;
+  communityLoading: boolean;
+  communityError: boolean;
+  communityRetrying: boolean;
+  onRetryCommunity: () => void;
   ministries: any[];
   family: any;
   roleLabels: string[];
-  onRequestAssignment: () => void;
 }) {
   const personalRole = roleLabels.length > 0 ? roleLabels.join(", ") : "Member";
+  const jumuiyaItem = communityLoading ? (
+    <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-background/50 p-3">
+      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+        <Users className="h-4 w-4 text-primary" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">Jumuiya / Community</p>
+        <p className="mt-1 text-sm text-muted-foreground">Tunaangalia taarifa ya Jumuiya yako...</p>
+      </div>
+    </div>
+  ) : communityError ? (
+    <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-destructive/10">
+        <Users className="h-4 w-4 text-destructive" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">Jumuiya / Community</p>
+        <p className="mt-1 text-sm text-muted-foreground">Taarifa ya Jumuiya haikuweza kupakiwa kwa sasa.</p>
+        <Button size="sm" variant="outline" className="mt-3" onClick={onRetryCommunity} disabled={communityRetrying}>
+          {communityRetrying ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
+          Jaribu tena
+        </Button>
+      </div>
+    </div>
+  ) : (
+    <ParticipationItem
+      label="Jumuiya / Community"
+      value={community?.name ?? null}
+      emptyMessage="Jumuiya yako bado haijawekwa. Wasiliana na ofisi ya parokia ili kusasisha taarifa hii."
+      icon={Users}
+    />
+  );
 
   return (
     <Card>
@@ -1695,17 +1667,7 @@ function MyParticipationCard({
         <p className="text-sm text-muted-foreground">Member view only. Hapa unaona ushiriki wako binafsi bila kuchanganya data za usimamizi.</p>
       </CardHeader>
       <CardContent className="space-y-3">
-        <ParticipationItem
-          label="Jumuiya / Community"
-          value={community?.name ?? null}
-          emptyMessage="You are not assigned to a Jumuiya yet"
-          icon={Users}
-          action={
-            <Button size="sm" variant="outline" onClick={onRequestAssignment}>
-              Request Assignment
-            </Button>
-          }
-        />
+        {jumuiyaItem}
         <ParticipationItem
           label="Ministries"
           value={ministries.length ? ministries.map((ministry: any) => ministry.name).join(", ") : null}
