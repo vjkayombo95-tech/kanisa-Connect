@@ -1,4 +1,13 @@
-const PRIMARY_MEMBER_ROUTES = new Set(["/portal", "/portal/services", "/member", "/member/services"]);
+const PRIMARY_MEMBER_ROUTES = new Set([
+  "/portal",
+  "/portal/today",
+  "/portal/my-parish",
+  "/portal/services",
+  "/member",
+  "/member/today",
+  "/member/my-parish",
+  "/member/services",
+]);
 
 export function isPrimaryMemberRoute(pathname: string) {
   return PRIMARY_MEMBER_ROUTES.has(pathname.replace(/\/$/, "") || "/");
