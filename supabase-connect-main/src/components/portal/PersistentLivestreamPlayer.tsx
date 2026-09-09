@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Maximize2, X } from "lucide-react";
 
 import { usePersistentLivestream } from "@/contexts/PersistentLivestreamContext";
-import { getYouTubeEmbedUrl } from "@/lib/church-livestreams";
+import { getYouTubeEmbedUrl, presentation } from "@/lib/church-livestreams";
 
 export function PersistentLivestreamPlayer() {
   const player = usePersistentLivestream();
@@ -18,6 +18,7 @@ export function PersistentLivestreamPlayer() {
     && embed
     && player.featureEnabled
     && player.stream.churchId === player.churchId
+    && presentation(player.stream)
   );
 
   useLayoutEffect(() => {
