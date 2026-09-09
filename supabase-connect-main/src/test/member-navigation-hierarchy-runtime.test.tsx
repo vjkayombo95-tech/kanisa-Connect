@@ -51,15 +51,19 @@ vi.mock("react-i18next", () => ({
 import { PortalLayout } from "@/components/portal/PortalLayout";
 import MemberServicesPage from "@/pages/portal/MemberServicesPage";
 
-function PortalApplication({ initialPath = "/portal" }: { initialPath?: string }) {
+function PortalApplication({ basePath = "/portal", initialPath = basePath }: { basePath?: "/portal" | "/member"; initialPath?: string }) {
   return (
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
-        <Route path="/portal" element={<PortalLayout />}>
+        <Route path={basePath} element={<PortalLayout />}>
           <Route index element={<div data-testid="page">Nyumbani page</div>} />
           <Route path="today" element={<div data-testid="page">Leo page</div>} />
           <Route path="my-parish" element={<div data-testid="page">Parokia Yangu page</div>} />
           <Route path="services" element={<div data-testid="page">Zaidi page</div>} />
+          <Route path="give" element={<div data-testid="page">Michango page</div>} />
+          <Route path="mass-intentions" element={<div data-testid="page">Nia page</div>} />
+          <Route path="announcements" element={<div data-testid="page">Matangazo page</div>} />
+          <Route path="jumuiya" element={<div data-testid="page">Jumuiya page</div>} />
         </Route>
       </Routes>
     </MemoryRouter>
@@ -82,6 +86,12 @@ function bottomNav(host: HTMLElement) {
 
 function linksFrom(nav: HTMLElement) {
   return [...nav.querySelectorAll("a")];
+}
+
+function activeBottomLabels(host: HTMLElement) {
+  return linksFrom(bottomNav(host))
+    .filter((link) => link.className.includes("bg-primary/12"))
+    .map((link) => link.textContent);
 }
 
 describe("Wave 14 member navigation hierarchy runtime", () => {
@@ -128,6 +138,32 @@ describe("Wave 14 member navigation hierarchy runtime", () => {
 
     act(() => linksFrom(bottomNav(mounted.host))[3].click());
     expect(mounted.host.querySelector('[data-testid="page"]')).toHaveTextContent("Zaidi page");
+  });
+
+  it.each([
+    ["/portal", "Nyumbani"],
+    ["/portal/today", "Leo"],
+    ["/portal/my-parish", "Parokia Yangu"],
+    ["/portal/services", "Zaidi"],
+    ["/portal/give", "Zaidi"],
+    ["/portal/mass-intentions", "Zaidi"],
+    ["/portal/announcements", "Zaidi"],
+    ["/portal/jumuiya", "Zaidi"],
+  ])("marks only %s active in the bottom nav", (path, expectedLabel) => {
+    mounted = render(<PortalApplication initialPath={path} />);
+
+    expect(activeBottomLabels(mounted.host)).toEqual([expectedLabel]);
+  });
+
+  it.each([
+    ["/member", "Nyumbani"],
+    ["/member/today", "Leo"],
+    ["/member/my-parish", "Parokia Yangu"],
+    ["/member/give", "Zaidi"],
+  ])("preserves bottom-nav active semantics for %s aliases", (path, expectedLabel) => {
+    mounted = render(<PortalApplication basePath="/member" initialPath={path} />);
+
+    expect(activeBottomLabels(mounted.host)).toEqual([expectedLabel]);
   });
 
   it("keeps removed bottom-nav tasks discoverable in the actual Zaidi services page", () => {

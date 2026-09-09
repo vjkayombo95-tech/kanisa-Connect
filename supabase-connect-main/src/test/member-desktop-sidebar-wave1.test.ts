@@ -185,8 +185,8 @@ describe("member desktop sidebar Wave 1", () => {
   });
 
   it("keeps the intended four-item mobile bottom navigation contract", () => {
+    expect(layout).toContain('const MOBILE_BOTTOM_PRIMARY_URLS = ["/portal", "/portal/today", "/portal/my-parish", "/portal/services"];');
     expect(layout).toContain('style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}');
-    expect(layout).toContain('["/portal", "/portal/today", "/portal/my-parish", "/portal/services"]');
     expect(layout).not.toContain('["/portal", "/portal/give", "/portal/mass-intentions", "/portal/announcements", "/portal/services"]');
     expect(layout).toContain('{ titleKey: "Zaidi", url: "/portal/services", icon: PortalIcon, featureKey: null }');
     expect(layout).not.toContain('{ titleKey: "Huduma", url: "/portal/services", icon: PortalIcon, featureKey: null }');
