@@ -19,6 +19,7 @@ export function getMemberBackFallback(pathname: string) {
   if (/^\/(?:portal|member)\/bible\/[^/]+$/.test(pathname)) return "/portal/bible";
   if (/^\/(?:portal|member)\/library\/[^/]+$/.test(pathname)) return "/member/library";
   if (/^\/(?:portal|member)\/contribution-receipt\/[^/]+$/.test(pathname)) return "/portal/contribution-history";
+  if (/^\/(?:portal|member)\/ministries\/[^/]+$/.test(pathname)) return "/portal/ministries";
   return "/portal/services";
 }
 

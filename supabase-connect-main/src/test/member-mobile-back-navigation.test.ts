@@ -50,5 +50,6 @@ describe("production member mobile back navigation", () => {
     expect(getMemberBackFallback("/portal/bible/john/chapter/3")).toBe("/portal/bible/john");
     expect(getMemberBackFallback("/portal/bible/john")).toBe("/portal/bible");
     expect(getMemberBackFallback("/member/library/saint-peter")).toBe("/member/library");
+    expect(getMemberBackFallback("/portal/ministries/ministry-1")).toBe("/portal/ministries");
   });
 });
