@@ -1,6 +1,8 @@
 -- Restore chat reaction persistence after the production baseline omitted the
 -- archived table contract. Policies use the current channel visibility helper.
 
+begin;
+
 create table if not exists public.chat_message_reactions (
   message_id uuid not null references public.chat_messages(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -128,7 +130,12 @@ begin
     where namespace_row.nspname = 'public'
       and table_row.relname = 'chat_message_reactions'
       and constraint_row.contype = 'c'
-      and pg_get_constraintdef(constraint_row.oid) = 'CHECK ((char_length(emoji) >= 1) AND (char_length(emoji) <= 16))'
+      and regexp_replace(
+        lower(pg_get_expr(constraint_row.conbin, constraint_row.conrelid)),
+        '[[:space:]()]+',
+        '',
+        'g'
+      ) = 'char_lengthemoji>=1andchar_lengthemoji<=16'
   ) then
     raise exception 'chat_message_reactions.emoji check constraint contract mismatch';
   end if;
@@ -140,10 +147,23 @@ create index if not exists idx_chat_message_reactions_message_id
 
 alter table public.chat_message_reactions enable row level security;
 
-drop policy if exists "Users can view chat reactions" on public.chat_message_reactions;
-drop policy if exists "Users can add chat reactions" on public.chat_message_reactions;
-drop policy if exists "Users can update chat reactions" on public.chat_message_reactions;
-drop policy if exists "Users can delete their chat reactions" on public.chat_message_reactions;
+do $$
+declare
+  policy_record record;
+begin
+  for policy_record in
+    select policyname
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'chat_message_reactions'
+  loop
+    execute format(
+      'drop policy if exists %I on public.chat_message_reactions',
+      policy_record.policyname
+    );
+  end loop;
+end;
+$$;
 
 create policy "Users can view chat reactions"
 on public.chat_message_reactions
@@ -197,4 +217,7 @@ using (
   user_id = auth.uid()
 );
 
+revoke all on public.chat_message_reactions from anon;
 grant select, insert, update, delete on public.chat_message_reactions to authenticated;
+
+commit;

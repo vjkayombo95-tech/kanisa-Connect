@@ -27,6 +27,11 @@ begin
 end;
 $$;
 
+create or replace function pg_temp.normalized_emoji_check(_expression text)
+returns text language sql immutable as $$
+  select regexp_replace(lower(_expression), '[[:space:]()]+', '', 'g');
+$$;
+
 insert into auth.users (id, email, aud, role, created_at, updated_at) values
   ('71000000-0000-4000-8000-000000000001', 'reaction-creator@test.invalid', 'authenticated', 'authenticated', now(), now()),
   ('71000000-0000-4000-8000-000000000002', 'reaction-member@test.invalid', 'authenticated', 'authenticated', now(), now()),
@@ -72,6 +77,26 @@ insert into public.chat_channels (
   '71000000-0000-4000-8000-000000000004'
 );
 
+insert into public.chat_channels (
+  id,
+  church_id,
+  name,
+  description,
+  owner_scope,
+  audience_type,
+  metadata,
+  created_by
+) values (
+  '75000000-0000-4000-8000-000000000002',
+  '72000000-0000-4000-8000-000000000001',
+  'Reaction Unauthorized Channel',
+  'A private channel for reaction update tests',
+  'church_admin',
+  'admin_roles',
+  '{}',
+  '71000000-0000-4000-8000-000000000004'
+);
+
 insert into public.chat_channel_members (channel_id, user_id, member_id) values
   ('75000000-0000-4000-8000-000000000001', '71000000-0000-4000-8000-000000000001', '73000000-0000-4000-8000-000000000001'),
   ('75000000-0000-4000-8000-000000000001', '71000000-0000-4000-8000-000000000002', '73000000-0000-4000-8000-000000000002');
@@ -88,6 +113,20 @@ insert into public.chat_messages (
   '71000000-0000-4000-8000-000000000001',
   '73000000-0000-4000-8000-000000000001',
   'Private reaction message'
+);
+
+insert into public.chat_messages (
+  id,
+  channel_id,
+  sender_user_id,
+  sender_member_id,
+  body
+) values (
+  '76000000-0000-4000-8000-000000000002',
+  '75000000-0000-4000-8000-000000000002',
+  '71000000-0000-4000-8000-000000000004',
+  '73000000-0000-4000-8000-000000000004',
+  'Unauthorized target message'
 );
 
 insert into public.chat_message_reactions (message_id, user_id, emoji) values
@@ -129,6 +168,23 @@ select pg_temp.assert_true(
       and emoji = 'thumb'
   ),
   'own reaction can be updated/replaced'
+);
+select pg_temp.assert_raises(
+  $$update public.chat_message_reactions
+    set message_id = '76000000-0000-4000-8000-000000000002'
+    where message_id = '76000000-0000-4000-8000-000000000001'
+      and user_id = '71000000-0000-4000-8000-000000000002'$$,
+  'cannot move own reaction to unauthorized channel message'
+);
+select pg_temp.assert_true(
+  exists (
+    select 1
+    from public.chat_message_reactions
+    where message_id = '76000000-0000-4000-8000-000000000001'
+      and user_id = '71000000-0000-4000-8000-000000000002'
+      and emoji = 'thumb'
+  ),
+  'failed unauthorized message move leaves own reaction unchanged'
 );
 update public.chat_message_reactions
 set emoji = 'fire'
@@ -213,6 +269,41 @@ select pg_temp.assert_true(
 );
 
 reset role;
+
+select pg_temp.assert_true(
+  exists (
+    select 1
+    from pg_constraint constraint_row
+    join pg_class table_row on table_row.oid = constraint_row.conrelid
+    join pg_namespace namespace_row on namespace_row.oid = table_row.relnamespace
+    where namespace_row.nspname = 'public'
+      and table_row.relname = 'chat_message_reactions'
+      and constraint_row.contype = 'c'
+      and pg_temp.normalized_emoji_check(pg_get_expr(constraint_row.conbin, constraint_row.conrelid)) =
+        'char_lengthemoji>=1andchar_lengthemoji<=16'
+  ),
+  'emoji check accepts PostgreSQL canonical expression form'
+);
+select pg_temp.assert_true(
+  pg_temp.normalized_emoji_check('((char_length(emoji) >= 1) AND (char_length(emoji) <= 16))') =
+    'char_lengthemoji>=1andchar_lengthemoji<=16',
+  'emoji check normalizer accepts observed staging canonical expression'
+);
+select pg_temp.assert_true(
+  pg_temp.normalized_emoji_check('((char_length(emoji) >= 1) AND (char_length(emoji) <= 15))') <>
+    'char_lengthemoji>=1andchar_lengthemoji<=16',
+  'emoji check normalizer rejects wrong maximum length'
+);
+select pg_temp.assert_true(
+  pg_temp.normalized_emoji_check('((char_length(emoji) >= 0) AND (char_length(emoji) <= 16))') <>
+    'char_lengthemoji>=1andchar_lengthemoji<=16',
+  'emoji check normalizer rejects empty emoji allowance'
+);
+select pg_temp.assert_true(
+  pg_temp.normalized_emoji_check('(emoji is not null)') <>
+    'char_lengthemoji>=1andchar_lengthemoji<=16',
+  'emoji check normalizer rejects unrelated check expression'
+);
 
 select pg_temp.assert_true(
   not exists (
