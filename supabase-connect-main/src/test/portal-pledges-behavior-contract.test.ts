@@ -14,6 +14,10 @@ describe("PortalPledges member behavior contract", () => {
   const pledgeHelpers = read("src/lib/pledges.ts");
   const pledgePaymentDialog = read("src/components/pledges/PledgePaymentDialog.tsx");
   const productionBaseline = read("supabase/migrations/20260622000000_production_baseline.sql");
+  const pledgePaymentIsolationMigration = read(
+    "supabase/migrations/20260913130000_harden_pledge_payment_select_rls.sql",
+  );
+  const pledgePaymentIsolationSql = read("supabase/tests/pledge_payment_financial_isolation.sql");
 
   it("keeps the member pledges route wired to PortalPledges and the pledges feature key", () => {
     expect(memberRoutes).toContain('const PortalPledges = lazy(() => import("@/pages/portal/PortalPledges"))');
@@ -133,6 +137,24 @@ describe("PortalPledges member behavior contract", () => {
     expect(portalPledges).toContain("Salio la ahadi litasasishwa baada ya msimamizi wa kanisa au padre kuthibitisha malipo.");
     expect(pledgePaymentDialog).toContain("missingEvidence");
     expect(pledgePaymentDialog).toContain("Submit for Approval");
+  });
+
+  it("removes broad same-church pledge payment reads while preserving authorized payment access", () => {
+    expect(pledgePaymentIsolationMigration).toContain(
+      'drop policy if exists "payments same church" on public.pledge_payments',
+    );
+    expect(pledgePaymentIsolationMigration).toContain('"Users can view accessible pledge payments"');
+
+    expect(pledgePaymentIsolationSql).toContain("owner can access own pledge payment");
+    expect(pledgePaymentIsolationSql).toContain(
+      "unrelated same-church member cannot access another member pledge payment",
+    );
+    expect(pledgePaymentIsolationSql).toContain("cross-church member cannot access pledge payment");
+    expect(pledgePaymentIsolationSql).toContain("authorized church admin can access pledge payment");
+    expect(pledgePaymentIsolationSql).toContain("authorized community leader can access pledge payment");
+    expect(pledgePaymentIsolationSql).toContain(
+      "no broad same-church pledge payment select policy remains",
+    );
   });
 
   it("keeps create pledge success feedback, reset, dialog close, and invalidations", () => {
