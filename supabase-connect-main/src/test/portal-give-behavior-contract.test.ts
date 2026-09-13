@@ -33,6 +33,11 @@ describe("PortalGive Michango behavior contract", () => {
     expect(portalGive).toContain("p_payment_reference: paymentRef || null");
   });
 
+  it("exposes contribution history navigation from the giving page", () => {
+    expect(portalGive).toContain('import { Link } from "react-router-dom"');
+    expect(portalGive).toContain('<Link to="/portal/contribution-history">Historia ya Michango</Link>');
+  });
+
   it("submits through the contribution RPC and protects payload field names", () => {
     expect(portalGive).toContain('supabase.rpc("record_contribution_with_key"');
     for (const field of [

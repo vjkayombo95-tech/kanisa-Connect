@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -159,9 +160,9 @@ export default function PortalGive() {
             <h1 className="mt-1 text-3xl font-bold font-serif tracking-normal text-foreground sm:text-4xl">Michango</h1>
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">Rekodi mchango wako kwa parokia.</p>
           </div>
-          <div className="w-fit max-w-full rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
-            Taarifa ya kumbukumbu
-          </div>
+          <Button asChild variant="ghost" className="min-h-10 w-fit max-w-full rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/15 hover:text-primary">
+            <Link to="/portal/contribution-history">Historia ya Michango</Link>
+          </Button>
         </div>
 
         <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
