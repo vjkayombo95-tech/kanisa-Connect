@@ -211,7 +211,7 @@ export function ChannelWorkspace({
       const profileMap = new Map((profiles ?? []).map((profile: any) => [profile.id, profile.full_name || "User"]));
       const { data: reactions, error: reactionsError } = messageIds.length
         ? await supabase
-            .from("chat_message_reactions" as never)
+            .from("chat_message_reactions")
             .select("message_id, user_id, emoji")
             .in("message_id", messageIds)
         : { data: [], error: null };
@@ -440,7 +440,7 @@ export function ChannelWorkspace({
     mutationFn: async ({ messageId, emoji, reacted }: { messageId: string; emoji: string; reacted: boolean }) => {
       if (reacted) {
         const { error } = await supabase
-          .from("chat_message_reactions" as never)
+          .from("chat_message_reactions")
           .delete()
           .eq("message_id", messageId)
           .eq("user_id", userId);
@@ -450,12 +450,12 @@ export function ChannelWorkspace({
       }
 
       const { error } = await supabase
-        .from("chat_message_reactions" as never)
+        .from("chat_message_reactions")
         .upsert({
           message_id: messageId,
           user_id: userId,
           emoji,
-        } as never, { onConflict: "message_id,user_id" });
+        }, { onConflict: "message_id,user_id" });
 
       if (error) throw error;
     },
