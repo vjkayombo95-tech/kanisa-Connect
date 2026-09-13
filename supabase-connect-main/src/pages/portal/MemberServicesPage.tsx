@@ -50,6 +50,7 @@ const servicePresentationGroup: Record<string, PresentationGroupId> = {
   calendar: "parish-services",
   events: "parish-services",
   announcements: "parish-services",
+  channels: "parish-services",
   jumuiya: "parish-services",
   ministries: "parish-services",
   "prayer-requests": "parish-services",

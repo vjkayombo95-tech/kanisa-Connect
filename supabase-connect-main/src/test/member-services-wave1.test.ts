@@ -52,7 +52,10 @@ describe("production Wave 1 member services", () => {
     expect(services).toContain('const OMITTED_ZAIDI_SERVICE_IDS = new Set(["home", "services", "today", "my-parish"]);');
     expect(services).toContain("!OMITTED_ZAIDI_SERVICE_IDS.has(item.id)");
     expect(services).toContain("if (!item.ordinaryMemberAllowed) return false;");
-    expect(registry).not.toContain('path: "/portal/channels", label:');
+    expect(registry).toContain('id: "channels"');
+    expect(registry).toContain('path: "/portal/channels"');
+    expect(registry).toContain('featureKey: "channels"');
+    expect(registry).toContain('backTitle: "Njia za Mawasiliano"');
     expect(registry).not.toContain('path: "/portal/community-help", label:');
     expect(registry).not.toContain('path: "/portal/event-requests", label:');
   });
@@ -65,6 +68,7 @@ describe("production Wave 1 member services", () => {
       ["/member/give", "give"],
       ["/member/mass-intentions", "mass-intentions"],
       ["/member/announcements", "announcements"],
+      ["/member/channels", "channels"],
     ]) {
       expect(getMemberServiceForPath(alias)?.id).toBe(canonicalId);
       expect(isOrdinaryMemberPathAllowed(alias)).toBe(true);

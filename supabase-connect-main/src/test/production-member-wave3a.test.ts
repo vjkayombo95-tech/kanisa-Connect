@@ -42,10 +42,11 @@ describe("Wave 3A member reliability contracts", () => {
   });
 
   it("implements the approved route decisions without exposing deferred routes", () => {
-    for (const route of ["/portal/prayer-requests", "/portal/sermons", "/portal/events", "/portal/contribution-history", "/portal/pledges"]) {
+    for (const route of ["/portal/prayer-requests", "/portal/sermons", "/portal/events", "/portal/contribution-history", "/portal/pledges", "/portal/channels"]) {
       expect(isOrdinaryMemberPathAllowed(route), route).toBe(true);
     }
-    for (const route of ["/portal/channels", "/portal/community-help", "/portal/event-requests"]) {
+    expect(memberServiceRegistry.some((item) => item.path === "/portal/channels" && item.showInServices)).toBe(true);
+    for (const route of ["/portal/community-help", "/portal/event-requests"]) {
       expect(isOrdinaryMemberPathAllowed(route), route).toBe(false);
       expect(memberServiceRegistry.some((item) => item.path === route && item.showInServices)).toBe(false);
     }
