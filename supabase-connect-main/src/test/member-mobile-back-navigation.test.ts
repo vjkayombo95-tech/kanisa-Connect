@@ -1,8 +1,21 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import { getMemberBackFallback, isPrimaryMemberRoute, resolveMemberBackTarget } from "@/lib/member-mobile-navigation";
 
 describe("production member mobile back navigation", () => {
+  it("keeps Radio free of a duplicate page-level back control", () => {
+    const radioSource = readFileSync(
+      `${process.cwd()}/src/pages/portal/MemberRadioPage.tsx`,
+      "utf8",
+    );
+
+    expect(radioSource).not.toContain("navigate(-1)");
+    expect(radioSource).not.toContain("ArrowLeft");
+    expect(radioSource).not.toContain(">Rudi</button>");
+  });
+
   it.each([
     "/portal",
     "/portal/today",
