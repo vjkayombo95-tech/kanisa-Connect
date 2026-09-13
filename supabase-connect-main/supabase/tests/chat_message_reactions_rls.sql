@@ -210,7 +210,7 @@ select pg_temp.assert_raises(
 );
 select pg_temp.assert_raises(
   $$update public.chat_message_reactions
-    set emoji = 'this-is-too-long'
+    set emoji = repeat('x', 17)
     where message_id = '76000000-0000-4000-8000-000000000001'
       and user_id = '71000000-0000-4000-8000-000000000002'$$,
   'emoji length constraint works'
