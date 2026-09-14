@@ -1,5 +1,6 @@
 function appOrigin() {
-  return typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "https://kanisaniconnect.netlify.app";
+  if (typeof window === "undefined" || !window.location.origin) return null;
+  return window.location.origin.replace(/\/$/, "");
 }
 
 function clean(value: string | null | undefined) {
@@ -13,7 +14,9 @@ function shorten(value: string | null | undefined, maxLength = 180) {
 }
 
 function appLink(path = "/portal") {
-  return `${appOrigin()}${path.startsWith("/") ? path : `/${path}`}`;
+  const origin = appOrigin();
+  if (!origin) return null;
+  return `${origin}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 export function buildWhatsAppShareUrl(message: string): string {
