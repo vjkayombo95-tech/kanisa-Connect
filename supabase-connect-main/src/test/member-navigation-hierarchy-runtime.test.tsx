@@ -201,6 +201,8 @@ describe("Wave 14 member navigation hierarchy runtime", () => {
     expect(mounted.host).toHaveTextContent("Toa Mchango");
     expect(mounted.host).toHaveTextContent("Nia za Misa");
     expect(mounted.host).toHaveTextContent("Matangazo");
+    expect(mounted.host).toHaveTextContent("Watakatifu");
+    expect(mounted.host.querySelector('a[href="/portal/library"]')).not.toBeNull();
   });
 
   it("renders desktop Primary without duplicate Jumuiya and keeps secondary groups intact", () => {

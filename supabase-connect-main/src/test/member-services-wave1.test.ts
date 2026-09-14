@@ -60,6 +60,33 @@ describe("production Wave 1 member services", () => {
     expect(registry).not.toContain('path: "/portal/event-requests", label:');
   });
 
+  it("exposes Watakatifu in Zaidi without changing hidden account or deferred services", () => {
+    const library = memberServiceRegistry.find((item) => item.id === "library");
+    const dashboard = memberServiceRegistry.find((item) => item.id === "dashboard");
+
+    expect(library).toMatchObject({
+      path: "/portal/library",
+      label: "Watakatifu",
+      group: "today",
+      ordinaryMemberAllowed: true,
+      showInServices: true,
+      backTitle: "Watakatifu",
+    });
+    expect(library?.matchPrefixes).toEqual(expect.arrayContaining(["/portal/library/", "/portal/saints/", "/member/library"]));
+    expect(services).toContain('library: "spiritual"');
+    expect(dashboard).toMatchObject({ label: "Historia Yangu", showInServices: false });
+    expect(memberServiceRegistry.some((item) => item.path === "/portal/community-help" && item.showInServices)).toBe(false);
+    expect(memberServiceRegistry.some((item) => item.path === "/portal/event-requests" && item.showInServices)).toBe(false);
+  });
+
+  it("keeps Watakatifu route aliases authorized and attached to the same back-navigation contract", () => {
+    for (const route of ["/portal/library", "/portal/library/saint-peter", "/portal/saints/saint-id", "/member/library"]) {
+      expect(getMemberServiceForPath(route)?.id).toBe("library");
+      expect(getMemberServiceForPath(route)?.backTitle).toBe("Watakatifu");
+      expect(isOrdinaryMemberPathAllowed(route)).toBe(true);
+    }
+  });
+
   it("preserves compatibility lookup for legacy member route aliases", () => {
     for (const [alias, canonicalId] of [
       ["/member", "home"],
