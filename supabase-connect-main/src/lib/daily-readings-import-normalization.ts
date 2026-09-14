@@ -1,4 +1,4 @@
-export const DAILY_READINGS_NORMALIZATION_VERSION = "daily-readings-v1";
+export const DAILY_READINGS_NORMALIZATION_VERSION = "daily-readings-v1" as const;
 
 export type DailyReadingSourceRecord = {
   source_key: string;
