@@ -28,7 +28,7 @@ describe("Wave 16 deferred member feature hardening", () => {
   });
 
   it("does not expose deferred Community Help from Historia Yangu dashboard quick actions", () => {
-    expect(portalDashboard).toContain("useMemberHelpRequests(member?.id, false)");
+    expect(portalDashboard).not.toContain("useMemberHelpRequests");
     expect(portalDashboard).not.toContain('to="/portal/community-help"');
     expect(portalDashboard).not.toContain('label="Omba Msaada"');
   });
@@ -68,3 +68,4 @@ describe("Wave 16 deferred member feature hardening", () => {
     expect(communityHelpSqlTest).toContain("overbroad same-church help request select policies are absent");
   });
 });
+

@@ -10,6 +10,7 @@ const ChurchAdminLayout = lazy(() =>
 );
 const ChurchDashboard = lazy(() => import("@/pages/church-admin/ChurchDashboard"));
 const ChurchQRPage = lazy(() => import("@/pages/church-admin/ChurchQRPage"));
+const InviteMembersPage = lazy(() => import("@/pages/church-admin/InviteMembersPage"));
 const AnalyticsAssistantPage = lazy(() => import("@/pages/church-admin/AnalyticsAssistantPage"));
 const MembersPage = lazy(() => import("@/pages/church-admin/MembersPage"));
 const ContributionsPage = lazy(() => import("@/pages/church-admin/ContributionsPage"));
@@ -59,6 +60,7 @@ export default function AdminRoutes() {
           <Route index element={<ChurchDashboard />} />
           <Route path="services" element={<StaffServicesPage config={config} />} />
           <Route path="qr-payments" element={<ChurchQRPage />} />
+          <Route path="invite-members" element={<InviteMembersPage />} />
           <Route path="members" element={<MembersPage />} />
           <Route path="contributions" element={<ContributionsPage />} />
           <Route path="pledges" element={<PledgesPage />} />
@@ -95,3 +97,4 @@ export default function AdminRoutes() {
     </Suspense>
   );
 }
+

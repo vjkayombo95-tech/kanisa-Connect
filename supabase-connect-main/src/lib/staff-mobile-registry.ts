@@ -49,6 +49,7 @@ export function getCommunityMobileConfig(communityId: string): StaffMobileConfig
 const adminServices: StaffService[] = [
   { id: "members", label: "Wanachama", route: "/church-admin/members", group: "Watu", icon: Users, featureKey: "members", primary: true },
   { id: "roles", label: "Mialiko na majukumu", route: "/church-admin/roles", group: "Watu", icon: UserCheck, featureKey: "roles", primary: true },
+  { id: "invite-members", label: "Alika Wanachama", route: "/church-admin/invite-members", group: "Watu", icon: UserCheck },
   { id: "announcements", label: "Matangazo", route: "/church-admin/announcements", group: "Mawasiliano", icon: Megaphone, featureKey: "announcements", primary: true },
   { id: "events", label: "Matukio", route: "/church-admin/events", group: "Uendeshaji", icon: CalendarDays, featureKey: "events", primary: true },
   { id: "calendar", label: "Kalenda ya Parokia", route: "/church-admin/calendar", group: "Uendeshaji", icon: CalendarDays, featureKey: "events" },
@@ -58,6 +59,7 @@ const adminServices: StaffService[] = [
   { id: "contributions", label: "Michango", route: "/church-admin/contributions", group: "Fedha", icon: HandCoins, featureKey: "contributions" },
   { id: "pledges", label: "Ahadi", route: "/church-admin/pledges", group: "Fedha", icon: Target, featureKey: "pledges" },
   { id: "reports", label: "Ripoti", route: "/church-admin/reports", group: "Fedha", icon: BarChart3, featureKey: "reports" },
+  { id: "qr-payments", label: "Malipo ya QR", route: "/church-admin/qr-payments", group: "Fedha", icon: Receipt },
   { id: "mass-intentions", label: "Nia za Misa", route: "/church-admin/mass-intentions", group: "Kichungaji", icon: ClipboardList, featureKey: "mass_intentions" },
   { id: "prayer-requests", label: "Maombi", route: "/church-admin/prayer-requests", group: "Kichungaji", icon: HeartHandshake, featureKey: "prayer_requests" },
   { id: "mass-schedule", label: "Ratiba ya Misa", route: "/church-admin/mass-schedule", group: "Kichungaji", icon: CalendarDays, featureKey: "events" },
@@ -129,3 +131,4 @@ export function isStaffRouteAllowed(workspace: StaffMobileWorkspace | null, path
 export function canSuperAdminEnterChurchWorkspace(churchId: string | null) {
   return typeof churchId === "string" && churchId.length > 0;
 }
+

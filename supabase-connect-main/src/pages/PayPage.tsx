@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Church, HandCoins, Loader2, ShieldCheck, Smartphone } from "lucide-react";
@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { getChurchPaymentProfile } from "@/lib/qr-payments";
 import { logSupabaseError } from "@/lib/error-logger";
 
 const QUICK_AMOUNTS = [5000, 10000, 20000];
@@ -76,9 +75,9 @@ export default function PayPage() {
         logSupabaseError(error, {
           page: "Public Giving",
           component: "PayPage",
-          function: "submitContribution",
+          function: "loadPublicGivingChurch",
           operation: "rpc",
-          rpc: "submit_public_contribution",
+          rpc: "get_public_giving_church",
           metadata: {
             church_lookup: churchLookup,
             contribution_type: contributionType,
@@ -95,12 +94,7 @@ export default function PayPage() {
     retry: 1,
   });
 
-  const fallbackChurch = useMemo(
-    () => (churchLookup && !church ? getChurchPaymentProfile(churchLookup) : null),
-    [church, churchLookup],
-  );
-
-  const displayChurch = church ?? fallbackChurch;
+  const displayChurch = church;
 
   const validate = () => {
     const nextErrors: Record<string, string> = {};
@@ -418,3 +412,5 @@ export default function PayPage() {
     </div>
   );
 }
+
+
