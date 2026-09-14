@@ -52,6 +52,7 @@ describe("production member mobile back navigation", () => {
     expect(getMemberBackFallback("/portal/library/saint-peter")).toBe("/portal/library");
     expect(getMemberBackFallback("/member/library/saint-peter")).toBe("/portal/library");
     expect(getMemberBackFallback("/portal/saints/saint-id")).toBe("/portal/library");
+    expect(getMemberBackFallback("/member/saints/saint-id")).toBe("/portal/library");
     expect(getMemberBackFallback("/portal/ministries/ministry-1")).toBe("/portal/ministries");
   });
 });

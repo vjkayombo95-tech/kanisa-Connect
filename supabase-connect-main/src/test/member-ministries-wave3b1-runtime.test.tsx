@@ -167,6 +167,9 @@ describe("Wave 3B1 ministry hierarchy", () => {
       { id: "available", churchId: "church-a", name: "Wahudumu wa Altare", description: "Huduma ya madhabahuni", memberCount: 2, joined: false, requestPending: false },
     ];
     await renderPage("/portal/ministries/available");
+    expect(host.querySelector('[data-testid="member-ministry-detail"]')).not.toBeNull();
+    expect(host.textContent).toContain("Maelezo ya huduma");
+    expect(host.textContent).toContain("Angalia taarifa za huduma hii na hali yako ya ushiriki.");
     expect(host.textContent).toContain("Wahudumu wa Altare");
     expect(host.textContent).toContain("Huduma ya madhabahuni");
 

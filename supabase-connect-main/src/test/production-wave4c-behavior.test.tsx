@@ -513,6 +513,8 @@ describe("Wave 4C behavioral content boundaries", () => {
     database.saints = [saint];
     mount("/portal/liturgical-calendar", [{ path: "/portal/liturgical-calendar", element: <LiturgicalCalendarPage /> }]);
     expect(await screen.findByRole("heading", { name: "Kalenda ya Liturujia" })).toBeInTheDocument();
+    expect(screen.getByText("Fuatilia maadhimisho ya Kanisa na watakatifu katika mwaka mzima.")).toBeInTheDocument();
+    expect(document.querySelector('input[placeholder="Tafuta jina, mwezi, mlezi, nchi, au lebo..."]')).toBeInTheDocument();
   });
 
   it("exposes no audio, import, favorite, history, bookmark, note, or translation controls", async () => {

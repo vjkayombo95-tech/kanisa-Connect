@@ -269,7 +269,7 @@ describe("Wave 12 Slice 3 member Jumuiya dashboard runtime states", () => {
 
     await waitForText(host, "Jumuiya ya Mtakatifu Monica");
 
-    expect(host.textContent).toContain("Jumuiya / Community");
+    expect(host.textContent).toContain("Jumuiya");
     expect(mutationControlText(host)).toBe(false);
     expect(state.mutationCalls).toEqual([]);
   });

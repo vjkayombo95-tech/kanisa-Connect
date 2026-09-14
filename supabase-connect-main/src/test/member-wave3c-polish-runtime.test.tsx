@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -45,4 +47,13 @@ describe("Wave 3C member polish runtime", () => {
   it("keeps Events and Sermons request failures distinct from empty collections", async () => { state.tableErrors.add("events"); render(<PortalEvents />); await waitFor(() => host.textContent?.includes("Imeshindikana kupakia matukio.") === true); expect(host.textContent).not.toContain("No events at this time"); client.clear(); state.tableErrors.clear(); state.tableErrors.add("sermons"); render(<PortalSermons />); await waitFor(() => host.textContent?.includes("Imeshindikana kupakia mahubiri.") === true); expect(host.textContent).not.toContain("No sermons available"); });
   it("suppresses community-leader discovery until the profile menu needs it", async () => { function Probe({ enabled }: { enabled: boolean }) { const query = useLedCommunities(enabled); return <output>{query.fetchStatus}</output>; } render(<Probe enabled={false} />); expect(host.textContent).toBe("idle"); expect(state.rpcCalls).toBe(0); render(<Probe enabled />); await waitFor(() => state.rpcCalls === 1); });
   it("uses canonical labels for the same member destinations", () => { const labels = new Map(memberServiceRegistry.map((service) => [service.id, service.label])); expect(labels.get("radio")).toBe("Radio"); expect(labels.get("livestream")).toBe("Misa Mubashara"); expect(labels.get("daily-readings")).toBe("Masomo ya Leo"); expect(labels.get("liturgical-calendar")).toBe("Kalenda ya Liturujia"); expect(labels.get("library")).toBe("Watakatifu"); expect(labels.get("dashboard")).toBe("Historia Yangu"); expect(getMemberBackTitle("/portal/live/stream-a")).toBe("Misa Mubashara"); });
+  it("keeps Historia Yangu profile labels in Kiswahili", () => {
+    const dashboard = readFileSync(join(process.cwd(), "src/pages/portal/PortalDashboard.tsx"), "utf8");
+    for (const label of ["Wasifu Binafsi", "Jina Kamili", "Jinsia", "Namba ya Mwanachama", "Ushiriki Wangu"]) {
+      expect(dashboard).toContain(label);
+    }
+    for (const label of ["Personal Profile", "Full Name", "Gender", "Member ID", "My Participation"]) {
+      expect(dashboard).not.toContain(label);
+    }
+  });
 });

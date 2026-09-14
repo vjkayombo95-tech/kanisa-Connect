@@ -8,7 +8,7 @@ describe("Wave 12 Slice 3 member Jumuiya legacy hardening", () => {
   const dashboard = read("src/pages/portal/PortalDashboard.tsx");
 
   it("keeps assigned Jumuiya display read-only on the legacy dashboard", () => {
-    expect(dashboard).toContain('label="Jumuiya / Community"');
+    expect(dashboard).toContain('label="Jumuiya"');
     expect(dashboard).toContain("value={community?.name ?? null}");
     expect(dashboard).not.toContain("Edit Jumuiya");
     expect(dashboard).not.toContain("Change Jumuiya");

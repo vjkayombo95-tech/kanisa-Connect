@@ -63,7 +63,7 @@ vi.mock("@/hooks/use-feature-access", () => ({
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => (
-      key === "view_as_community_leader" ? "View as a Community Leader" : key
+      key === "view_as_community_leader" ? "Fungua kama Kiongozi wa Jumuiya" : key
     ),
     i18n: { language: "sw" },
   }),
@@ -236,7 +236,7 @@ describe("Wave 14 member navigation hierarchy runtime", () => {
 
     act(() => (mounted?.host.querySelector("header button") as HTMLButtonElement).click());
     expect(mounted.host).toHaveTextContent("Historia Yangu");
-    expect(mounted.host).not.toHaveTextContent("View as a Community Leader");
+    expect(mounted.host).not.toHaveTextContent("Fungua kama Kiongozi wa Jumuiya");
     expect(state.ledCommunityEnabledCalls).toContain(true);
     expect(state.refetchLedCommunities).toHaveBeenCalledTimes(1);
 
@@ -265,10 +265,11 @@ describe("Wave 14 member navigation hierarchy runtime", () => {
     const links = [...mounted.host.querySelectorAll<HTMLAnchorElement>("a")];
     expect(links.find((link) => link.getAttribute("href") === "/portal/dashboard")).toHaveTextContent("Historia Yangu");
     expect(links.find((link) => link.getAttribute("href") === "/community/community-a")).toHaveTextContent(
-      "View as a Community Leader - Jumuiya A",
+      "Fungua kama Kiongozi wa Jumuiya - Jumuiya A",
     );
     expect(links.find((link) => link.getAttribute("href") === "/community/community-b")).toHaveTextContent(
-      "View as a Community Leader - Jumuiya B",
+      "Fungua kama Kiongozi wa Jumuiya - Jumuiya B",
     );
+    expect(links.find((link) => link.getAttribute("href") === "/community/community-a")?.querySelector("span")).toHaveClass("break-words");
   });
 });

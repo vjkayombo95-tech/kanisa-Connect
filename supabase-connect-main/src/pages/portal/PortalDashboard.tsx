@@ -58,21 +58,21 @@ function formatRoleLabel(role: string) {
 
   switch (normalizedRole) {
     case "member":
-      return "Member";
+      return "Mwanachama";
     case "jumuiya_leader":
     case "community_leader":
-      return "Jumuiya Leader";
+      return "Kiongozi wa Jumuiya";
     case "ministry_leader":
-      return "Ministry Leader";
+      return "Kiongozi wa Huduma";
     case "church_admin":
     case "admin":
-      return "Admin";
+      return "Msimamizi";
     case "pastor":
-      return "Pastor";
+      return "Paroko";
     case "secretary":
-      return "Secretary";
+      return "Katibu";
     case "treasurer":
-      return "Treasurer";
+      return "Mweka Hazina";
     default:
       return normalizedRole.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
@@ -556,7 +556,7 @@ function InfoRow({ label, value, icon: Icon }: { label: string; value: string | 
       {Icon && <Icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />}
       <div className="min-w-0">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-medium truncate">{value || "Not assigned yet"}</p>
+        <p className="text-sm font-medium truncate">{value || "Bado haijawekwa"}</p>
       </div>
     </div>
   );
@@ -824,7 +824,7 @@ export default function PortalDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-member-record"] });
       queryClient.invalidateQueries({ queryKey: ["members"] });
-      toast({ title: "Profile photo updated" });
+      toast({ title: "Picha ya wasifu imesasishwa" });
     },
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
     onSettled: () => setAvatarUploading(false),
@@ -832,17 +832,17 @@ export default function PortalDashboard() {
 
   const submitRecordPreservation = useMutation({
     mutationFn: async () => {
-      if (!churchId || !member?.id) throw new Error("Member profile not found.");
+      if (!churchId || !member?.id) throw new Error("Wasifu wa mwanachama haukupatikana.");
       const transactionId = preservationTransactionId.trim();
-      if (!transactionId) throw new Error("Transaction ID is required.");
+      if (!transactionId) throw new Error("Namba ya muamala inahitajika.");
       if (!/^[A-Za-z0-9._-]{4,80}$/.test(transactionId)) {
-        throw new Error("Use a valid transaction ID with letters, numbers, dots, dashes, or underscores.");
+        throw new Error("Tumia namba sahihi ya muamala yenye herufi, namba, nukta, vistari, au underscores.");
       }
 
       let proofPath: string | null = null;
       if (preservationProofFile) {
         if (preservationProofFile.size > 5 * 1024 * 1024) {
-          throw new Error("Payment proof must be 5MB or smaller.");
+          throw new Error("Uthibitisho wa malipo lazima uwe 5MB au chini yake.");
         }
         const safeName = preservationProofFile.name.replace(/[^a-zA-Z0-9._-]/g, "-");
         proofPath = `${churchId}/${member.id}/${crypto.randomUUID()}-${safeName}`;
@@ -892,8 +892,8 @@ export default function PortalDashboard() {
       setPreservationPlan("monthly");
       void queryClient.invalidateQueries({ queryKey: ["member-record-preservation", member?.id, churchId] });
       toast({
-        title: "Preservation request submitted",
-        description: "Your Digital Record Preservation request is pending platform review.",
+        title: "Ombi la kuhifadhi rekodi limetumwa",
+        description: "Ombi lako la Digital Record Preservation linasubiri ukaguzi wa mfumo.",
       });
     },
     onError: (err: any) => {
@@ -906,7 +906,7 @@ export default function PortalDashboard() {
         rpc: "submit_member_record_subscription",
         metadata: { member_id: member?.id, plan_interval: preservationPlan },
       });
-      toast({ title: "Unable to submit request", description: err.message, variant: "destructive" });
+      toast({ title: "Ombi halikuweza kutumwa", description: err.message, variant: "destructive" });
     },
   });
 
@@ -943,14 +943,14 @@ export default function PortalDashboard() {
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="flex flex-col gap-2 p-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm font-semibold text-primary">Limited access - upgrade to unlock full member features</p>
+              <p className="text-sm font-semibold text-primary">Ufikiaji mdogo - boresha mpango kufungua huduma zote za mwanachama</p>
               <p className="text-sm text-muted-foreground">
-                Free plan members can view their profile and basic church info. Contribution history, prayer requests, and communication features are locked.
+                Wanachama wa mpango wa bure wanaweza kuona wasifu wao na taarifa za msingi za parokia. Historia ya michango, maombi, na mawasiliano vimefungwa.
               </p>
             </div>
             <Badge variant="outline" className="border-primary/30 text-primary">
               <Lock className="mr-1 h-3 w-3" />
-              Limited member portal
+              Portal ya mwanachama yenye kikomo
             </Badge>
           </CardContent>
         </Card>
@@ -958,35 +958,35 @@ export default function PortalDashboard() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2"><User className="h-4 w-4 text-primary" /> Personal Profile</CardTitle>
+              <CardTitle className="text-base flex items-center gap-2"><User className="h-4 w-4 text-primary" /> Wasifu Binafsi</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
-              <InfoRow label="Full Name" value={member?.full_name || profile?.full_name} icon={User} />
+              <InfoRow label="Jina Kamili" value={member?.full_name || profile?.full_name} icon={User} />
               <InfoRow label="Email" value={member?.email || profile?.email} icon={Mail} />
-              <InfoRow label="Phone" value={member?.phone || profile?.phone} icon={Phone} />
-              <InfoRow label="Community" value={community?.name} icon={Users} />
-              <InfoRow label="Ministries" value={ministryNames.length > 0 ? ministryNames.join(", ") : null} icon={Heart} />
-              <InfoRow label="Member Since" value={member?.created_at ? new Date(member.created_at).toLocaleDateString() : null} icon={Calendar} />
+              <InfoRow label="Simu" value={member?.phone || profile?.phone} icon={Phone} />
+              <InfoRow label="Jumuiya" value={community?.name} icon={Users} />
+              <InfoRow label="Huduma" value={ministryNames.length > 0 ? ministryNames.join(", ") : null} icon={Heart} />
+              <InfoRow label="Tangu" value={member?.created_at ? new Date(member.created_at).toLocaleDateString() : null} icon={Calendar} />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2"><Church className="h-4 w-4 text-primary" /> Basic Church Info</CardTitle>
+              <CardTitle className="text-base flex items-center gap-2"><Church className="h-4 w-4 text-primary" /> Taarifa za Parokia</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
-              <InfoRow label="Church" value={church?.name} icon={Church} />
-              <InfoRow label="Role" value={userRole ? userRole.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase()) : "Member"} icon={Shield} />
-              <InfoRow label="Family" value={family?.name} icon={Users} />
-              <InfoRow label="Family Role" value={family?.role ? family.role.charAt(0).toUpperCase() + family.role.slice(1) : null} icon={Shield} />
+              <InfoRow label="Parokia" value={church?.name} icon={Church} />
+              <InfoRow label="Wajibu" value={userRole ? userRole.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase()) : "Mwanachama"} icon={Shield} />
+              <InfoRow label="Familia" value={family?.name} icon={Users} />
+              <InfoRow label="Nafasi ya Familia" value={family?.role ? family.role.charAt(0).toUpperCase() + family.role.slice(1) : null} icon={Shield} />
             </CardContent>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <LockedPortalCard title="Contribution History" description="Upgrade to unlock giving records and analytics." />
-          <LockedPortalCard title="Prayer Requests" description="Upgrade to unlock prayer submission and tracking." />
-          <LockedPortalCard title="Communication Features" description="Upgrade to unlock requests, messages, and engagement tools." />
+          <LockedPortalCard title="Historia ya Michango" description="Boresha mpango kufungua rekodi za michango na takwimu." />
+          <LockedPortalCard title="Maombi" description="Boresha mpango kufungua kutuma na kufuatilia maombi." />
+          <LockedPortalCard title="Mawasiliano" description="Boresha mpango kufungua maombi, ujumbe, na zana za ushiriki." />
         </div>
       </div>
     );
@@ -1033,20 +1033,20 @@ export default function PortalDashboard() {
           <p className="text-xs text-primary font-medium uppercase tracking-wider">Karibu nyumbani</p>
           <h1 className="text-2xl md:text-3xl font-bold font-serif truncate">{displayName}</h1>
           <p className="text-sm text-muted-foreground">
-            Welcome to {church?.name || "your church"}.
+            Karibu {church?.name || "parokia yako"}.
           </p>
           <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
             <span className="rounded-full border border-border/60 bg-muted/30 px-3 py-1">
-              Jumuiya: {community?.name || "Not assigned"}
+              Jumuiya: {community?.name || "Haijawekwa"}
             </span>
             <span className="rounded-full border border-border/60 bg-muted/30 px-3 py-1">
-              Ministries: {ministryNames.length > 0 ? ministryNames.join(", ") : "None yet"}
+              Huduma: {ministryNames.length > 0 ? ministryNames.join(", ") : "Bado"}
             </span>
           </div>
         </div>
         <Badge variant="outline" className="border-primary/30 text-primary">
           <Shield className="h-3 w-3 mr-1" />
-          {userRole ? userRole.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase()) : "Member"}
+          {userRole ? userRole.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase()) : "Mwanachama"}
         </Badge>
       </div>
 
@@ -1063,15 +1063,15 @@ export default function PortalDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2"><User className="h-4 w-4 text-primary" /> Personal Profile</CardTitle>
+                <CardTitle className="text-base flex items-center gap-2"><User className="h-4 w-4 text-primary" /> Wasifu Binafsi</CardTitle>
               </CardHeader>
               <CardContent className="space-y-1">
-                <InfoRow label="Full Name" value={member?.full_name} icon={User} />
+                <InfoRow label="Jina Kamili" value={member?.full_name} icon={User} />
                 <InfoRow label="Email" value={member?.email} icon={Mail} />
-                <InfoRow label="Phone" value={member?.phone} icon={Phone} />
-                <InfoRow label="Gender" value={member?.gender ? (member.gender === "male" ? "Male" : "Female") : null} icon={Users} />
-                <InfoRow label="Date Joined" value={member?.created_at ? new Date(member.created_at).toLocaleDateString() : null} icon={Calendar} />
-                <InfoRow label="Member ID" value={member?.id?.slice(0, 8).toUpperCase()} icon={Shield} />
+                <InfoRow label="Simu" value={member?.phone} icon={Phone} />
+                <InfoRow label="Jinsia" value={member?.gender ? (member.gender === "male" ? "Mwanaume" : "Mwanamke") : null} icon={Users} />
+                <InfoRow label="Tarehe ya Kujiunga" value={member?.created_at ? new Date(member.created_at).toLocaleDateString() : null} icon={Calendar} />
+                <InfoRow label="Namba ya Mwanachama" value={member?.id?.slice(0, 8).toUpperCase()} icon={Shield} />
               </CardContent>
             </Card>
 
@@ -1101,21 +1101,21 @@ export default function PortalDashboard() {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-base font-semibold">Digital Record Preservation</h2>
+                <h2 className="text-base font-semibold">Uhifadhi wa Rekodi za Kidigitali</h2>
                 <Badge variant={activeRecordPreservation ? "default" : latestRecordPreservation?.status === "pending" ? "secondary" : "outline"}>
-                  {activeRecordPreservation ? "Active" : latestRecordPreservation?.status === "pending" ? "Pending review" : "Archive renewal"}
+                  {activeRecordPreservation ? "Inatumika" : latestRecordPreservation?.status === "pending" ? "Inasubiri ukaguzi" : "Sasisha hifadhi"}
                 </Badge>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
                 {activeRecordPreservation && recordPreservation?.active?.end_date
-                  ? `Your records are preserved until ${new Date(recordPreservation.active.end_date).toLocaleDateString()}.`
+                  ? `Rekodi zako zimehifadhiwa hadi ${new Date(recordPreservation.active.end_date).toLocaleDateString()}.`
                   : latestRecordPreservation?.status === "pending"
-                    ? "Your Secure Church Record Archive request is awaiting platform review."
-                    : "Your records are safely preserved. Renew to view your full historical archive."}
+                    ? "Ombi lako la Secure Church Record Archive linasubiri ukaguzi wa mfumo."
+                    : "Rekodi zako zimehifadhiwa salama. Sasisha kuona kumbukumbu zako zote za zamani."}
               </p>
               {!activeRecordPreservation ? (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Current month activity remains visible. Historical Records, yearly summaries, and downloadable archive records unlock again when preservation is active.
+                  Shughuli za mwezi huu zinaendelea kuonekana. Rekodi za zamani, muhtasari wa mwaka, na rekodi za kupakua zitafunguka tena uhifadhi ukiwa hai.
                 </p>
               ) : null}
             </div>
@@ -1123,12 +1123,12 @@ export default function PortalDashboard() {
           <Dialog open={preservationOpen} onOpenChange={setPreservationOpen}>
             <DialogTrigger asChild>
               <Button variant={activeRecordPreservation ? "outline" : "default"}>
-                {activeRecordPreservation ? "Extend archive" : "Preserve records"}
+                {activeRecordPreservation ? "Ongeza muda wa hifadhi" : "Hifadhi rekodi"}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Digital Record Preservation</DialogTitle>
+                <DialogTitle>Uhifadhi wa Rekodi za Kidigitali</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="rounded-lg border border-border/60 bg-muted/30 p-3 text-sm">
@@ -1136,32 +1136,32 @@ export default function PortalDashboard() {
                     {preservationPlan === "yearly" ? "TSh 30,000 / year" : "TSh 3,000 / month"}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Submit your payment transaction ID for the Secure Church Record Archive. Your normal member app access remains free.
+                    Weka namba ya muamala wa malipo ya Secure Church Record Archive. Ufikiaji wako wa kawaida wa programu ya mwanachama unabaki bure.
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Preservation plan</Label>
+                  <Label>Mpango wa uhifadhi</Label>
                   <Select value={preservationPlan} onValueChange={(value) => setPreservationPlan(value as "monthly" | "yearly")}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select plan" />
+                      <SelectValue placeholder="Chagua mpango" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="monthly">Monthly - TSh 3,000</SelectItem>
-                      <SelectItem value="yearly">Yearly - TSh 30,000</SelectItem>
+                      <SelectItem value="monthly">Kila mwezi - TSh 3,000</SelectItem>
+                      <SelectItem value="yearly">Kila mwaka - TSh 30,000</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="preservation-transaction">Transaction ID</Label>
+                  <Label htmlFor="preservation-transaction">Namba ya muamala</Label>
                   <Input
                     id="preservation-transaction"
                     value={preservationTransactionId}
                     onChange={(event) => setPreservationTransactionId(event.target.value)}
-                    placeholder="Enter payment transaction ID"
+                    placeholder="Weka namba ya muamala wa malipo"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="preservation-proof">Payment proof</Label>
+                  <Label htmlFor="preservation-proof">Uthibitisho wa malipo</Label>
                   <Input id="preservation-proof" type="file" accept="image/*,.pdf" onChange={handlePreservationProofSelect} />
                   {preservationProofFile ? (
                     <p className="text-xs text-muted-foreground">{preservationProofFile.name}</p>
@@ -1177,7 +1177,7 @@ export default function PortalDashboard() {
                   ) : (
                     <Upload className="mr-2 h-4 w-4" />
                   )}
-                  Submit for review
+                  Tuma kwa ukaguzi
                 </Button>
               </div>
             </DialogContent>
@@ -1186,22 +1186,22 @@ export default function PortalDashboard() {
       </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <SummaryCard icon={HandCoins} label="Total Given" value={formatTZS(stats.total)} />
-        <SummaryCard icon={TrendingUp} label="This Month" value={formatTZS(stats.monthTotal)} />
-        <SummaryCard icon={BarChart3} label="This Year" value={formatTZS(stats.yearTotal)} />
-        <SummaryCard icon={Calendar} label="Member Since" value={member?.created_at ? new Date(member.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "—"} />
+        <SummaryCard icon={HandCoins} label="Jumla ya Michango" value={formatTZS(stats.total)} />
+        <SummaryCard icon={TrendingUp} label="Mwezi Huu" value={formatTZS(stats.monthTotal)} />
+        <SummaryCard icon={BarChart3} label="Mwaka Huu" value={formatTZS(stats.yearTotal)} />
+        <SummaryCard icon={Calendar} label="Mwanachama Tangu" value={member?.created_at ? new Date(member.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "—"} />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <SummaryCard icon={Gift} label="Today" value={formatTZS(stats.todayTotal)} subtle />
-        <SummaryCard icon={FileText} label="Records" value={String(stats.count)} subtle />
-        <SummaryCard icon={Clock} label="Last Given" value={stats.lastContrib && getContributionDate(stats.lastContrib) ? new Date(getContributionDate(stats.lastContrib)!).toLocaleDateString() : "—"} subtle />
-        <SummaryCard icon={Star} label="Status" value={member?.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : "—"} subtle />
+        <SummaryCard icon={Gift} label="Leo" value={formatTZS(stats.todayTotal)} subtle />
+        <SummaryCard icon={FileText} label="Rekodi" value={String(stats.count)} subtle />
+        <SummaryCard icon={Clock} label="Mwisho Kuchangia" value={stats.lastContrib && getContributionDate(stats.lastContrib) ? new Date(getContributionDate(stats.lastContrib)!).toLocaleDateString() : "—"} subtle />
+        <SummaryCard icon={Star} label="Hali" value={member?.status ? member.status.charAt(0).toUpperCase() + member.status.slice(1) : "—"} subtle />
       </div>
 
       {/* ── Contribution Analytics ── */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> Contribution Analytics</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><BarChart3 className="h-4 w-4 text-primary" /> Takwimu za Michango</CardTitle>
         </CardHeader>
         <CardContent>
           {detailsLoading ? (
@@ -1210,7 +1210,7 @@ export default function PortalDashboard() {
               <Skeleton className="h-56 rounded-xl" />
             </div>
           ) : visibleContributions.length === 0 ? (
-            <EmptyState icon={HandCoins} title="No contributions yet" desc="Your contribution analytics will appear here once you start giving." />
+            <EmptyState icon={HandCoins} title="Bado hakuna michango" desc="Takwimu za michango yako zitaonekana hapa ukianza kuchangia." />
           ) : (
             <Suspense fallback={
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -1233,16 +1233,16 @@ export default function PortalDashboard() {
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> Contribution History</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> Historia ya Michango</CardTitle>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search..." className="pl-8 h-8 w-40 text-xs" value={searchQ} onChange={(e) => { setSearchQ(e.target.value); setPage(0); }} />
+                <Input placeholder="Tafuta..." className="pl-8 h-8 w-40 text-xs" value={searchQ} onChange={(e) => { setSearchQ(e.target.value); setPage(0); }} />
               </div>
               <Select value={catFilter} onValueChange={(v) => { setCatFilter(v); setPage(0); }}>
-                <SelectTrigger className="h-8 w-36 text-xs"><SelectValue placeholder="Category" /></SelectTrigger>
+                <SelectTrigger className="h-8 w-36 text-xs"><SelectValue placeholder="Aina" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">Aina Zote</SelectItem>
                   {categoryNames.map((n) => <SelectItem key={n} value={n}>{translateContributionCategory(t, n, "short")}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -1252,21 +1252,21 @@ export default function PortalDashboard() {
         <CardContent>
           {!activeRecordPreservation ? (
             <div className="mb-4 rounded-lg border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
-              Current month activity is shown here. Your records are safely preserved. Renew to view your full historical archive.
+              Shughuli za mwezi huu zinaonyeshwa hapa. Rekodi zako zimehifadhiwa salama. Sasisha kuona kumbukumbu zako zote za zamani.
             </div>
           ) : null}
           {filteredContribs.length === 0 ? (
-            <EmptyState icon={HandCoins} title="No records found" desc="Your contribution history will show here." />
+            <EmptyState icon={HandCoins} title="Hakuna rekodi zilizopatikana" desc="Historia ya michango yako itaonekana hapa." />
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left">
-                      <th className="pb-2 pr-4 text-xs font-medium text-muted-foreground">Date</th>
-                      <th className="pb-2 pr-4 text-xs font-medium text-muted-foreground">Category</th>
-                      <th className="pb-2 pr-4 text-xs font-medium text-muted-foreground">Amount</th>
-                      <th className="pb-2 text-xs font-medium text-muted-foreground hidden sm:table-cell">Note</th>
+                      <th className="pb-2 pr-4 text-xs font-medium text-muted-foreground">Tarehe</th>
+                      <th className="pb-2 pr-4 text-xs font-medium text-muted-foreground">Aina</th>
+                      <th className="pb-2 pr-4 text-xs font-medium text-muted-foreground">Kiasi</th>
+                      <th className="pb-2 text-xs font-medium text-muted-foreground hidden sm:table-cell">Dokezo</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1285,7 +1285,7 @@ export default function PortalDashboard() {
               </div>
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4">
-                  <p className="text-xs text-muted-foreground">Page {page + 1} of {totalPages}</p>
+                  <p className="text-xs text-muted-foreground">Ukurasa {page + 1} kati ya {totalPages}</p>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page === 0} onClick={() => setPage(p => p - 1)}><ChevronLeft className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" className="h-7 w-7" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}><ChevronRight className="h-4 w-4" /></Button>
@@ -1303,13 +1303,13 @@ export default function PortalDashboard() {
         {isFeatureEnabled("prayer_requests") && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2"><Flame className="h-4 w-4 text-primary" /> My Prayer Requests</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Flame className="h-4 w-4 text-primary" /> Maombi Yangu</CardTitle>
           </CardHeader>
           <CardContent>
             {detailsLoading ? (
               <Skeleton className="h-32 rounded-xl" />
             ) : visiblePrayers.length === 0 ? (
-              <EmptyState icon={Flame} title="No prayer requests yet" desc="Submit a prayer request and it will appear here." />
+              <EmptyState icon={Flame} title="Bado hakuna maombi" desc="Tuma ombi la sala na litaonekana hapa." />
             ) : (
               <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                 {visiblePrayers.map((p: any) => (
@@ -1323,7 +1323,7 @@ export default function PortalDashboard() {
                 ))}
                 {prayerTotalPages > 1 && (
                   <div className="flex items-center justify-between pt-2">
-                    <p className="text-xs text-muted-foreground">Page {prayerPage + 1} of {prayerTotalPages}</p>
+                    <p className="text-xs text-muted-foreground">Ukurasa {prayerPage + 1} kati ya {prayerTotalPages}</p>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" className="h-7 w-7" disabled={prayerPage === 0} onClick={() => setPrayerPage((current) => current - 1)}><ChevronLeft className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" disabled={prayerPage >= prayerTotalPages - 1} onClick={() => setPrayerPage((current) => current + 1)}><ChevronRight className="h-4 w-4" /></Button>
@@ -1339,13 +1339,13 @@ export default function PortalDashboard() {
         {isFeatureEnabled("mass_intentions") && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2"><Heart className="h-4 w-4 text-primary" /> My Mass Intentions</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Heart className="h-4 w-4 text-primary" /> Nia Zangu za Misa</CardTitle>
           </CardHeader>
           <CardContent>
             {detailsLoading ? (
               <Skeleton className="h-32 rounded-xl" />
             ) : visibleMassIntentions.length === 0 ? (
-              <EmptyState icon={Heart} title="No mass intentions yet" desc="Submit a mass intention and it will appear here." />
+              <EmptyState icon={Heart} title="Bado hakuna nia za misa" desc="Tuma nia ya misa na itaonekana hapa." />
             ) : (
               <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                 {visibleMassIntentions.map((m: any) => (
@@ -1360,7 +1360,7 @@ export default function PortalDashboard() {
                 ))}
                 {massIntentionTotalPages > 1 && (
                   <div className="flex items-center justify-between pt-2">
-                    <p className="text-xs text-muted-foreground">Page {massIntentionPage + 1} of {massIntentionTotalPages}</p>
+                    <p className="text-xs text-muted-foreground">Ukurasa {massIntentionPage + 1} kati ya {massIntentionTotalPages}</p>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" className="h-7 w-7" disabled={massIntentionPage === 0} onClick={() => setMassIntentionPage((current) => current - 1)}><ChevronLeft className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" disabled={massIntentionPage >= massIntentionTotalPages - 1} onClick={() => setMassIntentionPage((current) => current + 1)}><ChevronRight className="h-4 w-4" /></Button>
@@ -1379,13 +1379,13 @@ export default function PortalDashboard() {
       {isFeatureEnabled("community_help") && (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2"><HelpCircle className="h-4 w-4 text-primary" /> My Help Requests</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><HelpCircle className="h-4 w-4 text-primary" /> Maombi Yangu ya Msaada</CardTitle>
         </CardHeader>
         <CardContent>
           {detailsLoading ? (
             <Skeleton className="h-32 rounded-xl" />
           ) : helpRequests.length === 0 ? (
-            <EmptyState icon={HelpCircle} title="No help requests" desc="Submit a community help request and it will appear here." />
+            <EmptyState icon={HelpCircle} title="Hakuna maombi ya msaada" desc="Tuma ombi la msaada wa jumuiya na litaonekana hapa." />
           ) : (
             <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
               {helpRequests.map((h: any) => (
@@ -1408,13 +1408,13 @@ export default function PortalDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2"><Megaphone className="h-4 w-4 text-primary" /> Latest Announcements</CardTitle>
-              <Button variant="ghost" size="sm" asChild><Link to="/portal/announcements">View All <ArrowRight className="ml-1 h-3 w-3" /></Link></Button>
+              <CardTitle className="text-base flex items-center gap-2"><Megaphone className="h-4 w-4 text-primary" /> Matangazo Mapya</CardTitle>
+              <Button variant="ghost" size="sm" asChild><Link to="/portal/announcements">Tazama yote <ArrowRight className="ml-1 h-3 w-3" /></Link></Button>
             </div>
           </CardHeader>
           <CardContent>
             {announcements.length === 0 ? (
-              <EmptyState icon={Megaphone} title="No announcements" desc="Check back later for church updates." />
+              <EmptyState icon={Megaphone} title="Hakuna matangazo" desc="Rudi baadaye kuona taarifa za parokia." />
             ) : (
               <div className="space-y-3">
                 {announcements.map((a: any) => (
@@ -1434,15 +1434,15 @@ export default function PortalDashboard() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" /> Upcoming Events</CardTitle>
-              <Button variant="ghost" size="sm" asChild><Link to="/portal/events">View All <ArrowRight className="ml-1 h-3 w-3" /></Link></Button>
+              <CardTitle className="text-base flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" /> Matukio Yajayo</CardTitle>
+              <Button variant="ghost" size="sm" asChild><Link to="/portal/events">Tazama yote <ArrowRight className="ml-1 h-3 w-3" /></Link></Button>
             </div>
           </CardHeader>
           <CardContent>
             {!loadDashboardDetails ? (
               <Skeleton className="h-32 rounded-xl" />
             ) : events.length === 0 ? (
-              <EmptyState icon={Calendar} title="No upcoming events" desc="New events will appear here." />
+              <EmptyState icon={Calendar} title="Hakuna matukio yajayo" desc="Matukio mapya yataonekana hapa." />
             ) : (
               <div className="space-y-3">
                 {events.map((e: any) => (
@@ -1464,7 +1464,7 @@ export default function PortalDashboard() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Building2 className="h-4 w-4 text-primary" />
-              Community Leadership Dashboards
+              Dashibodi za Uongozi wa Jumuiya
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1479,7 +1479,7 @@ export default function PortalDashboard() {
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate">{ledCommunity.community_name}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Open members, contributions, reports, and leadership analytics.
+                        Fungua wanachama, michango, ripoti, na takwimu za uongozi.
                       </p>
                     </div>
                     <Badge variant="outline" className="border-primary/30 text-primary shrink-0">
@@ -1487,7 +1487,7 @@ export default function PortalDashboard() {
                     </Badge>
                   </div>
                   <div className="mt-3 flex items-center gap-2 text-xs font-medium text-primary">
-                    <span>Open dashboard</span>
+                    <span>Fungua dashibodi</span>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </div>
                 </Link>
@@ -1501,20 +1501,20 @@ export default function PortalDashboard() {
       {isFeatureEnabled("community_help") && (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Quick Actions</CardTitle>
+          <CardTitle className="text-base">Vitendo vya Haraka</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {isFeatureEnabled("give") && <QuickAction icon={HandCoins} label="Give Now" to="/portal/give" />}
-            {isFeatureEnabled("pledges") && <QuickAction icon={Target} label="Pledges" to="/portal/pledges" />}
-            {isFeatureEnabled("prayer_requests") && <QuickAction icon={Flame} label="Prayer Request" to="/portal/prayer-requests" />}
-            {isFeatureEnabled("mass_intentions") && <QuickAction icon={Heart} label="Mass Intention" to="/portal/mass-intentions" />}
-            {isFeatureEnabled("community_help") && <QuickAction icon={HelpCircle} label="Request Help" to="/portal/community-help" />}
-            {isFeatureEnabled("events") && <QuickAction icon={Calendar} label="View Events" to="/portal/events" />}
-            {isFeatureEnabled("sermons") && <QuickAction icon={BookOpen} label="View Sermons" to="/portal/sermons" />}
-            {isFeatureEnabled("announcements") && <QuickAction icon={Megaphone} label="Announcements" to="/portal/announcements" />}
-            {ledCommunities[0] && <QuickAction icon={Building2} label="Leader Dashboard" to={`/community/${ledCommunities[0].community_id}`} />}
-            <QuickAction icon={User} label="Portal Home" to="/portal" />
+            {isFeatureEnabled("give") && <QuickAction icon={HandCoins} label="Changia Sasa" to="/portal/give" />}
+            {isFeatureEnabled("pledges") && <QuickAction icon={Target} label="Ahadi" to="/portal/pledges" />}
+            {isFeatureEnabled("prayer_requests") && <QuickAction icon={Flame} label="Ombi la Sala" to="/portal/prayer-requests" />}
+            {isFeatureEnabled("mass_intentions") && <QuickAction icon={Heart} label="Nia ya Misa" to="/portal/mass-intentions" />}
+            {isFeatureEnabled("community_help") && <QuickAction icon={HelpCircle} label="Omba Msaada" to="/portal/community-help" />}
+            {isFeatureEnabled("events") && <QuickAction icon={Calendar} label="Tazama Matukio" to="/portal/events" />}
+            {isFeatureEnabled("sermons") && <QuickAction icon={BookOpen} label="Tazama Mahubiri" to="/portal/sermons" />}
+            {isFeatureEnabled("announcements") && <QuickAction icon={Megaphone} label="Matangazo" to="/portal/announcements" />}
+            {ledCommunities[0] && <QuickAction icon={Building2} label="Dashibodi ya Kiongozi" to={`/community/${ledCommunities[0].community_id}`} />}
+            <QuickAction icon={User} label="Nyumbani" to="/portal" />
           </div>
         </CardContent>
       </Card>
@@ -1524,27 +1524,27 @@ export default function PortalDashboard() {
       <Card className="glass-card">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3">
-            <CardTitle className="text-base flex items-center gap-2"><Target className="h-4 w-4 text-primary" /> My Pledges</CardTitle>
-            <Button variant="ghost" size="sm" asChild><Link to="/portal/pledges">Open Pledges <ArrowRight className="ml-1 h-3 w-3" /></Link></Button>
+            <CardTitle className="text-base flex items-center gap-2"><Target className="h-4 w-4 text-primary" /> Ahadi Zangu</CardTitle>
+            <Button variant="ghost" size="sm" asChild><Link to="/portal/pledges">Fungua Ahadi <ArrowRight className="ml-1 h-3 w-3" /></Link></Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {detailsLoading ? (
             <Skeleton className="h-32 rounded-xl" />
           ) : pledges.length === 0 ? (
-            <EmptyState icon={Target} title="No pledges yet" desc="Your pledge commitments will appear here once they are recorded." />
+            <EmptyState icon={Target} title="Bado hakuna ahadi" desc="Ahadi zako zitaonekana hapa zikirekodiwa." />
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <SummaryCard icon={Target} label="Pledged" value={formatTZS(pledgeSummary.pledged)} />
-                <SummaryCard icon={HandCoins} label="Paid" value={formatTZS(pledgeSummary.paid)} />
-                <SummaryCard icon={Wallet} label="Balance" value={formatTZS(pledgeSummary.balance)} />
+                <SummaryCard icon={Target} label="Ahadi" value={formatTZS(pledgeSummary.pledged)} />
+                <SummaryCard icon={HandCoins} label="Imelipwa" value={formatTZS(pledgeSummary.paid)} />
+                <SummaryCard icon={Wallet} label="Salio" value={formatTZS(pledgeSummary.balance)} />
               </div>
               <div className="space-y-2">
                 <Progress value={pledgeProgress} className="h-2.5" />
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{pledgeProgress.toFixed(0)}% complete</span>
-                  <span>{pledges.length} pledge{pledges.length === 1 ? "" : "s"}</span>
+                  <span>{pledgeProgress.toFixed(0)}% imekamilika</span>
+                  <span>{pledges.length} {pledges.length === 1 ? "ahadi" : "ahadi"}</span>
                 </div>
               </div>
             </>
@@ -1623,14 +1623,14 @@ function MyParticipationCard({
   family: any;
   roleLabels: string[];
 }) {
-  const personalRole = roleLabels.length > 0 ? roleLabels.join(", ") : "Member";
+  const personalRole = roleLabels.length > 0 ? roleLabels.join(", ") : "Mwanachama";
   const jumuiyaItem = communityLoading ? (
     <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-background/50 p-3">
       <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
         <Users className="h-4 w-4 text-primary" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">Jumuiya / Community</p>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">Jumuiya</p>
         <p className="mt-1 text-sm text-muted-foreground">Tunaangalia taarifa ya Jumuiya yako...</p>
       </div>
     </div>
@@ -1640,7 +1640,7 @@ function MyParticipationCard({
         <Users className="h-4 w-4 text-destructive" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">Jumuiya / Community</p>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">Jumuiya</p>
         <p className="mt-1 text-sm text-muted-foreground">Taarifa ya Jumuiya haikuweza kupakiwa kwa sasa.</p>
         <Button size="sm" variant="outline" className="mt-3" onClick={onRetryCommunity} disabled={communityRetrying}>
           {communityRetrying ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
@@ -1650,7 +1650,7 @@ function MyParticipationCard({
     </div>
   ) : (
     <ParticipationItem
-      label="Jumuiya / Community"
+      label="Jumuiya"
       value={community?.name ?? null}
       emptyMessage="Jumuiya yako bado haijawekwa. Wasiliana na ofisi ya parokia ili kusasisha taarifa hii."
       icon={Users}
@@ -1662,32 +1662,32 @@ function MyParticipationCard({
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Church className="h-4 w-4 text-primary" />
-          My Participation
+          Ushiriki Wangu
         </CardTitle>
-        <p className="text-sm text-muted-foreground">Member view only. Hapa unaona ushiriki wako binafsi bila kuchanganya data za usimamizi.</p>
+        <p className="text-sm text-muted-foreground">Mwonekano wa mwanachama pekee. Hapa unaona ushiriki wako binafsi bila kuchanganya data za usimamizi.</p>
       </CardHeader>
       <CardContent className="space-y-3">
         {jumuiyaItem}
         <ParticipationItem
-          label="Ministries"
+          label="Huduma"
           value={ministries.length ? ministries.map((ministry: any) => ministry.name).join(", ") : null}
-          emptyMessage="You are not assigned to a ministry yet"
+          emptyMessage="Bado hujawekwa kwenye huduma yoyote"
           icon={Heart}
         />
         <ParticipationItem
-          label="Family"
+          label="Familia"
           value={
             family?.name
               ? [family.name, family?.role ? `(${family.role.charAt(0).toUpperCase() + family.role.slice(1)})` : null].filter(Boolean).join(" ")
               : null
           }
-          emptyMessage="You are not assigned to a family yet"
+          emptyMessage="Bado hujawekwa kwenye familia"
           icon={Users}
         />
         <ParticipationItem
-          label="Personal Role"
+          label="Wajibu Binafsi"
           value={personalRole}
-          emptyMessage="Your role details will appear here"
+          emptyMessage="Taarifa za wajibu wako zitaonekana hapa"
           icon={Shield}
         />
       </CardContent>
@@ -1703,7 +1703,7 @@ function LeadershipPanelCard({ leadershipScopes }: { leadershipScopes: any[] }) 
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Building2 className="h-4 w-4 text-primary" />
-          Leadership Panel
+          Jopo la Uongozi
         </CardTitle>
         <p className="text-sm text-muted-foreground">Inaonekana tu kama una role ya uongozi au usimamizi.</p>
       </CardHeader>
@@ -1722,11 +1722,11 @@ function LeadershipPanelCard({ leadershipScopes }: { leadershipScopes: any[] }) 
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-lg border border-border/60 bg-background/70 p-3">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Managing</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Unasimamia</p>
                 <p className="mt-1 text-sm font-medium">{scope.managingLabel}</p>
               </div>
               <div className="rounded-lg border border-border/60 bg-background/70 p-3">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Total Members</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Jumla ya Wanachama</p>
                 <p className="mt-1 text-sm font-medium">{scope.memberCount}</p>
               </div>
             </div>
