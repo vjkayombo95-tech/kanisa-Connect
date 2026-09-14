@@ -191,9 +191,9 @@ describe("Daily Readings import normalization and hashing", () => {
   });
 
   it("does not allow editorial fields into the source contract", async () => {
-    // @ts-expect-error reflection is intentionally outside DailyReadingSourceRecord.
     const recordWithEditorialData: DailyReadingSourceRecord = {
       ...baseRecord,
+      // @ts-expect-error reflection is intentionally outside DailyReadingSourceRecord.
       reflection: "Synthetic reflection outside source contract",
       prayer: "Synthetic prayer outside source contract",
       status: "published",

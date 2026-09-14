@@ -105,7 +105,7 @@ function roleCandidates(role: string) {
   const selector = role === "heading" ? "h1,h2,h3,h4,h5,h6,[role=heading]" : role === "button" ? "button,[role=button]" : role === "link" ? "a,[role=link]" : `[role=${role}]`;
   return [...document.body.querySelectorAll<HTMLElement>(selector)];
 }
-const waitFor = async (assertion: () => unknown, timeout = 3000) => {
+const waitFor = async <T,>(assertion: () => T, timeout = 3000): Promise<T> => {
   const started = Date.now();
   while (true) {
     try { return assertion(); } catch (error) { if (Date.now() - started >= timeout) throw error; await act(() => new Promise((resolve) => setTimeout(resolve, 20))); }
