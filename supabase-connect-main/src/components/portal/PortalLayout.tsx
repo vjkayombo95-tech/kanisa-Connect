@@ -413,7 +413,7 @@ function ProfileMenu({
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-64 max-w-[calc(100vw-2rem)]">
         <DropdownMenuItem disabled className="text-xs text-muted-foreground">
           {profile?.full_name || t("member")}
         </DropdownMenuItem>
@@ -431,10 +431,10 @@ function ProfileMenu({
                 <AppLink
                   to={`/community/${community.community_id}`}
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2"
+                  className="flex min-w-0 items-start gap-2 whitespace-normal"
                 >
-                  <Building2 className="h-3.5 w-3.5 text-primary" />
-                  <span className="truncate">
+                  <Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                  <span className="min-w-0 break-words leading-snug">
                     {t("view_as_community_leader")}
                     {ledCommunities.length > 1 ? ` - ${community.community_name}` : ""}
                   </span>

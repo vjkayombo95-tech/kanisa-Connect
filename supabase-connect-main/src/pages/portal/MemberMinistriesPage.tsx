@@ -185,9 +185,18 @@ export default function MemberMinistriesPage() {
           </CardContent>
         </Card>
       ) : !readFailed && selected && member.data ? (
-        <section className="space-y-4">
+        <section className="space-y-4" data-testid="member-ministry-detail">
           <Button asChild variant="ghost"><AppLink to="/portal/ministries">Huduma zote</AppLink></Button>
-          <MinistryCard ministry={selected} memberId={member.data.id} />
+          <div className="rounded-[28px] border border-primary/25 bg-primary/5 p-5 shadow-sm sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Maelezo ya huduma</p>
+            <h2 className="mt-2 break-words text-3xl font-bold tracking-tight">{selected.name}</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Angalia taarifa za huduma hii na hali yako ya ushiriki.
+            </p>
+          </div>
+          <div className="rounded-[28px] border border-border/70 bg-card/70 p-3 sm:p-4">
+            <MinistryCard ministry={selected} memberId={member.data.id} />
+          </div>
         </section>
       ) : !readFailed && member.data ? (
         <section className="space-y-4">
