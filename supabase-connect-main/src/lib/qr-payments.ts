@@ -2,13 +2,22 @@ export type ChurchPaymentPayload = {
   churchId: string;
 };
 
-export function buildChurchGivingUrl(churchId: string, churchSlug?: string | null, origin?: string) {
-  const baseOrigin =
-    origin ||
-    (typeof window !== "undefined" ? window.location.origin : "https://kanisaniconnect.netlify.app");
-  const target = (churchSlug || churchId).trim();
+function resolveAppOrigin(origin?: string) {
+  const explicitOrigin = origin?.trim();
+  if (explicitOrigin) return explicitOrigin.replace(/\/$/, "");
 
-  return `${baseOrigin.replace(/\/$/, "")}/give/${encodeURIComponent(target)}`;
+  if (typeof window !== "undefined" && window.location.origin) {
+    return window.location.origin.replace(/\/$/, "");
+  }
+
+  throw new Error("Application origin is required to build a church giving URL outside the browser.");
+}
+
+export function buildChurchGivingUrl(churchId: string, churchSlug?: string | null, origin?: string) {
+  const target = (churchSlug || churchId).trim();
+  if (!target) throw new Error("Church slug or ID is required to build a giving URL.");
+
+  return `${resolveAppOrigin(origin)}/give/${encodeURIComponent(target)}`;
 }
 
 export function buildChurchQRPayload(churchId: string, churchSlug?: string | null) {
