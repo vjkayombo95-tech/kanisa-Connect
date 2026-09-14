@@ -17,7 +17,8 @@ export function getMemberBackFallback(pathname: string) {
   const bibleChapter = pathname.match(/^\/(?:portal|member)\/bible\/([^/]+)\/chapter\//);
   if (bibleChapter) return `/portal/bible/${bibleChapter[1]}`;
   if (/^\/(?:portal|member)\/bible\/[^/]+$/.test(pathname)) return "/portal/bible";
-  if (/^\/(?:portal|member)\/library\/[^/]+$/.test(pathname)) return "/member/library";
+  if (/^\/(?:portal|member)\/library\/[^/]+$/.test(pathname)) return "/portal/library";
+  if (/^\/portal\/saints\/[^/]+$/.test(pathname)) return "/portal/library";
   if (/^\/(?:portal|member)\/contribution-receipt\/[^/]+$/.test(pathname)) return "/portal/contribution-history";
   if (/^\/(?:portal|member)\/ministries\/[^/]+$/.test(pathname)) return "/portal/ministries";
   return "/portal/services";

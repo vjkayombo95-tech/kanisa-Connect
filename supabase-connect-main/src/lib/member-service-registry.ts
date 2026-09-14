@@ -54,7 +54,7 @@ export const memberServiceRegistry: MemberServiceDefinition[] = [
   { id: "ministries", path: "/portal/ministries", matchPrefixes: ["/portal/ministries/"], label: "Huduma za Parokia", description: "Omba kujiunga na huduma ya parokia", group: "community", iconKey: "users", featureKey: "ministries", ordinaryMemberAllowed: true, showInServices: true, backTitle: "Huduma za Parokia", requiresExistingFeature: true },
   { id: "kanisa-ai", path: "/portal/kanisa-ai", label: "Uliza Kanisa", description: "Uliza kuhusu huduma za kanisa lako", group: "community", iconKey: "message", featureKey: "kanisa_ai", ordinaryMemberAllowed: true, showInServices: true, requiresExplicitChurchEnable: true },
   { id: "radio", path: "/portal/radio", label: "Radio", description: "Sikiliza radio ya parokia", group: "media", iconKey: "radio", featureKey: "radio", ordinaryMemberAllowed: true, showInServices: true, backTitle: "Radio" },
-  { id: "library", path: "/portal/library", matchPrefixes: ["/portal/library/", "/portal/saints/", "/member/library"], label: "Watakatifu", description: "Maktaba ya imani", group: "today", iconKey: "book", featureKey: null, ordinaryMemberAllowed: true, showInServices: false, backTitle: "Watakatifu" },
+  { id: "library", path: "/portal/library", matchPrefixes: ["/portal/library/", "/portal/saints/", "/member/library"], label: "Watakatifu", description: "Maktaba ya imani", group: "today", iconKey: "book", featureKey: null, ordinaryMemberAllowed: true, showInServices: true, backTitle: "Watakatifu" },
   { id: "dashboard", path: "/portal/dashboard", label: "Historia Yangu", description: "Historia na wasifu", group: "giving", iconKey: "giving", featureKey: null, ordinaryMemberAllowed: true, showInServices: false, backTitle: "Historia Yangu" },
 ];
 
