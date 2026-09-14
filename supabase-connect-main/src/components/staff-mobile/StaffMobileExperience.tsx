@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { BriefcaseBusiness, ChevronDown, ChevronLeft, Home, MoreHorizontal, Search } from "lucide-react";
+import { BriefcaseBusiness, ChevronDown, ChevronLeft, Home, MoreHorizontal, Search, UserRound } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { ChurchDashboardIntelligence } from "@/components/church-admin/ChurchDashboardIntelligence";
@@ -44,6 +44,12 @@ export function StaffMobileHome({ config, contextLabel }: { config: StaffMobileC
       <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-300/80">Kanisa Connect</p>
       <h1 className="mt-3 text-2xl font-bold tracking-tight text-white">Habari, {String(name).split(" ")[0]}</h1>
       <p className="mt-1 text-sm text-zinc-400">{workspaceLabel}{contextLabel ? ` · ${contextLabel}` : ""}</p>
+      {config.workspace === "community" ? (
+        <MobileLink to="/portal" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-2xl border border-amber-200/20 bg-white/8 px-4 text-sm font-semibold text-white outline-none transition hover:bg-white/12 focus-visible:ring-2 focus-visible:ring-amber-300">
+          <UserRound className="h-4 w-4" aria-hidden="true" />
+          <span>Rudi kama Mwanachama</span>
+        </MobileLink>
+      ) : null}
     </section>
     <section aria-labelledby="staff-primary-actions">
       <h2 id="staff-primary-actions" className="mb-3 text-lg font-semibold">Ungependa kufanya nini?</h2>

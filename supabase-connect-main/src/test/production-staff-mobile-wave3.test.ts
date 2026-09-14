@@ -22,6 +22,8 @@ describe("production-native Wave 3 role resolution", () => {
 
   it("keeps community leadership out of church-wide role union", () => {
     expect(resolveStaffMobileWorkspace(["member"])).toBe("member");
+    expect(resolveStaffMobileWorkspace(["community_leader"])).toBeNull();
+    expect(resolveStaffMobileWorkspace(["member", "community_leader"])).toBe("member");
   });
 });
 

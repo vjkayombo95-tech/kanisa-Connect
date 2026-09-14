@@ -38,6 +38,13 @@ describe("Wave 3 production integration boundaries", () => {
     expect(mobile).toContain("min-h-14");
   });
 
+  it("exposes a mobile community leader return path to the member portal without sign-out", () => {
+    expect(mobile).toContain('config.workspace === "community"');
+    expect(mobile).toContain('to="/portal"');
+    expect(mobile).toContain("Rudi kama Mwanachama");
+    expect(mobile).not.toMatch(/signOut|logout|\/login/);
+  });
+
   it("uses safe workspace-contained back navigation without history traversal", () => {
     expect(mobile).toContain("stateFrom.startsWith(root)");
     expect(mobile).toContain("navigate(target, { replace: true })");

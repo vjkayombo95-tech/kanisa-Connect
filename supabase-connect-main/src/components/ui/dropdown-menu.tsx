@@ -23,12 +23,27 @@ function useDropdownMenu() {
 
 const DropdownMenu = ({
   children,
+  open: controlledOpen,
+  onOpenChange,
 }: {
   children: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) => {
-  const [open, setOpen] = React.useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = React.useCallback<React.Dispatch<React.SetStateAction<boolean>>>(
+    (value) => {
+      const nextOpen = typeof value === "function" ? value(open) : value;
+
+      if (controlledOpen === undefined) {
+        setUncontrolledOpen(nextOpen);
+      }
+
+      onOpenChange?.(nextOpen);
+    },
+    [controlledOpen, onOpenChange, open],
+  );
 
   return (
     <DropdownMenuContext.Provider value={{ open, setOpen }}>
