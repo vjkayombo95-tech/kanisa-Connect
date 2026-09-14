@@ -7,7 +7,7 @@ import { formatTZS } from "@/lib/currency";
 import { useBillingAccess } from "@/hooks/use-billing-access";
 import { useLedCommunities } from "@/hooks/use-community-leader";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
-import { COMMUNITY_HELP_SELECT, MASS_INTENTION_SELECT, enrichCommunityHelpRequests, mapMassIntentionRecord } from "@/lib/member-linked-requests";
+import { MASS_INTENTION_SELECT, mapMassIntentionRecord } from "@/lib/member-linked-requests";
 import { useMemberPledges } from "@/lib/pledges";
 import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
 import {
@@ -381,25 +381,6 @@ function useMemberMassIntentions(memberId: string | undefined, enabled = true, i
   });
 }
 
-function useMemberHelpRequests(memberId: string | undefined, enabled = true) {
-  const { churchId } = useAuth();
-  return useQuery({
-    queryKey: ["my-help-requests-dashboard", memberId, churchId],
-    queryFn: async () => {
-      if (!memberId || !churchId) return [];
-      const { data } = await supabase
-        .from("community_help_requests")
-        .select(COMMUNITY_HELP_SELECT)
-        .eq("church_id", churchId)
-        .eq("member_id", memberId)
-        .order("created_at", { ascending: false })
-        .limit(20);
-      return enrichCommunityHelpRequests((data ?? []) as any[]);
-    },
-    enabled: enabled && !!memberId && !!churchId,
-    ...DASHBOARD_QUERY_OPTIONS,
-  });
-}
 
 function useParticipationAndLeadershipProfile({
   member,
@@ -609,7 +590,6 @@ export default function PortalDashboard() {
   const prayers = prayerPageData.records;
   const { data: massIntentionPageData = { records: [], totalCount: 0 } } = useMemberMassIntentions(member?.id, loadDashboardDetails, activeRecordPreservation, massIntentionPage);
   const massIntentions = massIntentionPageData.records;
-  useMemberHelpRequests(member?.id, false);
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -924,7 +904,6 @@ export default function PortalDashboard() {
   const isLoading = memberLoading;
   const limitedPortal = billing.memberPortalAccess === "limited";
   const detailsLoading = !loadDashboardDetails || contribLoading;
-  const showDeferredCommunityHelp = false;
 
   if (isLoading) {
     return (
@@ -1377,33 +1356,6 @@ export default function PortalDashboard() {
       )}
 
       {/* ── My Community Help Requests ── */}
-      {showDeferredCommunityHelp && (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2"><HelpCircle className="h-4 w-4 text-primary" /> Maombi Yangu ya Msaada</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {detailsLoading ? (
-            <Skeleton className="h-32 rounded-xl" />
-          ) : helpRequests.length === 0 ? (
-            <EmptyState icon={HelpCircle} title="Hakuna maombi ya msaada" desc="Tuma ombi la msaada wa jumuiya na litaonekana hapa." />
-          ) : (
-            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-              {helpRequests.map((h: any) => (
-                <div key={h.id} className="flex items-start justify-between gap-2 pb-3 border-b border-border/50 last:border-0">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{h.category} — {h.description?.slice(0, 60)}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{new Date(h.created_at).toLocaleDateString()}</p>
-                  </div>
-                  <Badge variant={h.status === "pending" ? "outline" : h.status === "approved" ? "default" : "secondary"} className="shrink-0 text-xs">{h.status}</Badge>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {isFeatureEnabled("announcements") && (
         <Card>
@@ -1773,3 +1725,5 @@ function QuickAction({ icon: Icon, label, to }: { icon: any; label: string; to: 
     </Link>
   );
 }
+
+

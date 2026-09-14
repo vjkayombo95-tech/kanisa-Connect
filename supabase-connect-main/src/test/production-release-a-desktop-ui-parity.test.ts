@@ -15,7 +15,7 @@ describe("Release A Church Admin desktop UI parity boundaries", () => {
   const registry = read("src/lib/staff-mobile-registry.ts");
 
   const expectedRoutePaths = [
-    "services", "qr-payments", "members", "contributions", "pledges", "communities", "ministries", "families",
+    "services", "qr-payments", "invite-members", "members", "contributions", "pledges", "communities", "ministries", "families",
     "events", "events/:eventId/registrations", "calendar", "mass-timetable", "mass-schedule", "event-requests",
     "announcements", "sermons", "bible-verses", "prayer-requests", "mass-intentions", "community-help",
     "notifications", "channels", "roles", "settings", "settings/billing", "reports", "analytics",
@@ -70,3 +70,5 @@ describe("Release A Church Admin desktop UI parity boundaries", () => {
     expect(dashboard).toContain("currentPlanDefinition");
   });
 });
+
+

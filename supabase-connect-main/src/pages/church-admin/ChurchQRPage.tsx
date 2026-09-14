@@ -12,8 +12,8 @@ import { buildChurchGivingUrl } from "@/lib/qr-payments";
 
 export default function ChurchQRPage() {
   const { churchId } = useAuth();
-  const safeChurchId = churchId ?? "abc123";
-  const { data: church } = useQuery({
+
+  const { data: church, isLoading, isError } = useQuery({
     queryKey: ["church-giving-qr", churchId],
     queryFn: async () => {
       if (!churchId) return null;
@@ -27,7 +27,38 @@ export default function ChurchQRPage() {
     },
     enabled: !!churchId,
   });
-  const givingLink = buildChurchGivingUrl(safeChurchId, church?.slug);
+
+  if (!churchId) {
+    return (
+      <Card className="rounded-3xl">
+        <CardContent className="p-6 text-sm text-muted-foreground">
+          Kanisa halijapatikana kwenye akaunti hii. Chagua kanisa kisha ujaribu tena.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <Card className="rounded-3xl">
+        <CardContent className="p-6 text-sm text-muted-foreground">
+          Inapakia taarifa za kanisa...
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError || !church) {
+    return (
+      <Card className="rounded-3xl">
+        <CardContent className="p-6 text-sm text-muted-foreground">
+          Taarifa za kanisa hazikupatikana. Jaribu tena baadae.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const givingLink = buildChurchGivingUrl(church.id, church.slug);
 
   return (
     <div className="space-y-6">
@@ -78,12 +109,14 @@ export default function ChurchQRPage() {
         </Card>
 
         <ChurchQRCode
-          churchId={safeChurchId}
-          churchName={church?.name ?? undefined}
-          churchSlug={church?.slug}
-          churchLogo={church?.logo_url}
+          churchId={church.id}
+          churchName={church.name}
+          churchSlug={church.slug}
+          churchLogo={church.logo_url}
         />
       </div>
     </div>
   );
 }
+
+
