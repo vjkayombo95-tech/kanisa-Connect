@@ -14,6 +14,7 @@ import { Loader2, ShieldAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { StaffMobileBackHeader, StaffMobileBottomNav, StaffMobileHome } from "@/components/staff-mobile/StaffMobileExperience";
 import { getCommunityMobileConfig } from "@/lib/staff-mobile-registry";
+import { AppLink } from "@/components/AppLink";
 
 export interface CommunityOutletContext {
   communityId: string;
@@ -99,7 +100,9 @@ export function CommunityLeaderLayout() {
                       {profile?.full_name || "Leader"}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate("/portal")}>Member Portal</DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <AppLink to="/portal">Rudi kama Mwanachama</AppLink>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/portal/dashboard")}>My Dashboard</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="text-destructive">Sign Out</DropdownMenuItem>

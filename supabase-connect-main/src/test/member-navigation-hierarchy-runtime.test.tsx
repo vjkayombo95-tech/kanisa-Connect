@@ -3,6 +3,17 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const state = vi.hoisted(() => ({
+  ledCommunities: [] as Array<{
+    community_id: string;
+    community_name: string;
+    leadership_role: string;
+    church_id: string;
+  }>,
+  ledCommunityEnabledCalls: [] as boolean[],
+  refetchLedCommunities: vi.fn(),
+}));
+
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({
     churchId: "church-a",
@@ -17,7 +28,12 @@ vi.mock("@/hooks/use-billing-access", () => ({
   useBillingAccess: () => ({ memberPortalAccess: "full", isLoading: false }),
 }));
 
-vi.mock("@/hooks/use-community-leader", () => ({ useLedCommunities: () => ({ data: [] }) }));
+vi.mock("@/hooks/use-community-leader", () => ({
+  useLedCommunities: (enabled = true) => {
+    state.ledCommunityEnabledCalls.push(enabled);
+    return { data: state.ledCommunities, refetch: state.refetchLedCommunities };
+  },
+}));
 vi.mock("@/hooks/use-member-notifications", () => ({ useMemberNotifications: () => ({ data: [] }) }));
 vi.mock("@/components/auth/ProtectedRoute", () => ({ ProtectedRoute: ({ children }: { children: ReactNode }) => children }));
 vi.mock("@/components/portal/BibleVersePopup", () => ({ BibleVersePopup: () => null }));
@@ -45,7 +61,12 @@ vi.mock("@/hooks/use-feature-access", () => ({
   }),
 }));
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { language: "sw" } }),
+  useTranslation: () => ({
+    t: (key: string) => (
+      key === "view_as_community_leader" ? "View as a Community Leader" : key
+    ),
+    i18n: { language: "sw" },
+  }),
 }));
 
 import { PortalLayout } from "@/components/portal/PortalLayout";
@@ -99,6 +120,9 @@ describe("Wave 14 member navigation hierarchy runtime", () => {
 
   beforeEach(() => {
     mounted = null;
+    state.ledCommunities = [];
+    state.ledCommunityEnabledCalls = [];
+    state.refetchLedCommunities.mockClear();
   });
 
   afterEach(() => {
@@ -200,5 +224,49 @@ describe("Wave 14 member navigation hierarchy runtime", () => {
     expect(huduma).toHaveTextContent("Matangazo");
     expect(kiroho).toHaveTextContent("Kiroho");
     expect(media).toHaveTextContent("Media");
+  });
+
+  it("shows community leader context switching only for canonical led communities", () => {
+    mounted = render(<PortalApplication />);
+
+    expect(state.ledCommunityEnabledCalls).toContain(false);
+    expect(state.refetchLedCommunities).not.toHaveBeenCalled();
+
+    act(() => (mounted?.host.querySelector("header button") as HTMLButtonElement).click());
+    expect(mounted.host).toHaveTextContent("Historia Yangu");
+    expect(mounted.host).not.toHaveTextContent("View as a Community Leader");
+    expect(state.ledCommunityEnabledCalls).toContain(true);
+    expect(state.refetchLedCommunities).toHaveBeenCalledTimes(1);
+
+    act(() => mounted?.root.unmount());
+    mounted.host.remove();
+    mounted = null;
+
+    state.ledCommunities = [
+      {
+        community_id: "community-a",
+        community_name: "Jumuiya A",
+        leadership_role: "Mwenyekiti",
+        church_id: "church-a",
+      },
+      {
+        community_id: "community-b",
+        community_name: "Jumuiya B",
+        leadership_role: "Katibu",
+        church_id: "church-a",
+      },
+    ];
+    mounted = render(<PortalApplication />);
+
+    act(() => (mounted?.host.querySelector("header button") as HTMLButtonElement).click());
+
+    const links = [...mounted.host.querySelectorAll<HTMLAnchorElement>("a")];
+    expect(links.find((link) => link.getAttribute("href") === "/portal/dashboard")).toHaveTextContent("Historia Yangu");
+    expect(links.find((link) => link.getAttribute("href") === "/community/community-a")).toHaveTextContent(
+      "View as a Community Leader - Jumuiya A",
+    );
+    expect(links.find((link) => link.getAttribute("href") === "/community/community-b")).toHaveTextContent(
+      "View as a Community Leader - Jumuiya B",
+    );
   });
 });

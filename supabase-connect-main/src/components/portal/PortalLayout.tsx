@@ -17,7 +17,7 @@ import {
   CalendarDays,
   Radio,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   DropdownMenu,
@@ -428,7 +428,11 @@ function ProfileMenu({
             <DropdownMenuSeparator />
             {ledCommunities.map((community) => (
               <DropdownMenuItem key={community.community_id} asChild>
-                <AppLink to={`/community/${community.community_id}`} className="flex items-center gap-2">
+                <AppLink
+                  to={`/community/${community.community_id}`}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2"
+                >
                   <Building2 className="h-3.5 w-3.5 text-primary" />
                   <span className="truncate">
                     {t("view_as_community_leader")}
@@ -459,10 +463,14 @@ export function PortalLayout() {
   const navigate = useNavigate();
   const { signOut, profile, user, userRole } = useAuth();
   const isAdmin = isAdminRole(userRole as AppRole | null);
-  const { data: ledCommunities = [] } = useLedCommunities(profileMenuOpen);
+  const {
+    data: ledCommunities = [],
+    refetch: refetchLedCommunities,
+  } = useLedCommunities(profileMenuOpen);
   const { memberPortalAccess, isLoading } = useBillingAccess();
   const { getFeatureState, isLoading: featuresLoading } = useFeatureAccess();
   const { t, i18n } = useTranslation();
+  const profileMenuWasOpen = useRef(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -513,6 +521,14 @@ export function PortalLayout() {
     () => findDesktopGroupForPath(visibleDesktopSidebarGroups, location.pathname),
     [location.pathname, visibleDesktopSidebarGroups],
   );
+
+  useEffect(() => {
+    if (profileMenuOpen && !profileMenuWasOpen.current) {
+      void refetchLedCommunities();
+    }
+
+    profileMenuWasOpen.current = profileMenuOpen;
+  }, [profileMenuOpen, refetchLedCommunities]);
 
   useEffect(() => {
     if (!activeDesktopGroup) {
