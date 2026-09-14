@@ -609,7 +609,7 @@ export default function PortalDashboard() {
   const prayers = prayerPageData.records;
   const { data: massIntentionPageData = { records: [], totalCount: 0 } } = useMemberMassIntentions(member?.id, loadDashboardDetails, activeRecordPreservation, massIntentionPage);
   const massIntentions = massIntentionPageData.records;
-  const { data: helpRequests = [] } = useMemberHelpRequests(member?.id, loadDashboardDetails);
+  useMemberHelpRequests(member?.id, false);
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -924,6 +924,7 @@ export default function PortalDashboard() {
   const isLoading = memberLoading;
   const limitedPortal = billing.memberPortalAccess === "limited";
   const detailsLoading = !loadDashboardDetails || contribLoading;
+  const showDeferredCommunityHelp = false;
 
   if (isLoading) {
     return (
@@ -1376,7 +1377,7 @@ export default function PortalDashboard() {
       )}
 
       {/* ── My Community Help Requests ── */}
-      {isFeatureEnabled("community_help") && (
+      {showDeferredCommunityHelp && (
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2"><HelpCircle className="h-4 w-4 text-primary" /> Maombi Yangu ya Msaada</CardTitle>
@@ -1498,7 +1499,6 @@ export default function PortalDashboard() {
       )}
 
       {/* ── Quick Actions ── */}
-      {isFeatureEnabled("community_help") && (
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Vitendo vya Haraka</CardTitle>
@@ -1509,7 +1509,6 @@ export default function PortalDashboard() {
             {isFeatureEnabled("pledges") && <QuickAction icon={Target} label="Ahadi" to="/portal/pledges" />}
             {isFeatureEnabled("prayer_requests") && <QuickAction icon={Flame} label="Ombi la Sala" to="/portal/prayer-requests" />}
             {isFeatureEnabled("mass_intentions") && <QuickAction icon={Heart} label="Nia ya Misa" to="/portal/mass-intentions" />}
-            {isFeatureEnabled("community_help") && <QuickAction icon={HelpCircle} label="Omba Msaada" to="/portal/community-help" />}
             {isFeatureEnabled("events") && <QuickAction icon={Calendar} label="Tazama Matukio" to="/portal/events" />}
             {isFeatureEnabled("sermons") && <QuickAction icon={BookOpen} label="Tazama Mahubiri" to="/portal/sermons" />}
             {isFeatureEnabled("announcements") && <QuickAction icon={Megaphone} label="Matangazo" to="/portal/announcements" />}
@@ -1518,7 +1517,6 @@ export default function PortalDashboard() {
           </div>
         </CardContent>
       </Card>
-      )}
 
       {isFeatureEnabled("pledges") && (
       <Card className="glass-card">
