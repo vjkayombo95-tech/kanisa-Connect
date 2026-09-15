@@ -1,0 +1,52 @@
+name: Staging Analytics Snapshots
+
+on:
+  schedule:
+    # GitHub cron uses UTC: 00:00 UTC = 03:00 EAT (Africa/Dar_es_Salaam, UTC+3)
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate-staging-analytics-snapshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Trigger staging analytics snapshots
+        shell: bash
+        env:
+          STAGING_SUPABASE_GATEWAY_JWT: ${{ secrets.STAGING_SUPABASE_GATEWAY_JWT }}
+          STAGING_ANALYTICS_SCHEDULER_SECRET: ${{ secrets.STAGING_ANALYTICS_SCHEDULER_SECRET }}
+        run: |
+          set -euo pipefail
+
+          test -n "$STAGING_SUPABASE_GATEWAY_JWT"
+          test -n "$STAGING_ANALYTICS_SCHEDULER_SECRET"
+
+          response="$(
+            curl --fail-with-body --silent --show-error \
+              --request POST \
+              --header "Authorization: Bearer ${STAGING_SUPABASE_GATEWAY_JWT}" \
+              --header "X-Analytics-Scheduler-Secret: ${STAGING_ANALYTICS_SCHEDULER_SECRET}" \
+              --header "Content-Type: application/json" \
+              --data '{}' \
+              "https://nunfrjcuimaytydnaqtt.supabase.co/functions/v1/analytics-snapshots"
+          )"
+
+          echo "$response" | jq -e '
+            .success == true and
+            .status == "completed"
+          ' > /dev/null
+
+          echo "$response" | jq '{
+            success,
+            status,
+            run_id,
+            pages_processed,
+            churches_attempted,
+            churches_succeeded,
+            churches_failed
+          }'
