@@ -10,12 +10,24 @@ const env = new Map([
   ["SUPABASE_URL", "https://example.supabase.co"],
   ["SUPABASE_ANON_KEY", "anon-key"],
   ["SUPABASE_SERVICE_ROLE_KEY", "service-role-secret"],
+  ["ANALYTICS_SCHEDULER_SECRET", "scheduler-secret"],
 ]);
 
-function request(method: string, authorization?: string) {
+function envWithoutSchedulerSecret() {
+  return new Map([
+    ["SUPABASE_URL", "https://example.supabase.co"],
+    ["SUPABASE_ANON_KEY", "anon-key"],
+    ["SUPABASE_SERVICE_ROLE_KEY", "service-role-secret"],
+  ]);
+}
+
+function request(method: string, authorization?: string, schedulerSecret?: string) {
   return new Request("https://example.functions.supabase.co/analytics-snapshots", {
     method,
-    headers: authorization ? { Authorization: authorization } : undefined,
+    headers: {
+      ...(authorization ? { Authorization: authorization } : {}),
+      ...(schedulerSecret !== undefined ? { "X-Analytics-Scheduler-Secret": schedulerSecret } : {}),
+    },
   });
 }
 
@@ -153,35 +165,103 @@ describe("Wave 17 analytics Edge authorization", () => {
     expect(JSON.stringify(tools.clientCalls[1].options)).not.toContain("super-admin-token");
   });
 
-  it("accepts the service-role bearer as scheduler without caller auth forwarding", async () => {
+  it("denies gateway-valid bearer tokens as scheduler without the scheduler secret", async () => {
+    for (const authorization of ["Bearer service-role-secret", "Bearer different-service-role-token"]) {
+      const tools = harness({ isSuperAdmin: false });
+      const response = await handleAnalyticsSnapshotsRequest(request("POST", authorization), {
+        createClient: tools.createClient,
+        env,
+        orchestrate: tools.orchestrate,
+        console: tools.logger,
+      });
+
+      expect(response.status).toBe(403);
+      expect(tools.orchestrate).not.toHaveBeenCalled();
+      expect(tools.clientCalls).toHaveLength(1);
+      expect(tools.clientCalls[0].key).toBe("anon-key");
+    }
+  });
+
+  it("accepts a gateway-valid bearer plus scheduler secret as scheduler without caller auth forwarding", async () => {
     const tools = harness();
-    const response = await handleAnalyticsSnapshotsRequest(request("POST", "Bearer service-role-secret"), {
-      createClient: tools.createClient,
-      env,
-      orchestrate: tools.orchestrate,
-      console: tools.logger,
-    });
+    const response = await handleAnalyticsSnapshotsRequest(
+      request("POST", "Bearer gateway-valid-jwt", "scheduler-secret"),
+      {
+        createClient: tools.createClient,
+        env,
+        orchestrate: tools.orchestrate,
+        console: tools.logger,
+      },
+    );
 
     expect(response.status).toBe(200);
     expect(tools.createClient).toHaveBeenCalledTimes(1);
     expect(tools.clientCalls[0]).toMatchObject({ key: "service-role-secret" });
     expect(JSON.stringify(tools.clientCalls[0].options)).not.toContain("Authorization");
+    expect(JSON.stringify(tools.clientCalls[0].options)).not.toContain("scheduler-secret");
     expect(tools.orchestrate).toHaveBeenCalledWith(expect.anything(), { invocationSource: "scheduler" });
+  });
+
+  it("denies incorrect, empty, or missing runtime scheduler secrets and preserves super-admin fallback", async () => {
+    for (const schedulerSecret of ["wrong-secret", ""]) {
+      const tools = harness({ isSuperAdmin: false });
+      const response = await handleAnalyticsSnapshotsRequest(request("POST", "Bearer gateway-valid-jwt", schedulerSecret), {
+        createClient: tools.createClient,
+        env,
+        orchestrate: tools.orchestrate,
+        console: tools.logger,
+      });
+
+      expect(response.status).toBe(403);
+      expect(tools.orchestrate).not.toHaveBeenCalled();
+    }
+
+    const missingRuntime = harness({ isSuperAdmin: false });
+    const missingRuntimeResponse = await handleAnalyticsSnapshotsRequest(
+      request("POST", "Bearer gateway-valid-jwt", "scheduler-secret"),
+      {
+        createClient: missingRuntime.createClient,
+        env: envWithoutSchedulerSecret(),
+        orchestrate: missingRuntime.orchestrate,
+        console: missingRuntime.logger,
+      },
+    );
+
+    expect(missingRuntimeResponse.status).toBe(403);
+    expect(missingRuntime.orchestrate).not.toHaveBeenCalled();
+
+    const superAdmin = harness({ isSuperAdmin: true });
+    const superAdminResponse = await handleAnalyticsSnapshotsRequest(request("POST", "Bearer super-admin-token"), {
+      createClient: superAdmin.createClient,
+      env,
+      orchestrate: superAdmin.orchestrate,
+      console: superAdmin.logger,
+    });
+
+    expect(superAdminResponse.status).toBe(200);
+    expect(superAdmin.orchestrate).toHaveBeenCalledWith(expect.anything(), { invocationSource: "super_admin" });
   });
 
   it("does not return or log the service-role secret on failures", async () => {
     const tools = harness({ orchestrationError: "SUPABASE_SERVICE_ROLE_KEY=service-role-secret" });
-    const response = await handleAnalyticsSnapshotsRequest(request("POST", "Bearer service-role-secret"), {
-      createClient: tools.createClient,
-      env,
-      orchestrate: tools.orchestrate,
-      console: tools.logger,
-    });
+    const response = await handleAnalyticsSnapshotsRequest(
+      request("POST", "Bearer gateway-valid-jwt", "scheduler-secret"),
+      {
+        createClient: tools.createClient,
+        env,
+        orchestrate: tools.orchestrate,
+        console: tools.logger,
+      },
+    );
     const payload = await body(response);
 
     expect(response.status).toBe(500);
     expect(JSON.stringify(payload)).not.toContain("service-role-secret");
+    expect(JSON.stringify(payload)).not.toContain("scheduler-secret");
+    expect(JSON.stringify(payload)).not.toContain("gateway-valid-jwt");
     expect(JSON.stringify(tools.errors)).not.toContain("service-role-secret");
+    expect(JSON.stringify(tools.errors)).not.toContain("scheduler-secret");
+    expect(JSON.stringify(tools.errors)).not.toContain("gateway-valid-jwt");
     expect(payload.error).toBe("SUPABASE_SERVICE_ROLE_KEY=[redacted]");
   });
 
