@@ -123,7 +123,9 @@ describe("Wave 17 analytics service runner", () => {
   it("keeps the Edge Function on the existing service-role credential pattern", () => {
     expect(edgeFunction).toContain("handleAnalyticsSnapshotsRequest");
     expect(edgeHandler).toContain('dependencies.env.get("SUPABASE_SERVICE_ROLE_KEY")');
-    expect(edgeHandler).toContain("bearerToken === serviceRoleKey");
+    expect(edgeHandler).toContain('dependencies.env.get("ANALYTICS_SCHEDULER_SECRET")');
+    expect(edgeHandler).toContain('request.headers.get("X-Analytics-Scheduler-Secret")');
+    expect(edgeHandler).toContain("isNonEmptyTimingSafeMatch");
     expect(edgeHandler).toContain('callerSupabase.rpc("is_super_admin")');
     expect(edgeHandler).toContain("dependencies.createClient(supabaseUrl, serviceRoleKey");
     expect(edgeHandler).toContain("orchestrateAnalyticsSnapshots");

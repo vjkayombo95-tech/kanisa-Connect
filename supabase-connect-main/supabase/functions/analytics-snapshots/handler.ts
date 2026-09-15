@@ -51,7 +51,7 @@ export async function authorizeAnalyticsSnapshotsRequest(
   request: Request,
   supabaseUrl: string,
   anonKey: string,
-  serviceRoleKey: string,
+  schedulerSecret: string | undefined,
   createClient: SupabaseFactory,
   logger: Pick<Console, "warn"> = console,
 ): Promise<AuthorizationResult> {
@@ -62,7 +62,8 @@ export async function authorizeAnalyticsSnapshotsRequest(
     return { authorized: false, scheduler: false };
   }
 
-  if (bearerToken === serviceRoleKey) {
+  const schedulerSecretHeader = request.headers.get("X-Analytics-Scheduler-Secret") ?? "";
+  if (isNonEmptyTimingSafeMatch(schedulerSecretHeader, schedulerSecret)) {
     return { authorized: true, scheduler: true };
   }
 
@@ -88,6 +89,22 @@ export async function authorizeAnalyticsSnapshotsRequest(
   }
 
   return { authorized: data === true, scheduler: false };
+}
+
+function isNonEmptyTimingSafeMatch(candidate: string, expected: string | undefined) {
+  if (!candidate || !expected) return false;
+
+  const encoder = new TextEncoder();
+  const candidateBytes = encoder.encode(candidate);
+  const expectedBytes = encoder.encode(expected);
+  const maxLength = Math.max(candidateBytes.length, expectedBytes.length);
+  let diff = candidateBytes.length ^ expectedBytes.length;
+
+  for (let index = 0; index < maxLength; index += 1) {
+    diff |= (candidateBytes[index] ?? 0) ^ (expectedBytes[index] ?? 0);
+  }
+
+  return diff === 0;
 }
 
 export async function handleAnalyticsSnapshotsRequest(
@@ -119,6 +136,7 @@ export async function handleAnalyticsSnapshotsRequest(
     const supabaseUrl = dependencies.env.get("SUPABASE_URL");
     const anonKey = dependencies.env.get("SUPABASE_ANON_KEY");
     const serviceRoleKey = dependencies.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const schedulerSecret = dependencies.env.get("ANALYTICS_SCHEDULER_SECRET");
 
     if (!supabaseUrl || !anonKey || !serviceRoleKey) {
       throw new Error("Analytics automation backend is not configured.");
@@ -128,7 +146,7 @@ export async function handleAnalyticsSnapshotsRequest(
       request,
       supabaseUrl,
       anonKey,
-      serviceRoleKey,
+      schedulerSecret,
       dependencies.createClient,
       logger,
     );
