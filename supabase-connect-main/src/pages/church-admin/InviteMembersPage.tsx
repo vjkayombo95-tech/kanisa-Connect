@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { buildMemberJoinUrl, buildMemberJoinWhatsAppMessage } from "@/lib/invite-flow";
+import { openWhatsAppShare } from "@/lib/whatsapp-share";
 
 export default function InviteMembersPage() {
   const { churchId } = useAuth();
@@ -30,10 +32,7 @@ export default function InviteMembersPage() {
     enabled: !!churchId,
   });
 
-  const joinLink =
-    church?.slug && typeof window !== "undefined"
-      ? `${window.location.origin}/join/${church.slug}`
-      : "";
+  const joinLink = buildMemberJoinUrl(church?.slug) ?? "";
 
   const copyJoinLink = async () => {
     if (!joinLink) return;
@@ -56,12 +55,7 @@ export default function InviteMembersPage() {
   const shareOnWhatsApp = () => {
     if (!joinLink) return;
 
-    const message = `Jiunge na ${church?.name || "kanisa letu"} kwenye Kanisa Connect: ${joinLink}`;
-    window.open(
-      `https://wa.me/?text=${encodeURIComponent(message)}`,
-      "_blank",
-      "noopener,noreferrer",
-    );
+    openWhatsAppShare(buildMemberJoinWhatsAppMessage({ churchName: church?.name, joinUrl: joinLink }));
   };
 
   if (!churchId) {

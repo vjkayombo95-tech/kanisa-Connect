@@ -129,6 +129,50 @@ function parseSignupRateLimit(errorMessage: string) {
   };
 }
 
+function formatRegistrationError(error: unknown) {
+  const rawMessage = error instanceof Error ? error.message : String(error ?? "");
+  const lowerMessage = rawMessage.toLowerCase();
+  const { isRateLimited, cooldownSeconds } = parseSignupRateLimit(rawMessage);
+
+  if (lowerMessage.includes("offline")) {
+    return "You are offline. Your registration draft is saved on this device. Reconnect to submit.";
+  }
+
+  if (lowerMessage.includes("already registered") || lowerMessage.includes("already exists")) {
+    return "That email is already registered. Please log in instead.";
+  }
+
+  if (lowerMessage.includes("already linked") || lowerMessage.includes("another church")) {
+    return "This account is already connected to another church. Please contact your church administrator.";
+  }
+
+  if (lowerMessage.includes("invalid login credentials")) {
+    return "This email already has an account, but that password does not match. Please sign in or use the correct password.";
+  }
+
+  if (lowerMessage.includes("email not confirmed")) {
+    return "Your account exists, but your email is not confirmed yet. Check your inbox, then sign in again.";
+  }
+
+  if (isRateLimited && cooldownSeconds > 0) {
+    return `Email signup is temporarily rate-limited. Please wait ${cooldownSeconds} seconds before trying again.`;
+  }
+
+  if (lowerMessage.includes("phone")) {
+    return "Please check the phone number and try again.";
+  }
+
+  if (lowerMessage.includes("invalid church") || lowerMessage.includes("church not found")) {
+    return "This church registration link is invalid or no longer active.";
+  }
+
+  if (lowerMessage.includes("public registration")) {
+    return "Public registration is currently unavailable for this church.";
+  }
+
+  return "Registration could not be completed. Please try again or contact your church administrator.";
+}
+
 export default function RegisterPage() {
   const { churchCode = "", slug = "" } = useParams<{ churchCode: string; slug: string }>();
   const [searchParams] = useSearchParams();
@@ -487,23 +531,14 @@ export default function RegisterPage() {
         storeSignupCooldown(normalizedEmail, until);
       }
 
-      const message = lowerMessage.includes("already registered") || lowerMessage.includes("already exists")
-        ? "That email is already registered. Please log in instead."
-        : lowerMessage.includes("invalid login credentials")
-          ? "This email already has an account, but that password does not match. Please sign in or use the correct password."
-        : lowerMessage.includes("email not confirmed")
-          ? "Your account exists, but your email is not confirmed yet. Check your inbox, then sign in again."
-        : isRateLimited && cooldownSeconds > 0
-          ? `Email signup is temporarily rate-limited. Please wait ${cooldownSeconds} seconds before trying again.`
-        : error.message;
-
-      toast({ title: "Registration failed", description: message, variant: "destructive" });
+      toast({ title: "Registration failed", description: formatRegistrationError(error), variant: "destructive" });
     },
   });
 
   const isLoadingPage = churchQuery.isLoading || communitiesQuery.isLoading || ministriesQuery.isLoading;
   const pageError = churchQuery.error || communitiesQuery.error || ministriesQuery.error;
   const registrationEnabled = isPublicRegistrationEnabled(churchQuery.data?.metadata);
+  const registrationErrorMessage = registerMutation.error ? formatRegistrationError(registerMutation.error) : null;
   const ministrySummary = useMemo(() => {
     if (selectedMinistryIds.length === 0) return "No ministries selected";
     if (selectedMinistryIds.length === 1) return "1 ministry selected";
@@ -707,11 +742,11 @@ export default function RegisterPage() {
               </CardHeader>
 
               <CardContent className="p-0">
-                {registerMutation.error ? (
+                {registrationErrorMessage ? (
                   <Alert variant="destructive" className="mb-6">
                     <ShieldAlert className="h-4 w-4" />
                     <AlertTitle>Registration could not be completed</AlertTitle>
-                    <AlertDescription>{registerMutation.error.message}</AlertDescription>
+                    <AlertDescription>{registrationErrorMessage}</AlertDescription>
                   </Alert>
                 ) : null}
                 {alreadyInSameChurch && (

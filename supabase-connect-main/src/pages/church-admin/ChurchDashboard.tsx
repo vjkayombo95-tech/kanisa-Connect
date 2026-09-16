@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ensureBirthdayAnnouncements } from "@/lib/birthday-announcements";
 import { fetchChurchMessageTemplate, renderChurchMessageTemplate } from "@/lib/church-message-templates";
 import { formatTZS } from "@/lib/currency";
+import { buildMemberJoinUrl, buildMemberJoinWhatsAppMessage } from "@/lib/invite-flow";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { getStaffMobileConfig } from "@/lib/staff-mobile-registry";
 import { openWhatsAppShare } from "@/lib/whatsapp-share";
@@ -388,9 +389,7 @@ export default function ChurchDashboard() {
 
   const administratorName = profile?.full_name || user?.user_metadata?.full_name || "Administrator";
   const greeting = new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening";
-  const joinLink = data?.churchSlug && typeof window !== "undefined"
-    ? `${window.location.origin}/join/${data.churchSlug}`
-    : "";
+  const joinLink = buildMemberJoinUrl(data?.churchSlug) ?? "";
 
   const copyJoinLink = async () => {
     if (!joinLink) return;
@@ -404,8 +403,7 @@ export default function ChurchDashboard() {
 
   const shareJoinLinkOnWhatsApp = () => {
     if (!joinLink) return;
-    const message = `Join ${data?.churchName || "our church"} on Kanisa Connect: ${joinLink}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+    openWhatsAppShare(buildMemberJoinWhatsAppMessage({ churchName: data?.churchName || "our church", joinUrl: joinLink }));
   };
 
   const shareBirthdayWishOnWhatsApp = (memberName: string) => {
