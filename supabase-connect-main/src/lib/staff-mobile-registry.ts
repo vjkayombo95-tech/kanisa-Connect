@@ -62,7 +62,6 @@ const adminServices: StaffService[] = [
   { id: "qr-payments", label: "Malipo ya QR", route: "/church-admin/qr-payments", group: "Fedha", icon: Receipt },
   { id: "mass-intentions", label: "Nia za Misa", route: "/church-admin/mass-intentions", group: "Kichungaji", icon: ClipboardList, featureKey: "mass_intentions" },
   { id: "prayer-requests", label: "Maombi", route: "/church-admin/prayer-requests", group: "Kichungaji", icon: HeartHandshake, featureKey: "prayer_requests" },
-  { id: "mass-schedule", label: "Ratiba ya Misa", route: "/church-admin/mass-schedule", group: "Kichungaji", icon: CalendarDays, featureKey: "events" },
   { id: "mass-timetable", label: "Ratiba za Misa", route: "/church-admin/mass-timetable", group: "Kichungaji", icon: CalendarDays, featureKey: "events" },
   { id: "sermons", label: "Mahubiri", route: "/church-admin/sermons", group: "Kichungaji", icon: BookOpen, featureKey: "sermons" },
   { id: "livestreams", label: "Matangazo Mubashara", route: "/church-admin/livestreams", group: "Kichungaji", icon: Activity, featureKey: "livestream", livestreamPermission: true },
@@ -72,8 +71,9 @@ const adminServices: StaffService[] = [
   { id: "billing", label: "Malipo ya kanisa", route: "/church-admin/billing", group: "Usimamizi", icon: CreditCard },
 ];
 
-const pastoralIds = new Set(["mass-intentions", "prayer-requests", "mass-schedule", "mass-timetable", "calendar", "events", "announcements", "sermons", "livestreams"]);
+const pastoralIds = new Set(["mass-intentions", "prayer-requests", "mass-timetable", "calendar", "events", "announcements", "sermons", "livestreams"]);
 const financeIds = new Set(["contributions", "pledges", "reports"]);
+const pastoralHiddenRoutes = ["/church-admin/mass-schedule"];
 
 const pastoralServices: StaffService[] = adminServices
   .filter((item) => pastoralIds.has(item.id))
@@ -125,7 +125,13 @@ export function isStaffRouteAllowed(workspace: StaffMobileWorkspace | null, path
   if (workspace !== "pastoral" && workspace !== "finance") return false;
   const normalized = exactPath(pathname);
   const config = STAFF_MOBILE_CONFIGS[workspace];
-  return normalized === config.home || normalized === config.servicesRoute || config.services.some((item) => normalized === item.route || normalized.startsWith(`${item.route}/`));
+  const hiddenRoutes = workspace === "pastoral" ? pastoralHiddenRoutes : [];
+  return (
+    normalized === config.home ||
+    normalized === config.servicesRoute ||
+    config.services.some((item) => normalized === item.route || normalized.startsWith(`${item.route}/`)) ||
+    hiddenRoutes.some((route) => normalized === route || normalized.startsWith(`${route}/`))
+  );
 }
 
 export function canSuperAdminEnterChurchWorkspace(churchId: string | null) {
