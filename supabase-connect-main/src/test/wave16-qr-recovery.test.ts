@@ -17,7 +17,7 @@ describe("Wave 16 QR recovery", () => {
   it("restores member invitation as a dedicated church-admin route", () => {
     expect(adminRoutes).toContain('path="invite-members"');
     expect(adminRoutes).toContain("<InviteMembersPage />");
-    expect(invitePage).toContain('`${window.location.origin}/join/${church.slug}`');
+    expect(invitePage).toContain("buildMemberJoinUrl(church?.slug)");
     expect(invitePage).toContain("<QRCodeSVG");
   });
 

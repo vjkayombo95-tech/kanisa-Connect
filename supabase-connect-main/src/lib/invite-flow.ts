@@ -20,6 +20,41 @@ export type InviteRecord = {
   sourceTable: InviteTableName;
 };
 
+export function getBrowserInviteOrigin() {
+  if (typeof window === "undefined" || !window.location.origin) return null;
+  return window.location.origin;
+}
+
+export function normalizeInviteOrigin(origin: string | null | undefined) {
+  const cleanOrigin = (origin ?? "").trim().replace(/\/+$/, "");
+  return cleanOrigin || null;
+}
+
+export function buildMemberJoinUrl(churchSlug: string | null | undefined, origin = getBrowserInviteOrigin()) {
+  const cleanOrigin = normalizeInviteOrigin(origin);
+  const cleanSlug = (churchSlug ?? "").trim();
+  if (!cleanOrigin || !cleanSlug) return null;
+  return `${cleanOrigin}/join/${encodeURIComponent(cleanSlug)}`;
+}
+
+export function buildTokenInviteUrl(token: string | null | undefined, origin = getBrowserInviteOrigin()) {
+  const cleanOrigin = normalizeInviteOrigin(origin);
+  const cleanToken = (token ?? "").trim();
+  if (!cleanOrigin || !cleanToken) return null;
+  return `${cleanOrigin}/invite/${encodeURIComponent(cleanToken)}`;
+}
+
+export function buildMemberJoinWhatsAppMessage({
+  churchName,
+  joinUrl,
+}: {
+  churchName?: string | null;
+  joinUrl: string;
+}) {
+  const cleanChurchName = (churchName ?? "").trim() || "kanisa letu";
+  return `Jiunge na ${cleanChurchName} kwenye Kanisa Connect: ${joinUrl}`;
+}
+
 const normalizeInvite = (row: Record<string, unknown>, sourceTable: InviteTableName): InviteRecord => ({
   id: String(row.id ?? ""),
   email: String(row.email ?? ""),

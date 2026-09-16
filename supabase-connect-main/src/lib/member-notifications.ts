@@ -16,12 +16,15 @@ export type MemberNotification = {
 export const memberNotificationsKey = (userId?: string | null, churchId?: string | null) =>
   ["member-notifications", userId, churchId] as const;
 
+export const adminNotificationsKey = (userId?: string | null, churchId?: string | null) =>
+  ["admin-notifications", userId, churchId] as const;
+
 export function boundedUnreadLabel(notifications: readonly MemberNotification[]) {
   const count = notifications.filter((notification) => !notification.is_read).length;
   return count > 9 ? "9+" : count ? String(count) : null;
 }
 
-export async function fetchMemberNotifications(userId: string, churchId: string): Promise<MemberNotification[]> {
+export async function fetchScopedNotifications(userId: string, churchId: string, limit = MEMBER_NOTIFICATION_LIMIT): Promise<MemberNotification[]> {
   if (!userId || !churchId) return [];
 
   const { data, error } = await supabase
@@ -30,7 +33,7 @@ export async function fetchMemberNotifications(userId: string, churchId: string)
     .eq("user_id", userId)
     .eq("church_id", churchId)
     .order("created_at", { ascending: false })
-    .limit(MEMBER_NOTIFICATION_LIMIT);
+    .limit(limit);
 
   if (error) throw error;
   const rows = (data ?? []) as MemberNotification[];
@@ -40,7 +43,11 @@ export async function fetchMemberNotifications(userId: string, churchId: string)
   return rows;
 }
 
-export async function markMemberNotificationRead(notificationId: string, userId: string, churchId: string) {
+export async function fetchMemberNotifications(userId: string, churchId: string): Promise<MemberNotification[]> {
+  return fetchScopedNotifications(userId, churchId, MEMBER_NOTIFICATION_LIMIT);
+}
+
+export async function markScopedNotificationRead(notificationId: string, userId: string, churchId: string) {
   if (!notificationId || !userId || !churchId) throw new Error("Notification ownership is unavailable.");
 
   const { data, error } = await supabase
@@ -57,4 +64,27 @@ export async function markMemberNotificationRead(notificationId: string, userId:
     throw new Error("Notification was not marked as read.");
   }
   return data.id;
+}
+
+export async function markMemberNotificationRead(notificationId: string, userId: string, churchId: string) {
+  return markScopedNotificationRead(notificationId, userId, churchId);
+}
+
+export async function markAllScopedNotificationsRead(userId: string, churchId: string) {
+  if (!userId || !churchId) throw new Error("Notification ownership is unavailable.");
+
+  const { data, error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("user_id", userId)
+    .eq("church_id", churchId)
+    .eq("is_read", false)
+    .select("id,user_id,church_id,is_read");
+
+  if (error) throw error;
+  const rows = (data ?? []) as Array<Pick<MemberNotification, "id" | "user_id" | "church_id" | "is_read">>;
+  if (rows.some((row) => row.user_id !== userId || row.church_id !== churchId || row.is_read !== true)) {
+    throw new Error("Notification ownership could not be verified.");
+  }
+  return rows.map((row) => row.id);
 }

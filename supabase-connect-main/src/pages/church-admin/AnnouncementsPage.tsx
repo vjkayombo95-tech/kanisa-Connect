@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,57 +93,6 @@ type AnnouncementMutationResult = {
 const AI_GENERATION_DELAY_MS = 1100;
 const AI_CONNECTION_DELAY_MS = 350;
 
-const mockTemplates: Record<SuggestionType, Record<LanguageType, Array<Pick<MessageTemplateRecord, "title" | "content">>>> = {
-  service: {
-    sw: [
-      { title: "Tangazo la Ibada ya Jumapili", content: "Karibuni kwenye ibada yetu ya Jumapili hii kuanzia saa 2:00 asubuhi. Tutakuwa na muda wa maombi, sifa na neno la Mungu. Tafadhali fika mapema na umkaribishe jirani yako." },
-      { title: "Ibada ya Jumapili Wiki Hii", content: "Kanisa linawakaribisha waumini wote kwenye ibada ya Jumapili hii. Njoo tushirikiane katika kuabudu, kusikiliza neno la Mungu na kuombeana kama familia ya imani." },
-      { title: "Tusikose Ibada ya Jumapili", content: "Tunawakumbusha waumini wote kuhusu ibada ya Jumapili ijayo. Huu ni wakati wa kujengwa kiroho, kuungana na wengine na kumtukuza Mungu pamoja." },
-    ],
-    en: [
-      { title: "Sunday Service Announcement", content: "Join us this Sunday for a powerful worship service starting at 8:00 AM. Expect prayer, praise, and a timely word for the church family. Come early and invite someone." },
-      { title: "This Week's Sunday Service", content: "You are warmly invited to our Sunday service this week. Let us gather in faith, worship together, and receive encouragement from the Word of God." },
-      { title: "Do Not Miss Sunday Service", content: "We are reminding the church family about the upcoming Sunday service. It will be a meaningful time of worship, fellowship, and spiritual renewal." },
-    ],
-  },
-  youth: {
-    sw: [
-      { title: "Tangazo la Mkutano wa Vijana", content: "Vijana wote mnakaribishwa kwenye mkutano wa vijana Ijumaa hii jioni. Tutakuwa na neno, maombi, mjadala na muda wa kujengana katika imani." },
-      { title: "Kikao cha Vijana Wiki Hii", content: "Tunawakumbusha vijana wote kuhusu mkutano wetu wa wiki hii. Njoo tushirikiane, tujifunze pamoja, na kuimarishana kiroho." },
-      { title: "Karibu Mkutano wa Vijana", content: "Mkutano wa vijana unafanyika wiki hii na kila kijana anakaribishwa. Leta rafiki yako na tuwe na muda mzuri wa ibada, neno na ushirika." },
-    ],
-    en: [
-      { title: "Youth Meeting Announcement", content: "All young people are invited to this week's youth meeting. We will have worship, a short teaching, prayer, and time to connect as a growing faith community." },
-      { title: "Youth Fellowship This Week", content: "Please join us for our youth fellowship this week. It will be a refreshing space for encouragement, discipleship, and real connection." },
-      { title: "Join the Youth Gathering", content: "The youth gathering is happening this week and everyone is welcome. Bring a friend and come ready for worship, learning, and fellowship." },
-    ],
-  },
-  prayer: {
-    sw: [
-      { title: "Tangazo la Mkutano wa Maombi", content: "Karibu kwenye mkutano wa maombi utakaofanyika Jumatano jioni. Tutatafuta uso wa Mungu pamoja na kuombea familia, kanisa na taifa letu." },
-      { title: "Muda wa Maombi ya Kanisa", content: "Tunawakumbusha waumini wote kuhusu mkutano wa maombi wa wiki hii. Njoo tushirikiane katika maombi na kuimarisha maisha yetu ya kiroho." },
-      { title: "Tusimame Pamoja Katika Maombi", content: "Kanisa linakaribisha waumini wote kwenye mkutano wa maombi. Huu ni wakati wa kuleta mahitaji yetu mbele za Mungu na kuombeana kwa upendo." },
-    ],
-    en: [
-      { title: "Prayer Meeting Announcement", content: "You are invited to our church prayer meeting this week. Let us seek God together and lift up our families, church, and community in prayer." },
-      { title: "Church Prayer Gathering", content: "Please join us for a special time of prayer this week. We will gather to intercede, encourage one another, and grow deeper in faith." },
-      { title: "Stand With Us in Prayer", content: "Our prayer meeting is coming up this week. Come ready to pray, believe, and stand together for the needs of the church and community." },
-    ],
-  },
-  event: {
-    sw: [
-      { title: "Tangazo la Tukio Maalum", content: "Tunayo furaha kuwatangazia tukio maalum litakalofanyika hivi karibuni kanisani. Tafadhali jiandae kushiriki nasi katika siku hii ya pekee na uendelee kufuatilia taarifa zaidi." },
-      { title: "Karibu Tukio Maalum la Kanisa", content: "Kanisa linakualika kwenye tukio maalum linalokuja. Hii itakuwa nafasi ya baraka, ushirika na shangwe kwa familia yote ya kanisa." },
-      { title: "Usikose Tukio Hili Maalum", content: "Tunawaalika wote kushiriki kwenye tukio maalum la kanisa. Endelea kufuatilia maelezo zaidi na jiandae kuwa sehemu ya siku hii ya kipekee." },
-    ],
-    en: [
-      { title: "Special Event Announcement", content: "We are excited to announce a special church event coming soon. Please prepare to join us for a memorable and uplifting time together." },
-      { title: "You Are Invited to a Special Event", content: "Our church family is invited to an upcoming special event. It will be a meaningful opportunity for fellowship, celebration, and encouragement." },
-      { title: "Do Not Miss This Special Event", content: "A special event is on the way, and we would love to see you there. Watch for more details and get ready to be part of something memorable." },
-    ],
-  },
-};
-
 const templateTypeAliases: Record<SuggestionType, string[]> = {
   service: ["service", "sunday_service"],
   youth: ["youth", "youth_meeting"],
@@ -198,18 +147,6 @@ function normalizeMessageTemplate(
   };
 }
 
-function getMockTemplates(type: SuggestionType, selectedLanguage: LanguageType): MessageTemplateRecord[] {
-  return mockTemplates[type][selectedLanguage].map((template, index) => ({
-    id: `mock-${type}-${selectedLanguage}-${index}`,
-    type,
-    language: selectedLanguage,
-    title: template.title,
-    content: template.content,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }));
-}
-
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
@@ -240,18 +177,14 @@ function formatAiGeneratorError(error: unknown) {
     message.includes("404") ||
     message.includes("schema cache")
   ) {
-    return "Setup incomplete: Please refresh Supabase schema in Settings -> API -> Refresh";
+    return "Templates could not be loaded right now. Try again in a moment.";
   }
 
   if (message.toLowerCase().includes("failed to fetch") || message.includes("ERR_CONNECTION_REFUSED")) {
-    return "Connection failed while reaching Supabase. Please check your project URL, API availability, or refresh the schema and try again.";
+    return "Templates could not be loaded. Check your connection and try again.";
   }
 
-  if (message.includes("No templates returned from Supabase")) {
-    return "No live templates were returned from Supabase. Using local mock templates for now.";
-  }
-
-  return message;
+  return "Templates could not be loaded right now. Try again in a moment.";
 }
 
 function isMissingAnnouncementRpc(error: unknown) {
@@ -289,6 +222,7 @@ export default function AnnouncementsPage() {
   const [aiNotice, setAiNotice] = useState<string | null>(null);
   const [aiLoadingMessage, setAiLoadingMessage] = useState("Connecting to AI...");
   const [lastGeneratedAt, setLastGeneratedAt] = useState<number>(0);
+  const templateRequestSequence = useRef(0);
   const { churchId, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -557,17 +491,18 @@ export default function AnnouncementsPage() {
       type,
       selectedLanguage,
       regenerate = false,
+      requestId,
     }: {
       type: SuggestionType;
       selectedLanguage: LanguageType;
       regenerate?: boolean;
+      requestId: number;
     }) => {
       setAiLoadingMessage("Connecting to AI...");
       await pause(AI_CONNECTION_DELAY_MS);
       setAiLoadingMessage("Fetching templates...");
 
-      // If the table was created recently, Supabase may still serve a stale schema cache
-      // until it is refreshed manually in Dashboard > Settings > API > Refresh.
+      // Keep this path live-only; failures are surfaced as retryable UI instead of local fallbacks.
       const [response] = await Promise.all([
         supabase
           .from("message_templates")
@@ -583,25 +518,28 @@ export default function AnnouncementsPage() {
       const templates = ((data ?? []) as MessageTemplateLike[])
         .map((template, index) => normalizeMessageTemplate(template, type, selectedLanguage, index))
         .filter((template): template is MessageTemplateRecord => Boolean(template));
-      if (templates.length === 0) {
-        throw new Error("No templates returned from Supabase for this selection.");
-      }
 
       const shuffled = shuffleTemplates(templates).slice(0, 3);
-      return { templates: shuffled, regenerate, type, selectedLanguage, source: "supabase" as const };
+      return { templates: shuffled, regenerate, type, selectedLanguage, requestId, source: "supabase" as const };
     },
-    onMutate: ({ type, selectedLanguage }) => {
+    onMutate: ({ type, selectedLanguage, requestId }) => {
+      if (requestId !== templateRequestSequence.current) return;
       setSelectedType(type);
       setLanguage(selectedLanguage);
       setAiError(null);
       setAiNotice(null);
     },
-    onSuccess: ({ templates, regenerate, type, selectedLanguage }) => {
+    onSuccess: ({ templates, regenerate, type, selectedLanguage, requestId }) => {
+      if (requestId !== templateRequestSequence.current) return;
       setAiResults(templates);
       setLastGeneratedAt(Date.now());
-      setAiNotice(null);
+      setAiNotice(
+        templates.length === 0
+          ? "No saved templates are configured for this message type and language yet."
+          : null,
+      );
 
-      if (!regenerate) {
+      if (templates.length > 0 && !regenerate) {
         const first = templates[0];
         setAiDraft({
           title: first.title || getFallbackTitle(type, selectedLanguage),
@@ -609,22 +547,15 @@ export default function AnnouncementsPage() {
         });
       }
     },
-    onError: (err: unknown) => {
-      console.error("Failed to generate AI announcement:", err);
-      const fallbackTemplates = shuffleTemplates(getMockTemplates(selectedType, language)).slice(0, 3);
-      setAiResults(fallbackTemplates);
+    onError: (err: unknown, variables) => {
+      if (variables.requestId !== templateRequestSequence.current) return;
+      console.error("Failed to load announcement templates:", err);
+      setAiResults([]);
       const formattedError = formatAiGeneratorError(err);
       setAiError(formattedError);
-      setAiNotice("Using local mock templates while Supabase is unavailable.");
+      setAiNotice(null);
       setLastGeneratedAt(Date.now());
-      if (!aiDraft.content.trim()) {
-        const first = fallbackTemplates[0];
-        setAiDraft({
-          title: first.title || getFallbackTitle(selectedType, language),
-          content: first.content,
-        });
-      }
-      toast({ title: "AI suggestions unavailable", description: formattedError, variant: "destructive" });
+      toast({ title: "Templates unavailable", description: formattedError, variant: "destructive" });
     },
   });
 
@@ -691,7 +622,7 @@ export default function AnnouncementsPage() {
         title: "Announcement sent",
         description: result.stored
           ? "Members can now see it in their announcements."
-          : "Members can now see it. Message history storage will be available after the schema refresh.",
+          : "Members can now see it. Message history will be available once setup is complete.",
       });
       setAiDraft(EMPTY_AI_FORM);
     },
@@ -702,7 +633,9 @@ export default function AnnouncementsPage() {
   });
 
   const handleGenerate = (type: SuggestionType, regenerate = false) => {
-    generateMessages.mutate({ type, selectedLanguage: language, regenerate });
+    const requestId = templateRequestSequence.current + 1;
+    templateRequestSequence.current = requestId;
+    generateMessages.mutate({ type, selectedLanguage: language, regenerate, requestId });
   };
 
   const applyTemplate = (template: MessageTemplateRecord) => {
@@ -874,7 +807,7 @@ export default function AnnouncementsPage() {
                   </div>
                 </div>
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  Pick a church moment, let the assistant pull message templates from Supabase, then refine and send the final copy.
+                  Pick a church moment, load saved templates, then refine and send the final copy.
                 </p>
               </div>
 
@@ -886,10 +819,13 @@ export default function AnnouncementsPage() {
                     if (value === "sw" || value === "en") {
                       setLanguage(value);
                       if (aiResults.length > 0) {
+                        const requestId = templateRequestSequence.current + 1;
+                        templateRequestSequence.current = requestId;
                         generateMessages.mutate({
                           type: selectedType,
                           selectedLanguage: value,
                           regenerate: true,
+                          requestId,
                         });
                       }
                     }
@@ -978,7 +914,7 @@ export default function AnnouncementsPage() {
                         <div>
                           <h2 className="font-serif text-xl text-foreground">Generated variations</h2>
                           <p className="text-sm text-muted-foreground">
-                            Choose one, then fine-tune it before sending. Results are shuffled from Supabase templates to feel freshly generated.
+                            Choose one, then fine-tune it before sending. Results are shuffled from saved church templates to feel freshly generated.
                           </p>
                         </div>
                         <Button
@@ -1020,7 +956,9 @@ export default function AnnouncementsPage() {
                         <Card className="border-dashed border-white/10 bg-black/20">
                           <CardContent className="py-12 text-center text-muted-foreground">
                             <Sparkles className="mx-auto mb-4 h-10 w-10 text-amber-200/35" />
-                            Tap a suggestion above to generate 2-3 polished message variations.
+                            {aiError
+                              ? "Templates could not be loaded. Retry when your connection or configuration is ready."
+                              : aiNotice ?? "Tap a suggestion above to load saved message templates."}
                             <div className="mt-4">
                               <Button
                                 type="button"
@@ -1029,7 +967,7 @@ export default function AnnouncementsPage() {
                                 disabled={generateMessages.isPending}
                                 className="rounded-full border-white/10 bg-white/5"
                               >
-                                Retry loading templates
+                                {aiError || aiNotice ? "Retry loading templates" : "Load templates"}
                               </Button>
                             </div>
                           </CardContent>
@@ -1112,7 +1050,7 @@ export default function AnnouncementsPage() {
                           />
                         </div>
                         <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100/85">
-                          AI style note: templates are fetched from Supabase and shuffled to feel freshly generated each time.
+                          AI style note: saved templates are shuffled to feel freshly generated each time.
                         </div>
                         <div className="flex flex-col gap-3 sm:flex-row">
                           <Button

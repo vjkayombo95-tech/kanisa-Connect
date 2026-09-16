@@ -18,6 +18,7 @@ import { Shield, UserPlus, Mail, Loader2, RefreshCw, Trash2, Send, Check, Chevro
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { getEdgeFunctionErrorMessage } from "@/lib/edge-function-error";
+import { buildTokenInviteUrl } from "@/lib/invite-flow";
 import { v4 as uuidv4 } from "uuid";
 
 const appRoles: { label: string; value: string }[] = [
@@ -287,7 +288,8 @@ export default function RolesPage() {
   });
 
   const copyInviteLink = (token: string) => {
-    const url = `${window.location.origin}/invite/${token}`;
+    const url = buildTokenInviteUrl(token);
+    if (!url) return;
     navigator.clipboard.writeText(url);
     toast({ title: "Invite link copied to clipboard" });
   };
