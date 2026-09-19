@@ -25,7 +25,7 @@ Required checks:
 
 Run `npm run verify` locally before opening a pull request when practical.
 
-`npm run test:ci` runs the stable Vitest suite and explicitly leaves out only `src/test/production-dashboard-mobile-responsive-browser.test.tsx`. That real-browser responsive test currently has a known afterAll browser cleanup timeout even when its assertions pass. Wave 19 Slice 2 owns stabilizing that test and returning it to the required CI gate. To run it manually, use `npm run test:browser-responsive`.
+`npm run test:ci` runs the full Vitest suite, including `src/test/production-dashboard-mobile-responsive-browser.test.tsx`. During Wave 19 Slice 2, the previously observed afterAll browser cleanup timeout did not reproduce across five isolated browser-test runs, a full-suite run, and the required CI test command. No timeout increase or assertion weakening was introduced. For focused browser-responsive verification, use `npm run test:browser-responsive`.
 
 ## Post-merge and deployment provenance
 
