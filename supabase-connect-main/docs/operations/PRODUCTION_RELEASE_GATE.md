@@ -10,6 +10,23 @@ The required GitHub check is the **Build and validate** job from `.github/workfl
 3. Confirm the pull request contains no pending migration unless that migration has a separate approval and rollout plan.
 4. Confirm no environment file, credential, fixture output, or generated artifact is included.
 
+## Automated CI
+
+The **Build and validate** job runs without Supabase credentials, service-role keys, deployment tokens, or database access.
+
+Required checks:
+
+- `npm ci`
+- `npm run typecheck`
+- `npm run lint`
+- `npm run test:ci`
+- `npm run build`
+- `git diff --check` and a clean checkout sanity check
+
+Run `npm run verify` locally before opening a pull request when practical.
+
+`npm run test:ci` runs the full Vitest suite, including `src/test/production-dashboard-mobile-responsive-browser.test.tsx`. During Wave 19 Slice 2, the previously observed afterAll browser cleanup timeout did not reproduce across five isolated browser-test runs, a full-suite run, and the required CI test command. No timeout increase or assertion weakening was introduced. For focused browser-responsive verification, use `npm run test:browser-responsive`.
+
 ## Post-merge and deployment provenance
 
 1. Record the resulting `main` SHA.

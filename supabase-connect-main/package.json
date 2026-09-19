@@ -16,7 +16,11 @@
     "bible:import": "node scripts/bible/import-bible.ts",
     "lint": "eslint .",
     "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit --pretty false",
     "test": "vitest run",
+    "test:ci": "vitest run --no-file-parallelism --reporter=dot",
+    "test:browser-responsive": "vitest run src/test/production-dashboard-mobile-responsive-browser.test.tsx --reporter=dot --pool=forks",
+    "verify": "npm run typecheck && npm run lint && npm run test:ci && npm run build",
     "test:watch": "vitest"
   },
   "dependencies": {

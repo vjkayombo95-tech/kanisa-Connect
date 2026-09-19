@@ -42,16 +42,16 @@ jobs:
         run: npm ci
 
       - name: Install Playwright Chromium
-        run: npx --no-install playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium
 
       - name: TypeScript
-        run: npx tsc --noEmit
+        run: npm run typecheck
 
       - name: ESLint
         run: npm run lint
 
-      - name: Full test suite
-        run: npm test -- --no-file-parallelism --reporter=dot
+      - name: CI test suite
+        run: npm run test:ci
 
       - name: Production build
         run: npm run build
