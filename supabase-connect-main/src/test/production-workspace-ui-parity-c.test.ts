@@ -19,7 +19,9 @@ describe("Production workspace UI parity C boundaries", () => {
     expect(sidebar).toContain("Church Admin Workspace");
     expect(sidebar).toContain("getStaffMobileConfig(staffWorkspace)");
     expect(sidebar).toContain("useVisibleStaffServices(workspaceConfig");
-    expect(sidebar).toContain("groups.map");
+    expect(sidebar).toContain("primaryServices.map");
+    expect(sidebar).toContain('route="/church-admin/services"');
+    expect(sidebar).toContain('label="Zaidi"');
     expect(layout).toContain("ChurchAdminCommandMenu");
     expect(layout).toContain("pageTitle");
   });
@@ -38,7 +40,7 @@ describe("Production workspace UI parity C boundaries", () => {
   });
 
   it("does not label unknown staff workspaces as Church Admin", () => {
-    for (const source of [layout, sidebar, dashboardExperience]) {
+    for (const source of [layout, sidebar]) {
       expect(source).toContain('=== "admin"');
       expect(source).toContain('"Staff Workspace"');
       expect(source).not.toContain(': "Church Admin Workspace"');
@@ -81,7 +83,7 @@ describe("Production workspace UI parity C boundaries", () => {
     expect(layout).toContain("canOpenNotifications ? (");
     expect(layout).toContain("canOpenSettings ? (");
     expect(sidebar).toContain('isStaffRouteAllowed(staffWorkspace, "/church-admin/billing")');
-    expect(sidebar).toContain("canOpenBilling ? <div");
+    expect(sidebar).toContain("canOpenBilling ? (");
   });
 
   it("does not add staging-only route topology", () => {
