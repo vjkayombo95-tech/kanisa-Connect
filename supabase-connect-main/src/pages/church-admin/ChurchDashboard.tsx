@@ -158,7 +158,7 @@ function relativeDate(value: string) {
 
 export default function ChurchDashboard() {
   const prefersReducedMotion = useReducedMotion();
-  const { churchId, profile, staffWorkspace, user } = useAuth();
+  const { churchId, profile, staffWorkspace, user, userRole } = useAuth();
   const { toast } = useToast();
   const [loadDeferredDashboardData, setLoadDeferredDashboardData] = useState(false);
   const billing = useBillingAccess({ enabled: loadDeferredDashboardData });
@@ -462,6 +462,7 @@ export default function ChurchDashboard() {
         ) : null}
 
         <ChurchDashboardExperience
+          userRole={userRole}
           intelligence={intelligence}
           administratorName={administratorName}
           greeting={greeting}
