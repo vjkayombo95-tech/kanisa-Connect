@@ -31,6 +31,8 @@ type MemberHomeData = {
   memberId: string | null;
   memberName: string;
   churchName: string | null;
+  churchBannerUrl: string | null;
+  churchBannerPositionY: number;
   totalPaid: number | null;
   pendingAmount: number | null;
   lastPayment: {
@@ -66,6 +68,8 @@ const emptyMemberHome = (name: string): MemberHomeData => ({
   memberId: null,
   memberName: name,
   churchName: null,
+  churchBannerUrl: null,
+  churchBannerPositionY: 38,
   totalPaid: null,
   pendingAmount: null,
   lastPayment: null,
@@ -145,7 +149,7 @@ function useSimpleMemberHomeData() {
       if (!member) return emptyState;
 
       const [churchResult, announcementRows] = await Promise.all([
-        supabase.from("churches").select("name").eq("id", member.church_id).maybeSingle(),
+        supabase.from("churches").select("name, banner_url, banner_position_y").eq("id", member.church_id).maybeSingle(),
         fetchPortalAnnouncements(member.church_id, 1),
       ]);
       if (churchResult.error) logMemberDashboardError("church", churchResult.error);
@@ -155,6 +159,8 @@ function useSimpleMemberHomeData() {
         memberId: member.id,
         memberName: member.full_name || fallbackName,
         churchName: churchResult.error ? null : churchResult.data?.name ?? null,
+        churchBannerUrl: churchResult.error ? null : churchResult.data?.banner_url ?? null,
+        churchBannerPositionY: churchResult.error ? 38 : churchResult.data?.banner_position_y ?? 38,
         totalPaid: null,
         pendingAmount: null,
         lastPayment: null,
@@ -387,6 +393,8 @@ export default function MemberDashboard() {
     <div className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-5 pb-28 lg:px-8 lg:pb-8">
       <MobileMemberHome
         announcementsVisible={announcementsVisible}
+        churchBannerPositionY={home.churchBannerPositionY}
+        churchBannerUrl={home.churchBannerUrl}
         churchName={home.churchName}
         giveVisible={giveVisible}
         latestAnnouncement={home.latestAnnouncement}

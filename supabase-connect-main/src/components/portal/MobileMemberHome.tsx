@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type MobileMemberHomeProps = {
   announcementsVisible: boolean;
+  churchBannerPositionY: number;
+  churchBannerUrl: string | null;
   churchName: string | null;
   giveVisible: boolean;
   latestAnnouncement: { title: string; content: string | null } | null;
@@ -27,6 +29,8 @@ const actions = [
 
 export function MobileMemberHome({
   announcementsVisible,
+  churchBannerPositionY,
+  churchBannerUrl,
   churchName,
   giveVisible,
   latestAnnouncement,
@@ -43,22 +47,44 @@ export function MobileMemberHome({
     if (id === "announcements") return announcementsVisible;
     return true;
   });
+  const coverPositionY = Number.isFinite(churchBannerPositionY)
+    ? Math.max(0, Math.min(100, Math.round(churchBannerPositionY)))
+    : 38;
 
   return (
     <div className="mx-auto max-w-lg space-y-6 lg:hidden" data-testid="mobile-member-home">
       <ProductionLiveMassCard />
 
-      <section className="flex min-w-0 items-start gap-3 rounded-[28px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.13),hsl(var(--card))_65%)] p-4 shadow-sm">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+      <section
+        className={cn(
+          "relative flex min-w-0 items-start gap-3 overflow-hidden rounded-[28px] border border-primary/15 p-4 shadow-sm",
+          churchBannerUrl
+            ? "min-h-44 bg-cover text-white"
+            : "bg-[linear-gradient(135deg,hsl(var(--primary)/0.13),hsl(var(--card))_65%)]",
+        )}
+        style={churchBannerUrl ? { backgroundImage: `url("${churchBannerUrl}")`, backgroundPosition: `center ${coverPositionY}%` } : undefined}
+      >
+        {churchBannerUrl ? <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/20" aria-hidden="true" /> : null}
+        <span className={cn(
+          "relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl",
+          churchBannerUrl ? "bg-white/18 text-white ring-1 ring-white/25 backdrop-blur-sm" : "bg-primary text-primary-foreground",
+        )}>
           <Church className="h-6 w-6" />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-primary">Kanisa Connect</p>
+        <div className="relative z-10 min-w-0 flex-1 self-end">
+          <p className={cn("text-[0.7rem] font-bold uppercase tracking-[0.2em]", churchBannerUrl ? "text-white/80" : "text-primary")}>Kanisa Connect</p>
           <h1 className="mt-1 break-words text-2xl font-bold tracking-tight">Habari, {firstName}</h1>
-          <p className="mt-1 truncate text-sm text-muted-foreground">{churchName || "Parokia yako"}</p>
+          <p className={cn("mt-1 truncate text-sm", churchBannerUrl ? "text-white/80" : "text-muted-foreground")}>{churchName || "Parokia yako"}</p>
         </div>
         {announcementsVisible ? (
-          <AppLink to="/portal/announcements" aria-label="Fungua matangazo" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border bg-card/80 text-foreground">
+          <AppLink
+            to="/portal/announcements"
+            aria-label="Fungua matangazo"
+            className={cn(
+              "relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border",
+              churchBannerUrl ? "border-white/25 bg-black/30 text-white backdrop-blur-sm" : "bg-card/80 text-foreground",
+            )}
+          >
             <Bell className="h-5 w-5" />
           </AppLink>
         ) : null}

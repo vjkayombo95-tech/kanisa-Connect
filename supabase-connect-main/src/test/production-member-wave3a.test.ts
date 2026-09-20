@@ -74,7 +74,7 @@ describe("Wave 3A member reliability contracts", () => {
     document.body.appendChild(container);
     const root = createRoot(container);
     act(() => root.render(createElement(MobileMemberHome, {
-      announcementsVisible: true, churchName: "Parokia", giveVisible: true,
+      announcementsVisible: true, churchBannerPositionY: 38, churchBannerUrl: null, churchName: "Parokia", giveVisible: true,
       latestAnnouncement: null, massVisible: true, memberName: "Mshirika",
       nextMass: { id: "mass-1", title: "Misa yenye jina refu sana kwa majaribio ya simu", description: null, massDate: "2026-08-24", startTime: "09:00", endTime: null, responseDeadline: null, askForRsvp: false, memberId: null, memberResponse: null },
       nextMassError: false, nextMassLoading: false,
