@@ -200,6 +200,7 @@ export default function SettingsPage() {
     }
     queryClient.invalidateQueries({ queryKey: ["church-settings"] });
     queryClient.invalidateQueries({ queryKey: ["dashboard-church"] });
+    queryClient.invalidateQueries({ queryKey: ["church-dashboard-critical", churchId] });
     queryClient.invalidateQueries({ queryKey: ["sidebar-church"] });
     toast({ title: "Banner uploaded successfully" });
   };
@@ -211,6 +212,9 @@ export default function SettingsPage() {
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     queryClient.invalidateQueries({ queryKey: ["church-settings"] });
     queryClient.invalidateQueries({ queryKey: ["dashboard-church"] });
+    if (type === "banner") {
+      queryClient.invalidateQueries({ queryKey: ["church-dashboard-critical", churchId] });
+    }
     queryClient.invalidateQueries({ queryKey: ["sidebar-church"] });
     toast({ title: `${type === "logo" ? "Logo" : "Banner"} removed` });
   };

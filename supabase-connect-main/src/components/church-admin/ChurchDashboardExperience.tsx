@@ -40,6 +40,7 @@ type ChurchDashboardExperienceProps = {
   administratorName: string;
   greeting: string;
   churchName: string | null;
+  bannerUrl: string | null;
   activeMembers: number;
   totalMembers: number;
   announcementCount: number;
@@ -140,6 +141,7 @@ export function ChurchDashboardExperience({
   administratorName,
   greeting,
   churchName,
+  bannerUrl,
   activeMembers,
   totalMembers,
   announcementCount,
@@ -203,9 +205,11 @@ export function ChurchDashboardExperience({
     >
       <section
         aria-label="Workspace briefing"
-        className="rounded-2xl border border-primary/20 bg-card/85 p-5 shadow-sm sm:p-6"
+        className={`relative overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-sm sm:p-6 ${bannerUrl ? "min-h-[220px] bg-cover bg-center text-white" : "bg-card/85"}`}
+        style={bannerUrl ? { backgroundImage: `url("${bannerUrl}")` } : undefined}
       >
-        <div className="flex items-start gap-4">
+        {bannerUrl ? <div className="absolute inset-0 bg-black/60" aria-hidden="true" /> : null}
+        <div className="relative z-10 flex items-start gap-4">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Sparkles
               className="h-6 w-6"
@@ -214,21 +218,21 @@ export function ChurchDashboardExperience({
           </span>
 
           <div className="min-w-0">
-            <p className="font-serif text-2xl font-bold text-foreground">
+            <p className={`font-serif text-2xl font-bold ${bannerUrl ? "text-white" : "text-foreground"}`}>
               {greeting}, {firstName}.
             </p>
 
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+            <p className={`mt-1 text-sm leading-6 ${bannerUrl ? "text-white/80" : "text-muted-foreground"}`}>
               {statusMessage}
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="inline-flex rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${bannerUrl ? "border-white/25 bg-black/30 text-white" : "border-primary/20 bg-primary/10 text-primary"}`}>
                 {workspaceLabel}
               </span>
 
               {churchName ? (
-                <span className="text-xs text-muted-foreground">
+                <span className={`text-xs ${bannerUrl ? "text-white/75" : "text-muted-foreground"}`}>
                   {churchName}
                 </span>
               ) : null}
