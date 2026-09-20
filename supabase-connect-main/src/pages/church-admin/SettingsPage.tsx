@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +47,7 @@ export default function SettingsPage() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [themeColor, setThemeColor] = useState("#d4a017");
+  const [bannerPositionY, setBannerPositionY] = useState(38);
   const [customHex, setCustomHex] = useState("");
   const [customError, setCustomError] = useState("");
   const [previewColor, setPreviewColor] = useState<string | null>(null);
@@ -88,6 +90,7 @@ export default function SettingsPage() {
       setPhone(church.phone || "");
       setAddress(church.address || "");
       setThemeColor(church.theme_color || "#d4a017");
+      setBannerPositionY(church.banner_position_y ?? 38);
     }
   }, [church]);
 
@@ -205,6 +208,25 @@ export default function SettingsPage() {
     toast({ title: "Banner uploaded successfully" });
   };
 
+  const saveBannerPosition = useMutation({
+    mutationFn: async () => {
+      if (!churchId) throw new Error("No church");
+      const position = Math.max(0, Math.min(100, Math.round(bannerPositionY)));
+      const { error } = await supabase
+        .from("churches")
+        .update({ banner_position_y: position })
+        .eq("id", churchId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["church-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-church"] });
+      queryClient.invalidateQueries({ queryKey: ["church-dashboard-critical", churchId] });
+      toast({ title: "Cover position saved" });
+    },
+    onError: (err: any) =>
+      toast({ title: "Unable to save cover position", description: err.message, variant: "destructive" }),
+  });
   const removeImage = async (type: "logo" | "banner") => {
     if (!churchId) return;
     const updateField = type === "logo" ? { logo_url: null } : { banner_url: null };
@@ -300,6 +322,46 @@ export default function SettingsPage() {
                   onUploadComplete={handleBannerUploaded}
                   onRemove={() => removeImage("banner")}
                 />
+              )}
+              {church?.banner_url && (
+                <div className="mt-6 space-y-4 border-t border-border pt-5">
+                  <div>
+                    <Label className="text-sm font-medium">Cover photo position</Label>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Move the photo up or down until the important part is visible.
+                    </p>
+                  </div>
+                  <div
+                    className="h-40 w-full rounded-xl border border-border bg-cover"
+                    style={{
+                      backgroundImage: `url("${church.banner_url}")`,
+                      backgroundPosition: `center ${bannerPositionY}%`,
+                    }}
+                    aria-label="Cover photo position preview"
+                  />
+                  <div className="space-y-2">
+                    <Slider
+                      value={[bannerPositionY]}
+                      min={0}
+                      max={100}
+                      step={1}
+                      onValueChange={([value]) => setBannerPositionY(value)}
+                      aria-label="Move cover photo up or down"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Up</span>
+                      <span>Down</span>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => saveBannerPosition.mutate()}
+                    disabled={saveBannerPosition.isPending}
+                  >
+                    {saveBannerPosition.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save position
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>

@@ -20,9 +20,13 @@ describe("Wave 21 church cover photo", () => {
     "src/pages/church-admin/SettingsPage.tsx",
   );
 
+  const migration = read(
+    "supabase/migrations/20260920130000_add_church_banner_position.sql",
+  );
+
   it("loads the tenant church banner into the desktop dashboard data flow", () => {
     expect(page).toContain(
-      '.select("name, slug, banner_url")',
+      '.select("name, slug, banner_url, banner_position_y")',
     );
 
     expect(page).toContain(
@@ -30,7 +34,15 @@ describe("Wave 21 church cover photo", () => {
     );
 
     expect(page).toContain(
+      "bannerPositionY: church.data?.banner_position_y ?? 38",
+    );
+
+    expect(page).toContain(
       "bannerUrl={data?.bannerUrl ?? null}",
+    );
+
+    expect(page).toContain(
+      "bannerPositionY={data?.bannerPositionY ?? 38}",
     );
   });
 
@@ -40,7 +52,7 @@ describe("Wave 21 church cover photo", () => {
     );
 
     expect(dashboard).toContain(
-      'bannerUrl ? "min-h-[250px] bg-cover bg-[center_38%] text-white sm:min-h-[260px]" : "bg-card/85"',
+      'bannerUrl ? "min-h-[250px] bg-cover text-white sm:min-h-[260px]" : "bg-card/85"',
     );
 
     expect(dashboard).toContain(
@@ -56,7 +68,8 @@ describe("Wave 21 church cover photo", () => {
     expect(dashboard).toContain("min-h-[250px]");
     expect(dashboard).toContain("sm:min-h-[260px]");
     expect(dashboard).toContain("bg-cover");
-    expect(dashboard).toContain("bg-[center_38%]");
+    expect(dashboard).toContain('backgroundPosition: `center ${bannerPositionY}%`');
+    expect(dashboard).not.toContain("bg-[center_38%]");
     expect(dashboard).not.toContain("bg-contain");
   });
 
@@ -115,6 +128,31 @@ describe("Wave 21 church cover photo", () => {
     );
   });
 
+  it("supports tenant-scoped cover photo positioning with a safe persisted range", () => {
+    expect(migration).toContain(
+      "ADD COLUMN banner_position_y integer NOT NULL DEFAULT 38",
+    );
+    expect(migration).toContain(
+      "CHECK (banner_position_y BETWEEN 0 AND 100)",
+    );
+
+    expect(settings).toContain(
+      "setBannerPositionY(church.banner_position_y ?? 38)",
+    );
+    expect(settings).toContain(
+      ".update({ banner_position_y: position })",
+    );
+    expect(settings).toContain(
+      'backgroundPosition: `center ${bannerPositionY}%`',
+    );
+    expect(settings).toContain(
+      "onValueChange={([value]) => setBannerPositionY(value)}",
+    );
+    expect(settings).toContain(
+      "onClick={() => saveBannerPosition.mutate()}",
+    );
+    expect(settings).toContain("Save position");
+  });
   it("keeps the desktop presentation component free of direct Supabase access", () => {
     expect(dashboard).not.toContain("supabase.");
   });

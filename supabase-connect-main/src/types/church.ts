@@ -7,6 +7,7 @@ export interface Church {
   address: string | null;
   logo_url: string | null;
   banner_url: string | null;
+  banner_position_y: number;
   status: 'active' | 'inactive' | 'suspended';
   theme_color: string | null;
   metadata: Record<string, unknown> | null;

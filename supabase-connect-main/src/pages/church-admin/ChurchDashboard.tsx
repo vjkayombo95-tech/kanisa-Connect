@@ -104,6 +104,7 @@ type DashboardData = {
   churchName: string | null;
   churchSlug: string | null;
   bannerUrl: string | null;
+  bannerPositionY: number;
   totalMembers: number;
   activeMembers: number;
   announcements: AnnouncementRow[];
@@ -174,6 +175,7 @@ export default function ChurchDashboard() {
           churchName: null,
           churchSlug: null,
           bannerUrl: null,
+          bannerPositionY: 38,
           totalMembers: 0,
           activeMembers: 0,
           announcements: [],
@@ -185,7 +187,7 @@ export default function ChurchDashboard() {
         cacheKey,
         async () => {
           const [church, allMembers, members, announcements] = await Promise.all([
-            supabase.from("churches").select("name, slug, banner_url").eq("id", churchId).maybeSingle(),
+            supabase.from("churches").select("name, slug, banner_url, banner_position_y").eq("id", churchId).maybeSingle(),
             supabase.from("members").select("id", { count: "exact", head: true }).eq("church_id", churchId),
             supabase.from("members").select("id", { count: "exact", head: true }).eq("church_id", churchId).eq("status", "active"),
             supabase
@@ -207,6 +209,7 @@ export default function ChurchDashboard() {
             churchName: church.data?.name ?? null,
             churchSlug: church.data?.slug ?? null,
             bannerUrl: church.data?.banner_url ?? null,
+            bannerPositionY: church.data?.banner_position_y ?? 38,
             totalMembers: allMembers.count ?? 0,
             activeMembers: members.count ?? 0,
             announcements: (announcements.data ?? []) as AnnouncementRow[],
@@ -216,6 +219,7 @@ export default function ChurchDashboard() {
           churchName: null,
           churchSlug: null,
           bannerUrl: null,
+          bannerPositionY: 38,
           totalMembers: 0,
           activeMembers: 0,
           announcements: [],
@@ -472,6 +476,7 @@ export default function ChurchDashboard() {
           greeting={greeting}
           churchName={data?.churchName ?? null}
           bannerUrl={data?.bannerUrl ?? null}
+          bannerPositionY={data?.bannerPositionY ?? 38}
           activeMembers={data?.activeMembers ?? 0}
           totalMembers={data?.totalMembers ?? 0}
           announcementCount={data?.announcements.length ?? 0}

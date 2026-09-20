@@ -2435,6 +2435,7 @@ export type Database = {
       churches: {
         Row: {
           address: string | null
+          banner_position_y: number
           banner_url: string | null
           church_code: string
           code: string | null
@@ -2463,6 +2464,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          banner_position_y?: number
           banner_url?: string | null
           church_code: string
           code?: string | null
@@ -2491,6 +2493,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          banner_position_y?: number
           banner_url?: string | null
           church_code?: string
           code?: string | null
