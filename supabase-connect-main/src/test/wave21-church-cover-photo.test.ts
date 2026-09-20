@@ -20,6 +20,14 @@ describe("Wave 21 church cover photo", () => {
     "src/pages/church-admin/SettingsPage.tsx",
   );
 
+  const memberDashboard = read(
+    "src/components/portal/MemberDashboard.tsx",
+  );
+
+  const memberMobileHome = read(
+    "src/components/portal/MobileMemberHome.tsx",
+  );
+
   const migration = read(
     "supabase/migrations/20260920130000_add_church_banner_position.sql",
   );
@@ -155,5 +163,38 @@ describe("Wave 21 church cover photo", () => {
   });
   it("keeps the desktop presentation component free of direct Supabase access", () => {
     expect(dashboard).not.toContain("supabase.");
+  });
+
+  it("loads and passes the tenant church banner into the member mobile home", () => {
+    expect(memberDashboard).toContain(
+      '.select("name, banner_url, banner_position_y")',
+    );
+    expect(memberDashboard).toContain(
+      "churchBannerUrl: churchResult.error ? null : churchResult.data?.banner_url ?? null",
+    );
+    expect(memberDashboard).toContain(
+      "churchBannerPositionY: churchResult.error ? 38 : churchResult.data?.banner_position_y ?? 38",
+    );
+    expect(memberDashboard).toContain(
+      "churchBannerUrl={home.churchBannerUrl}",
+    );
+    expect(memberDashboard).toContain(
+      "churchBannerPositionY={home.churchBannerPositionY}",
+    );
+  });
+
+  it("shows the church cover photo on the member mobile home when available", () => {
+    expect(memberMobileHome).toContain(
+      'style={churchBannerUrl ? { backgroundImage: `url("${churchBannerUrl}")`, backgroundPosition: `center ${coverPositionY}%` } : undefined}',
+    );
+    expect(memberMobileHome).toContain(
+      '? "min-h-44 bg-cover text-white"',
+    );
+    expect(memberMobileHome).toContain(
+      'className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/20"',
+    );
+    expect(memberMobileHome).toContain(
+      ': "bg-[linear-gradient(135deg,hsl(var(--primary)/0.13),hsl(var(--card))_65%)]"',
+    );
   });
 });
