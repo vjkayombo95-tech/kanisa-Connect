@@ -41,6 +41,7 @@ type ChurchDashboardExperienceProps = {
   greeting: string;
   churchName: string | null;
   bannerUrl: string | null;
+  bannerPositionY: number;
   activeMembers: number;
   totalMembers: number;
   announcementCount: number;
@@ -142,6 +143,7 @@ export function ChurchDashboardExperience({
   greeting,
   churchName,
   bannerUrl,
+  bannerPositionY,
   activeMembers,
   totalMembers,
   announcementCount,
@@ -205,8 +207,8 @@ export function ChurchDashboardExperience({
     >
       <section
         aria-label="Workspace briefing"
-        className={`relative overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-sm sm:p-6 ${bannerUrl ? "min-h-[250px] bg-cover bg-[center_38%] text-white sm:min-h-[260px]" : "bg-card/85"}`}
-        style={bannerUrl ? { backgroundImage: `url("${bannerUrl}")` } : undefined}
+        className={`relative overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-sm sm:p-6 ${bannerUrl ? "min-h-[250px] bg-cover text-white sm:min-h-[260px]" : "bg-card/85"}`}
+        style={bannerUrl ? { backgroundImage: `url("${bannerUrl}")`, backgroundPosition: `center ${bannerPositionY}%` } : undefined}
       >
         {bannerUrl ? <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/15" aria-hidden="true" /> : null}
         <div className="relative z-10 flex items-start gap-4">
