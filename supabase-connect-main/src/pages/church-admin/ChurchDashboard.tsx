@@ -103,6 +103,7 @@ type BirthdayMemberRow = {
 type DashboardData = {
   churchName: string | null;
   churchSlug: string | null;
+  bannerUrl: string | null;
   totalMembers: number;
   activeMembers: number;
   announcements: AnnouncementRow[];
@@ -172,6 +173,7 @@ export default function ChurchDashboard() {
         return {
           churchName: null,
           churchSlug: null,
+          bannerUrl: null,
           totalMembers: 0,
           activeMembers: 0,
           announcements: [],
@@ -183,7 +185,7 @@ export default function ChurchDashboard() {
         cacheKey,
         async () => {
           const [church, allMembers, members, announcements] = await Promise.all([
-            supabase.from("churches").select("name, slug").eq("id", churchId).maybeSingle(),
+            supabase.from("churches").select("name, slug, banner_url").eq("id", churchId).maybeSingle(),
             supabase.from("members").select("id", { count: "exact", head: true }).eq("church_id", churchId),
             supabase.from("members").select("id", { count: "exact", head: true }).eq("church_id", churchId).eq("status", "active"),
             supabase
@@ -204,6 +206,7 @@ export default function ChurchDashboard() {
           return {
             churchName: church.data?.name ?? null,
             churchSlug: church.data?.slug ?? null,
+            bannerUrl: church.data?.banner_url ?? null,
             totalMembers: allMembers.count ?? 0,
             activeMembers: members.count ?? 0,
             announcements: (announcements.data ?? []) as AnnouncementRow[],
@@ -212,6 +215,7 @@ export default function ChurchDashboard() {
         readOfflineCache(cacheKey, {
           churchName: null,
           churchSlug: null,
+          bannerUrl: null,
           totalMembers: 0,
           activeMembers: 0,
           announcements: [],
@@ -467,6 +471,7 @@ export default function ChurchDashboard() {
           administratorName={administratorName}
           greeting={greeting}
           churchName={data?.churchName ?? null}
+          bannerUrl={data?.bannerUrl ?? null}
           activeMembers={data?.activeMembers ?? 0}
           totalMembers={data?.totalMembers ?? 0}
           announcementCount={data?.announcements.length ?? 0}
