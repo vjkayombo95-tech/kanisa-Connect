@@ -40,16 +40,32 @@ describe("Wave 21 church cover photo", () => {
     );
 
     expect(dashboard).toContain(
-      'bannerUrl ? "min-h-[220px] bg-cover bg-center text-white" : "bg-card/85"',
+      'bannerUrl ? "min-h-[250px] bg-cover bg-[center_38%] text-white sm:min-h-[260px]" : "bg-card/85"',
     );
 
     expect(dashboard).toContain(
-      'className="absolute inset-0 bg-black/60"',
+      'className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/15"',
     );
 
     expect(dashboard).toContain(
       'className="relative z-10 flex items-start gap-4"',
     );
+  });
+
+  it("keeps the banner presentation taller, covered, and composed for church photos", () => {
+    expect(dashboard).toContain("min-h-[250px]");
+    expect(dashboard).toContain("sm:min-h-[260px]");
+    expect(dashboard).toContain("bg-cover");
+    expect(dashboard).toContain("bg-[center_38%]");
+    expect(dashboard).not.toContain("bg-contain");
+  });
+
+  it("uses a directional overlay only for the banner state", () => {
+    expect(dashboard).toContain("bg-gradient-to-r");
+    expect(dashboard).toContain("from-black/75");
+    expect(dashboard).toContain("via-black/45");
+    expect(dashboard).toContain("to-black/15");
+    expect(dashboard).toContain("{bannerUrl ? <div");
   });
 
   it("preserves readable banner text and the existing no-banner fallback", () => {
@@ -68,6 +84,17 @@ describe("Wave 21 church cover photo", () => {
     expect(dashboard).toContain(
       'bannerUrl ? "text-white/75" : "text-muted-foreground"',
     );
+
+    expect(dashboard).toContain(
+      ': "bg-card/85"',
+    );
+  });
+
+  it("preserves the existing greeting, role badge, and church name content", () => {
+    expect(dashboard).toContain("{greeting}, {firstName}.");
+    expect(dashboard).toContain("{workspaceLabel}");
+    expect(dashboard).toContain("{churchName}");
+    expect(dashboard).toContain('userRole === "church_admin"');
   });
 
   it("reuses the existing tenant-scoped banner branding flow", () => {
