@@ -6,8 +6,6 @@ const root = process.cwd();
 const read = (relative: string) => readFileSync(join(root, relative), "utf8");
 
 const migration = read("supabase/migrations/20260920120000_repair_branding_authorization_contract.sql");
-const storagePolicy = read("supabase/migrations/20260722191000_fix_branding_storage_permission_policy.sql");
-const settingsAlignment = read("supabase/migrations/20260722180000_fix_mutation_permission_alignment.sql");
 const upload = read("src/lib/file-upload.ts");
 const dashboardTest = read("src/test/wave21-church-cover-photo.test.ts");
 
@@ -18,51 +16,37 @@ describe("Wave 21 branding storage authorization repair", () => {
     expect(upload).toContain('bucket: "church-assets"');
   });
 
-  it("preserves storage RLS tenant isolation instead of broad authenticated uploads", () => {
-    expect(storagePolicy).toContain("bucket_id = 'church-assets'");
-    expect(storagePolicy).toContain("coalesce((storage.foldername(name))[2], '') in ('logos', 'banners')");
-    expect(storagePolicy).toContain("(storage.foldername(name))[1] ~*");
-    expect(storagePolicy).toContain("((storage.foldername(name))[1])::uuid");
-    expect(storagePolicy).toContain("'feature_permissions_admin', 'manage'");
-    expect(storagePolicy).not.toMatch(/auth\.role\(\)\s*=\s*'authenticated'/);
+  it("repairs only the existing church-assets manager write policies", () => {
+    expect(migration).toContain('drop policy if exists "Church managers can upload church assets"');
+    expect(migration).toContain('create policy "Church managers can upload church assets"');
+    expect(migration).toContain('drop policy if exists "Church managers can update church assets"');
+    expect(migration).toContain('create policy "Church managers can update church assets"');
+    expect(migration).toContain('drop policy if exists "Church managers can delete church assets"');
+    expect(migration).toContain('create policy "Church managers can delete church assets"');
+    expect(migration).not.toMatch(/for select/i);
+    expect(migration).not.toContain("Public can read church assets");
   });
 
-  it("keeps the restrictive branding guard aligned with the permissive branding policies", () => {
-    expect(storagePolicy).toContain('create policy "church settings guard asset insert"');
-    expect(storagePolicy).toContain("on storage.objects as restrictive for insert to authenticated");
-    expect(storagePolicy).toContain('create policy "church settings guard asset update"');
-    expect(storagePolicy).toContain('create policy "church settings guard asset delete"');
+  it("keeps authenticated writes scoped to church-assets and workspace managers", () => {
+    expect(migration).toMatch(/for insert\s+to authenticated/i);
+    expect(migration).toMatch(/for update\s+to authenticated/i);
+    expect(migration).toMatch(/for delete\s+to authenticated/i);
+    expect(migration.match(/bucket_id = 'church-assets'/g)).toHaveLength(4);
+    expect(migration).toContain("public.can_manage_church_workspace(auth.uid(), c.id)");
+    expect(migration).not.toMatch(/auth\.role\(\)\s*=\s*'authenticated'/);
   });
 
-  it("uses the same canonical predicate for church settings updates and branding storage", () => {
-    expect(settingsAlignment).toContain('create policy "church settings manage update"');
-    expect(settingsAlignment).toContain("public.has_church_feature_permission(auth.uid(), id, 'feature_permissions_admin', 'manage')");
-    expect(storagePolicy).toContain("public.has_church_feature_permission(");
+  it("explicitly compares church id against the evaluated storage object path", () => {
+    expect(migration).toContain("where c.id::text = (storage.foldername(storage.objects.name))[1]");
+    expect(migration).not.toContain("storage.foldername(name)");
+    expect(migration).not.toContain("storage.foldername(c.name)");
   });
 
-  it("repairs mandatory Church Admin recovery rows for all churches", () => {
-    expect(migration).toContain("pf.key = 'feature_permissions_admin'");
-    expect(migration).toContain("insert into public.church_features");
-    expect(migration).toContain("enabled = true");
-    expect(migration).toContain("locked = true");
-    expect(migration).toContain("insert into public.church_role_permissions");
-    expect(migration).toContain("select c.id, 'church_admin', pf.id, true, true");
-  });
-
-  it("restores multi-role effective authorization after the production-specific override", () => {
-    expect(migration).toContain("create or replace function public.has_church_feature_permission");
-    expect(migration).toContain("exists (\n          select 1\n          from public.user_roles ur");
-    expect(migration).toContain("lower(ur.role::text) = 'church_admin'");
-    expect(migration).toContain("lower(ur.role::text) = crp.role");
-    expect(migration).toContain("crp.role = 'member'");
-    expect(migration).not.toContain("ur.user_id = _user_id and ur.church_id = _church_id\n        and pf.key = _feature_key");
-  });
-
-  it("does not grant pastoral, finance, anonymous, or non-branding storage authority", () => {
-    expect(migration).not.toMatch(/role in \('church_admin','pastor'\)/);
-    expect(migration).not.toMatch(/role in \('church_admin','pastor','secretary','treasurer'\)/);
-    expect(migration).not.toMatch(/grant execute[\s\S]*to anon/);
-    expect(storagePolicy).toContain("coalesce((storage.foldername(name))[2], '') not in ('logos', 'banners')");
+  it("does not modify feature-permission tables or replace authorization helpers", () => {
+    expect(migration).not.toContain("public.platform_features");
+    expect(migration).not.toContain("public.church_features");
+    expect(migration).not.toContain("public.church_role_permissions");
+    expect(migration).not.toContain("create or replace function public.has_church_feature_permission");
   });
 
   it("keeps the Wave 21 dashboard banner assertions in place", () => {
