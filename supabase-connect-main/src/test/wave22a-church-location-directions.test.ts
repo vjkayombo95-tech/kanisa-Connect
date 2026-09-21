@@ -56,6 +56,7 @@ describe("Wave 22A church location directions", () => {
 
   it("extends the existing settings save flow without a second Supabase write path", () => {
     const settings = readSrc("pages/church-admin/SettingsPage.tsx");
+    const mapPicker = readSrc("components/church-admin/ChurchLocationMapPicker.tsx");
     const locationSectionStart = settings.indexOf("Mahali Kanisa Lilipo");
     const advancedStart = settings.indexOf("Mipangilio ya kina");
     const geolocationHandler = settings.slice(settings.indexOf("const useCurrentLocation"), settings.indexOf("const handleLogoUploaded"));
@@ -88,6 +89,22 @@ describe("Wave 22A church location directions", () => {
     expect(settings).toContain("Eneo limepatikana. Bonyeza Hifadhi kuhifadhi mabadiliko.");
     expect(settings).toContain("Kifaa hiki hakiwezi kupata eneo lako.");
     expect(settings).toContain("Hatukuweza kupata eneo lako. Hakikisha umeruhusu Kanisa Connect kutumia Location kisha jaribu tena.");
+    expect(settings).toContain("ChurchLocationMapPicker");
+    expect(settings).toContain("parseMapCoordinate(latitude, -90, 90)");
+    expect(settings).toContain("parseMapCoordinate(longitude, -180, 180)");
+    expect(settings).toContain("mapLatitude !== null && mapLongitude !== null");
+    expect(settings).toContain("onLocationChange={handleMapLocationChange}");
+    expect(settings).toContain("setLatitude(nextLatitude.toFixed(6))");
+    expect(settings).toContain("setLongitude(nextLongitude.toFixed(6))");
+    expect(mapPicker).toContain("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+    expect(mapPicker).toContain("OpenStreetMap");
+    expect(mapPicker).toContain("Public OSM tiles are appropriate for early/light usage");
+    expect(mapPicker).toContain("Gusa kwenye ramani kuweka eneo sahihi la kanisa. Unaweza pia kuburuta alama.");
+    expect(mapPicker).toContain("draggable: true");
+    expect(mapPicker).toContain('map.on("click"');
+    expect(mapPicker).toContain('marker.on("dragend"');
+    expect(mapPicker).toContain("Ramani haikuweza kupakiwa");
+    expect(mapPicker).not.toContain("supabase");
     expect(geolocationHandler).not.toContain("supabase.from");
     expect(geolocationHandler).not.toContain(".update(");
     expect(settings.match(/from\("churches"\)\.select/g)).toHaveLength(1);
@@ -100,6 +117,18 @@ describe("Wave 22A church location directions", () => {
     );
 
     expect(wave22Migrations).toEqual(["20260921120000_add_church_location_coordinates.sql"]);
+  });
+
+  it("keeps member directions code unchanged for the admin map enhancement", () => {
+    const parishPage = readSrc("pages/portal/MemberMyParishPage.tsx");
+    const helper = readSrc("lib/member-daily-life.ts");
+
+    expect(parishPage).toContain("getParishDirectionsHref(parish.data)");
+    expect(parishPage).toContain("Pata Maelekezo");
+    expect(parishPage).not.toContain("ChurchLocationMapPicker");
+    expect(helper).toContain('.select("id,name,logo_url,phone,email,address,latitude,longitude")');
+    expect(helper).toContain("return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`");
+    expect(helper).not.toContain("leaflet");
   });
 
   it("updates local church types for nullable coordinates", () => {

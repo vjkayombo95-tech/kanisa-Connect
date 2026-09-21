@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Palette, Church, Loader2, Image, Check, RotateCcw, Eye, CreditCard, MessageCircle, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useBillingAccess } from "@/hooks/use-billing-access";
+import { ChurchLocationMapPicker, isValidMapCoordinatePair } from "@/components/church-admin/ChurchLocationMapPicker";
 import OptimizedImageUpload from "@/components/church-admin/OptimizedImageUpload";
 import type { UploadResult } from "@/lib/file-upload";
 import {
@@ -56,6 +57,13 @@ function hasSavedCoordinates(latitude: number | null | undefined, longitude: num
     longitude >= -180 &&
     longitude <= 180
   );
+}
+
+function parseMapCoordinate(value: string, min: number, max: number) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const numeric = Number(trimmed);
+  return Number.isFinite(numeric) && numeric >= min && numeric <= max ? numeric : null;
 }
 
 export default function SettingsPage() {
@@ -218,6 +226,13 @@ export default function SettingsPage() {
     setMessageTemplate(getDefaultTemplate(templateType, churchId ?? null));
   };
 
+  const handleMapLocationChange = (nextLatitude: number, nextLongitude: number) => {
+    setLatitude(nextLatitude.toFixed(6));
+    setLongitude(nextLongitude.toFixed(6));
+    setLocationMessageTone("success");
+    setLocationMessage("Eneo limepatikana. Bonyeza Hifadhi kuhifadhi mabadiliko.");
+  };
+
   const useCurrentLocation = () => {
     setLocationMessage("");
     if (!navigator.geolocation) {
@@ -320,6 +335,8 @@ export default function SettingsPage() {
     date: new Date().toLocaleDateString("en-TZ"),
     community_name: "Mt. Rita",
   });
+  const mapLatitude = parseMapCoordinate(latitude, -90, 90);
+  const mapLongitude = parseMapCoordinate(longitude, -180, 180);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -378,6 +395,13 @@ export default function SettingsPage() {
                       </p>
                     ) : null}
                   </div>
+                  {mapLatitude !== null && mapLongitude !== null && isValidMapCoordinatePair(mapLatitude, mapLongitude) ? (
+                    <ChurchLocationMapPicker
+                      latitude={mapLatitude}
+                      longitude={mapLongitude}
+                      onLocationChange={handleMapLocationChange}
+                    />
+                  ) : null}
                   <div className="space-y-2">
                     <Label htmlFor="church-address">Anwani (hiari)</Label>
                     <Input id="church-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Mbezi Beach, Dar es Salaam" />
