@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EMPTY_PENDING_COUNTS, visiblePendingActions } from "@/lib/church-dashboard-intelligence";
 import type { StaffMobileConfig, StaffService } from "@/lib/staff-mobile-registry";
 import { roleLabel } from "@/lib/staff-mobile-role";
+import { cn } from "@/lib/utils";
 
 type AttendanceSummary = {
   title: string | null;
@@ -24,6 +25,8 @@ type ChurchDashboardMobileExperienceProps = {
   administratorName: string;
   greeting: string;
   churchName: string | null;
+  bannerUrl: string | null;
+  bannerPositionY: number;
   activeMembers: number;
   totalMembers: number;
   announcementCount: number;
@@ -63,6 +66,8 @@ export function ChurchDashboardMobileExperience({
   administratorName,
   greeting,
   churchName,
+  bannerUrl,
+  bannerPositionY,
   activeMembers,
   totalMembers,
   announcementCount,
@@ -80,6 +85,9 @@ export function ChurchDashboardMobileExperience({
     .slice(0, 3);
   const quickActions = services.filter((service) => service.primary).slice(0, 4);
   const pendingTotal = priorities.reduce((sum, item) => sum + item.count, 0);
+  const coverPositionY = Number.isFinite(bannerPositionY)
+    ? Math.max(0, Math.min(100, Math.round(bannerPositionY)))
+    : 38;
 
   // Focus order is deliberately stable: authorized pending work, next Mass,
   // upcoming events, recent announcements, then the calm state.
@@ -110,12 +118,23 @@ export function ChurchDashboardMobileExperience({
 
   return (
     <div className="space-y-7 lg:hidden" data-testid="church-dashboard-mobile-parity-core">
-      <section className="grid gap-4 rounded-2xl border border-primary/20 bg-card/85 p-5 shadow-sm md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.75fr)]" aria-label="Mobile workspace briefing">
-        <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Sparkles className="h-5 w-5" /></span>
+      <section
+        className={cn(
+          "relative grid gap-4 overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-sm md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.75fr)]",
+          bannerUrl ? "bg-cover text-white" : "bg-card/85",
+        )}
+        style={bannerUrl ? { backgroundImage: `url("${bannerUrl}")`, backgroundPosition: `center ${coverPositionY}%` } : undefined}
+        aria-label="Mobile workspace briefing"
+      >
+        {bannerUrl ? <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/25" aria-hidden="true" /> : null}
+        <div className={cn("relative z-10 flex items-start gap-3", bannerUrl && "[&_.text-muted-foreground]:text-white/80 [&_.text-primary]:text-white/80")}>
+          <span className={cn(
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg",
+            bannerUrl ? "bg-white/15 text-white ring-1 ring-white/25 backdrop-blur-sm" : "bg-primary/10 text-primary",
+          )}><Sparkles className="h-5 w-5" /></span>
           <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Kanisa Connect</p><h1 className="mt-2 font-serif text-2xl font-bold">{greeting}, {administratorName.split(" ")[0]}.</h1><p className="mt-1 text-sm text-muted-foreground">{churchName || "Your parish"} · {config.workspace === "community" ? "Uongozi wa jumuiya" : roleLabel(config.workspace)}</p></div>
         </div>
-        <div className="rounded-xl border border-border/70 bg-background/50 p-4" data-testid="mobile-todays-focus"><p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary"><CalendarClock className="h-4 w-4" />Today&apos;s Focus</p>{focusLoading ? <Skeleton className="mt-3 h-5 w-4/5" /> : <p className="mt-2 text-sm leading-6 text-foreground/80">{focus}</p>}</div>
+        <div className={cn("relative z-10 rounded-xl border p-4", bannerUrl ? "border-white/20 bg-black/35 text-white backdrop-blur-sm [&_.text-foreground\\/80]:text-white/85 [&_.text-primary]:text-white/80" : "border-border/70 bg-background/50")} data-testid="mobile-todays-focus"><p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary"><CalendarClock className="h-4 w-4" />Today&apos;s Focus</p>{focusLoading ? <Skeleton className="mt-3 h-5 w-4/5" /> : <p className="mt-2 text-sm leading-6 text-foreground/80">{focus}</p>}</div>
       </section>
 
       <section className="space-y-3" aria-labelledby="mobile-priorities"><div><h2 id="mobile-priorities" className="font-serif text-lg font-semibold">Today&apos;s Priorities</h2><p className="mt-1 text-sm text-muted-foreground">Your highest-value authorized work queues.</p></div>

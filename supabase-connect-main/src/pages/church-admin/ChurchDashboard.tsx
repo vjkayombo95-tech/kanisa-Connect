@@ -446,6 +446,8 @@ export default function ChurchDashboard() {
           administratorName={administratorName}
           greeting={greeting}
           churchName={data?.churchName ?? null}
+          bannerUrl={data?.bannerUrl ?? null}
+          bannerPositionY={data?.bannerPositionY ?? 38}
           activeMembers={data?.activeMembers ?? 0}
           totalMembers={data?.totalMembers ?? 0}
           announcementCount={data?.announcements.length ?? 0}

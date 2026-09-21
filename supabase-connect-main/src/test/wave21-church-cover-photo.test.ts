@@ -16,6 +16,10 @@ describe("Wave 21 church cover photo", () => {
     "src/components/church-admin/ChurchDashboardExperience.tsx",
   );
 
+  const mobileDashboard = read(
+    "src/components/church-admin/ChurchDashboardMobileExperience.tsx",
+  );
+
   const settings = read(
     "src/pages/church-admin/SettingsPage.tsx",
   );
@@ -49,6 +53,15 @@ describe("Wave 21 church cover photo", () => {
       "bannerUrl={data?.bannerUrl ?? null}",
     );
 
+    expect(page).toContain(
+      "bannerPositionY={data?.bannerPositionY ?? 38}",
+    );
+  });
+
+  it("passes the existing tenant church banner into the staff mobile dashboard", () => {
+    expect(page).toContain(
+      "bannerUrl={data?.bannerUrl ?? null}",
+    );
     expect(page).toContain(
       "bannerPositionY={data?.bannerPositionY ?? 38}",
     );
@@ -163,6 +176,26 @@ describe("Wave 21 church cover photo", () => {
   });
   it("keeps the desktop presentation component free of direct Supabase access", () => {
     expect(dashboard).not.toContain("supabase.");
+  });
+
+  it("uses the church banner on the staff mobile workspace briefing without another query", () => {
+    expect(mobileDashboard).toContain(
+      'style={bannerUrl ? { backgroundImage: `url("${bannerUrl}")`, backgroundPosition: `center ${coverPositionY}%` } : undefined}',
+    );
+    expect(mobileDashboard).toContain(
+      'bannerUrl ? "bg-cover text-white" : "bg-card/85"',
+    );
+    expect(mobileDashboard).toContain(
+      "Math.max(0, Math.min(100, Math.round(bannerPositionY)))",
+    );
+    expect(mobileDashboard).toContain(
+      'className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/25"',
+    );
+    expect(mobileDashboard).toContain("Today&apos;s Focus");
+    expect(mobileDashboard).toContain("Today&apos;s Priorities");
+    expect(mobileDashboard).toContain("Quick Actions");
+    expect(mobileDashboard).not.toContain("supabase.");
+    expect(mobileDashboard).not.toContain("useQuery(");
   });
 
   it("loads and passes the tenant church banner into the member mobile home", () => {
