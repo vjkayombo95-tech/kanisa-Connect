@@ -1,11 +1,9 @@
-import { Suspense, lazy, useMemo } from "react";
-import { Route, Routes, type NavigateFunction, useNavigate } from "react-router-dom";
-import { Loader2, Settings, UserRound } from "lucide-react";
+import { Suspense, lazy } from "react";
+import { Route, Routes } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import StaffServicesPage from "@/pages/StaffServicesPage";
-import type { StaffMobileAccountAction } from "@/components/staff-mobile/StaffMobileExperience";
-import { isStaffRouteAllowed, STAFF_MOBILE_CONFIGS } from "@/lib/staff-mobile-registry";
+import { STAFF_MOBILE_CONFIGS } from "@/lib/staff-mobile-registry";
 import { useAuth } from "@/contexts/AuthContext";
-import type { StaffMobileWorkspace } from "@/lib/staff-mobile-role";
 
 const ChurchAdminLayout = lazy(() =>
   import("@/components/church-admin/ChurchAdminLayout").then((module) => ({ default: module.ChurchAdminLayout })),
@@ -52,43 +50,16 @@ function SectionFallback() {
   );
 }
 
-export function createStaffMobileAccountActions({
-  workspace,
-  signOut,
-  navigate,
-}: {
-  workspace: StaffMobileWorkspace | null;
-  signOut: () => Promise<void>;
-  navigate: NavigateFunction;
-}): StaffMobileAccountAction[] {
-  const actions: StaffMobileAccountAction[] = [];
-  if (isStaffRouteAllowed(workspace, "/church-admin/settings")) {
-    actions.push({ id: "church-settings", label: "Mipangilio ya Kanisa", to: "/church-admin/settings", icon: Settings });
-  }
-  actions.push({
-    id: "account-exit",
-    label: "Toka",
-    icon: UserRound,
-    onSelect: async () => {
-      await signOut();
-      navigate("/login");
-    },
-  });
-  return actions;
-}
-
 export default function AdminRoutes() {
-  const { staffWorkspace, signOut } = useAuth();
-  const navigate = useNavigate();
+  const { staffWorkspace } = useAuth();
   const config = staffWorkspace === "admin" || staffWorkspace === "pastoral" || staffWorkspace === "finance" ? STAFF_MOBILE_CONFIGS[staffWorkspace] : STAFF_MOBILE_CONFIGS.admin;
-  const accountActions = useMemo(() => createStaffMobileAccountActions({ workspace: staffWorkspace, signOut, navigate }), [staffWorkspace, signOut, navigate]);
 
   return (
     <Suspense fallback={<SectionFallback />}>
       <Routes>
         <Route element={<ChurchAdminLayout />}>
           <Route index element={<ChurchDashboard />} />
-          <Route path="services" element={<StaffServicesPage config={config} accountActions={accountActions} />} />
+          <Route path="services" element={<StaffServicesPage config={config} />} />
           <Route path="qr-payments" element={<ChurchQRPage />} />
           <Route path="invite-members" element={<InviteMembersPage />} />
           <Route path="members" element={<MembersPage />} />

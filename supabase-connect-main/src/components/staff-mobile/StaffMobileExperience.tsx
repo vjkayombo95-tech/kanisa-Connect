@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { BriefcaseBusiness, ChevronDown, ChevronLeft, Home, MoreHorizontal, Search, UserRound } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -11,15 +11,7 @@ import type { StaffMobileConfig, StaffService } from "@/lib/staff-mobile-registr
 import { roleLabel } from "@/lib/staff-mobile-role";
 import { cn } from "@/lib/utils";
 
-export type StaffMobileAccountAction = {
-  id: string;
-  label: string;
-  to?: string;
-  onSelect?: () => void | Promise<void>;
-  icon?: StaffService["icon"];
-};
-
-function MobileLink({ to, className, children }: { to: string; className?: string; children: ReactNode }) {
+function MobileLink({ to, className, children }: { to: string; className?: string; children: React.ReactNode }) {
   const location = useLocation();
   return <Link to={to} state={{ from: location.pathname }} className={className}>{children}</Link>;
 }
@@ -76,7 +68,7 @@ function ServiceCard({ service }: { service: StaffService }) {
   return <MobileLink to={service.route} className="flex min-h-28 flex-col justify-between rounded-[22px] border bg-card/80 p-4 outline-none transition hover:border-primary/35 focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.98] motion-reduce:transform-none"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5 stroke-[1.8]" aria-hidden="true" /></span><span className="text-sm font-semibold">{service.label}</span></MobileLink>;
 }
 
-export function StaffMobileServices({ config, accountActions = [] }: { config: StaffMobileConfig; accountActions?: StaffMobileAccountAction[] }) {
+export function StaffMobileServices({ config }: { config: StaffMobileConfig }) {
   const { services, isLoading } = useVisibleStaffServices(config);
   const [query, setQuery] = useState("");
   const groups = useMemo(() => {
@@ -97,15 +89,6 @@ export function StaffMobileServices({ config, accountActions = [] }: { config: S
       const expanded = !!query.trim() || openGroup === group || (!openGroup && index === 0);
       return <section key={group} className="overflow-hidden rounded-[22px] border bg-card/70"><button type="button" aria-expanded={expanded} aria-controls={`staff-services-${index}`} onClick={() => setOpenGroup(expanded ? "" : group)} className="flex min-h-14 w-full items-center justify-between px-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"><span><span className="block font-semibold">{group}</span><span className="text-xs text-muted-foreground">Huduma {items.length}</span></span><ChevronDown className={cn("h-5 w-5 transition-transform", expanded && "rotate-180")} aria-hidden="true" /></button><div id={`staff-services-${index}`} hidden={!expanded} className="border-t p-2">{items.map((service) => { const Icon = service.icon; return <MobileLink key={service.id} to={service.route} className="flex min-h-14 items-center gap-3 rounded-2xl px-3 text-sm outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-primary"><Icon className="h-5 w-5 text-primary" aria-hidden="true" /><span>{service.label}</span></MobileLink>; })}</div></section>;
     })}{!groups.length ? <p className="py-8 text-center text-sm text-muted-foreground">Hakuna huduma inayolingana na utafutaji huu.</p> : null}</div>}
-    {accountActions.length ? <section aria-labelledby="staff-mobile-account" className="rounded-[22px] border bg-card/70 p-3">
-      <h2 id="staff-mobile-account" className="px-1 text-sm font-semibold">Akaunti</h2>
-      <div className="mt-2 space-y-1">{accountActions.map((action) => {
-        const Icon = action.icon;
-        const className = "flex min-h-14 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-semibold outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-primary";
-        const content = <>{Icon ? <Icon className="h-5 w-5 text-primary" aria-hidden="true" /> : null}<span>{action.label}</span></>;
-        return action.to ? <MobileLink key={action.id} to={action.to} className={className}>{content}</MobileLink> : <button key={action.id} type="button" onClick={() => { void action.onSelect?.(); }} className={className}>{content}</button>;
-      })}</div>
-    </section> : null}
   </div>;
 }
 
