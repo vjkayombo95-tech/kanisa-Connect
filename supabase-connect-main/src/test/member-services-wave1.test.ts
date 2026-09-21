@@ -57,7 +57,7 @@ describe("production Wave 1 member services", () => {
     expect(registry).toContain('featureKey: "channels"');
     expect(registry).toContain('backTitle: "Njia za Mawasiliano"');
     expect(registry).not.toContain('path: "/portal/community-help", label:');
-    expect(registry).not.toContain('path: "/portal/event-requests", label:');
+    expect(memberServiceRegistry.find((item) => item.path === "/portal/event-requests")).toMatchObject({ featureKey: "event_requests", ordinaryMemberAllowed: true, showInServices: false });
   });
 
   it("exposes Watakatifu in Zaidi without changing hidden account or deferred services", () => {
