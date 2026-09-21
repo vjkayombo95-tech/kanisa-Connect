@@ -4,7 +4,7 @@ import { ChurchAdminSidebar } from "./ChurchAdminSidebar";
 import { ChurchAdminCommandMenu } from "./ChurchAdminCommandMenu";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Bell, User, Lock, Building2, ChevronRight } from "lucide-react";
+import { Bell, User, Lock, Building2, ChevronRight, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -114,6 +114,38 @@ export function ChurchAdminLayout() {
                 </DropdownMenu>
               </div>
             </header>
+            {mobileConfig ? (
+              <header className="sticky top-0 z-40 border-b border-border/60 bg-background/92 backdrop-blur-xl lg:hidden" data-testid="church-admin-mobile-profile-header">
+                <div className="flex min-h-16 items-center justify-between gap-3 px-4 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold font-serif text-foreground">Kanisa Connect</p>
+                    <p className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">{workspaceLabel}</p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button aria-label="Fungua wasifu" variant="ghost" size="icon" className="shrink-0 rounded-full">
+                        <div className="gradient-gold flex h-9 w-9 items-center justify-center rounded-full shadow-[0_14px_28px_-18px_rgba(250,204,21,0.65)]">
+                          <User className="h-4 w-4 text-primary-foreground" />
+                        </div>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="z-[70] w-64 max-w-[calc(100vw-2rem)]">
+                      <DropdownMenuItem disabled className="text-xs text-muted-foreground">{profile?.full_name || "Admin"}</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {canOpenSettings ? (
+                        <>
+                          <DropdownMenuItem onClick={() => navigate("/church-admin/settings")}>Mipangilio ya Kanisa</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                        </>
+                      ) : null}
+                      <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                        <LogOut className="mr-2 h-4 w-4" /> Toka
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </header>
+            ) : null}
             <main className="flex-1 overflow-auto px-4 pb-24 pt-5 lg:px-7 lg:pb-8 lg:pt-6 xl:px-9">
               {mobileConfig ? <StaffMobileBackHeader config={mobileConfig} title={mobileTitle} /> : null}
               {routeLocked ? (
