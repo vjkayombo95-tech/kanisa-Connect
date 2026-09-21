@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -56,21 +56,50 @@ describe("Wave 22A church location directions", () => {
 
   it("extends the existing settings save flow without a second Supabase write path", () => {
     const settings = readSrc("pages/church-admin/SettingsPage.tsx");
+    const locationSectionStart = settings.indexOf("Mahali Kanisa Lilipo");
+    const advancedStart = settings.indexOf("Mipangilio ya kina");
+    const geolocationHandler = settings.slice(settings.indexOf("const useCurrentLocation"), settings.indexOf("const handleLogoUploaded"));
 
     expect(settings).toContain("Mahali Kanisa Lilipo");
-    expect(settings).toContain("Tumia eneo langu la sasa");
+    expect(settings).toContain("Weka eneo la kanisa ili waumini waweze kupata maelekezo ya kufika kanisani.");
+    expect(settings).toContain("Tumia eneo nilipo sasa");
+    expect(settings).toContain("Ukiwa kanisani, bonyeza kitufe hiki ili kuhifadhi eneo la kanisa.");
+    expect(settings).toContain("Inatafuta eneo...");
+    expect(settings).toContain("Anwani (hiari)");
+    expect(settings).toContain("Mbezi Beach, Dar es Salaam");
+    expect(settings).toContain("<details");
+    expect(settings).toContain("<summary");
+    expect(settings).toContain("Mipangilio ya kina");
+    expect(settings).toContain("Tumia sehemu hii tu kama unajua coordinates za eneo la kanisa.");
+    expect(settings.indexOf('htmlFor="church-latitude"')).toBeGreaterThan(advancedStart);
+    expect(settings.indexOf('htmlFor="church-longitude"')).toBeGreaterThan(advancedStart);
+    expect(settings.slice(locationSectionStart, advancedStart)).not.toContain("church-latitude");
+    expect(settings.slice(locationSectionStart, advancedStart)).not.toContain("church-longitude");
     expect(settings).toContain("navigator.geolocation.getCurrentPosition");
     expect(settings).toContain("if (!trimmed) return null");
+    expect(settings).toContain("hasSavedCoordinates(church.latitude, church.longitude)");
+    expect(settings).toContain("Eneo la kanisa limehifadhiwa.");
     expect(settings).toContain("const parsedLatitude = parseOptionalCoordinate(latitude, \"Latitude\", -90, 90)");
     expect(settings).toContain("const parsedLongitude = parseOptionalCoordinate(longitude, \"Longitude\", -180, 180)");
     expect(settings).toContain("latitude: parsedLatitude");
     expect(settings).toContain("longitude: parsedLongitude");
     expect(settings).toContain("setLatitude(position.coords.latitude.toFixed(6))");
     expect(settings).toContain("setLongitude(position.coords.longitude.toFixed(6))");
-    expect(settings).toContain("Kifaa hiki hakitumii kupata eneo lako");
-    expect(settings).toContain("Hatukuweza kupata eneo lako");
+    expect(settings).toContain("Eneo limepatikana. Bonyeza Hifadhi kuhifadhi mabadiliko.");
+    expect(settings).toContain("Kifaa hiki hakiwezi kupata eneo lako.");
+    expect(settings).toContain("Hatukuweza kupata eneo lako. Hakikisha umeruhusu Kanisa Connect kutumia Location kisha jaribu tena.");
+    expect(geolocationHandler).not.toContain("supabase.from");
+    expect(geolocationHandler).not.toContain(".update(");
     expect(settings.match(/from\("churches"\)\.select/g)).toHaveLength(1);
     expect(settings).not.toMatch(/from\("churches"\)\.insert|rpc\(/);
+  });
+
+  it("does not add another migration for the admin location UX simplification", () => {
+    const wave22Migrations = readdirSync(join(process.cwd(), "supabase", "migrations")).filter((name) =>
+      name.includes("church_location") || name.includes("location_coordinates"),
+    );
+
+    expect(wave22Migrations).toEqual(["20260921120000_add_church_location_coordinates.sql"]);
   });
 
   it("updates local church types for nullable coordinates", () => {
