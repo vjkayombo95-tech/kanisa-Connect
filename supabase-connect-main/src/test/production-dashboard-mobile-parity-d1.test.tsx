@@ -19,6 +19,8 @@ import { getStaffMobileConfig } from "@/lib/staff-mobile-registry";
 import { resolveStaffMobileWorkspace } from "@/lib/staff-mobile-role";
 
 type RenderOptions = {
+  bannerPositionY?: number;
+  bannerUrl?: string | null;
   pendingError?: boolean;
   pendingLoading?: boolean;
   pendingZero?: boolean;
@@ -44,7 +46,7 @@ function intelligence(financialEnabled = false, options: RenderOptions = {}): Ch
 function renderFor(role: "church_admin" | "secretary" | "pastor" | "treasurer", financialEnabled = false, options: RenderOptions = {}) {
   const config = getStaffMobileConfig(resolveStaffMobileWorkspace([role]));
   if (!config) return "";
-  return renderToStaticMarkup(<ChurchDashboardMobileExperience config={config} intelligence={{ ...intelligence(financialEnabled, options), staffWorkspace: config.workspace === "community" ? null : config.workspace }} administratorName="Amina Admin" greeting="Good morning" churchName="St Joseph" activeMembers={82} totalMembers={100} announcementCount={2} upcomingEventCount={options.upcomingEventCount ?? 1} attendance={{ title: options.deferredError || options.noMass ? null : "Sunday Mass", yes: 20, maybe: 4, responseRate: 60 }} criticalLoading={!!options.criticalLoading} criticalError={!!options.criticalError} deferredLoading={!!options.deferredLoading} deferredError={!!options.deferredError} />);
+  return renderToStaticMarkup(<ChurchDashboardMobileExperience config={config} intelligence={{ ...intelligence(financialEnabled, options), staffWorkspace: config.workspace === "community" ? null : config.workspace }} administratorName="Amina Admin" greeting="Good morning" churchName="St Joseph" bannerUrl={options.bannerUrl ?? null} bannerPositionY={options.bannerPositionY ?? 38} activeMembers={82} totalMembers={100} announcementCount={2} upcomingEventCount={options.upcomingEventCount ?? 1} attendance={{ title: options.deferredError || options.noMass ? null : "Sunday Mass", yes: 20, maybe: 4, responseRate: 60 }} criticalLoading={!!options.criticalLoading} criticalError={!!options.criticalError} deferredLoading={!!options.deferredLoading} deferredError={!!options.deferredError} />);
 }
 
 describe("Release D.1 mobile and tablet dashboard parity", () => {
@@ -54,6 +56,28 @@ describe("Release D.1 mobile and tablet dashboard parity", () => {
     const positions = labels.map((label) => markup.indexOf(label));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((left, right) => left - right));
+  });
+
+  it("renders the tenant cover photo on the staff mobile briefing without losing the approved content", () => {
+    const markup = renderFor("church_admin", false, { bannerUrl: "https://cdn.example.test/church-cover.webp", bannerPositionY: 72 });
+    expect(markup).toContain("background-image:url(&quot;https://cdn.example.test/church-cover.webp&quot;)");
+    expect(markup).toContain("background-position:center 72%");
+    expect(markup).toContain("bg-cover");
+    expect(markup).toContain("from-black/75");
+    expect(markup).toContain("Good morning");
+    expect(markup).toContain("St Joseph");
+    expect(markup).toContain("Uendeshaji wa parokia");
+    expect(markup).toContain("Today&#x27;s Focus");
+    expect(markup).toContain("Today&#x27;s Priorities");
+    expect(markup).toContain("Quick Actions");
+  });
+
+  it("clamps staff mobile cover positioning and keeps the no-banner fallback", () => {
+    const clamped = renderFor("church_admin", false, { bannerUrl: "https://cdn.example.test/church-cover.webp", bannerPositionY: 140 });
+    const fallback = renderFor("church_admin");
+    expect(clamped).toContain("background-position:center 100%");
+    expect(fallback).not.toContain("background-image:");
+    expect(fallback).toContain("bg-card/85");
   });
 
   it("caps priorities at three and quick actions at four", () => {
