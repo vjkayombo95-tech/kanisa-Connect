@@ -361,6 +361,28 @@ describe("My Parish feature-aware quick links", () => {
     expect(host.querySelector('button[aria-label^="Jaribu tena: Taarifa za parokia"]')).toBeNull();
   });
 
+  it("shows parish office services when event requests are available", () => {
+    renderPage();
+
+    const section = host.querySelector('section[aria-label="Huduma za Ofisi"]');
+    expect(section).not.toBeNull();
+    expect(section?.textContent).toContain("Huduma za Ofisi");
+    expect(section?.textContent).toContain("Ndoa");
+    expect(section?.textContent).toContain("Ubatizo");
+    expect(section?.textContent).toContain("Mazishi");
+    expect(section?.textContent).toContain("Kuomba Tukio");
+    expect(section?.textContent).toContain("Huduma nyingine");
+    expect(section?.textContent).toContain("Maombi yangu");
+    expect(section?.querySelectorAll('a[href="/portal/event-requests"]').length).toBe(6);
+  });
+
+  it("hides parish office services when event requests are unavailable", () => {
+    state.features.set("event_requests", false);
+
+    renderPage();
+
+    expect(host.querySelector('section[aria-label="Huduma za Ofisi"]')).toBeNull();
+  });
   it("renders the next Mass section when data exists", () => {
     state.mass = {
       mass: {

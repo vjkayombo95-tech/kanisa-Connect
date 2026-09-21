@@ -13,15 +13,21 @@ const communityHelpMigration = read("supabase/migrations/20260914120000_harden_c
 const communityHelpSqlTest = read("supabase/tests/community_help_requests_rls_hardening.sql");
 
 describe("Wave 16 deferred member feature hardening", () => {
-  it("keeps Event Requests and Community Help out of ordinary member service discovery and direct-route allow lists", () => {
-    for (const path of ["/portal/event-requests", "/member/event-requests", "/portal/community-help", "/member/community-help"]) {
+  it("allows Event Requests for ordinary members while keeping Community Help deferred", () => {
+    expect(isOrdinaryMemberPathAllowed("/portal/event-requests")).toBe(true);
+    expect(isOrdinaryMemberPathAllowed("/member/event-requests")).toBe(true);
+
+    const eventRequestService = memberServiceRegistry.find((item) => item.path === "/portal/event-requests");
+    expect(eventRequestService).toBeDefined();
+    expect(eventRequestService?.featureKey).toBe("event_requests");
+    expect(eventRequestService?.ordinaryMemberAllowed).toBe(true);
+    expect(eventRequestService?.showInServices).toBe(false);
+
+    for (const path of ["/portal/community-help", "/member/community-help"]) {
       expect(isOrdinaryMemberPathAllowed(path), path).toBe(false);
     }
 
-    for (const path of ["/portal/event-requests", "/portal/community-help"]) {
-      expect(memberServiceRegistry.some((item) => item.path === path)).toBe(false);
-      expect(memberServiceRegistry.some((item) => item.path === path && item.showInServices)).toBe(false);
-    }
+    expect(memberServiceRegistry.some((item) => item.path === "/portal/community-help")).toBe(false);
 
     expect(portalLayout).toContain("isOrdinaryMemberPathAllowed(location.pathname)");
     expect(portalLayout).toContain("simpleMemberRouteHidden || explicitFeatureUnavailable");
@@ -33,11 +39,19 @@ describe("Wave 16 deferred member feature hardening", () => {
     expect(portalDashboard).not.toContain('label="Omba Msaada"');
   });
 
-  it("documents the hidden Event Requests frontend as stale until the deferred feature is rebuilt", () => {
+  it("uses the canonical Event Requests workflow for parish office services", () => {
     expect(eventRequests).toContain('<SelectItem value="wedding">');
     expect(eventRequests).toContain('<SelectItem value="baptism">');
     expect(eventRequests).toContain('<SelectItem value="funeral">');
-    expect(eventRequests).toContain('status: "pending"');
+    expect(eventRequests).toContain('<SelectItem value="requested_event">');
+    expect(eventRequests).toContain('requestType: "parish_event"');
+    expect(eventRequests).toContain('type: "wedding"');
+    expect(eventRequests).toContain('type: "baptism"');
+    expect(eventRequests).toContain('type: "funeral"');
+    expect(eventRequests).toContain('type: "requested_event"');
+    expect(eventRequests).toContain('type: "other_office_service"');
+    expect(eventRequests).toContain('status: "submitted"');
+    expect(eventRequests).not.toContain('status: "pending"');
 
     expect(eventWorkflowMigration).toContain("'parish_event'");
     expect(eventWorkflowMigration).toContain("'ministry_group_event'");

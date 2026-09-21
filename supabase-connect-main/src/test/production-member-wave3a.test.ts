@@ -46,10 +46,15 @@ describe("Wave 3A member reliability contracts", () => {
       expect(isOrdinaryMemberPathAllowed(route), route).toBe(true);
     }
     expect(memberServiceRegistry.some((item) => item.path === "/portal/channels" && item.showInServices)).toBe(true);
-    for (const route of ["/portal/community-help", "/portal/event-requests"]) {
-      expect(isOrdinaryMemberPathAllowed(route), route).toBe(false);
-      expect(memberServiceRegistry.some((item) => item.path === route && item.showInServices)).toBe(false);
-    }
+    expect(isOrdinaryMemberPathAllowed("/portal/community-help")).toBe(false);
+    expect(memberServiceRegistry.some((item) => item.path === "/portal/community-help" && item.showInServices)).toBe(false);
+
+    expect(isOrdinaryMemberPathAllowed("/portal/event-requests")).toBe(true);
+    expect(memberServiceRegistry.find((item) => item.path === "/portal/event-requests")).toMatchObject({
+      featureKey: "event_requests",
+      ordinaryMemberAllowed: true,
+      showInServices: false,
+    });
   });
 
   it("keeps detail routes scoped to their registered member destination", () => {

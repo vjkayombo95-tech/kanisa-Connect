@@ -108,6 +108,7 @@ export default function MemberMyParishPage() {
   const announcementsVisible = featureVisible(getFeatureState, "announcements");
   const eventsVisible = featureVisible(getFeatureState, "events");
   const ministriesVisible = featureVisible(getFeatureState, "ministries");
+  const eventRequestsVisible = featureVisible(getFeatureState, "event_requests");
   const eligibleLivestream = !!(livestream.featureEnabled && !livestream.error && livestream.data && livestream.data.churchId === livestream.churchId && presentation(livestream.data) && getYouTubeEmbedUrl(livestream.data));
 
   const copyAddress = async () => {
@@ -138,6 +139,17 @@ export default function MemberMyParishPage() {
         {parish.data.address ? <button type="button" onClick={() => void copyAddress()} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-left font-semibold"><Clipboard className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /><span className="min-w-0 break-words">Nakili anwani</span></button> : null}
         <a href={directionsHref} target="_blank" rel="noopener noreferrer" aria-label={`Pata Maelekezo: ${parish.data.address ?? parish.data.name}`} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-3 py-2 font-semibold"><MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /><span className="min-w-0 break-words">Pata Maelekezo</span></a>
       </div>{copyStatus !== "idle" ? <p role="status" className="flex items-center gap-1 text-xs text-muted-foreground">{copyStatus === "copied" ? <><Check className="h-3.5 w-3.5" aria-hidden="true" />Anwani imenakiliwa.</> : "Anwani haikuweza kunakiliwa."}</p> : null}</CardContent></Card> : <EmptyCard>Mahali pa parokia bado hapajawekwa.</EmptyCard>}</div>
+    </section> : null}
+
+    {eventRequestsVisible ? <section aria-label="Huduma za Ofisi">
+      <SectionTitle title="Huduma za Ofisi" action={<AppLink to="/portal/event-requests" className="text-sm font-bold text-primary">Maombi yangu</AppLink>} />
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+        <Shortcut to="/portal/event-requests" title="Ndoa" icon={HeartHandshake} />
+        <Shortcut to="/portal/event-requests" title="Ubatizo" icon={Church} />
+        <Shortcut to="/portal/event-requests" title="Mazishi" icon={Church} />
+        <Shortcut to="/portal/event-requests" title="Kuomba Tukio" icon={CalendarDays} />
+        <Shortcut to="/portal/event-requests" title="Huduma nyingine" icon={Clipboard} />
+      </div>
     </section> : null}
 
     <section>
