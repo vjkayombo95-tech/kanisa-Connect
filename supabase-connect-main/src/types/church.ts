@@ -5,6 +5,8 @@ export interface Church {
   email: string;
   phone: string | null;
   address: string | null;
+  latitude: number | null;
+  longitude: number | null;
   logo_url: string | null;
   banner_url: string | null;
   banner_position_y: number;

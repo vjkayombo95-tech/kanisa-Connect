@@ -2444,7 +2444,9 @@ export type Database = {
           created_by: string | null
           email: string | null
           id: string
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           mass_intention_auto_confirm_paid: boolean
           mass_intention_currency: string
           mass_intention_default_fee: number | null
@@ -2473,7 +2475,9 @@ export type Database = {
           created_by?: string | null
           email?: string | null
           id?: string
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           mass_intention_auto_confirm_paid?: boolean
           mass_intention_currency?: string
           mass_intention_default_fee?: number | null
@@ -2502,7 +2506,9 @@ export type Database = {
           created_by?: string | null
           email?: string | null
           id?: string
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           mass_intention_auto_confirm_paid?: boolean
           mass_intention_currency?: string
           mass_intention_default_fee?: number | null

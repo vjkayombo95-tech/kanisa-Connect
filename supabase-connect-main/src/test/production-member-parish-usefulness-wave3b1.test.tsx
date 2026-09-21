@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  getParishDirectionsHref,
   getParishEmailHref,
   getParishMapHref,
   getParishPhoneHref,
@@ -39,11 +40,18 @@ describe("Wave 3B1 parish usefulness", () => {
     expect(getParishMapHref("St Joseph\nDar es Salaam")).toBe(
       "https://www.google.com/maps/search/?api=1&query=St%20Joseph%20Dar%20es%20Salaam",
     );
+    expect(getParishDirectionsHref({ address: "St Joseph", latitude: 0, longitude: 39.2 })).toBe(
+      "https://www.google.com/maps/dir/?api=1&destination=0,39.2",
+    );
+    expect(getParishDirectionsHref({ address: "St Joseph, Dar es Salaam", latitude: null, longitude: null })).toBe(
+      "https://www.google.com/maps/search/?api=1&query=St%20Joseph%2C%20Dar%20es%20Salaam",
+    );
   });
 
   it("keeps contact rendering nullable, compact, and clipboard-safe", () => {
     expect(parishPage).toContain("(phoneHref || emailHref) ?");
-    expect(parishPage).toContain("mapHref && parish.data.address");
+    expect(parishPage).toContain("directionsHref ?");
+    expect(parishPage).toContain("Pata Maelekezo");
     expect(parishPage).toContain("navigator.clipboard?.writeText");
     expect(parishPage).toContain('target="_blank" rel="noopener noreferrer"');
     expect(parishPage).toContain("overflow-x-hidden");

@@ -8,6 +8,8 @@ export type ParishIdentity = {
   phone: string | null;
   email: string | null;
   address: string | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 export type ParishEvent = { id: string; churchId: string; title: string; description: string | null; startDate: string; location: string | null };
 export type MemberNextMass = {
@@ -73,9 +75,25 @@ export function getParishMapHref(value: string | null | undefined) {
     : null;
 }
 
+export function normalizeCoordinate(value: number | null | undefined, min: number, max: number) {
+  return typeof value === "number" && Number.isFinite(value) && value >= min && value <= max ? value : null;
+}
+
+export function getParishDirectionsHref(
+  location: Pick<ParishIdentity, "address" | "latitude" | "longitude"> | null | undefined,
+) {
+  if (!location) return null;
+  const latitude = normalizeCoordinate(location.latitude, -90, 90);
+  const longitude = normalizeCoordinate(location.longitude, -180, 180);
+  if (latitude !== null && longitude !== null) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+  }
+  return getParishMapHref(location.address);
+}
+
 export async function fetchParishIdentity(churchId: string): Promise<ParishIdentity | null> {
   if (!churchId) return null;
-  const { data, error } = await supabase.from("churches").select("id,name,logo_url,phone,email,address").eq("id", churchId).maybeSingle();
+  const { data, error } = await supabase.from("churches").select("id,name,logo_url,phone,email,address,latitude,longitude").eq("id", churchId).maybeSingle();
   if (error) throw error;
   if (!data || data.id !== churchId) return null;
   return {
@@ -85,6 +103,8 @@ export async function fetchParishIdentity(churchId: string): Promise<ParishIdent
     phone: normalizeParishContact(data.phone),
     email: normalizeParishContact(data.email),
     address: normalizeParishContact(data.address),
+    latitude: normalizeCoordinate(data.latitude, -90, 90),
+    longitude: normalizeCoordinate(data.longitude, -180, 180),
   };
 }
 
