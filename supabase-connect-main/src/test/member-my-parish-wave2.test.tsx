@@ -11,7 +11,7 @@ describe("Wave 2 My Parish", () => {
   const linkedMember = read("hooks/use-linked-member.ts");
 
   it("renders production parish identity with a safe missing-logo fallback", () => {
-    expect(helper).toContain('.select("id,name,logo_url,phone,email,address")');
+    expect(helper).toContain('.select("id,name,logo_url,phone,email,address,latitude,longitude")');
     expect(page).toContain("parish.data.logoUrl ?");
     expect(page).toContain("<Church className");
   });
@@ -22,6 +22,8 @@ describe("Wave 2 My Parish", () => {
     expect(helper).toContain("phone: normalizeParishContact(data.phone)");
     expect(helper).toContain("email: normalizeParishContact(data.email)");
     expect(helper).toContain("address: normalizeParishContact(data.address)");
+    expect(helper).toContain("latitude: normalizeCoordinate(data.latitude, -90, 90)");
+    expect(helper).toContain("longitude: normalizeCoordinate(data.longitude, -180, 180)");
     expect(page).toContain("enabled: !!churchId");
     expect(page).not.toContain("metadata");
   });

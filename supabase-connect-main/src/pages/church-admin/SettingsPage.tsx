@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Palette, Church, Loader2, Image, Check, RotateCcw, Eye, CreditCard, MessageCircle } from "lucide-react";
+import { Palette, Church, Loader2, Image, Check, RotateCcw, Eye, CreditCard, MessageCircle, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useBillingAccess } from "@/hooks/use-billing-access";
 import OptimizedImageUpload from "@/components/church-admin/OptimizedImageUpload";
@@ -35,6 +35,16 @@ const templateTypeOptions: Array<{ value: ChurchMessageTemplateType; label: stri
   { value: "contribution_appreciation", label: "Contribution appreciation" },
 ];
 
+function parseOptionalCoordinate(value: string, label: string, min: number, max: number) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const numeric = Number(trimmed);
+  if (!Number.isFinite(numeric) || numeric < min || numeric > max) {
+    throw new Error(`${label} must be a number between ${min} and ${max}.`);
+  }
+  return numeric;
+}
+
 export default function SettingsPage() {
   const { churchId } = useAuth();
   const { themeColor: activeThemeColor } = useChurchTheme();
@@ -46,6 +56,11 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [locationMessage, setLocationMessage] = useState("");
+  const [locationMessageTone, setLocationMessageTone] = useState<"success" | "error">("success");
+  const [isLocating, setIsLocating] = useState(false);
   const [themeColor, setThemeColor] = useState("#d4a017");
   const [bannerPositionY, setBannerPositionY] = useState(38);
   const [customHex, setCustomHex] = useState("");
@@ -89,6 +104,8 @@ export default function SettingsPage() {
       setEmail(church.email || "");
       setPhone(church.phone || "");
       setAddress(church.address || "");
+      setLatitude(church.latitude == null ? "" : String(church.latitude));
+      setLongitude(church.longitude == null ? "" : String(church.longitude));
       setThemeColor(church.theme_color || "#d4a017");
       setBannerPositionY(church.banner_position_y ?? 38);
     }
@@ -101,8 +118,15 @@ export default function SettingsPage() {
   const saveGeneral = useMutation({
     mutationFn: async () => {
       if (!churchId) throw new Error("No church");
+      const parsedLatitude = parseOptionalCoordinate(latitude, "Latitude", -90, 90);
+      const parsedLongitude = parseOptionalCoordinate(longitude, "Longitude", -180, 180);
       const { error } = await supabase.from("churches").update({
-        name: churchName, email, phone: phone || null, address: address || null,
+        name: churchName,
+        email,
+        phone: phone || null,
+        address: address || null,
+        latitude: parsedLatitude,
+        longitude: parsedLongitude,
       }).eq("id", churchId);
       if (error) throw error;
     },
@@ -173,6 +197,31 @@ export default function SettingsPage() {
 
   const resetMessageTemplate = () => {
     setMessageTemplate(getDefaultTemplate(templateType, churchId ?? null));
+  };
+
+  const useCurrentLocation = () => {
+    setLocationMessage("");
+    if (!navigator.geolocation) {
+      setLocationMessageTone("error");
+      setLocationMessage("Kifaa hiki hakitumii kupata eneo lako. Unaweza kuandika latitude na longitude mwenyewe.");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude.toFixed(6));
+        setLongitude(position.coords.longitude.toFixed(6));
+        setLocationMessageTone("success");
+        setLocationMessage("Eneo limewekwa. Bonyeza Save Changes kuhifadhi.");
+        setIsLocating(false);
+      },
+      () => {
+        setLocationMessageTone("error");
+        setLocationMessage("Hatukuweza kupata eneo lako. Unaweza kuandika latitude na longitude mwenyewe.");
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
   };
 
   const handleLogoUploaded = async (result: UploadResult) => {
@@ -285,7 +334,32 @@ export default function SettingsPage() {
                 <div className="space-y-2"><Label>Church Code</Label><Input disabled value={churchCode} className="bg-muted/50" /></div>
                 <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
                 <div className="space-y-2"><Label>Phone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></div>
-                <div className="space-y-2 md:col-span-2"><Label>Address</Label><Input value={address} onChange={(e) => setAddress(e.target.value)} /></div>
+                <div className="space-y-4 rounded-2xl border border-border/70 bg-background/60 p-4 md:col-span-2">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                    <div className="min-w-0">
+                      <h3 className="font-semibold">Mahali Kanisa Lilipo</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Unaweza kutumia eneo lako la sasa ukiwa kanisani ili kuhifadhi mahali sahihi.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2 md:col-span-2"><Label>Anwani</Label><Input value={address} onChange={(e) => setAddress(e.target.value)} /></div>
+                    <div className="space-y-2"><Label>Latitude</Label><Input inputMode="decimal" value={latitude} onChange={(e) => setLatitude(e.target.value)} placeholder="-6.792354" /></div>
+                    <div className="space-y-2"><Label>Longitude</Label><Input inputMode="decimal" value={longitude} onChange={(e) => setLongitude(e.target.value)} placeholder="39.208328" /></div>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Button type="button" variant="outline" onClick={useCurrentLocation} disabled={isLocating} className="w-full sm:w-auto">
+                      {isLocating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Tumia eneo langu la sasa
+                    </Button>
+                    {locationMessage ? (
+                      <p role="status" className={locationMessageTone === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}>
+                        {locationMessage}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
               </div>
               <Button onClick={() => saveGeneral.mutate()} disabled={saveGeneral.isPending}>
                 {saveGeneral.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Save Changes

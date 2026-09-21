@@ -12,7 +12,7 @@ import { useChurchRadioStations } from "@/hooks/use-church-radio";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { useLinkedMember } from "@/hooks/use-linked-member";
 import { getYouTubeEmbedUrl, presentation } from "@/lib/church-livestreams";
-import { dailyLifeKeys, fetchLatestAnnouncement, fetchNextMassSummary, fetchParishEvents, fetchParishIdentity, getParishEmailHref, getParishMapHref, getParishPhoneHref, isUpcomingEvent } from "@/lib/member-daily-life";
+import { dailyLifeKeys, fetchLatestAnnouncement, fetchNextMassSummary, fetchParishEvents, fetchParishIdentity, getParishDirectionsHref, getParishEmailHref, getParishPhoneHref, isUpcomingEvent } from "@/lib/member-daily-life";
 import { fetchMemberMinistries, memberMinistriesQueryKey } from "@/lib/member-ministries";
 import type { PortalFeatureKey } from "@/lib/portal-features";
 
@@ -103,7 +103,7 @@ export default function MemberMyParishPage() {
   const joined = ministries.data?.filter((ministry) => ministry.joined) ?? [];
   const phoneHref = getParishPhoneHref(parish.data?.phone);
   const emailHref = getParishEmailHref(parish.data?.email);
-  const mapHref = getParishMapHref(parish.data?.address);
+  const directionsHref = getParishDirectionsHref(parish.data);
   const memberName = member.data?.full_name?.trim() ?? "";
   const announcementsVisible = featureVisible(getFeatureState, "announcements");
   const eventsVisible = featureVisible(getFeatureState, "events");
@@ -134,9 +134,9 @@ export default function MemberMyParishPage() {
         {phoneHref && parish.data.phone ? <ContactLink href={phoneHref} label="Piga simu" value={parish.data.phone} icon={Phone} /> : null}
         {emailHref && parish.data.email ? <ContactLink href={emailHref} label="Tuma barua pepe" value={parish.data.email} icon={Mail} /> : null}
       </div> : <EmptyCard>Mawasiliano ya parokia bado hayajachapishwa.</EmptyCard>}</div>
-      <div className="min-w-0"><SectionTitle title="Mahali pa parokia" />{mapHref && parish.data.address ? <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="space-y-3 p-4 text-sm"><p className="min-w-0 break-words text-muted-foreground">{parish.data.address}</p><div className="grid gap-2 sm:grid-cols-2">
-        <button type="button" onClick={() => void copyAddress()} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-left font-semibold"><Clipboard className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /><span className="min-w-0 break-words">Nakili anwani</span></button>
-        <a href={mapHref} target="_blank" rel="noopener noreferrer" aria-label={`Fungua ramani: ${parish.data.address}`} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-3 py-2 font-semibold"><MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /><span className="min-w-0 break-words">Fungua ramani</span></a>
+      <div className="min-w-0"><SectionTitle title="Mahali pa parokia" />{directionsHref ? <Card className="rounded-[24px] border-border/70 bg-card/80"><CardContent className="space-y-3 p-4 text-sm">{parish.data.address ? <p className="min-w-0 break-words text-muted-foreground">{parish.data.address}</p> : <p className="min-w-0 break-words text-muted-foreground">Mahali halisi kimehifadhiwa kwa ramani.</p>}<div className="grid gap-2 sm:grid-cols-2">
+        {parish.data.address ? <button type="button" onClick={() => void copyAddress()} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-3 py-2 text-left font-semibold"><Clipboard className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /><span className="min-w-0 break-words">Nakili anwani</span></button> : null}
+        <a href={directionsHref} target="_blank" rel="noopener noreferrer" aria-label={`Pata Maelekezo: ${parish.data.address ?? parish.data.name}`} className="flex min-h-12 min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-3 py-2 font-semibold"><MapPin className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" /><span className="min-w-0 break-words">Pata Maelekezo</span></a>
       </div>{copyStatus !== "idle" ? <p role="status" className="flex items-center gap-1 text-xs text-muted-foreground">{copyStatus === "copied" ? <><Check className="h-3.5 w-3.5" aria-hidden="true" />Anwani imenakiliwa.</> : "Anwani haikuweza kunakiliwa."}</p> : null}</CardContent></Card> : <EmptyCard>Mahali pa parokia bado hapajawekwa.</EmptyCard>}</div>
     </section> : null}
 

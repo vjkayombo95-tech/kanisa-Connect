@@ -17,6 +17,8 @@ const state = vi.hoisted(() => ({
     phone: null as string | null,
     email: null as string | null,
     address: null as string | null,
+    latitude: null as number | null,
+    longitude: null as number | null,
   } as null | {
     id: string;
     name: string;
@@ -24,6 +26,8 @@ const state = vi.hoisted(() => ({
     phone: string | null;
     email: string | null;
     address: string | null;
+    latitude: number | null;
+    longitude: number | null;
   },
   linkedMember: {
     data: { id: "member-a", full_name: "Member Test", church_id: "church-a" } as null | { id: string; full_name: string | null; church_id: string },
@@ -147,7 +151,7 @@ describe("My Parish feature-aware quick links", () => {
     state.errors = new Set();
     state.loading = new Set();
     state.refetches = new Map();
-    state.parish = { id: "church-a", name: "Parokia Test", logoUrl: null, phone: null, email: null, address: null };
+    state.parish = { id: "church-a", name: "Parokia Test", logoUrl: null, phone: null, email: null, address: null, latitude: null, longitude: null };
     state.linkedMember = {
       data: { id: "member-a", full_name: "Member Test", church_id: "church-a" },
       isLoading: false,
@@ -208,6 +212,8 @@ describe("My Parish feature-aware quick links", () => {
       phone: null,
       email: null,
       address: null,
+      latitude: null,
+      longitude: null,
     };
 
     renderPage();
@@ -253,6 +259,8 @@ describe("My Parish feature-aware quick links", () => {
       phone: "+255 712 345 678",
       email: "ofisi@example.org",
       address: null,
+      latitude: null,
+      longitude: null,
     };
 
     renderPage();
@@ -278,6 +286,8 @@ describe("My Parish feature-aware quick links", () => {
       phone: null,
       email: null,
       address: "Barabara ya Kanisa, Kata ya Mlimani, Dar es Salaam",
+      latitude: null,
+      longitude: null,
     };
 
     renderPage();
@@ -289,7 +299,29 @@ describe("My Parish feature-aware quick links", () => {
     expect(mapLink).not.toBeNull();
     expect(mapLink?.getAttribute("rel")).toBe("noopener noreferrer");
     expect(mapLink?.getAttribute("href")).not.toMatch(/^javascript:/i);
+    expect(mapLink?.textContent).toContain("Pata Maelekezo");
     expect(host.textContent).toContain("Mawasiliano ya parokia bado hayajachapishwa.");
+  });
+
+  it("uses parish coordinates for directions when they are available", () => {
+    state.parish = {
+      id: "church-a",
+      name: "Parokia Test",
+      logoUrl: null,
+      phone: null,
+      email: null,
+      address: "Barabara ya Kanisa, Kata ya Mlimani, Dar es Salaam",
+      latitude: 0,
+      longitude: 39.208328,
+    };
+
+    renderPage();
+
+    const directionsLink = host.querySelector<HTMLAnchorElement>('a[href^="https://www.google.com/maps/dir/?api=1&destination="]');
+    expect(directionsLink).not.toBeNull();
+    expect(directionsLink?.getAttribute("href")).toBe("https://www.google.com/maps/dir/?api=1&destination=0,39.208328");
+    expect(directionsLink?.textContent).toContain("Pata Maelekezo");
+    expect(host.textContent).toContain("Barabara ya Kanisa, Kata ya Mlimani, Dar es Salaam");
   });
 
   it("renders parish identity loading without fake parish information", () => {
