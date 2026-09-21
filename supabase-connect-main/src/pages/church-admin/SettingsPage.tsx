@@ -45,6 +45,19 @@ function parseOptionalCoordinate(value: string, label: string, min: number, max:
   return numeric;
 }
 
+function hasSavedCoordinates(latitude: number | null | undefined, longitude: number | null | undefined) {
+  return (
+    typeof latitude === "number" &&
+    Number.isFinite(latitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    typeof longitude === "number" &&
+    Number.isFinite(longitude) &&
+    longitude >= -180 &&
+    longitude <= 180
+  );
+}
+
 export default function SettingsPage() {
   const { churchId } = useAuth();
   const { themeColor: activeThemeColor } = useChurchTheme();
@@ -106,6 +119,12 @@ export default function SettingsPage() {
       setAddress(church.address || "");
       setLatitude(church.latitude == null ? "" : String(church.latitude));
       setLongitude(church.longitude == null ? "" : String(church.longitude));
+      if (hasSavedCoordinates(church.latitude, church.longitude)) {
+        setLocationMessageTone("success");
+        setLocationMessage("Eneo la kanisa limehifadhiwa.");
+      } else {
+        setLocationMessage("");
+      }
       setThemeColor(church.theme_color || "#d4a017");
       setBannerPositionY(church.banner_position_y ?? 38);
     }
@@ -203,7 +222,7 @@ export default function SettingsPage() {
     setLocationMessage("");
     if (!navigator.geolocation) {
       setLocationMessageTone("error");
-      setLocationMessage("Kifaa hiki hakitumii kupata eneo lako. Unaweza kuandika latitude na longitude mwenyewe.");
+      setLocationMessage("Kifaa hiki hakiwezi kupata eneo lako. Andika anwani au tumia Mipangilio ya kina ikiwa unajua coordinates.");
       return;
     }
     setIsLocating(true);
@@ -212,12 +231,12 @@ export default function SettingsPage() {
         setLatitude(position.coords.latitude.toFixed(6));
         setLongitude(position.coords.longitude.toFixed(6));
         setLocationMessageTone("success");
-        setLocationMessage("Eneo limewekwa. Bonyeza Save Changes kuhifadhi.");
+        setLocationMessage("Eneo limepatikana. Bonyeza Hifadhi kuhifadhi mabadiliko.");
         setIsLocating(false);
       },
       () => {
         setLocationMessageTone("error");
-        setLocationMessage("Hatukuweza kupata eneo lako. Unaweza kuandika latitude na longitude mwenyewe.");
+        setLocationMessage("Hatukuweza kupata eneo lako. Hakikisha umeruhusu Kanisa Connect kutumia Location kisha jaribu tena.");
         setIsLocating(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
@@ -340,25 +359,47 @@ export default function SettingsPage() {
                     <div className="min-w-0">
                       <h3 className="font-semibold">Mahali Kanisa Lilipo</h3>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Unaweza kutumia eneo lako la sasa ukiwa kanisani ili kuhifadhi mahali sahihi.
+                        Weka eneo la kanisa ili waumini waweze kupata maelekezo ya kufika kanisani.
                       </p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="space-y-2 md:col-span-2"><Label>Anwani</Label><Input value={address} onChange={(e) => setAddress(e.target.value)} /></div>
-                    <div className="space-y-2"><Label>Latitude</Label><Input inputMode="decimal" value={latitude} onChange={(e) => setLatitude(e.target.value)} placeholder="-6.792354" /></div>
-                    <div className="space-y-2"><Label>Longitude</Label><Input inputMode="decimal" value={longitude} onChange={(e) => setLongitude(e.target.value)} placeholder="39.208328" /></div>
-                  </div>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <Button type="button" variant="outline" onClick={useCurrentLocation} disabled={isLocating} className="w-full sm:w-auto">
-                      {isLocating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Tumia eneo langu la sasa
+                  <div className="space-y-2">
+                    <Button type="button" variant="outline" onClick={useCurrentLocation} disabled={isLocating} className="min-h-11 w-full justify-center sm:w-auto">
+                      {isLocating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MapPin className="mr-2 h-4 w-4" aria-hidden="true" />}
+                      {isLocating ? "Inatafuta eneo..." : "Tumia eneo nilipo sasa"}
                     </Button>
+                    <p className="text-sm text-muted-foreground">
+                      Ukiwa kanisani, bonyeza kitufe hiki ili kuhifadhi eneo la kanisa.
+                    </p>
                     {locationMessage ? (
-                      <p role="status" className={locationMessageTone === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}>
-                        {locationMessage}
+                      <p role={locationMessageTone === "error" ? "alert" : "status"} className={locationMessageTone === "error" ? "text-sm text-destructive" : "flex items-center gap-1 text-sm text-muted-foreground"}>
+                        {locationMessageTone === "success" ? <Check className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" /> : null}
+                        <span>{locationMessage}</span>
                       </p>
                     ) : null}
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="church-address">Anwani (hiari)</Label>
+                    <Input id="church-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Mbezi Beach, Dar es Salaam" />
+                  </div>
+                  <details className="group rounded-xl border border-border/60 bg-background/50 p-3 text-sm">
+                    <summary className="cursor-pointer font-medium text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                      Mipangilio ya kina
+                    </summary>
+                    <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <p className="text-muted-foreground md:col-span-2">
+                        Tumia sehemu hii tu kama unajua coordinates za eneo la kanisa.
+                      </p>
+                      <div className="space-y-2">
+                        <Label htmlFor="church-latitude">Latitude</Label>
+                        <Input id="church-latitude" inputMode="decimal" value={latitude} onChange={(e) => setLatitude(e.target.value)} placeholder="-6.792354" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="church-longitude">Longitude</Label>
+                        <Input id="church-longitude" inputMode="decimal" value={longitude} onChange={(e) => setLongitude(e.target.value)} placeholder="39.208328" />
+                      </div>
+                    </div>
+                  </details>
                 </div>
               </div>
               <Button onClick={() => saveGeneral.mutate()} disabled={saveGeneral.isPending}>
