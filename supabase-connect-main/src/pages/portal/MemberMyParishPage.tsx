@@ -143,9 +143,11 @@ export default function MemberMyParishPage() {
 
     {eventRequestsVisible ? <section aria-label="Huduma za Ofisi">
       <SectionTitle title="Huduma za Ofisi" action={<AppLink to="/portal/event-requests" className="text-sm font-bold text-primary">Maombi yangu</AppLink>} />
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         <Shortcut to="/portal/event-requests?service=wedding" title="Ndoa" icon={HeartHandshake} />
         <Shortcut to="/portal/event-requests?service=baptism" title="Ubatizo" icon={Church} />
+        <Shortcut to="/portal/event-requests?service=confirmation" title="Kipaimara" icon={Check} />
+        <Shortcut to="/portal/event-requests?service=first_communion" title="Komunyo ya Kwanza" icon={Church} />
         <Shortcut to="/portal/event-requests?service=funeral" title="Mazishi" icon={Church} />
         <Shortcut to="/portal/event-requests?service=requested_event" title="Kuomba Tukio" icon={CalendarDays} />
         <Shortcut to="/portal/event-requests?service=other" title="Huduma nyingine" icon={Clipboard} />

@@ -1,8 +1,12 @@
 import { readFileSync } from "fs";
+import type { TFunction } from "i18next";
 import { join } from "path";
 import { describe, expect, it } from "vitest";
 
+import en from "@/locales/en.json";
 import { STAFF_MOBILE_CONFIGS } from "@/lib/staff-mobile-registry";
+import { translateEventRequestType } from "@/lib/translation-helpers";
+import sw from "@/locales/sw.json";
 
 const root = process.cwd();
 const read = (path: string) => readFileSync(join(root, path), "utf8");
@@ -59,7 +63,15 @@ describe("Wave23D parish office services", () => {
   it("treats submitted office requests as actionable without hiding office service types", () => {
     expect(adminPage).toContain('const NEW_STATUSES = new Set(["pending", "submitted"])');
     expect(adminPage).toContain('status: "under_review"');
-    for (const value of ["wedding", "baptism", "funeral", "requested_event", "other_office_service"]) {
+    for (const value of [
+      "wedding",
+      "baptism",
+      "confirmation",
+      "first_communion",
+      "funeral",
+      "requested_event",
+      "other_office_service",
+    ]) {
       expect(`${adminPage}\n${memberPage}`).toContain(value);
     }
   });
@@ -68,6 +80,8 @@ describe("Wave23D parish office services", () => {
     for (const link of [
       "/portal/event-requests?service=wedding",
       "/portal/event-requests?service=baptism",
+      "/portal/event-requests?service=confirmation",
+      "/portal/event-requests?service=first_communion",
       "/portal/event-requests?service=funeral",
       "/portal/event-requests?service=requested_event",
       "/portal/event-requests?service=other",
@@ -79,5 +93,44 @@ describe("Wave23D parish office services", () => {
     expect(memberPage).toContain("getServiceFromSearch(location.search)");
     expect(memberPage).toContain("SERVICE_MAPPING[values.event_type as ServiceKey]");
     expect(memberPage).toContain('throw new Error("Invalid service type")');
+  });
+
+  it("maps confirmation and first communion through the existing parish event workflow", () => {
+    for (const value of ["wedding", "baptism", "funeral"]) {
+      expect(memberPage).toContain(`${value}: { requestType: "parish_event", type: "${value}" }`);
+    }
+
+    expect(memberPage).toContain('confirmation: { requestType: "parish_event", type: "confirmation" }');
+    expect(memberPage).toContain('first_communion: { requestType: "parish_event", type: "first_communion" }');
+    expect(memberPage).toContain('<SelectItem value="confirmation">{t("event_request.confirmation")}</SelectItem>');
+    expect(memberPage).toContain('<SelectItem value="first_communion">{t("event_request.first_communion")}</SelectItem>');
+    expect(memberPage).toContain('confirmation: "event_request.confirmation"');
+    expect(memberPage).toContain('first_communion: "event_request.first_communion"');
+  });
+
+  it("has English and Kiswahili labels for new sacramental service types", () => {
+    expect(en.event_request.confirmation).toBe("Confirmation");
+    expect(en.event_request.first_communion).toBe("First Communion");
+    expect(sw.event_request.confirmation).toBe("Kipaimara");
+    expect(sw.event_request.first_communion).toBe("Komunyo ya Kwanza");
+  });
+
+  it("shows new service labels in member history and the admin inbox", () => {
+    const t = (key: string, options?: { defaultValue?: string }) => {
+      const value = key.split(".").reduce<unknown>((current, part) => {
+        if (current && typeof current === "object" && part in current) {
+          return (current as Record<string, unknown>)[part];
+        }
+        return undefined;
+      }, en);
+
+      return typeof value === "string" ? value : options?.defaultValue ?? key;
+    };
+
+    const translate = t as unknown as TFunction;
+
+    expect(translateEventRequestType(translate, "confirmation")).toBe("Confirmation");
+    expect(translateEventRequestType(translate, "first_communion")).toBe("First Communion");
+    expect(adminPage).toContain("translateEventRequestType(t, request.type ?? request.request_type)");
   });
 });

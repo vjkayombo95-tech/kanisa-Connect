@@ -21,7 +21,7 @@ type FormErrors = {
   description?: string;
 };
 
-type ServiceKey = "wedding" | "baptism" | "funeral" | "requested_event" | "other";
+type ServiceKey = "wedding" | "baptism" | "confirmation" | "first_communion" | "funeral" | "requested_event" | "other";
 
 type MemberEventRequest = {
   id: string;
@@ -33,11 +33,13 @@ type MemberEventRequest = {
 };
 
 const TANZANIA_PHONE_REGEX = /^255\d{9}$/;
-const SERVICE_KEYS: ServiceKey[] = ["wedding", "baptism", "funeral", "requested_event", "other"];
+const SERVICE_KEYS: ServiceKey[] = ["wedding", "baptism", "confirmation", "first_communion", "funeral", "requested_event", "other"];
 
 const SERVICE_MAPPING: Record<ServiceKey, { requestType: string; type: string }> = {
   wedding: { requestType: "parish_event", type: "wedding" },
   baptism: { requestType: "parish_event", type: "baptism" },
+  confirmation: { requestType: "parish_event", type: "confirmation" },
+  first_communion: { requestType: "parish_event", type: "first_communion" },
   funeral: { requestType: "parish_event", type: "funeral" },
   requested_event: { requestType: "parish_event", type: "requested_event" },
   other: { requestType: "other", type: "other_office_service" },
@@ -46,6 +48,8 @@ const SERVICE_MAPPING: Record<ServiceKey, { requestType: string; type: string }>
 const SERVICE_LABEL_KEYS: Record<string, string> = {
   wedding: "event_request.wedding",
   baptism: "event_request.baptism",
+  confirmation: "event_request.confirmation",
+  first_communion: "event_request.first_communion",
   funeral: "event_request.funeral",
   requested_event: "event_request.requested_event",
   other_office_service: "event_request.other",
@@ -269,6 +273,8 @@ export default function EventRequests() {
                   <SelectContent>
                     <SelectItem value="wedding">{t("event_request.wedding")}</SelectItem>
                     <SelectItem value="baptism">{t("event_request.baptism")}</SelectItem>
+                    <SelectItem value="confirmation">{t("event_request.confirmation")}</SelectItem>
+                    <SelectItem value="first_communion">{t("event_request.first_communion")}</SelectItem>
                     <SelectItem value="funeral">{t("event_request.funeral")}</SelectItem>
                     <SelectItem value="requested_event">{t("event_request.requested_event")}</SelectItem>
                     <SelectItem value="other">{t("event_request.other")}</SelectItem>

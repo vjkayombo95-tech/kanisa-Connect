@@ -369,6 +369,8 @@ describe("My Parish feature-aware quick links", () => {
     expect(section?.textContent).toContain("Huduma za Ofisi");
     expect(section?.textContent).toContain("Ndoa");
     expect(section?.textContent).toContain("Ubatizo");
+    expect(section?.textContent).toContain("Kipaimara");
+    expect(section?.textContent).toContain("Komunyo ya Kwanza");
     expect(section?.textContent).toContain("Mazishi");
     expect(section?.textContent).toContain("Kuomba Tukio");
     expect(section?.textContent).toContain("Huduma nyingine");
@@ -378,6 +380,8 @@ describe("My Parish feature-aware quick links", () => {
       "/portal/event-requests",
       "/portal/event-requests?service=wedding",
       "/portal/event-requests?service=baptism",
+      "/portal/event-requests?service=confirmation",
+      "/portal/event-requests?service=first_communion",
       "/portal/event-requests?service=funeral",
       "/portal/event-requests?service=requested_event",
       "/portal/event-requests?service=other",

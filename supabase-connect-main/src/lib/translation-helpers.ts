@@ -16,6 +16,8 @@ const eventRequestKeyMap: Record<string, string> = {
   parish_event: "event_request.requested_event",
   wedding: "event_request.wedding",
   baptism: "event_request.baptism",
+  confirmation: "event_request.confirmation",
+  first_communion: "event_request.first_communion",
   funeral: "event_request.funeral",
   requested_event: "event_request.requested_event",
   other_office_service: "event_request.other",
