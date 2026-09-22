@@ -171,6 +171,8 @@
     "validation_description_short": "Details must be at least 10 characters.",
     "wedding": "Marriage",
     "baptism": "Baptism",
+    "confirmation": "Confirmation",
+    "first_communion": "First Communion",
     "funeral": "Funeral",
     "requested_event": "Request an Event",
     "other": "Other service",
