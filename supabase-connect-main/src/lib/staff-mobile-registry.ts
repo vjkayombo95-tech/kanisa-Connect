@@ -52,6 +52,7 @@ const adminServices: StaffService[] = [
   { id: "invite-members", label: "Alika Wanachama", route: "/church-admin/invite-members", group: "Watu", icon: UserCheck },
   { id: "announcements", label: "Matangazo", route: "/church-admin/announcements", group: "Mawasiliano", icon: Megaphone, featureKey: "announcements", primary: true },
   { id: "events", label: "Matukio", route: "/church-admin/events", group: "Uendeshaji", icon: CalendarDays, featureKey: "events", primary: true },
+  { id: "event-requests", label: "Huduma za Ofisi", route: "/church-admin/event-requests", group: "Uendeshaji", icon: ClipboardList, featureKey: "event_requests" },
   { id: "calendar", label: "Kalenda ya Parokia", route: "/church-admin/calendar", group: "Uendeshaji", icon: CalendarDays, featureKey: "events" },
   { id: "communities", label: "Jumuiya", route: "/church-admin/communities", group: "Watu", icon: Church, featureKey: "communities" },
   { id: "families", label: "Familia", route: "/church-admin/families", group: "Watu", icon: Users, featureKey: "families" },

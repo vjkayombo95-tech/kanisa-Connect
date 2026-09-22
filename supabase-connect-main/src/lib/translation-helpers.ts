@@ -13,18 +13,27 @@ const massIntentionKeyMap: Record<string, string> = {
 };
 
 const eventRequestKeyMap: Record<string, string> = {
+  parish_event: "event_request.requested_event",
   wedding: "event_request.wedding",
   baptism: "event_request.baptism",
   funeral: "event_request.funeral",
+  requested_event: "event_request.requested_event",
+  other_office_service: "event_request.other",
   other: "event_request.other",
 };
 
 const statusKeyMap: Record<string, string> = {
   pending: "common.pending",
+  submitted: "event_request.status_submitted",
+  under_review: "event_request.status_under_review",
+  changes_requested: "event_request.status_changes_requested",
   approved: "common.approved",
   rejected: "common.rejected",
   reviewed: "common.reviewed",
   completed: "common.completed",
+  converted: "event_request.status_converted",
+  scheduled: "event_request.status_scheduled",
+  cancelled: "event_request.status_cancelled",
 };
 
 const contributionCategoryKeyMap: Record<string, string> = {

@@ -373,7 +373,15 @@ describe("My Parish feature-aware quick links", () => {
     expect(section?.textContent).toContain("Kuomba Tukio");
     expect(section?.textContent).toContain("Huduma nyingine");
     expect(section?.textContent).toContain("Maombi yangu");
-    expect(section?.querySelectorAll('a[href="/portal/event-requests"]').length).toBe(6);
+    const links = Array.from(section?.querySelectorAll<HTMLAnchorElement>("a") ?? []).map((link) => link.getAttribute("href"));
+    expect(links).toEqual([
+      "/portal/event-requests",
+      "/portal/event-requests?service=wedding",
+      "/portal/event-requests?service=baptism",
+      "/portal/event-requests?service=funeral",
+      "/portal/event-requests?service=requested_event",
+      "/portal/event-requests?service=other",
+    ]);
   });
 
   it("hides parish office services when event requests are unavailable", () => {

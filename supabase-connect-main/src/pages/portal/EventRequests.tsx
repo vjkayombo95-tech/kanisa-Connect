@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, Loader2, Send } from "lucide-react";
 
@@ -32,6 +33,7 @@ type MemberEventRequest = {
 };
 
 const TANZANIA_PHONE_REGEX = /^255\d{9}$/;
+const SERVICE_KEYS: ServiceKey[] = ["wedding", "baptism", "funeral", "requested_event", "other"];
 
 const SERVICE_MAPPING: Record<ServiceKey, { requestType: string; type: string }> = {
   wedding: { requestType: "parish_event", type: "wedding" },
@@ -60,6 +62,11 @@ const STATUS_LABEL_KEYS: Record<string, string> = {
   scheduled: "event_request.status_scheduled",
   cancelled: "event_request.status_cancelled",
 };
+
+function getServiceFromSearch(search: string): ServiceKey | "" {
+  const value = new URLSearchParams(search).get("service");
+  return SERVICE_KEYS.includes(value as ServiceKey) ? (value as ServiceKey) : "";
+}
 
 function validateForm(
   values: {
@@ -96,7 +103,8 @@ function validateForm(
 }
 
 export default function EventRequests() {
-  const [eventType, setEventType] = useState("");
+  const location = useLocation();
+  const [eventType, setEventType] = useState<ServiceKey | "">(() => getServiceFromSearch(location.search));
   const [preferredDate, setPreferredDate] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [description, setDescription] = useState("");
@@ -204,7 +212,7 @@ export default function EventRequests() {
     event.preventDefault();
 
     const trimmedValues = {
-      event_type: eventType.trim(),
+      event_type: eventType,
       preferred_date: preferredDate,
       contact_phone: contactPhone.trim(),
       description: description.trim(),
@@ -251,7 +259,7 @@ export default function EventRequests() {
                 <Select
                   value={eventType}
                   onValueChange={(value) => {
-                    setEventType(value);
+                    setEventType(SERVICE_KEYS.includes(value as ServiceKey) ? (value as ServiceKey) : "");
                     setErrors((current) => ({ ...current, event_type: undefined }));
                   }}
                 >
