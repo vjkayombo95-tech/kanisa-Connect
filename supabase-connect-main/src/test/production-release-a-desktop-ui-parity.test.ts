@@ -13,6 +13,7 @@ describe("Release A Church Admin desktop UI parity boundaries", () => {
   const mobileDashboard = read("src/components/church-admin/ChurchDashboardMobileExperience.tsx");
   const mobile = read("src/components/staff-mobile/StaffMobileExperience.tsx");
   const registry = read("src/lib/staff-mobile-registry.ts");
+  const sw = JSON.parse(read("src/locales/sw.json"));
 
   const expectedRoutePaths = [
     "services", "qr-payments", "invite-members", "members", "contributions", "pledges", "communities", "ministries", "families",
@@ -58,7 +59,8 @@ describe("Release A Church Admin desktop UI parity boundaries", () => {
     expect(dashboard).toContain("ChurchDashboardMobileExperience");
     expect(layout).toContain("StaffMobileBottomNav");
     expect(mobile).toContain("services.filter((service) => service.primary).slice(0, 4)");
-    expect(mobile).toContain("Tafuta huduma");
+    expect(mobile).toContain('t("staff_mobile.search_services")');
+    expect(sw.staff_mobile.search_services).toBe("Tafuta huduma");
     expect(mobile).toContain("StaffMobileBottomNav");
   });
 

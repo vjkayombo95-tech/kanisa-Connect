@@ -1,10 +1,12 @@
 import { Building2, CreditCard, LayoutDashboard, LockKeyhole, MoreHorizontal } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import { useVisibleStaffServices } from "@/components/staff-mobile/StaffMobileExperience";
 import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBillingAccess } from "@/hooks/use-billing-access";
+import { translateStaffServiceLabel } from "@/lib/localization";
 import { getStaffMobileConfig, isStaffRouteAllowed } from "@/lib/staff-mobile-registry";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +25,7 @@ function isActive(pathname: string, route: string) {
 }
 
 export function ChurchAdminSidebar() {
+  const { t } = useTranslation();
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
@@ -32,14 +35,14 @@ export function ChurchAdminSidebar() {
 
   const workspaceLabel =
     staffWorkspace === "admin"
-      ? "Church Admin Workspace"
+      ? t("church_admin_layout.workspaces.admin")
       : staffWorkspace === "finance"
-        ? "Finance Workspace"
+        ? t("church_admin_layout.workspaces.finance")
         : staffWorkspace === "pastoral"
-          ? "Pastoral Workspace"
+          ? t("church_admin_layout.workspaces.pastoral")
           : staffWorkspace === "super_admin"
-            ? "Super Admin Workspace"
-            : "Staff Workspace";
+            ? t("church_admin_layout.workspaces.super_admin")
+            : t("church_admin_layout.workspaces.staff");
 
   const { services, isLoading } = useVisibleStaffServices(workspaceConfig);
   const canOpenBilling = isStaffRouteAllowed(staffWorkspace, "/church-admin/billing");
@@ -77,7 +80,7 @@ export function ChurchAdminSidebar() {
           <nav aria-label={workspaceLabel} className="space-y-1">
             <WorkspaceLink
               route="/church-admin"
-              label="Nyumbani"
+              label={t("nav.home")}
               icon={LayoutDashboard}
               active={isActive(location.pathname, "/church-admin")}
               collapsed={collapsed}
@@ -86,7 +89,7 @@ export function ChurchAdminSidebar() {
             {isLoading ? (
               <div
                 className="mx-2 mt-3 h-32 animate-pulse rounded-2xl bg-white/[0.04]"
-                aria-label="Loading services"
+                aria-label={t("staff_mobile.loading_services")}
               />
             ) : null}
 
@@ -95,7 +98,7 @@ export function ChurchAdminSidebar() {
                   <WorkspaceLink
                     key={service.id}
                     route={service.route}
-                    label={service.label}
+                    label={translateStaffServiceLabel(t, service)}
                     icon={service.icon}
                     active={isActive(location.pathname, service.route)}
                     collapsed={collapsed}
@@ -106,7 +109,7 @@ export function ChurchAdminSidebar() {
             {!isLoading && workspaceConfig ? (
               <WorkspaceLink
                 route="/church-admin/services"
-                label="Zaidi"
+                label={t("nav.more")}
                 icon={MoreHorizontal}
                 active={isActive(location.pathname, "/church-admin/services")}
                 collapsed={collapsed}

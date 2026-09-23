@@ -70,9 +70,13 @@ describe("Wave 22D admin mobile profile menu", () => {
 
     expect(staffRoutes).toContain("<StaffServicesPage config={getCommunityMobileConfig(communityId)} />");
     expect(staffRoutes).not.toContain("accountActions");
-    expect(mobile).toContain('label: "Nyumbani"');
-    expect(mobile).toContain("label: config.workLabel");
-    expect(mobile).toContain('label: "Zaidi"');
+    expect(mobile).toContain('label: translateSystemLabel(t, "nav.home", "Nyumbani")');
+    expect(mobile).toContain("label: translateStaffWorkLabel(t, config)");
+    expect(mobile).toContain('label: translateSystemLabel(t, "nav.more", "Zaidi")');
+    expect(sw.nav.home).toBe("Nyumbani");
+    expect(sw.nav.more).toBe("Zaidi");
+    expect(en.nav.home).toBe("Home");
+    expect(en.nav.more).toBe("More");
     expect(mobile).toContain("grid-cols-3");
   });
 

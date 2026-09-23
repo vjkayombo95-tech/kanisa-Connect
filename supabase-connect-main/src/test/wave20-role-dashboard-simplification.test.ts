@@ -8,6 +8,7 @@ const read = (relative: string) =>
   fs.readFileSync(path.join(root, relative), "utf8");
 
 describe("Wave 20 role dashboard simplification", () => {
+  const sw = JSON.parse(read("src/locales/sw.json"));
   const sidebar = read(
     "src/components/church-admin/ChurchAdminSidebar.tsx",
   );
@@ -18,7 +19,8 @@ describe("Wave 20 role dashboard simplification", () => {
 
   it("keeps the desktop sidebar focused and sends secondary services to Zaidi", () => {
     expect(sidebar).toContain('"/church-admin/services"');
-    expect(sidebar).toContain("Zaidi");
+    expect(sidebar).toContain('label={t("nav.more")}');
+    expect(sw.nav.more).toBe("Zaidi");
 
     for (const primaryService of [
       "members",

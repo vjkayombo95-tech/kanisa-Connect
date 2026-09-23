@@ -1,5 +1,6 @@
 import { CalendarClock, CheckCircle2, ChevronRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import {
   ChurchDashboardIntelligenceView,
@@ -8,8 +9,8 @@ import {
 import { useVisibleStaffServices } from "@/components/staff-mobile/StaffMobileExperience";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EMPTY_PENDING_COUNTS, visiblePendingActions } from "@/lib/church-dashboard-intelligence";
+import { translateStaffServiceLabel, translateStaffWorkspaceLabel } from "@/lib/localization";
 import type { StaffMobileConfig, StaffService } from "@/lib/staff-mobile-registry";
-import { roleLabel } from "@/lib/staff-mobile-role";
 import { cn } from "@/lib/utils";
 
 type AttendanceSummary = {
@@ -51,11 +52,12 @@ const pendingServiceId: Record<string, string> = {
 };
 
 function MobileServiceCard({ service }: { service: StaffService }) {
+  const { t } = useTranslation();
   const Icon = service.icon;
   return (
     <Link to={service.route} className="flex min-h-24 items-center gap-3 rounded-xl border border-border/70 bg-card/85 p-4 outline-none transition active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-5 w-5" aria-hidden="true" /></span>
-      <span className="text-sm font-semibold text-foreground">{service.label}</span>
+      <span className="text-sm font-semibold text-foreground">{translateStaffServiceLabel(t, service)}</span>
     </Link>
   );
 }
@@ -78,6 +80,7 @@ export function ChurchDashboardMobileExperience({
   deferredLoading,
   deferredError,
 }: ChurchDashboardMobileExperienceProps) {
+  const { t } = useTranslation();
   const { services, isLoading: servicesLoading } = useVisibleStaffServices(config);
   const visibleServiceIds = new Set(services.map((service) => service.id));
   const priorities = visiblePendingActions(intelligence.pending.data ?? EMPTY_PENDING_COUNTS, intelligence.staffWorkspace)
@@ -132,7 +135,7 @@ export function ChurchDashboardMobileExperience({
             "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg",
             bannerUrl ? "bg-white/15 text-white ring-1 ring-white/25 backdrop-blur-sm" : "bg-primary/10 text-primary",
           )}><Sparkles className="h-5 w-5" /></span>
-          <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Kanisa Connect</p><h1 className="mt-2 font-serif text-2xl font-bold">{greeting}, {administratorName.split(" ")[0]}.</h1><p className="mt-1 text-sm text-muted-foreground">{churchName || "Your parish"} · {config.workspace === "community" ? "Uongozi wa jumuiya" : roleLabel(config.workspace)}</p></div>
+          <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Kanisa Connect</p><h1 className="mt-2 font-serif text-2xl font-bold">{greeting}, {administratorName.split(" ")[0]}.</h1><p className="mt-1 text-sm text-muted-foreground">{churchName || t("staff_mobile.your_parish")} - {translateStaffWorkspaceLabel(t, config.workspace)}</p></div>
         </div>
         <div className={cn("relative z-10 rounded-xl border p-4", bannerUrl ? "border-white/20 bg-black/35 text-white backdrop-blur-sm [&_.text-foreground\\/80]:text-white/85 [&_.text-primary]:text-white/80" : "border-border/70 bg-background/50")} data-testid="mobile-todays-focus"><p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary"><CalendarClock className="h-4 w-4" />Today&apos;s Focus</p>{focusLoading ? <Skeleton className="mt-3 h-5 w-4/5" /> : <p className="mt-2 text-sm leading-6 text-foreground/80">{focus}</p>}</div>
       </section>

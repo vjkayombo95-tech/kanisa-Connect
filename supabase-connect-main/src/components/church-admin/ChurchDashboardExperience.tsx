@@ -19,6 +19,8 @@ import {
   getStaffMobileConfig,
   type StaffMobileConfig,
 } from "@/lib/staff-mobile-registry";
+import { translateStaffServiceLabel } from "@/lib/localization";
+import { useTranslation } from "react-i18next";
 
 type AttendanceSummary = {
   title: string | null;
@@ -90,6 +92,7 @@ function VisibleChurchDashboardQuickActions({
 }: {
   config: StaffMobileConfig;
 }) {
+  const { t } = useTranslation();
   const { services } = useVisibleStaffServices(config);
 
   const quickActions = services.filter((service) =>
@@ -115,7 +118,7 @@ function VisibleChurchDashboardQuickActions({
             </span>
 
             <span className="text-sm font-semibold text-foreground">
-              {service.label}
+              {translateStaffServiceLabel(t, service)}
             </span>
           </Link>
         );
