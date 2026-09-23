@@ -82,6 +82,24 @@
     "english": "English",
     "swahili": "Kiswahili"
   },
+  "church_admin_layout": {
+    "workspaces": {
+      "admin": "Usimamizi wa Kanisa",
+      "finance": "Kitengo cha Fedha",
+      "pastoral": "Kitengo cha Kichungaji",
+      "super_admin": "Usimamizi Mkuu",
+      "staff": "Huduma za Wafanyakazi"
+    },
+    "route_titles": {
+      "event_requests": "Huduma za Ofisi"
+    },
+    "parish_operations": "Uendeshaji wa parokia",
+    "settings": "Mipangilio ya Kanisa",
+    "sign_out": "Toka",
+    "open_notifications": "Fungua arifa",
+    "open_profile": "Fungua wasifu",
+    "mobile_back_from": "Rudi kutoka {{title}}"
+  },
   "mass_intention": {
     "title": "Nia ya Misa"
   },

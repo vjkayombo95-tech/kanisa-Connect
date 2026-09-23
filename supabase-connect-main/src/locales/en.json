@@ -82,6 +82,24 @@
     "english": "English",
     "swahili": "Kiswahili"
   },
+  "church_admin_layout": {
+    "workspaces": {
+      "admin": "Church Admin Workspace",
+      "finance": "Finance Workspace",
+      "pastoral": "Pastoral Workspace",
+      "super_admin": "Super Admin Workspace",
+      "staff": "Staff Workspace"
+    },
+    "route_titles": {
+      "event_requests": "Parish Office Services"
+    },
+    "parish_operations": "Parish operations",
+    "settings": "Church Settings",
+    "sign_out": "Sign Out",
+    "open_notifications": "Open notifications",
+    "open_profile": "Open profile",
+    "mobile_back_from": "Back from {{title}}"
+  },
   "mass_intention": {
     "title": "Mass Intention"
   },

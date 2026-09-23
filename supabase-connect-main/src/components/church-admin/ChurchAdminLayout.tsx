@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ChurchAdminSidebar } from "./ChurchAdminSidebar";
 import { ChurchAdminCommandMenu } from "./ChurchAdminCommandMenu";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Bell, User, Lock, Building2, ChevronRight, LogOut } from "lucide-react";
 import {
@@ -28,6 +29,7 @@ export function ChurchAdminLayout() {
   const { signOut, profile, isSuperAdmin, churchId, staffWorkspace } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const { getFeatureState, isLoading: featuresLoading } = useFeatureAccess();
   const isLegacySystemHealthPath = location.pathname === "/church-admin/system-health";
   const activeFeatureKey = getChurchAdminFeatureForPath(location.pathname);
@@ -41,14 +43,17 @@ export function ChurchAdminLayout() {
     : !isStaffRouteAllowed(staffWorkspace, location.pathname);
   const isHome = location.pathname.replace(/\/$/, "") === "/church-admin";
   const pageSegment = location.pathname.split("/").filter(Boolean).at(-1)?.replace(/-/g, " ") ?? "dashboard";
-  const mobileTitle = pageSegment;
-  const pageTitle = pageSegment.replace(/\b\w/g, (character) => character.toUpperCase());
+  const pageTitle = location.pathname.startsWith("/church-admin/event-requests")
+    ? t("church_admin_layout.route_titles.event_requests")
+    : pageSegment.replace(/\b\w/g, (character) => character.toUpperCase());
+  const mobileTitle = pageTitle;
+  const pageOwnsHeading = location.pathname.startsWith("/church-admin/event-requests");
   const workspaceLabel =
-    staffWorkspace === "admin" ? "Church Admin Workspace" :
-    staffWorkspace === "finance" ? "Finance Workspace" :
-    staffWorkspace === "pastoral" ? "Pastoral Workspace" :
-    staffWorkspace === "super_admin" ? "Super Admin Workspace" :
-    "Staff Workspace";
+    staffWorkspace === "admin" ? t("church_admin_layout.workspaces.admin") :
+    staffWorkspace === "finance" ? t("church_admin_layout.workspaces.finance") :
+    staffWorkspace === "pastoral" ? t("church_admin_layout.workspaces.pastoral") :
+    staffWorkspace === "super_admin" ? t("church_admin_layout.workspaces.super_admin") :
+    t("church_admin_layout.workspaces.staff");
   const canOpenNotifications = isStaffRouteAllowed(staffWorkspace, "/church-admin/notifications");
   const canOpenSettings = isStaffRouteAllowed(staffWorkspace, "/church-admin/settings");
 
@@ -88,13 +93,13 @@ export function ChurchAdminLayout() {
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 {canOpenNotifications ? (
-                  <Button aria-label="Fungua arifa" variant="ghost" size="icon" className="rounded-xl text-muted-foreground hover:bg-white/[0.05] hover:text-foreground" onClick={() => navigate("/church-admin/notifications")}>
+                  <Button aria-label={t("church_admin_layout.open_notifications")} variant="ghost" size="icon" className="rounded-xl text-muted-foreground hover:bg-white/[0.05] hover:text-foreground" onClick={() => navigate("/church-admin/notifications")}>
                     <Bell className="h-4 w-4" />
                   </Button>
                 ) : null}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button aria-label="Fungua wasifu" variant="ghost" size="icon" className="rounded-xl hover:bg-white/[0.05]">
+                    <Button aria-label={t("church_admin_layout.open_profile")} variant="ghost" size="icon" className="rounded-xl hover:bg-white/[0.05]">
                       <div className="gradient-gold flex h-8 w-8 items-center justify-center rounded-xl">
                         <User className="h-4 w-4 text-primary-foreground" />
                       </div>
@@ -105,11 +110,11 @@ export function ChurchAdminLayout() {
                     <DropdownMenuSeparator />
                     {canOpenSettings ? (
                       <>
-                        <DropdownMenuItem onClick={() => navigate("/church-admin/settings")}>Church Settings</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/church-admin/settings")}>{t("church_admin_layout.settings")}</DropdownMenuItem>
                         <DropdownMenuSeparator />
                       </>
                     ) : null}
-                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive">Sign Out</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive">{t("church_admin_layout.sign_out")}</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -123,7 +128,7 @@ export function ChurchAdminLayout() {
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button aria-label="Fungua wasifu" variant="ghost" size="icon" className="shrink-0 rounded-full">
+                      <Button aria-label={t("church_admin_layout.open_profile")} variant="ghost" size="icon" className="shrink-0 rounded-full">
                         <div className="gradient-gold flex h-9 w-9 items-center justify-center rounded-full shadow-[0_14px_28px_-18px_rgba(250,204,21,0.65)]">
                           <User className="h-4 w-4 text-primary-foreground" />
                         </div>
@@ -134,12 +139,12 @@ export function ChurchAdminLayout() {
                       <DropdownMenuSeparator />
                       {canOpenSettings ? (
                         <>
-                          <DropdownMenuItem onClick={() => navigate("/church-admin/settings")}>Mipangilio ya Kanisa</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate("/church-admin/settings")}>{t("church_admin_layout.settings")}</DropdownMenuItem>
                           <DropdownMenuSeparator />
                         </>
                       ) : null}
                       <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                        <LogOut className="mr-2 h-4 w-4" /> Toka
+                        <LogOut className="mr-2 h-4 w-4" /> {t("church_admin_layout.sign_out")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -147,7 +152,14 @@ export function ChurchAdminLayout() {
               </header>
             ) : null}
             <main className="flex-1 overflow-auto px-4 pb-24 pt-5 lg:px-7 lg:pb-8 lg:pt-6 xl:px-9">
-              {mobileConfig ? <StaffMobileBackHeader config={mobileConfig} title={mobileTitle} /> : null}
+              {mobileConfig ? (
+                <StaffMobileBackHeader
+                  config={mobileConfig}
+                  title={mobileTitle}
+                  showTitle={!pageOwnsHeading}
+                  ariaLabel={t("church_admin_layout.mobile_back_from", { title: mobileTitle })}
+                />
+              ) : null}
               {routeLocked ? (
                 <div className="mx-auto max-w-2xl">
                   <Card className="glass-card border-primary/20">
@@ -167,7 +179,7 @@ export function ChurchAdminLayout() {
               ) : (
                 <>
                   <div>
-                    {!isHome ? <div className="mx-auto mb-5 flex w-full max-w-[1600px] items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{workspaceLabel}</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{pageTitle}</h1></div><p className="hidden text-sm text-muted-foreground md:block">{profile?.church_name ?? profile?.church?.name ?? "Parish operations"}</p></div> : null}
+                    {!isHome && !pageOwnsHeading ? <div className="mx-auto mb-5 flex w-full max-w-[1600px] items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{workspaceLabel}</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{pageTitle}</h1></div><p className="hidden text-sm text-muted-foreground md:block">{profile?.church_name ?? profile?.church?.name ?? t("church_admin_layout.parish_operations")}</p></div> : null}
                     <div className="mx-auto w-full max-w-[1600px]"><Outlet /></div>
                   </div>
                 </>
