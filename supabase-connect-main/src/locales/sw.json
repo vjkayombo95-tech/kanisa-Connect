@@ -77,10 +77,46 @@
     "request_assignment": "Omba kupangiwa",
     "member": "Mwanachama"
   },
+  "shared": {
+    "actions": {
+      "retry": "Jaribu tena",
+      "reload_app": "Pakia programu upya",
+      "return_home": "Rudi nyumbani"
+    },
+    "loading": {
+      "application": "Inapakia programu...",
+      "checking_access": "Inakagua ruhusa zako..."
+    },
+    "auth": {
+      "connectivity_title": "Tunapata shida kuunganisha.",
+      "connectivity_description": "Akaunti yako bado imeingia. Kagua muunganisho wako na ujaribu tena.",
+      "workspace_access_title": "Hatukuweza kuthibitisha ruhusa zako za nafasi hii.",
+      "workspace_access_description": "Kikao chako bado kipo, lakini ruhusa za nafasi hii hazikuweza kuthibitishwa."
+    },
+    "errors": {
+      "application_label": "Hitilafu ya Programu",
+      "page_crashed_title": "Ukurasa huu umepata hitilafu.",
+      "render_failed": "Hitilafu imetokea wakati wa kuonyesha ukurasa huu."
+    },
+    "billing": {
+      "upgrade_to_unlock": "Boresha ili kufungua",
+      "admin_feature_locked_title": "Kipengele hiki cha admin kimefungwa",
+      "admin_feature_locked_description": "Super admin amekifunga kipengele hiki kwa wasimamizi wa kanisa.",
+      "analytics_locked_page_description": "Uchambuzi wa kina umefungwa kwenye mpango wako wa sasa.",
+      "analytics_locked_title": "Uchambuzi umefungwa",
+      "analytics_locked_description": "Boresha kwenda Pro au Enterprise ili kufungua uchambuzi wa kina, mwenendo na ripoti za kulinganisha.",
+      "default_free_plan": "Mpango wa bure chaguo-msingi",
+      "free_plan": "Mpango wa Bure",
+      "price_per_month": "{{amount}} kwa mwezi",
+      "loading_details": "Inapakia maelezo ya malipo..."
+    }
+  },
   "language_switcher": {
     "label": "Lugha",
     "english": "English",
-    "swahili": "Kiswahili"
+    "swahili": "Kiswahili",
+    "switch_to_english": "Badili lugha kwenda Kiingereza",
+    "switch_to_swahili": "Badili lugha kwenda Kiswahili"
   },
   "nav": {
     "home": "Nyumbani",

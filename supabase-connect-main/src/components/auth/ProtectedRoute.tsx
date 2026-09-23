@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { isAdminRole, type AppRole } from "@/lib/role-utils";
 import { Button } from "@/components/ui/button";
 import { isTransientAuthorizationFailure } from "@/lib/authorization-bootstrap";
+import { useTranslation } from "react-i18next";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -21,11 +22,13 @@ export const requireSuperAdmin = requireSuperAdminAccess;
 export function ProtectedRoute({ children, requireSuperAdmin, requireChurch, requireAdmin }: ProtectedRouteProps) {
   const { user, isSuperAdmin, churchId, userRole, isLoading, authorizationError, authorizationFailure, refreshUserData } = useAuth();
   const location = useLocation();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-background" role="status" aria-label={t("shared.loading.checking_access")}>
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="sr-only">{t("shared.loading.checking_access")}</span>
       </div>
     );
   }
@@ -41,7 +44,7 @@ export function ProtectedRoute({ children, requireSuperAdmin, requireChurch, req
 
   if (authorizationError) {
     const connectivity = authorizationFailure ? isTransientAuthorizationFailure(authorizationFailure) : false;
-    return <div className="min-h-screen flex items-center justify-center bg-background p-4"><div className="max-w-lg rounded-2xl border bg-card p-6 text-center shadow-sm"><h1 className="text-xl font-semibold">{connectivity ? "We're having trouble connecting." : "We could not verify your workspace access."}</h1><p className="mt-2 text-sm text-muted-foreground">{connectivity ? "Your account is still signed in. Check your connection and try again." : "Your session is still signed in, but workspace access could not be verified."}</p><Button className="mt-5" onClick={() => void refreshUserData()}>Retry</Button></div></div>;
+    return <div className="min-h-screen flex items-center justify-center bg-background p-4"><div className="max-w-lg rounded-2xl border bg-card p-6 text-center shadow-sm"><h1 className="text-xl font-semibold">{connectivity ? t("shared.auth.connectivity_title") : t("shared.auth.workspace_access_title")}</h1><p className="mt-2 text-sm text-muted-foreground">{connectivity ? t("shared.auth.connectivity_description") : t("shared.auth.workspace_access_description")}</p><Button className="mt-5" onClick={() => void refreshUserData()}>{t("shared.actions.retry")}</Button></div></div>;
   }
 
   if (requireSuperAdmin && !requireSuperAdminAccess(isSuperAdmin)) return <Navigate to="/" replace />;

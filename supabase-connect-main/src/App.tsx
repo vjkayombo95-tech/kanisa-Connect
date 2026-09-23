@@ -13,6 +13,7 @@ import { isSupabaseConfigured } from "@/integrations/supabase/client";
 import { environmentValidationErrors, environmentValidationWarnings } from "@/lib/environment";
 import { StagingBanner } from "@/components/StagingBanner";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Index from "./pages/Index";
 
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -46,9 +47,12 @@ const queryClient = new QueryClient({
 });
 
 function RouteLoadingFallback() {
+  const { t } = useTranslation();
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-background" role="status" aria-label={t("shared.loading.application")}>
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <span className="sr-only">{t("shared.loading.application")}</span>
     </div>
   );
 }

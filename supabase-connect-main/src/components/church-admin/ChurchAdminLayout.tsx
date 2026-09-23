@@ -168,9 +168,9 @@ export function ChurchAdminLayout() {
                         <Lock className="h-6 w-6 text-primary" />
                       </div>
                       <div className="space-y-2">
-                        <h1 className="text-2xl font-bold font-serif">This admin feature is locked</h1>
+                        <h1 className="text-2xl font-bold font-serif">{t("shared.billing.admin_feature_locked_title")}</h1>
                         <p className="text-sm text-muted-foreground">
-                          The super admin has locked this feature for church admins.
+                          {t("shared.billing.admin_feature_locked_description")}
                         </p>
                       </div>
                     </CardContent>
