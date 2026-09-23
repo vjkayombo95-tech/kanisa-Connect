@@ -104,7 +104,7 @@
     "suspended": "Imesimamishwa",
     "under_review": "Inaangaliwa"
   },
-  "roles": {
+  "role_labels": {
     "admin": "Usimamizi wa Kanisa",
     "church_admin": "Usimamizi wa Kanisa",
     "finance": "Kitengo cha Fedha",

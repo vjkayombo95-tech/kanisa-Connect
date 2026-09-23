@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import i18n, { changeAppLanguage } from "@/i18n";
@@ -19,6 +21,8 @@ import { memberServiceGroups, memberServiceRegistry } from "@/lib/member-service
 import { STAFF_MOBILE_CONFIGS, getCommunityMobileConfig } from "@/lib/staff-mobile-registry";
 
 type LocaleTree = Record<string, unknown>;
+const root = process.cwd();
+const read = (relative: string) => fs.readFileSync(path.join(root, relative), "utf8");
 
 function flattenKeys(tree: LocaleTree, prefix = ""): string[] {
   return Object.entries(tree).flatMap(([key, value]) => {
@@ -45,6 +49,26 @@ describe("Wave 26A localization foundation", () => {
 
   it("keeps active locale keys in parity", () => {
     expect(flattenKeys(sw).sort()).toEqual(flattenKeys(en).sort());
+  });
+
+  it("keeps role display labels separate from the existing roles navigation label", async () => {
+    expect(typeof en.roles).toBe("string");
+    expect(typeof sw.roles).toBe("string");
+    expect(en.roles).toBe("Roles");
+    expect(sw.roles).toBe("Majukumu");
+    expect(en.role_labels.church_admin).toBe("Church Admin");
+    expect(sw.role_labels.church_admin).toBe("Usimamizi wa Kanisa");
+    expect(flattenKeys(en.role_labels).sort()).toEqual(flattenKeys(sw.role_labels).sort());
+    expect(read("src/locales/en.json")).not.toMatch(/^  "roles":\s+\{/m);
+    expect(read("src/locales/sw.json")).not.toMatch(/^  "roles":\s+\{/m);
+
+    await changeAppLanguage("sw");
+    expect(i18n.t("roles")).toBe("Majukumu");
+    expect(translateRoleLabel(i18n.t, "church_admin")).toBe("Usimamizi wa Kanisa");
+
+    await changeAppLanguage("en");
+    expect(i18n.t("roles")).toBe("Roles");
+    expect(translateRoleLabel(i18n.t, "church_admin")).toBe("Church Admin");
   });
 
   it("keeps staff registry identifiers, routes, permissions and feature gates separate from translated labels", () => {
@@ -113,7 +137,16 @@ describe("Wave 26A localization foundation", () => {
     expect(formatAppDate("2026-09-01", "sw", options)).toBe(
       formatAppDate(new Date("2026-09-01T12:00:00Z"), "sw", { ...options, timeZone: "UTC" }),
     );
+    expect(formatAppDate("2026-09-01", "en", { ...options, timeZone: "America/Los_Angeles" })).toBe(
+      formatAppDate("2026-09-01", "en", options),
+    );
+    expect(formatAppDate("2026-09-01", "sw", { ...options, timeZone: "America/Los_Angeles" })).toBe(
+      formatAppDate("2026-09-01", "sw", options),
+    );
     expect(formatAppDate(new Date("2026-08-31T21:30:00Z"), "en", options)).toBe(formatAppDate("2026-09-01", "en", options));
     expect(formatAppDate(new Date("2026-08-31T20:59:00Z"), "en", options)).not.toBe(formatAppDate("2026-09-01", "en", options));
+    expect(formatAppDate(new Date("2026-08-31T21:30:00Z"), "en", { ...options, timeZone: "UTC" })).not.toBe(
+      formatAppDate(new Date("2026-08-31T21:30:00Z"), "en", options),
+    );
   });
 });

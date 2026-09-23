@@ -32,17 +32,17 @@ export const SYSTEM_STATUS_LABEL_KEYS: Record<string, string> = {
 };
 
 export const SYSTEM_ROLE_LABEL_KEYS: Record<string, string> = {
-  admin: "roles.admin",
-  church_admin: "roles.church_admin",
-  finance: "roles.finance",
-  member: "roles.member",
-  pastor: "roles.pastor",
-  pastoral: "roles.pastoral",
-  priest: "roles.priest",
-  secretary: "roles.secretary",
-  staff: "roles.staff",
-  super_admin: "roles.super_admin",
-  treasurer: "roles.treasurer",
+  admin: "role_labels.admin",
+  church_admin: "role_labels.church_admin",
+  finance: "role_labels.finance",
+  member: "role_labels.member",
+  pastor: "role_labels.pastor",
+  pastoral: "role_labels.pastoral",
+  priest: "role_labels.priest",
+  secretary: "role_labels.secretary",
+  staff: "role_labels.staff",
+  super_admin: "role_labels.super_admin",
+  treasurer: "role_labels.treasurer",
 };
 
 export function normalizeAppLanguage(language: string | undefined): AppLanguage {
@@ -70,10 +70,10 @@ export function formatAppDate(
   const date = dateOnly ?? new Date(value);
   if (Number.isNaN(date.getTime())) return "";
 
-  return new Intl.DateTimeFormat(getAppDateLocale(language), {
-    timeZone: dateOnly ? "UTC" : DATE_TIME_ZONE,
-    ...options,
-  }).format(date);
+  return new Intl.DateTimeFormat(
+    getAppDateLocale(language),
+    dateOnly ? { ...options, timeZone: "UTC" } : { timeZone: DATE_TIME_ZONE, ...options },
+  ).format(date);
 }
 
 export function translateSystemLabel(t: Translator, key: string | undefined, fallback = "") {
@@ -89,7 +89,7 @@ export function translateStatusLabel(t: Translator, status: string | null | unde
 
 export function translateRoleLabel(t: Translator, role: string | null | undefined) {
   if (!role) return "";
-  return translateSystemLabel(t, SYSTEM_ROLE_LABEL_KEYS[role] ?? `roles.${role}`, role.replace(/_/g, " "));
+  return translateSystemLabel(t, SYSTEM_ROLE_LABEL_KEYS[role] ?? `role_labels.${role}`, role.replace(/_/g, " "));
 }
 
 export function translateStaffWorkspaceLabel(t: Translator, workspace: StaffMobileWorkspace | "community" | null | undefined) {

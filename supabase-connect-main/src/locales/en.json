@@ -104,7 +104,7 @@
     "suspended": "Suspended",
     "under_review": "Under review"
   },
-  "roles": {
+  "role_labels": {
     "admin": "Church Admin",
     "church_admin": "Church Admin",
     "finance": "Finance",
