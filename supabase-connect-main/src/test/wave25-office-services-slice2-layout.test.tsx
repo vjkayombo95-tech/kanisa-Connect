@@ -141,6 +141,6 @@ describe("Wave 25 office services layout localization", () => {
   it("preserves the parent layout heading on other admin routes", () => {
     renderLayout("/church-admin/members", <div>Members content</div>);
 
-    expect(headings()).toContain("Members");
+    expect(headings()).toContain("Wanachama");
   });
 });

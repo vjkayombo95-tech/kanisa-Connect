@@ -287,7 +287,39 @@
       "staff": "Staff Workspace"
     },
     "route_titles": {
-      "event_requests": "Parish Office Services"
+      "analytics": "Analytics",
+      "analytics_assistant": "Analytics Assistant",
+      "announcements": "Announcements",
+      "audit_logs": "Audit Logs",
+      "bible_verses": "Bible Verses",
+      "billing": "Church Billing",
+      "billing_settings": "Billing Settings",
+      "calendar": "Parish Calendar",
+      "channels": "Communication",
+      "communities": "Communities",
+      "community_help": "Community Help",
+      "contributions": "Contributions",
+      "dashboard": "Dashboard",
+      "data_import": "Data Import",
+      "event_requests": "Parish Office Services",
+      "events": "Events",
+      "families": "Families",
+      "invite_members": "Invite Members",
+      "livestreams": "Livestreams",
+      "mass_intentions": "Mass Intentions",
+      "mass_timetable": "Mass Timetable",
+      "members": "Members",
+      "ministries": "Ministries",
+      "notifications": "Notifications",
+      "pledges": "Pledges",
+      "prayer_requests": "Prayer Requests",
+      "qr_payments": "QR Payments",
+      "radio": "Radio",
+      "reports": "Reports",
+      "roles": "Roles & Invitations",
+      "sermons": "Sermons",
+      "services": "Services",
+      "settings": "Church Settings"
     },
     "parish_operations": "Parish operations",
     "settings": "Church Settings",
@@ -295,6 +327,60 @@
     "open_notifications": "Open notifications",
     "open_profile": "Open profile",
     "mobile_back_from": "Back from {{title}}"
+  },
+  "church_admin_shell": {
+    "sidebar": {
+      "checking_access": "Checking access...",
+      "workspace_access_limited": "Workspace access limited",
+      "current_plan": "{{plan}} plan",
+      "renew_subscription": "Renew the parish subscription to restore approved services.",
+      "feature_access_enforced": "Production feature access remains enforced.",
+      "view_billing": "View billing"
+    },
+    "command": {
+      "open": "Open Church Admin command menu",
+      "input_label": "Search approved Church Admin services",
+      "open_service": "Open {{service}}"
+    },
+    "live_media": {
+      "aria_label": "Live Media",
+      "eyebrow": "Live Media",
+      "title": "Broadcast awareness",
+      "description": "Current authorized livestream and radio status. Playback never starts automatically.",
+      "schedule_fallback": "Schedule available in Livestreams",
+      "livestream": "Livestream",
+      "livestream_unavailable": "Status is temporarily unavailable.",
+      "live_now": "LIVE NOW",
+      "scheduled": "Scheduled",
+      "no_broadcast": "No active or scheduled broadcast is currently published.",
+      "open_livestreams": "Open Livestreams",
+      "radio": "Radio",
+      "radio_unavailable": "Station status is temporarily unavailable.",
+      "available": "Available",
+      "no_station": "No approved station is currently enabled.",
+      "open_radio": "Open Radio"
+    },
+    "ai": {
+      "eyebrow": "Ask AI",
+      "title": "Analytics Copilot",
+      "description": "Ask about giving, contributors, or category trends.",
+      "badge": {
+        "thinking": "Thinking",
+        "ready": "Ready",
+        "idle": "AI"
+      },
+      "input_label": "Ask the analytics assistant",
+      "input_placeholder": "Ask anything...",
+      "quick_prompts": {
+        "top_contributors": "Show top contributors",
+        "monthly_report": "Generate monthly report",
+        "category_breakdown": "Show category breakdown for offerings"
+      },
+      "helper": "Always one click away",
+      "open_full": "Open full AI",
+      "open": "Ask AI",
+      "close": "Close AI assistant"
+    }
   },
   "mass_intention": {
     "title": "Mass Intention"

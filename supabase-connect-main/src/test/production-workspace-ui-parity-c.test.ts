@@ -34,7 +34,9 @@ describe("Production workspace UI parity C boundaries", () => {
 
   it("communicates expired access without bypassing feature decisions", () => {
     expect(sidebar).toContain("billing.isExpired");
-    expect(sidebar).toContain("Workspace access limited");
+    expect(sidebar).toContain('t("church_admin_shell.sidebar.workspace_access_limited")');
+    expect(en.church_admin_shell.sidebar.workspace_access_limited).toBe("Workspace access limited");
+    expect(sw.church_admin_shell.sidebar.workspace_access_limited).toBe("Ruhusa za nafasi zimepunguzwa");
     expect(sidebar).not.toContain("getFeatureState");
   });
 

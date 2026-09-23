@@ -11,6 +11,32 @@ const state = vi.hoisted(() => ({
   radio: { featureEnabled: true, featureLoading: false, isLoading: false, isError: false, data: [] as Array<{ name: string; isDefault: boolean }> },
 }));
 
+const translations = vi.hoisted(() => ({
+  "church_admin_shell.live_media.aria_label": "Live Media",
+  "church_admin_shell.live_media.eyebrow": "Live Media",
+  "church_admin_shell.live_media.title": "Broadcast awareness",
+  "church_admin_shell.live_media.description": "Current authorized livestream and radio status. Playback never starts automatically.",
+  "church_admin_shell.live_media.schedule_fallback": "Schedule available in Livestreams",
+  "church_admin_shell.live_media.livestream": "Livestream",
+  "church_admin_shell.live_media.livestream_unavailable": "Status is temporarily unavailable.",
+  "church_admin_shell.live_media.live_now": "LIVE NOW",
+  "church_admin_shell.live_media.scheduled": "Scheduled",
+  "church_admin_shell.live_media.no_broadcast": "No active or scheduled broadcast is currently published.",
+  "church_admin_shell.live_media.open_livestreams": "Open Livestreams",
+  "church_admin_shell.live_media.radio": "Radio",
+  "church_admin_shell.live_media.radio_unavailable": "Station status is temporarily unavailable.",
+  "church_admin_shell.live_media.available": "Available",
+  "church_admin_shell.live_media.no_station": "No approved station is currently enabled.",
+  "church_admin_shell.live_media.open_radio": "Open Radio",
+}));
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: keyof typeof translations) => translations[key] ?? key,
+    i18n: { language: "en" },
+  }),
+}));
+
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ staffWorkspace: state.workspace }) }));
 vi.mock("@/hooks/use-church-livestream", () => ({ useChurchLivestream: () => state.livestream }));
 vi.mock("@/hooks/use-church-radio", () => ({ useChurchRadioStations: () => state.radio }));
