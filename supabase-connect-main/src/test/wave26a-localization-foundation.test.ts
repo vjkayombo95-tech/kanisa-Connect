@@ -59,8 +59,8 @@ describe("Wave 26A localization foundation", () => {
     expect(en.role_labels.church_admin).toBe("Church Admin");
     expect(sw.role_labels.church_admin).toBe("Usimamizi wa Kanisa");
     expect(flattenKeys(en.role_labels).sort()).toEqual(flattenKeys(sw.role_labels).sort());
-    expect(read("src/locales/en.json")).not.toMatch(/^  "roles":\s+\{/m);
-    expect(read("src/locales/sw.json")).not.toMatch(/^  "roles":\s+\{/m);
+    expect(read("src/locales/en.json")).not.toMatch(/^ {2}"roles":\s+\{/m);
+    expect(read("src/locales/sw.json")).not.toMatch(/^ {2}"roles":\s+\{/m);
 
     await changeAppLanguage("sw");
     expect(i18n.t("roles")).toBe("Majukumu");
