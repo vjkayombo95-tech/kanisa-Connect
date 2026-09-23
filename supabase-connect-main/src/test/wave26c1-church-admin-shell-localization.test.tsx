@@ -149,6 +149,8 @@ function renderLayout(path: string, child: ReactNode) {
     <Routes>
       <Route path="/church-admin" element={<ChurchAdminLayout />}>
         <Route path="event-requests" element={child} />
+        <Route path="events/:eventId/registrations" element={child} />
+        <Route path="mass-schedule" element={child} />
         <Route path="members" element={<div>Member route</div>} />
       </Route>
     </Routes>,
@@ -195,6 +197,39 @@ describe("Wave 26C-1 Church Admin shell localization", () => {
     expect(Array.from(host.querySelectorAll("h1")).map((heading) => heading.textContent?.trim())).toContain("Members");
     expect(host.querySelector("[data-testid='staff-mobile-back-header']")?.textContent).toBe("Members");
     expect(host.querySelector("[data-testid='staff-mobile-back-header']")?.getAttribute("aria-label")).toBe("Back from Members");
+  });
+
+  it("uses specific localized titles for Mass Schedule and event registrations before parent route fallbacks", () => {
+    renderLayout("/church-admin/mass-schedule", <div>Mass schedule page</div>);
+    expect(Array.from(host.querySelectorAll("h1")).map((heading) => heading.textContent?.trim())).toContain("Ratiba ya Misa");
+    expect(host.textContent).toContain("Ratiba ya Misa");
+    expect(host.textContent).not.toContain("Muhtasari");
+    expect(host.querySelector("[data-testid='staff-mobile-back-header']")?.textContent).toBe("Ratiba ya Misa");
+    expect(host.querySelector("[data-testid='staff-mobile-back-header']")?.getAttribute("aria-label")).toBe("Rudi kutoka Ratiba ya Misa");
+
+    state.language = "en";
+    renderLayout("/church-admin/mass-schedule", <div>Mass schedule page</div>);
+    expect(Array.from(host.querySelectorAll("h1")).map((heading) => heading.textContent?.trim())).toContain("Mass Schedule");
+    expect(host.textContent).toContain("Mass Schedule");
+    expect(host.textContent).not.toContain("Dashboard");
+    expect(host.querySelector("[data-testid='staff-mobile-back-header']")?.textContent).toBe("Mass Schedule");
+    expect(host.querySelector("[data-testid='staff-mobile-back-header']")?.getAttribute("aria-label")).toBe("Back from Mass Schedule");
+
+    renderLayout("/church-admin/events/event-123/registrations", <div>Registrations page</div>);
+    expect(Array.from(host.querySelectorAll("h1")).map((heading) => heading.textContent?.trim())).toContain("Event Registrations");
+    expect(host.textContent).toContain("Event Registrations");
+    expect(host.textContent).not.toContain("Dashboard");
+    expect(host.textContent).not.toContain("Events");
+    expect(host.querySelector("[data-testid='staff-mobile-back-header']")?.textContent).toBe("Event Registrations");
+    expect(host.querySelector("[data-testid='staff-mobile-back-header']")?.getAttribute("aria-label")).toBe("Back from Event Registrations");
+
+    state.language = "sw";
+    renderLayout("/church-admin/events/event-123/registrations", <div>Registrations page</div>);
+    expect(Array.from(host.querySelectorAll("h1")).map((heading) => heading.textContent?.trim())).toContain("Usajili wa Matukio");
+    expect(host.textContent).toContain("Usajili wa Matukio");
+    expect(host.textContent).not.toContain("Muhtasari");
+    expect(host.querySelector("[data-testid='staff-mobile-back-header']")?.textContent).toBe("Usajili wa Matukio");
+    expect(host.querySelector("[data-testid='staff-mobile-back-header']")?.getAttribute("aria-label")).toBe("Rudi kutoka Usajili wa Matukio");
   });
 
   it("localizes sidebar billing copy while preserving billing route visibility", () => {

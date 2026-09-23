@@ -4,6 +4,12 @@ import type { StaffMobileConfig, StaffService } from "@/lib/staff-mobile-registr
 import type { StaffMobileWorkspace } from "@/lib/staff-mobile-role";
 
 type Translator = (key: string, options?: Record<string, unknown>) => string;
+type ChurchAdminRouteTitle = {
+  path: string;
+  key: string;
+  fallback: string;
+  match?: (normalizedPath: string) => boolean;
+};
 
 const DATE_TIME_ZONE = "Africa/Dar_es_Salaam";
 
@@ -45,11 +51,12 @@ export const SYSTEM_ROLE_LABEL_KEYS: Record<string, string> = {
   treasurer: "role_labels.treasurer",
 };
 
-export const CHURCH_ADMIN_ROUTE_TITLE_KEYS = [
+export const CHURCH_ADMIN_ROUTE_TITLE_KEYS: readonly ChurchAdminRouteTitle[] = [
   { path: "/church-admin/analytics-assistant", key: "church_admin_layout.route_titles.analytics_assistant", fallback: "Analytics Assistant" },
   { path: "/church-admin/mass-intentions", key: "church_admin_layout.route_titles.mass_intentions", fallback: "Mass Intentions" },
   { path: "/church-admin/prayer-requests", key: "church_admin_layout.route_titles.prayer_requests", fallback: "Prayer Requests" },
   { path: "/church-admin/mass-timetable", key: "church_admin_layout.route_titles.mass_timetable", fallback: "Mass Timetable" },
+  { path: "/church-admin/mass-schedule", key: "church_admin_layout.route_titles.mass_schedule", fallback: "Mass Schedule" },
   { path: "/church-admin/event-requests", key: "church_admin_layout.route_titles.event_requests", fallback: "Parish Office Services" },
   { path: "/church-admin/invite-members", key: "church_admin_layout.route_titles.invite_members", fallback: "Invite Members" },
   { path: "/church-admin/community-help", key: "church_admin_layout.route_titles.community_help", fallback: "Community Help" },
@@ -72,6 +79,12 @@ export const CHURCH_ADMIN_ROUTE_TITLE_KEYS = [
   { path: "/church-admin/members", key: "church_admin_layout.route_titles.members", fallback: "Members" },
   { path: "/church-admin/families", key: "church_admin_layout.route_titles.families", fallback: "Families" },
   { path: "/church-admin/sermons", key: "church_admin_layout.route_titles.sermons", fallback: "Sermons" },
+  {
+    path: "/church-admin/events/:eventId/registrations",
+    key: "church_admin_layout.route_titles.event_registrations",
+    fallback: "Event Registrations",
+    match: (normalizedPath) => /^\/church-admin\/events\/[^/]+\/registrations$/.test(normalizedPath),
+  },
   { path: "/church-admin/events", key: "church_admin_layout.route_titles.events", fallback: "Events" },
   { path: "/church-admin/calendar", key: "church_admin_layout.route_titles.calendar", fallback: "Parish Calendar" },
   { path: "/church-admin/channels", key: "church_admin_layout.route_titles.channels", fallback: "Communication" },
@@ -120,8 +133,8 @@ export function translateSystemLabel(t: Translator, key: string | undefined, fal
 
 export function translateChurchAdminRouteTitle(t: Translator, pathname: string) {
   const normalizedPath = pathname.replace(/\/$/, "") || "/church-admin";
-  const routeTitle = CHURCH_ADMIN_ROUTE_TITLE_KEYS.find(({ path }) =>
-    normalizedPath === path || normalizedPath.startsWith(`${path}/`),
+  const routeTitle = CHURCH_ADMIN_ROUTE_TITLE_KEYS.find(({ path, match }) =>
+    match?.(normalizedPath) || normalizedPath === path || normalizedPath.startsWith(`${path}/`),
   );
   return translateSystemLabel(t, routeTitle?.key, routeTitle?.fallback ?? "Dashboard");
 }
