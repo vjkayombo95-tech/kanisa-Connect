@@ -3,11 +3,12 @@ import { Lock, Sparkles } from "lucide-react";
 import { AppLink } from "@/components/AppLink";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
 export function LockedFeatureNotice({
   title,
   description,
-  ctaLabel = "Upgrade to unlock",
+  ctaLabel,
   to = "/church-admin/billing",
 }: {
   title: string;
@@ -15,6 +16,9 @@ export function LockedFeatureNotice({
   ctaLabel?: string;
   to?: string;
 }) {
+  const { t } = useTranslation();
+  const actionLabel = ctaLabel ?? t("shared.billing.upgrade_to_unlock");
+
   return (
     <Card className="glass-card border-primary/20">
       <CardHeader>
@@ -28,7 +32,7 @@ export function LockedFeatureNotice({
         <Button asChild>
           <AppLink to={to}>
             <Sparkles className="mr-2 h-4 w-4" />
-            {ctaLabel}
+            {actionLabel}
           </AppLink>
         </Button>
       </CardContent>

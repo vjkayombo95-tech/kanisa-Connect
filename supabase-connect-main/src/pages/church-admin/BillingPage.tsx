@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { assertClientRateLimit } from "@/lib/client-rate-limit";
 import { logSupabaseError } from "@/lib/error-logger";
+import { useTranslation } from "react-i18next";
 
 type SubscriptionPayment = {
   id: string;
@@ -35,6 +36,7 @@ const DEFAULT_PAYMENT_INSTRUCTIONS = {
 };
 
 export default function BillingPage() {
+  const { t } = useTranslation();
   const { churchId } = useAuth();
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<BillingPlan | null>(null);
@@ -231,7 +233,7 @@ export default function BillingPage() {
             </div>
             <p className="text-sm text-muted-foreground">{currentPlanDefinition.description}</p>
             <p className="text-sm text-muted-foreground">
-              {currentPlanDefinition.price === 0 ? "Default free plan" : `${formatTZS(currentPlanDefinition.price)} per month`}
+              {currentPlanDefinition.price === 0 ? t("shared.billing.default_free_plan") : t("shared.billing.price_per_month", { amount: formatTZS(currentPlanDefinition.price) })}
             </p>
             {subscription.expires_at && (
               <p className="text-xs text-muted-foreground">
@@ -380,7 +382,7 @@ export default function BillingPage() {
                       </Button>
                     ) : plan.price === 0 ? (
                       <Button className="w-full" variant="outline" disabled>
-                        Free Plan
+                        {t("shared.billing.free_plan")}
                       </Button>
                     ) : (
                       <Button
@@ -501,7 +503,7 @@ export default function BillingPage() {
       </section>
 
       {isLoading && (
-        <p className="text-sm text-muted-foreground">Loading billing details...</p>
+        <p className="text-sm text-muted-foreground">{t("shared.billing.loading_details")}</p>
       )}
 
       <Dialog open={selectedPlan !== null} onOpenChange={(open) => !open && setSelectedPlan(null)}>

@@ -77,10 +77,46 @@
     "request_assignment": "Request Assignment",
     "member": "Member"
   },
+  "shared": {
+    "actions": {
+      "retry": "Retry",
+      "reload_app": "Reload App",
+      "return_home": "Return Home"
+    },
+    "loading": {
+      "application": "Loading application...",
+      "checking_access": "Checking your access..."
+    },
+    "auth": {
+      "connectivity_title": "We're having trouble connecting.",
+      "connectivity_description": "Your account is still signed in. Check your connection and try again.",
+      "workspace_access_title": "We could not verify your workspace access.",
+      "workspace_access_description": "Your session is still signed in, but workspace access could not be verified."
+    },
+    "errors": {
+      "application_label": "Application Error",
+      "page_crashed_title": "This page ran into an error.",
+      "render_failed": "Something went wrong while rendering this page."
+    },
+    "billing": {
+      "upgrade_to_unlock": "Upgrade to unlock",
+      "admin_feature_locked_title": "This admin feature is locked",
+      "admin_feature_locked_description": "The super admin has locked this feature for church admins.",
+      "analytics_locked_page_description": "Advanced analytics are locked on your current plan.",
+      "analytics_locked_title": "Analytics is locked",
+      "analytics_locked_description": "Upgrade to Pro or Enterprise to unlock advanced analytics, trends, and comparative reporting.",
+      "default_free_plan": "Default free plan",
+      "free_plan": "Free Plan",
+      "price_per_month": "{{amount}} per month",
+      "loading_details": "Loading billing details..."
+    }
+  },
   "language_switcher": {
     "label": "Language",
     "english": "English",
-    "swahili": "Kiswahili"
+    "swahili": "Kiswahili",
+    "switch_to_english": "Switch language to English",
+    "switch_to_swahili": "Switch language to Kiswahili"
   },
   "nav": {
     "home": "Home",

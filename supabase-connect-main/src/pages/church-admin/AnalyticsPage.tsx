@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { AnalyticsChartProps } from "./AnalyticsCharts";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { logSupabaseError } from "@/lib/error-logger";
+import { useTranslation } from "react-i18next";
 import {
   generateAnalyticsSnapshot,
   getLatestAnalyticsSnapshot,
@@ -42,6 +43,7 @@ type AnalyticsSnapshotPayload = AnalyticsChartProps & {
 };
 
 export default function AnalyticsPage() {
+  const { t } = useTranslation();
   const billing = useBillingAccess();
   const { churchId } = useAuth();
   const queryClient = useQueryClient();
@@ -99,12 +101,12 @@ export default function AnalyticsPage() {
     return (
       <div className="space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-2xl font-bold font-serif">Analytics</h1>
-          <p className="text-sm text-muted-foreground mt-1">Advanced analytics are locked on your current plan.</p>
+          <h1 className="text-2xl font-bold font-serif">{t("analytics")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("shared.billing.analytics_locked_page_description")}</p>
         </div>
         <LockedFeatureNotice
-          title="Analytics is LOCKED"
-          description="Upgrade to Pro or Enterprise to unlock advanced analytics, trends, and comparative reporting."
+          title={t("shared.billing.analytics_locked_title")}
+          description={t("shared.billing.analytics_locked_description")}
         />
       </div>
     );
