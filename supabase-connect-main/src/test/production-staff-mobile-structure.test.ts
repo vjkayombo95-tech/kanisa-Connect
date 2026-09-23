@@ -9,6 +9,7 @@ describe("Wave 3 production integration boundaries", () => {
   const auth = read("src/contexts/AuthContext.tsx");
   const mobile = read("src/components/staff-mobile/StaffMobileExperience.tsx");
   const adminLayout = read("src/components/church-admin/ChurchAdminLayout.tsx");
+  const sw = JSON.parse(read("src/locales/sw.json"));
 
   it("reads only authenticated current-church role rows and clears presentation on logout", () => {
     expect(auth).toContain('.from("user_roles")');
@@ -32,7 +33,8 @@ describe("Wave 3 production integration boundaries", () => {
   });
 
   it("implements searchable, collapsible and touch-sized controls", () => {
-    expect(mobile).toContain("Tafuta huduma");
+    expect(mobile).toContain('t("staff_mobile.search_services")');
+    expect(sw.staff_mobile.search_services).toBe("Tafuta huduma");
     expect(mobile).toContain("aria-expanded");
     expect(mobile).toContain("min-h-12");
     expect(mobile).toContain("min-h-14");
@@ -41,7 +43,8 @@ describe("Wave 3 production integration boundaries", () => {
   it("exposes a mobile community leader return path to the member portal without sign-out", () => {
     expect(mobile).toContain('config.workspace === "community"');
     expect(mobile).toContain('to="/portal"');
-    expect(mobile).toContain("Rudi kama Mwanachama");
+    expect(mobile).toContain("staff_mobile.back_as_member");
+    expect(sw.staff_mobile.back_as_member).toBe("Rudi kama Mwanachama");
     expect(mobile).not.toMatch(/signOut|logout|\/login/);
   });
 

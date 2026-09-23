@@ -15,14 +15,19 @@ describe("Production workspace UI parity C boundaries", () => {
   const portalPrayerRequests = read("src/pages/portal/PortalPrayerRequests.tsx");
   const routes = read("src/routes/AdminRoutes.tsx");
   const en = JSON.parse(read("src/locales/en.json"));
+  const sw = JSON.parse(read("src/locales/sw.json"));
 
   it("uses the compact grouped shell and production-approved registry", () => {
-    expect(sidebar).toContain("Church Admin Workspace");
+    expect(sidebar).toContain('t("church_admin_layout.workspaces.admin")');
+    expect(en.church_admin_layout.workspaces.admin).toBe("Church Admin Workspace");
+    expect(sw.church_admin_layout.workspaces.admin).toBe("Usimamizi wa Kanisa");
     expect(sidebar).toContain("getStaffMobileConfig(staffWorkspace)");
     expect(sidebar).toContain("useVisibleStaffServices(workspaceConfig");
     expect(sidebar).toContain("primaryServices.map");
     expect(sidebar).toContain('route="/church-admin/services"');
-    expect(sidebar).toContain('label="Zaidi"');
+    expect(sidebar).toContain('label={t("nav.more")}');
+    expect(en.nav.more).toBe("More");
+    expect(sw.nav.more).toBe("Zaidi");
     expect(layout).toContain("ChurchAdminCommandMenu");
     expect(layout).toContain("pageTitle");
   });
