@@ -14,6 +14,7 @@ describe("Production workspace UI parity C boundaries", () => {
   const portalGive = read("src/pages/portal/PortalGive.tsx");
   const portalPrayerRequests = read("src/pages/portal/PortalPrayerRequests.tsx");
   const routes = read("src/routes/AdminRoutes.tsx");
+  const en = JSON.parse(read("src/locales/en.json"));
 
   it("uses the compact grouped shell and production-approved registry", () => {
     expect(sidebar).toContain("Church Admin Workspace");
@@ -42,9 +43,11 @@ describe("Production workspace UI parity C boundaries", () => {
   it("does not label unknown staff workspaces as Church Admin", () => {
     for (const source of [layout, sidebar]) {
       expect(source).toContain('=== "admin"');
-      expect(source).toContain('"Staff Workspace"');
       expect(source).not.toContain(': "Church Admin Workspace"');
     }
+    expect(layout).toContain('t("church_admin_layout.workspaces.staff")');
+    expect(en.church_admin_layout.workspaces.staff).toBe("Staff Workspace");
+    expect(en.church_admin_layout.workspaces.staff).not.toBe("Church Admin Workspace");
     expect(dashboardExperience).toContain('"Staff"');
     expect(dashboardExperience).not.toContain(': "Church Admin"');
   });
