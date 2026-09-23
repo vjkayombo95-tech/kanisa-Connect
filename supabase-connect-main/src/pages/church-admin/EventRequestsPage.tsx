@@ -47,7 +47,7 @@ type TabValue = (typeof TABS)[number]["value"];
 export default function EventRequestsPage() {
   const { churchId } = useAuth();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabValue>("new");
   const [rejectRequest, setRejectRequest] = useState<EventRequestRow | null>(null);
@@ -107,7 +107,13 @@ export default function EventRequestsPage() {
   const doneCount = requests.filter((request) => DONE_STATUSES.has(request.status ?? "")).length;
   const tabCounts: Record<TabValue, number> = { new: newCount, active: activeCount, done: doneCount };
   const updatingId = updateStatus.isPending ? updateStatus.variables?.id : null;
-  const formatDate = (date: string | null) => date ? new Date(date).toLocaleDateString() : t("event_requests_admin.no_date");
+  const formatDate = (date: string | null) => {
+    if (!date) return t("event_requests_admin.no_date");
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) return date;
+    const locale = i18n.language === "sw" ? "sw-TZ" : "en-TZ";
+    return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(parsed);
+  };
   const descriptionPreview = (description: string | null) => {
     if (!description?.trim()) return t("event_requests_admin.no_description");
     return description.length > 140 ? `${description.slice(0, 140).trim()}...` : description;

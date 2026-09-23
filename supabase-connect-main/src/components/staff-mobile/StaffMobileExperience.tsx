@@ -98,7 +98,17 @@ export function StaffMobileBottomNav({ config }: { config: StaffMobileConfig }) 
   return <nav className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden" aria-label="Urambazaji wa nafasi"><div className="mx-auto grid max-w-lg grid-cols-3 px-3 py-1.5">{items.map((item) => { const Icon = item.icon; const active = location.pathname === item.to; return <MobileLink key={item.to} to={item.to} className={cn("flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-semibold text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary", active && "bg-primary/[0.07] text-primary")}><Icon className="h-5 w-5" aria-hidden="true" /><span>{item.label}</span></MobileLink>; })}</div></nav>;
 }
 
-export function StaffMobileBackHeader({ config, title }: { config: StaffMobileConfig; title: string }) {
+export function StaffMobileBackHeader({
+  config,
+  title,
+  showTitle = true,
+  ariaLabel,
+}: {
+  config: StaffMobileConfig;
+  title: string;
+  showTitle?: boolean;
+  ariaLabel?: string;
+}) {
   const location = useLocation();
   const navigate = useNavigate();
   const primary = [config.home, config.workRoute, config.servicesRoute];
@@ -106,5 +116,5 @@ export function StaffMobileBackHeader({ config, title }: { config: StaffMobileCo
   const stateFrom = (location.state as { from?: unknown } | null)?.from;
   const root = config.workspace === "community" ? config.home.slice(0, config.home.lastIndexOf("/")) : config.home;
   const target = typeof stateFrom === "string" && stateFrom.startsWith(root) && stateFrom !== location.pathname ? stateFrom : config.home;
-  return <button type="button" onClick={() => navigate(target, { replace: true })} className="mb-4 flex min-h-12 min-w-0 items-center gap-2 rounded-2xl pr-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden" aria-label={`Rudi kutoka ${title}`}><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-primary"><ChevronLeft className="h-6 w-6" aria-hidden="true" /></span><span className="truncate text-lg font-semibold">{title}</span></button>;
+  return <button type="button" onClick={() => navigate(target, { replace: true })} className="mb-4 flex min-h-12 min-w-0 items-center gap-2 rounded-2xl pr-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden" aria-label={ariaLabel ?? `Rudi kutoka ${title}`}><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-primary"><ChevronLeft className="h-6 w-6" aria-hidden="true" /></span>{showTitle ? <span className="truncate text-lg font-semibold">{title}</span> : null}</button>;
 }

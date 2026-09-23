@@ -6,13 +6,18 @@ const root = process.cwd();
 const read = (relative: string) => fs.readFileSync(path.join(root, relative), "utf8");
 
 describe("Wave 22D admin mobile profile menu", () => {
+  const en = JSON.parse(read("src/locales/en.json"));
+  const sw = JSON.parse(read("src/locales/sw.json"));
+
   it("places the mobile profile dropdown in ChurchAdminLayout", () => {
     const layout = read("src/components/church-admin/ChurchAdminLayout.tsx");
 
     expect(layout).toContain('data-testid="church-admin-mobile-profile-header"');
     expect(layout).toContain("lg:hidden");
     expect(layout).toContain("<DropdownMenuTrigger asChild>");
-    expect(layout).toContain('aria-label="Fungua wasifu"');
+    expect(layout).toContain('aria-label={t("church_admin_layout.open_profile")}');
+    expect(sw.church_admin_layout.open_profile).toBe("Fungua wasifu");
+    expect(en.church_admin_layout.open_profile).toBe("Open profile");
     expect(layout).toContain("{profile?.full_name || \"Admin\"}");
   });
 
@@ -22,7 +27,9 @@ describe("Wave 22D admin mobile profile menu", () => {
 
     expect(layout).toContain('isStaffRouteAllowed(staffWorkspace, "/church-admin/settings")');
     expect(layout).toContain("canOpenSettings ? (");
-    expect(layout).toContain("Mipangilio ya Kanisa");
+    expect(layout).toContain('t("church_admin_layout.settings")');
+    expect(sw.church_admin_layout.settings).toBe("Mipangilio ya Kanisa");
+    expect(en.church_admin_layout.settings).toBe("Church Settings");
     expect(registry).toContain('if (workspace === "admin") return pathname === "/church-admin" || pathname.startsWith("/church-admin/");');
     expect(registry).toContain('if (workspace !== "pastoral" && workspace !== "finance") return false;');
     expect(registry).toContain("config.services.some");
@@ -37,8 +44,9 @@ describe("Wave 22D admin mobile profile menu", () => {
     expect(layout).toContain("await signOut();");
     expect(layout).toContain('navigate("/login");');
     expect(layout).toContain("<LogOut");
-    expect(layout).toContain("Toka");
-    expect(layout).toContain("Sign Out");
+    expect(layout).toContain('t("church_admin_layout.sign_out")');
+    expect(sw.church_admin_layout.sign_out).toBe("Toka");
+    expect(en.church_admin_layout.sign_out).toBe("Sign Out");
   });
 
   it("removes the Zaidi account section and keeps StaffMobileExperience auth-free", () => {
@@ -72,7 +80,9 @@ describe("Wave 22D admin mobile profile menu", () => {
     const layout = read("src/components/church-admin/ChurchAdminLayout.tsx");
 
     expect(layout).toContain('className="sticky top-0 z-40 hidden h-[76px]');
-    expect(layout).toContain("Church Settings");
-    expect(layout).toContain("Sign Out");
+    expect(layout).toContain('t("church_admin_layout.settings")');
+    expect(layout).toContain('t("church_admin_layout.sign_out")');
+    expect(en.church_admin_layout.settings).toBe("Church Settings");
+    expect(en.church_admin_layout.sign_out).toBe("Sign Out");
   });
 });

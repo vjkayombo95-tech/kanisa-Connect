@@ -4,6 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import EventRequestsPage from "@/pages/church-admin/EventRequestsPage";
+import en from "@/locales/en.json";
 import sw from "@/locales/sw.json";
 
 const toast = vi.fn();
@@ -24,25 +25,28 @@ const state: {
   requests: RequestRow[];
   updates: Array<{ id: string; churchId: string; status: string }>;
   updatePromise?: Promise<{ data: Array<{ id: string; status: string }>; error: null }>;
+  language: "sw" | "en";
 } = {
   requests: [],
   updates: [],
+  language: "sw",
 };
 
 function translate(key: string, options?: Record<string, string>) {
+  const resource = state.language === "sw" ? sw : en;
   const value = key.split(".").reduce<unknown>((current, part) => {
     if (current && typeof current === "object" && part in current) {
       return (current as Record<string, unknown>)[part];
     }
     return undefined;
-  }, sw);
+  }, resource);
 
   const text = typeof value === "string" ? value : key;
   return Object.entries(options ?? {}).reduce((result, [name, replacement]) => result.replace(`{{${name}}}`, replacement), text);
 }
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: translate }),
+  useTranslation: () => ({ t: translate, i18n: { language: state.language } }),
 }));
 
 vi.mock("@/contexts/AuthContext", () => ({
@@ -121,6 +125,10 @@ function click(element: Element) {
   });
 }
 
+function expectedDate(date: string, language: "sw" | "en" = state.language) {
+  return new Intl.DateTimeFormat(language === "sw" ? "sw-TZ" : "en-TZ", { day: "numeric", month: "short", year: "numeric" }).format(new Date(date));
+}
+
 async function waitFor(assertion: () => void) {
   let lastError: unknown;
   for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -145,6 +153,7 @@ describe("Wave 25 office services UX", () => {
     toast.mockReset();
     state.updates = [];
     state.updatePromise = undefined;
+    state.language = "sw";
     state.requests = [
       {
         id: "request-confirmation",
@@ -197,6 +206,7 @@ describe("Wave 25 office services UX", () => {
     expect(host.textContent).toContain("Yaliyokamilika");
     expect(host.textContent).toContain("Maria Joseph");
     expect(host.textContent).toContain("255712345678");
+    expect(host.textContent).toContain(expectedDate("2026-10-04"));
     expect(host.textContent).toContain("Anza kushughulikia");
     expect(host.textContent).toContain("Kataa ombi");
 
@@ -204,10 +214,29 @@ describe("Wave 25 office services UX", () => {
     await waitFor(() => expect(host.textContent).toContain("Komunyo ya Kwanza"));
     expect(host.textContent).toContain("Petro Paulo");
     expect(host.textContent).toContain("Kamilisha");
+    expect(host.textContent).toContain(expectedDate("2026-10-11"));
 
     click(buttonByText("Yaliyokamilika"));
     await waitFor(() => expect(host.textContent).toContain("Ubatizo"));
     expect(host.textContent).not.toContain("Kamilisha");
+  });
+
+  it("renders office request labels and dates in English when English is selected", async () => {
+    state.language = "en";
+    renderPage();
+
+    await waitFor(() => expect(host.textContent).toContain("Confirmation"));
+    expect(host.textContent).toContain("New");
+    expect(host.textContent).toContain("In progress");
+    expect(host.textContent).toContain("Done");
+    expect(host.textContent).toContain("Start review");
+    expect(host.textContent).toContain("Reject request");
+    expect(host.textContent).toContain(expectedDate("2026-10-04", "en"));
+
+    click(buttonByText("In progress"));
+    await waitFor(() => expect(host.textContent).toContain("First Communion"));
+    expect(host.textContent).toContain("Complete");
+    expect(host.textContent).toContain(expectedDate("2026-10-11", "en"));
   });
 
   it("expands read-only request details without adding edit controls", async () => {
