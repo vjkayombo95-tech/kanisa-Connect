@@ -128,7 +128,7 @@ describe("Wave 21 church cover photo", () => {
     expect(dashboard).toContain("{greeting}, {firstName}.");
     expect(dashboard).toContain("{workspaceLabel}");
     expect(dashboard).toContain("{churchName}");
-    expect(dashboard).toContain('userRole === "church_admin"');
+    expect(dashboard).toContain("translateRoleLabel(t, userRole)");
   });
 
   it("reuses the existing tenant-scoped banner branding flow", () => {
@@ -191,9 +191,9 @@ describe("Wave 21 church cover photo", () => {
     expect(mobileDashboard).toContain(
       'className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/25"',
     );
-    expect(mobileDashboard).toContain("Today&apos;s Focus");
-    expect(mobileDashboard).toContain("Today&apos;s Priorities");
-    expect(mobileDashboard).toContain("Quick Actions");
+    expect(mobileDashboard).toContain("church_admin_dashboard.mobile.focus.title");
+    expect(mobileDashboard).toContain("church_admin_dashboard.mobile.priorities.title");
+    expect(mobileDashboard).toContain("church_admin_dashboard.quick_actions.title");
     expect(mobileDashboard).not.toContain("supabase.");
     expect(mobileDashboard).not.toContain("useQuery(");
   });

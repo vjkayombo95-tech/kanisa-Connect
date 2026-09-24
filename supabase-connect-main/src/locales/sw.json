@@ -130,6 +130,7 @@
     "completed": "Imekamilika",
     "converted": "Imeingizwa kwenye ratiba",
     "draft": "Rasimu",
+    "expired": "Umeisha",
     "inactive": "Haifanyi kazi",
     "pending": "Inasubiri",
     "rejected": "Imekataliwa",
@@ -138,6 +139,7 @@
     "sent": "Imetumwa",
     "submitted": "Imetumwa",
     "suspended": "Imesimamishwa",
+    "trial": "Majaribio",
     "under_review": "Inaangaliwa"
   },
   "role_labels": {
@@ -382,6 +384,228 @@
       "open_full": "Fungua AI kamili",
       "open": "Uliza AI",
       "close": "Funga msaidizi wa AI"
+    }
+  },
+  "church_admin_dashboard": {
+    "greetings": {
+      "morning": "Habari za asubuhi",
+      "afternoon": "Habari za mchana",
+      "evening": "Habari za jioni"
+    },
+    "defaults": {
+      "administrator": "Msimamizi",
+      "church": "Kanisa",
+      "our_church": "kanisa letu",
+      "your_church": "kanisa lako"
+    },
+    "errors": {
+      "critical_records": "Baadhi ya taarifa za muhtasari hazikuweza kupakiwa. Pakia upya baada ya kuthibitisha ruhusa za hifadhidata."
+    },
+    "hero": {
+      "aria_label": "Muhtasari wa nafasi ya kazi",
+      "status": {
+        "loading": "Tunakusanya kazi zinazohitaji umakini wako.",
+        "error": "Baadhi ya taarifa za muhtasari hazipatikani kwa sasa.",
+        "pending": "Kazi zinazohitaji umakini leo: {{count}}.",
+        "pending_plural": "Kazi zinazohitaji umakini leo: {{count}}.",
+        "clear": "Hakuna kazi ya haraka inayosubiri kwa sasa."
+      }
+    },
+    "priorities": {
+      "title": "Cha kufanya leo",
+      "description": "Kazi muhimu zinazohitaji hatua kutoka kwako.",
+      "badge": "Inahitaji hatua",
+      "waiting": "Zinahitaji kuangaliwa: {{count}}",
+      "waiting_plural": "Zinahitaji kuangaliwa: {{count}}",
+      "error": "Kazi zinazohitaji hatua hazipatikani kwa muda. Ruhusa zako hazijabadilishwa.",
+      "clear_title": "Uko sawa kwa sasa",
+      "clear_description": "Hakuna kazi ya haraka inayosubiri hatua yako."
+    },
+    "actions": {
+      "open": "Fungua"
+    },
+    "quick_actions": {
+      "title": "Haraka",
+      "description": "Fungua kazi unayotumia mara nyingi."
+    },
+    "today": {
+      "title": "Ratiba ya leo",
+      "description": "Misa, shughuli na taarifa muhimu za leo.",
+      "confirmed": "Wamethibitisha",
+      "maybe": "Labda",
+      "responses": "Majibu",
+      "no_mass": "Hakuna Misa inayofuata iliyoratibiwa kwa sasa.",
+      "upcoming_events": "Matukio yajayo pia yamepangwa: {{count}}.",
+      "upcoming_events_plural": "Matukio yajayo pia yamepangwa: {{count}}."
+    },
+    "summary": {
+      "title": "Muhtasari wa kanisa",
+      "description": "Taarifa chache muhimu bila kukujaza takwimu nyingi.",
+      "active_members": "Waumini hai",
+      "registered_members": "kati ya {{count}} waliosajiliwa",
+      "recent_announcements": "Matangazo ya karibuni",
+      "published_notices": "taarifa zilizochapishwa",
+      "verified_contributions": "Michango iliyothibitishwa mwezi huu",
+      "financial_unavailable": "Muhtasari wa fedha haupatikani kwa muda.",
+      "transactions": "Miamala: {{count}}",
+      "transactions_plural": "Miamala: {{count}}"
+    },
+    "activity": {
+      "title": "Shughuli za karibuni",
+      "description": "Mambo ya mwisho yaliyorekodiwa kwenye kanisa.",
+      "empty": "Hakuna shughuli za karibuni.",
+      "payment_title": "{{name}} amerekodi mchango",
+      "announcement_published": "Tangazo limechapishwa",
+      "upcoming_event_scheduled": "Tukio lijalo limepangwa",
+      "birthday_title": "{{name}} ana siku ya kuzaliwa leo",
+      "birthday_reminder": "Kikumbusho cha siku ya kuzaliwa",
+      "anniversary_title": "{{name}} ana kumbukumbu ya ndoa leo",
+      "anniversary_reminder": "Kikumbusho cha kumbukumbu ya ndoa"
+    },
+    "utilities": {
+      "eyebrow": "Zana za Uzalishaji",
+      "title": "Zana za usimamizi wa kanisa",
+      "description": "Zana na rekodi za uzalishaji za Release B bado zinapatikana chini ya nafasi ya kazi ya kila siku."
+    },
+    "billing": {
+      "eyebrow": "Mpango na Malipo",
+      "loading_subscription": "Inapakia usajili...",
+      "plan_name": "Mpango wa {{plan}}",
+      "trial_expires": "Majaribio yanaisha {{date}} (siku {{count}} imesalia).",
+      "trial_expires_plural": "Majaribio yanaisha {{date}} (siku {{count}} zimesalia).",
+      "member_limit_warning": "Unakaribia kikomo cha wanachama. Kagua mipango kabla ya kuongeza wanachama zaidi.",
+      "member_usage": "Matumizi ya wanachama",
+      "member_usage_unlimited": "{{count}} / Bila kikomo",
+      "member_usage_limited": "{{count}} / {{limit}}",
+      "review_upgrade_options": "Kagua Chaguo za Kuboresha",
+      "manage_billing": "Simamia Malipo",
+      "plans": {
+        "free": {
+          "name": "Bure",
+          "description": "Kwa jumuiya ndogo zinazoanza kutumia Kanisa Connect."
+        },
+        "basic": {
+          "name": "Msingi",
+          "description": "Uendeshaji muhimu wa kanisa kwa huduma zinazokua."
+        },
+        "intermediate": {
+          "name": "Kati",
+          "description": "Mpango wenye uwiano mzuri kwa uzoefu wa kisasa wa kanisa."
+        },
+        "pro": {
+          "name": "Pro",
+          "description": "Mawasiliano na takwimu kwa makanisa yenye huduma nyingi."
+        },
+        "enterprise": {
+          "name": "Enterprise",
+          "description": "Kwa makanisa makubwa yanayohitaji uwezo mkubwa, chapa na miunganisho."
+        }
+      }
+    },
+    "enrollment": {
+      "eyebrow": "Usajili wa Wanachama",
+      "title": "Alika Wanachama",
+      "description": "Shiriki kiungo hiki maalum. Wanachama wanaojisajili kupitia kiungo hiki wataunganishwa salama na {{church}}.",
+      "join_link_label": "Kiungo cha kujiunga kwa mwanachama",
+      "copy_link": "Nakili Kiungo",
+      "share_whatsapp": "Shiriki WhatsApp",
+      "join_link_unavailable": "Kiungo cha kujiunga kitaonekana baada ya sasisho la hifadhidata la kiungo cha kanisa kutumika.",
+      "qr_title": "Kiungo cha wanachama kujiunga na {{church}}",
+      "copy_success_title": "Kiungo cha kujiunga kimenakiliwa",
+      "copy_success_description": "Sasa unaweza kukituma kwa wanachama wako.",
+      "copy_error_title": "Imeshindikana kunakili kiungo",
+      "copy_error_description": "Chagua na unakili kiungo mwenyewe."
+    },
+    "giving": {
+      "eyebrow": "Michango",
+      "title": "Mwenendo wa Michango",
+      "empty": "Bado hakuna michango iliyorekodiwa."
+    },
+    "records": {
+      "title": "Rekodi za Karibuni",
+      "empty": "Bado hakuna shughuli iliyorekodiwa.",
+      "share_anniversary": "Shiriki Salamu za Kumbukumbu ya Ndoa WhatsApp",
+      "share_birthday": "Shiriki Salamu za Siku ya Kuzaliwa WhatsApp"
+    },
+    "pending_actions": {
+      "events": "Uhakiki wa matukio",
+      "mass_intentions": "Nia za Misa",
+      "prayer_requests": "Maombi",
+      "community_help": "Msaada wa Jamii",
+      "invitations": "Mialiko na majukumu",
+      "announcements": "Rasimu za matangazo",
+      "payments": "Uhakiki wa malipo",
+      "memberships": "Maombi ya Jumuiya",
+      "volunteers": "Wajitoleaji wa huduma"
+    },
+    "mobile": {
+      "hero_aria_label": "Muhtasari wa nafasi ya kazi kwenye simu",
+      "focus": {
+        "title": "Kipaumbele cha Leo",
+        "priority": "{{label}} zinazohitaji umakini: {{count}}.",
+        "priority_plural": "{{label}} zinazohitaji umakini: {{count}}.",
+        "mass": "{{title}}: {{yes}} wamethibitisha na {{maybe}} labda.",
+        "events": "Matukio yajayo yanayohitaji maandalizi: {{count}}.",
+        "events_plural": "Matukio yajayo yanayohitaji maandalizi: {{count}}.",
+        "announcements": "Matangazo ya karibuni yaliyochapishwa: {{count}}.",
+        "announcements_plural": "Matangazo ya karibuni yaliyochapishwa: {{count}}.",
+        "unavailable": "Baadhi ya taarifa za leo za muhtasari hazipatikani kwa sasa.",
+        "clear": "Hakuna kazi ya haraka inayohitaji umakini."
+      },
+      "priorities": {
+        "title": "Vipaumbele vya Leo",
+        "description": "Foleni muhimu zilizoidhinishwa za kazi zako.",
+        "error": "Vipaumbele havipatikani kwa muda. Ruhusa bado zinalindwa.",
+        "waiting": "{{count}} inasubiri",
+        "clear_title": "Hakuna kipaumbele kinachohitaji umakini",
+        "clear_description": "Foleni zako zilizoidhinishwa ziko wazi."
+      },
+      "quick_actions": {
+        "description": "Huduma za uzalishaji kulingana na jukumu lako.",
+        "empty": "Hakuna hatua kuu iliyoidhinishwa kwa sasa."
+      },
+      "briefing": {
+        "title": "Taarifa ya Kila Siku ya Msaidizi",
+        "description": "Ishara za uzalishaji za sasa, zimefupishwa kwa uthabiti.",
+        "members": "{{active}} hai kati ya wanachama {{total}} waliosajiliwa",
+        "members_unavailable": "Shughuli za wanachama hazipatikani kwa muda.",
+        "pending": "Vipengee vilivyoidhinishwa vinavyosubiri: {{count}}",
+        "pending_plural": "Vipengee vilivyoidhinishwa vinavyosubiri: {{count}}",
+        "pending_clear": "Foleni zilizoidhinishwa za kazi ziko wazi",
+        "pending_unavailable": "Hali ya kazi zinazosubiri haipatikani kwa muda.",
+        "mass": "{{title}}: {{yes}} wamethibitisha",
+        "schedule": "matangazo {{announcements}} - matukio {{events}} yajayo",
+        "events": "Matukio yajayo: {{count}}",
+        "events_plural": "Matukio yajayo: {{count}}",
+        "schedule_unavailable": "Taarifa za Misa na matukio hazipatikani kwa muda."
+      },
+      "snapshot": {
+        "title": "Taswira ya Uendeshaji",
+        "description": "Vipimo vifupi vya parokia.",
+        "active_members": "Waumini hai",
+        "announcements": "Matangazo",
+        "upcoming_events": "Matukio yajayo",
+        "mass_confirmed": "Misa imethibitishwa",
+        "next_mass": "Misa Inayofuata"
+      },
+      "release_b": {
+        "title": "Kazi Zinazosubiri + Muhtasari wa Fedha",
+        "description": "Ruhusa na mikataba ya data ya Release B iliyopo."
+      }
+    },
+    "intelligence": {
+      "aria_label": "Taarifa za muhtasari",
+      "needs_attention": "Inahitaji Umakini",
+      "pending_work": "Kazi zinazosubiri",
+      "pending_error": "Kazi zinazosubiri hazikuweza kupakiwa. Sehemu nyingine za muhtasari bado zinapatikana.",
+      "pending_empty": "Hakuna kazi inayosubiri kwa jukumu lako la sasa.",
+      "financial_summary": "Muhtasari wa fedha",
+      "verified_receipts": "Risiti zilizothibitishwa",
+      "financial_error": "Muhtasari wa fedha haupatikani kwa muda.",
+      "this_month": "Mwezi huu",
+      "all_received": "Zote zilizopokelewa",
+      "transactions": "Miamala",
+      "contributions": "Michango"
     }
   },
   "mass_intention": {

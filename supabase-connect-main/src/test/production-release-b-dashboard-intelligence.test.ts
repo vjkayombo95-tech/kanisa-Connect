@@ -76,7 +76,7 @@ describe("Release B production dashboard intelligence", () => {
     const routes = read("src/routes/AdminRoutes.tsx");
     expect(component).toContain("pending.isLoading");
     expect(component).toContain("pending.isError");
-    expect(component).toContain("No pending work is available for your current role.");
+    expect(component).toContain("church_admin_dashboard.intelligence.pending_empty");
     expect(component).toContain("financial.isError");
     expect(dashboard).toContain("<ChurchDashboardExperience");
     expect(dashboard).not.toContain("<ChurchDashboardIntelligence />");
