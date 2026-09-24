@@ -38,6 +38,8 @@ interface AuthenticatedContext {
   churchId: string;
 }
 
+const selectionSignature = (ids: string[]) => [...ids].sort().join("\u001f");
+
 export function MemberForm({
   isEdit,
   member,
@@ -65,6 +67,14 @@ export function MemberForm({
   const [photoPreview, setPhotoPreview] = useState<string | null>(member?.photo_url || null);
   const [uploading, setUploading] = useState(false);
   const photoRef = useRef<HTMLInputElement>(null);
+  const formRecordKey = `${isEdit ? member?.id || "edit:new" : "create"}:${churchId}`;
+  const selectionSyncRef = useRef({
+    recordKey: formRecordKey,
+    communitySignature: selectionSignature(selectedCommunityIds),
+    ministrySignature: selectionSignature(selectedMinistryIds),
+    communityDirty: false,
+    ministryDirty: false,
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
@@ -155,12 +165,27 @@ export function MemberForm({
   }, [photoFile, getAuthenticatedContext]);
 
   useEffect(() => {
-    setCommunityIds(selectedCommunityIds);
-  }, [selectedCommunityIds]);
+    const nextCommunitySignature = selectionSignature(selectedCommunityIds);
+    const nextMinistrySignature = selectionSignature(selectedMinistryIds);
+    const syncState = selectionSyncRef.current;
+    const recordChanged = syncState.recordKey !== formRecordKey;
 
-  useEffect(() => {
-    setMinistryIds(selectedMinistryIds);
-  }, [selectedMinistryIds]);
+    if (recordChanged || (!syncState.communityDirty && syncState.communitySignature !== nextCommunitySignature)) {
+      setCommunityIds(selectedCommunityIds);
+      syncState.communitySignature = nextCommunitySignature;
+      syncState.communityDirty = false;
+    }
+
+    if (recordChanged || (!syncState.ministryDirty && syncState.ministrySignature !== nextMinistrySignature)) {
+      setMinistryIds(selectedMinistryIds);
+      syncState.ministrySignature = nextMinistrySignature;
+      syncState.ministryDirty = false;
+    }
+
+    if (recordChanged) {
+      syncState.recordKey = formRecordKey;
+    }
+  }, [formRecordKey, selectedCommunityIds, selectedMinistryIds]);
 
   useEffect(() => {
     return () => {
@@ -170,7 +195,13 @@ export function MemberForm({
     };
   }, [photoPreview]);
 
-  const toggleSelection = useCallback((value: string, selectedValues: string[], setSelectedValues: React.Dispatch<React.SetStateAction<string[]>>) => {
+  const toggleSelection = useCallback((
+    value: string,
+    selectedValues: string[],
+    setSelectedValues: React.Dispatch<React.SetStateAction<string[]>>,
+    dirtyKey: "communityDirty" | "ministryDirty",
+  ) => {
+    selectionSyncRef.current[dirtyKey] = true;
     setSelectedValues((current) => {
       if (current.includes(value)) {
         return current.filter((item) => item !== value);
@@ -544,7 +575,7 @@ export function MemberForm({
                 <label key={community.id} className="flex items-center gap-3 text-sm">
                   <Checkbox
                     checked={communityIds.includes(community.id)}
-                    onCheckedChange={() => toggleSelection(community.id, communityIds, setCommunityIds)}
+                    onCheckedChange={() => toggleSelection(community.id, communityIds, setCommunityIds, "communityDirty")}
                   />
                   <span>{community.name}</span>
                 </label>
@@ -562,7 +593,7 @@ export function MemberForm({
                 <label key={ministry.id} className="flex items-center gap-3 text-sm">
                   <Checkbox
                     checked={ministryIds.includes(ministry.id)}
-                    onCheckedChange={() => toggleSelection(ministry.id, ministryIds, setMinistryIds)}
+                    onCheckedChange={() => toggleSelection(ministry.id, ministryIds, setMinistryIds, "ministryDirty")}
                   />
                   <span>{ministry.name}</span>
                 </label>

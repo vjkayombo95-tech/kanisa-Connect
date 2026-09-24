@@ -170,6 +170,44 @@ function input(label: string) {
   return host.querySelector<HTMLInputElement>(`input[aria-label="${label}"]`)!;
 }
 
+function setInputValue(element: HTMLInputElement, value: string) {
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+  setter?.call(element, value);
+  element.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+async function clickCheckboxFor(labelText: string) {
+  const row = Array.from(host.querySelectorAll("label"))
+    .find((element) => element.textContent?.includes(labelText));
+  const checkbox = row?.querySelector<HTMLButtonElement>('[role="checkbox"]');
+  if (!checkbox) throw new Error(`Checkbox not found for ${labelText}`);
+
+  await act(async () => {
+    checkbox.click();
+    await Promise.resolve();
+  });
+}
+
+function checkedFor(labelText: string) {
+  const row = Array.from(host.querySelectorAll("label"))
+    .find((element) => element.textContent?.includes(labelText));
+  return row?.querySelector('[role="checkbox"]')?.getAttribute("aria-checked");
+}
+
+async function selectPhoto() {
+  const fileInput = host.querySelector<HTMLInputElement>('input[type="file"]')!;
+  const file = new File(["photo"], "amina.webp", { type: "image/webp" });
+  Object.defineProperty(fileInput, "files", {
+    configurable: true,
+    value: [file],
+  });
+
+  await act(async () => {
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    await Promise.resolve();
+  });
+}
+
 async function submit() {
   const form = host.querySelector("form")!;
   await act(async () => {
@@ -229,27 +267,88 @@ describe("Wave 26C-2B-2 MemberForm localization", () => {
     expect(input("Barua pepe").placeholder).toBe("john@example.com");
   });
 
-  it("renders both languages without translating form values or adding language-driven resets", async () => {
+  it("updates labels during mounted language switching without resetting entered values, selections, or photo preview", async () => {
     const seededMember = { full_name: "Amina Nyerere", email: "amina@example.test" };
-    await renderForm({ member: seededMember });
+    await renderForm({
+      member: seededMember,
+      selectedCommunityIds: [],
+      selectedMinistryIds: [],
+    });
 
     expect(text()).toContain("Pakia Picha");
     expect(input("Jina Kamili").value).toBe("Amina Nyerere");
 
-    act(() => root?.unmount());
-    host.textContent = "";
-    root = createRoot(host);
+    setInputValue(input("Jina Kamili"), "Amina Updated");
+    await clickCheckboxFor("Mtakatifu Yosefu");
+    await clickCheckboxFor("Kwaya Kuu");
+    await selectPhoto();
+    expect(checkedFor("Mtakatifu Yosefu")).toBe("true");
+    expect(checkedFor("Kwaya Kuu")).toBe("true");
+    expect(host.querySelector<HTMLImageElement>('img[src="blob:member-photo"]')).not.toBeNull();
+
     state.language = "en";
-    await renderForm({ member: seededMember });
+    await renderForm({
+      member: seededMember,
+      selectedCommunityIds: [],
+      selectedMinistryIds: [],
+    });
 
     expect(text()).toContain("Upload Photo");
     expect(text()).toContain("Are you married?");
-    expect(input("Full Name").value).toBe("Amina Nyerere");
+    expect(input("Full Name").value).toBe("Amina Updated");
     expect(input("Email").value).toBe("amina@example.test");
+    expect(checkedFor("Mtakatifu Yosefu")).toBe("true");
+    expect(checkedFor("Kwaya Kuu")).toBe("true");
+    expect(host.querySelector<HTMLImageElement>('img[src="blob:member-photo"]')).not.toBeNull();
 
-    const source = readFileSync("src/components/MemberForm.tsx", "utf8");
-    expect(source).not.toContain("[t, fullName]");
-    expect(source).not.toContain("[i18n.language, fullName]");
+    state.language = "sw";
+    await renderForm({
+      member: seededMember,
+      selectedCommunityIds: [],
+      selectedMinistryIds: [],
+    });
+
+    expect(text()).toContain("Pakia Picha");
+    expect(input("Jina Kamili").value).toBe("Amina Updated");
+    expect(checkedFor("Mtakatifu Yosefu")).toBe("true");
+    expect(checkedFor("Kwaya Kuu")).toBe("true");
+    expect(host.querySelector<HTMLImageElement>('img[src="blob:member-photo"]')).not.toBeNull();
+  });
+
+  it("preserves dirty selections through equivalent prop arrays but initializes a different member record", async () => {
+    const memberA = { id: "member-a", full_name: "Amina Nyerere" };
+    const memberB = { id: "member-b", full_name: "John Mwangi" };
+
+    await renderForm({
+      isEdit: true,
+      member: memberA,
+      selectedCommunityIds: ["community-a"],
+      selectedMinistryIds: [],
+    });
+    expect(checkedFor("Mtakatifu Yosefu")).toBe("true");
+
+    await clickCheckboxFor("Mtakatifu Yosefu");
+    await clickCheckboxFor("Kwaya Kuu");
+    expect(checkedFor("Mtakatifu Yosefu")).toBe("false");
+    expect(checkedFor("Kwaya Kuu")).toBe("true");
+
+    await renderForm({
+      isEdit: true,
+      member: memberA,
+      selectedCommunityIds: ["community-a"],
+      selectedMinistryIds: [],
+    });
+    expect(checkedFor("Mtakatifu Yosefu")).toBe("false");
+    expect(checkedFor("Kwaya Kuu")).toBe("true");
+
+    await renderForm({
+      isEdit: true,
+      member: memberB,
+      selectedCommunityIds: [],
+      selectedMinistryIds: ["ministry-a"],
+    });
+    expect(checkedFor("Mtakatifu Yosefu")).toBe("false");
+    expect(checkedFor("Kwaya Kuu")).toBe("true");
   });
 
   it("submits create_member_with_relations with unchanged stored values and relation ids", async () => {
