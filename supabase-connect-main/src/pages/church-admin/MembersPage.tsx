@@ -29,6 +29,8 @@ import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { PaginationFooter } from "@/components/ui/pagination-footer";
 import { fetchChurchMessageTemplate, renderChurchMessageTemplate } from "@/lib/church-message-templates";
 import { openWhatsAppShare } from "@/lib/whatsapp-share";
+import { useTranslation } from "react-i18next";
+import { formatAppDate, translateStatusLabel, translateSystemLabel } from "@/lib/localization";
 
 type MemberRow = Tables<"members">;
 type InviteInsert = TablesInsert<"invitations">;
@@ -61,7 +63,32 @@ export default function MembersPage() {
   const { isOnline } = useNetworkStatus();
   const billing = useBillingAccess();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
+  const currentLanguage = i18n.language;
+
+  const label = useCallback((key: string, fallback: string, options?: Record<string, unknown>) => {
+    const translationKey = `members_admin.${key}`;
+    const translated = t(translationKey, { defaultValue: fallback, ...options });
+    return translated === translationKey ? fallback : translated;
+  }, [t]);
+  const formatMemberDate = useCallback((value: Date | string | number | null | undefined) =>
+    formatAppDate(value, currentLanguage), [currentLanguage]);
+  const displayStatus = useCallback((status: string | null | undefined) =>
+    translateStatusLabel(t, status) || label("not_available", "None"), [label, t]);
+  const displayGender = useCallback((genderValue: string | null | undefined) => {
+    if (!genderValue) return label("not_available", "None");
+    return translateSystemLabel(t, `members_admin.gender.${genderValue}`, genderValue.replace(/_/g, " "));
+  }, [label, t]);
+  const displayFamilyRole = useCallback((role: string | null | undefined) => {
+    if (!role) return "";
+    return translateSystemLabel(t, `members_admin.family_roles.${role}`, role.replace(/_/g, " "));
+  }, [t]);
+  const memberUsageText = useCallback((count: number) =>
+    billing.memberLimit === null
+      ? label("billing.usage_unlimited", "{{count}} members / Unlimited", { count })
+      : label("billing.usage_limited", "{{count}} / {{limit}} members", { count, limit: billing.memberLimit }),
+  [billing.memberLimit, label]);
 
   const { data: church } = useQuery({
     queryKey: ["members-page-church", churchId],
@@ -98,10 +125,10 @@ export default function MembersPage() {
         church_name: church?.name,
         member_name: member.full_name,
         spouse_name: member.spouse_name,
-        date: new Date().toLocaleDateString("en-TZ"),
+        date: formatMemberDate(new Date()),
       }),
     );
-  }, [anniversaryTemplate, birthdayTemplate, church?.name]);
+  }, [anniversaryTemplate, birthdayTemplate, church?.name, formatMemberDate]);
 
   const {
     data: memberContext,
@@ -150,12 +177,12 @@ export default function MembersPage() {
   useEffect(() => {
     if (memberContextError) {
       toast({
-        title: "Unable to load member context",
-        description: "We couldn't verify your member access right now.",
+        title: label("toasts.member_context_error_title", "Unable to load member context"),
+        description: label("toasts.member_context_error_description", "We couldn't verify your member access right now."),
         variant: "destructive",
       });
     }
-  }, [memberContextError, toast]);
+  }, [label, memberContextError, toast]);
 
   // Queries
   const {
@@ -384,12 +411,12 @@ export default function MembersPage() {
   useEffect(() => {
     if (membersError) {
       toast({
-        title: "Unable to load members",
-        description: "The member list could not be loaded. Please try again.",
+        title: label("toasts.load_error_title", "Unable to load members"),
+        description: label("toasts.load_error_description", "The member list could not be loaded. Please try again."),
         variant: "destructive",
       });
     }
-  }, [membersError, toast]);
+  }, [label, membersError, toast]);
 
   const getMemberCommunity = (memberId: string) => communityMemberships.find((cm: any) => cm.member_id === memberId);
   const getMemberMinistry = (memberId: string) => ministryMemberships.find((mm: any) => mm.member_id === memberId);
@@ -401,11 +428,11 @@ export default function MembersPage() {
     .map((mm: any) => mm.ministry_id);
   const getMemberFamily = (memberId: string) => familyMemberships.find((fm: any) => fm.member_id === memberId);
   const getCommunityName = (communityId?: string | null) =>
-    communities.find((community: any) => community.id === communityId)?.name ?? "None";
+    communities.find((community: any) => community.id === communityId)?.name ?? label("not_available", "None");
   const getMinistryName = (ministryId?: string | null) =>
-    ministries.find((ministry: any) => ministry.id === ministryId)?.name ?? "None";
+    ministries.find((ministry: any) => ministry.id === ministryId)?.name ?? label("not_available", "None");
   const getFamilyName = (familyId?: string | null) =>
-    families.find((family: any) => family.id === familyId)?.name ?? "None";
+    families.find((family: any) => family.id === familyId)?.name ?? label("not_available", "None");
   const getMemberContribs = (memberId: string) => memberContributions.filter((c: any) => c.member_id === memberId);
 
   const openEdit = (m: MemberRow) => {
@@ -417,7 +444,11 @@ export default function MembersPage() {
     if (!trustedChurchId || invitedMemberIds.includes(member.id)) return;
 
     if (!member.email?.trim()) {
-      toast({ title: "Error", description: "This member needs an email address before you can send an invite.", variant: "destructive" });
+      toast({
+        title: label("toasts.error_title", "Error"),
+        description: label("toasts.invite_missing_email", "This member needs an email address before you can send an invite."),
+        variant: "destructive",
+      });
       return;
     }
 
@@ -428,7 +459,7 @@ export default function MembersPage() {
       if (authError) throw authError;
 
       const currentUserId = authData.user?.id;
-      if (!currentUserId) throw new Error("No logged in user found");
+      if (!currentUserId) throw new Error(label("errors.no_logged_in_user", "No logged in user found"));
 
       const token = uuidv4();
       const invitePayload: InviteInsert = {
@@ -460,30 +491,32 @@ export default function MembersPage() {
 
         if (sendError) {
           emailFailed = true;
-          emailFailureMessage = await getEdgeFunctionErrorMessage(sendError, "The email service rejected this request.");
+          emailFailureMessage = await getEdgeFunctionErrorMessage(sendError, label("errors.email_service_rejected", "The email service rejected this request."));
           console.error("Invitation email failed:", sendError);
         }
       } catch (error) {
         emailFailed = true;
-        emailFailureMessage = await getEdgeFunctionErrorMessage(error, "The email service rejected this request.");
+        emailFailureMessage = await getEdgeFunctionErrorMessage(error, label("errors.email_service_rejected", "The email service rejected this request."));
         console.error("Invitation email failed:", error);
       }
 
       setInvitedMemberIds((current) => current.includes(member.id) ? current : [...current, member.id]);
       toast({
-        title: emailFailed ? "Invite saved, email not sent" : "Invite sent successfully",
+        title: emailFailed
+          ? label("toasts.invite_saved_email_failed", "Invite saved, email not sent")
+          : label("toasts.invite_sent", "Invite sent successfully"),
         description: emailFailed
-          ? `The invitation was created successfully, but the email could not be sent: ${emailFailureMessage}`
+          ? label("toasts.invite_email_failed_description", "The invitation was created successfully, but the email could not be sent: {{message}}", { message: emailFailureMessage })
           : undefined,
         variant: emailFailed ? "destructive" : undefined,
       });
     } catch (err: any) {
       console.error("Invite flow failed:", err);
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: label("toasts.error_title", "Error"), description: err.message, variant: "destructive" });
     } finally {
       setSendingInviteId(null);
     }
-  }, [trustedChurchId, invitedMemberIds, toast]);
+  }, [trustedChurchId, invitedMemberIds, toast, label]);
 
   const filtered = members;
 
@@ -506,6 +539,7 @@ export default function MembersPage() {
       <TableRow key={m.id} className="border-border">
         <TableCell>
           <button onClick={() => setDetailMember(m)} className="flex items-center gap-2 hover:text-primary transition-colors text-left font-medium">
+            <span className="sr-only">{label("actions.view_profile_for", "View profile for {{name}}", { name: m.full_name })}</span>
             <Avatar className="h-7 w-7">
               <AvatarImage src={m.photo_url} loading="lazy" />
               <AvatarFallback className="text-xs gradient-gold text-primary-foreground">{m.full_name?.charAt(0)}</AvatarFallback>
@@ -513,27 +547,36 @@ export default function MembersPage() {
             {m.full_name}
           </button>
         </TableCell>
-        <TableCell className="text-muted-foreground">{m.email || "—"}</TableCell>
-        <TableCell className="text-muted-foreground">{m.phone || "—"}</TableCell>
-        <TableCell className="text-muted-foreground capitalize">{m.gender || "—"}</TableCell>
-        <TableCell><Badge variant="outline" className={statusColor(m.status)}>{m.status}</Badge></TableCell>
-        <TableCell className="text-muted-foreground">{m.created_at ? new Date(m.created_at).toLocaleDateString() : "—"}</TableCell>
+        <TableCell className="text-muted-foreground">{m.email || label("no_email", "No email")}</TableCell>
+        <TableCell className="text-muted-foreground">{m.phone || label("no_phone", "No phone")}</TableCell>
+        <TableCell className="text-muted-foreground">{displayGender(m.gender)}</TableCell>
+        <TableCell><Badge variant="outline" className={statusColor(m.status)}>{displayStatus(m.status)}</Badge></TableCell>
+        <TableCell className="text-muted-foreground">{m.created_at ? formatMemberDate(m.created_at) : label("not_available", "None")}</TableCell>
         <TableCell>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                aria-label={label("actions.open_menu_for", "Open actions for {{name}}", { name: m.full_name })}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => openEdit(m)}><Pencil className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openEdit(m)}><Pencil className="mr-2 h-4 w-4" /> {label("actions.edit", "Edit")}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => sendInvite(m)} disabled={sendingInviteId === m.id || invitedMemberIds.includes(m.id)}>
                 {sendingInviteId === m.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                {invitedMemberIds.includes(m.id) ? "Invited" : "Send Invite"}
+                {invitedMemberIds.includes(m.id) ? label("actions.invited", "Invited") : label("actions.send_invite", "Send Invite")}
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive" onClick={() => setDeleteConfirm(m.id)}><Trash2 className="mr-2 h-4 w-4" /> Remove</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={() => setDeleteConfirm(m.id)}><Trash2 className="mr-2 h-4 w-4" /> {label("actions.remove", "Remove")}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </TableCell>
       </TableRow>
     ));
-  }, [filtered, invitedMemberIds, isLoading, openEdit, sendInvite, sendingInviteId, setDetailMember, setDeleteConfirm, statusColor]);
+  }, [displayGender, displayStatus, filtered, formatMemberDate, invitedMemberIds, isLoading, label, openEdit, sendInvite, sendingInviteId, setDetailMember, setDeleteConfirm, statusColor]);
 
 
 
@@ -551,7 +594,7 @@ export default function MembersPage() {
       return (
         <Dialog open={!!detailMember} onOpenChange={(o) => { if (!o) setDetailMember(null); }}>
           <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-            <DialogHeader><DialogTitle className="font-serif">Member Profile</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-serif">{label("profile.title", "Member Profile")}</DialogTitle></DialogHeader>
             <div className="space-y-6">
               {/* Header */}
               <div className="flex items-start gap-4">
@@ -561,24 +604,24 @@ export default function MembersPage() {
                 </Avatar>
                 <div className="flex-1">
                   <h3 className="text-xl font-bold font-serif">{m.full_name}</h3>
-                  <Badge variant="outline" className={statusColor(m.status)}>{m.status}</Badge>
+                  <Badge variant="outline" className={statusColor(m.status)}>{displayStatus(m.status)}</Badge>
                   <div className="flex gap-4 mt-3 flex-wrap">
-                    <Button size="sm" variant="outline" onClick={() => { setDetailMember(null); openEdit(m); }}><Pencil className="mr-2 h-3 w-3" /> Edit</Button>
+                    <Button size="sm" variant="outline" onClick={() => { setDetailMember(null); openEdit(m); }}><Pencil className="mr-2 h-3 w-3" /> {label("actions.edit", "Edit")}</Button>
                     <Button size="sm" variant="outline" onClick={() => sendInvite(m)} disabled={sendingInviteId === m.id || invitedMemberIds.includes(m.id)}>
                       {sendingInviteId === m.id ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Send className="mr-2 h-3 w-3" />}
-                      {invitedMemberIds.includes(m.id) ? "Invited" : "Send Invite"}
+                      {invitedMemberIds.includes(m.id) ? label("actions.invited", "Invited") : label("actions.send_invite", "Send Invite")}
                     </Button>
                     {m.date_of_birth && (
                       <Button size="sm" variant="outline" onClick={() => shareMemberMessage(m, "birthday")}>
-                        <MessageCircle className="mr-2 h-3 w-3" /> Share Birthday Wish to WhatsApp
+                        <MessageCircle className="mr-2 h-3 w-3" /> {label("actions.share_birthday", "Share Birthday Wish to WhatsApp")}
                       </Button>
                     )}
                     {m.wedding_date && (
                       <Button size="sm" variant="outline" onClick={() => shareMemberMessage(m, "anniversary")}>
-                        <MessageCircle className="mr-2 h-3 w-3" /> Share Anniversary Wish to WhatsApp
+                        <MessageCircle className="mr-2 h-3 w-3" /> {label("actions.share_anniversary", "Share Anniversary Wish to WhatsApp")}
                       </Button>
                     )}
-                    <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(m.id)}><Trash2 className="mr-2 h-3 w-3" /> Remove</Button>
+                    <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(m.id)}><Trash2 className="mr-2 h-3 w-3" /> {label("actions.remove", "Remove")}</Button>
                   </div>
                 </div>
               </div>
@@ -587,15 +630,15 @@ export default function MembersPage() {
 
               {/* Info grid */}
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground"><Mail className="h-4 w-4" /> {m.email || "No email"}</div>
-                <div className="flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4" /> {m.phone || "No phone"}</div>
-                <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="h-4 w-4" /> Joined: {m.created_at ? new Date(m.created_at).toLocaleDateString() : "—"}</div>
-                <div className="flex items-center gap-2 text-muted-foreground capitalize"><User className="h-4 w-4" /> {m.gender || "—"}</div>
-                <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="h-4 w-4" /> Birthdate: {m.date_of_birth ? new Date(m.date_of_birth).toLocaleDateString() : "—"}</div>
-                <div className="flex items-center gap-2 text-muted-foreground"><Building2 className="h-4 w-4" /> Jumuiya: {getCommunityName((cm as any)?.community_id)}</div>
-                <div className="flex items-center gap-2 text-muted-foreground"><BookOpen className="h-4 w-4" /> Ministry: {getMinistryName((mm as any)?.ministry_id)}</div>
-                <div className="flex items-center gap-2 text-muted-foreground"><Heart className="h-4 w-4" /> Family: {getFamilyName((fm as any)?.family_id)} {fm ? `(${(fm as any).role})` : ""}</div>
-                <div className="flex items-center gap-2 text-muted-foreground"><HandCoins className="h-4 w-4" /> Total: {formatTZS(totalContrib)}</div>
+                <div className="flex items-center gap-2 text-muted-foreground"><Mail className="h-4 w-4" /> {m.email || label("no_email", "No email")}</div>
+                <div className="flex items-center gap-2 text-muted-foreground"><Phone className="h-4 w-4" /> {m.phone || label("no_phone", "No phone")}</div>
+                <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="h-4 w-4" /> {label("profile.joined", "Joined")}: {m.created_at ? formatMemberDate(m.created_at) : label("not_available", "None")}</div>
+                <div className="flex items-center gap-2 text-muted-foreground"><User className="h-4 w-4" /> {displayGender(m.gender)}</div>
+                <div className="flex items-center gap-2 text-muted-foreground"><Calendar className="h-4 w-4" /> {label("profile.birthdate", "Birthdate")}: {m.date_of_birth ? formatMemberDate(m.date_of_birth) : label("not_available", "None")}</div>
+                <div className="flex items-center gap-2 text-muted-foreground"><Building2 className="h-4 w-4" /> {label("profile.community", "Jumuiya")}: {getCommunityName((cm as any)?.community_id)}</div>
+                <div className="flex items-center gap-2 text-muted-foreground"><BookOpen className="h-4 w-4" /> {label("profile.ministry", "Ministry")}: {getMinistryName((mm as any)?.ministry_id)}</div>
+                <div className="flex items-center gap-2 text-muted-foreground"><Heart className="h-4 w-4" /> {label("profile.family", "Family")}: {getFamilyName((fm as any)?.family_id)} {fm ? `(${displayFamilyRole((fm as any).role)})` : ""}</div>
+                <div className="flex items-center gap-2 text-muted-foreground"><HandCoins className="h-4 w-4" /> {label("profile.total", "Total")}: {formatTZS(totalContrib)}</div>
               </div>
 
               {/* Recent contributions */}
@@ -603,17 +646,17 @@ export default function MembersPage() {
                 <>
                   <Separator />
                   <div>
-                    <h4 className="text-sm font-semibold mb-3">Recent Contributions</h4>
+                    <h4 className="text-sm font-semibold mb-3">{label("profile.recent_contributions", "Recent Contributions")}</h4>
                     <div className="space-y-2">
                       {contribs.slice(0, 10).map((c: any) => (
                         <div key={c.id} className="flex items-center justify-between text-sm p-2 rounded bg-secondary/50">
                           <div>
-                            <span className="font-medium">{(c as any).contribution_categories?.name || "Uncategorized"}</span>
+                            <span className="font-medium">{(c as any).contribution_categories?.name || label("profile.uncategorized", "Uncategorized")}</span>
                             <span className="text-muted-foreground ml-2">{c.notes || ""}</span>
                           </div>
                           <div className="text-right">
                             <span className="font-medium text-primary">{formatTZS(c.amount)}</span>
-                            <span className="text-muted-foreground text-xs ml-2">{new Date(c.created_at).toLocaleDateString()}</span>
+                            <span className="text-muted-foreground text-xs ml-2">{formatMemberDate(c.created_at)}</span>
                           </div>
                         </div>
                       ))}
@@ -626,14 +669,14 @@ export default function MembersPage() {
         </Dialog>
       );
     };
-  }, [detailMember, getMemberCommunity, getMemberMinistry, getMemberFamily, getCommunityName, getMinistryName, getFamilyName, getMemberContribs, invitedMemberIds, statusColor, openEdit, sendInvite, sendingInviteId, setDetailMember, setDeleteConfirm, shareMemberMessage]);
+  }, [detailMember, getMemberCommunity, getMemberMinistry, getMemberFamily, getCommunityName, getMinistryName, getFamilyName, getMemberContribs, invitedMemberIds, statusColor, openEdit, sendInvite, sendingInviteId, setDetailMember, setDeleteConfirm, shareMemberMessage, label, displayStatus, displayGender, displayFamilyRole, formatMemberDate]);
 
   if (authLoading || memberContextLoading) {
     return (
       <div className="space-y-6 animate-fade-in">
         <Card className="glass-card">
           <CardContent className="py-12 text-center text-muted-foreground">
-            Loading members...
+            {label("loading", "Loading members...")}
           </CardContent>
         </Card>
       </div>
@@ -645,7 +688,7 @@ export default function MembersPage() {
       <div className="space-y-6 animate-fade-in">
         <Card className="glass-card">
           <CardContent className="py-12 text-center text-muted-foreground">
-            You need to sign in to view members.
+            {label("auth.sign_in_required", "You need to sign in to view members.")}
           </CardContent>
         </Card>
       </div>
@@ -657,7 +700,7 @@ export default function MembersPage() {
       <div className="space-y-6 animate-fade-in">
         <Card className="glass-card">
           <CardContent className="py-12 text-center text-muted-foreground">
-            No member record was found for your account. You don’t have access to this page yet.
+            {label("auth.no_member_record", "No member record was found for your account. You don't have access to this page yet.")}
           </CardContent>
         </Card>
       </div>
@@ -668,16 +711,16 @@ export default function MembersPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-serif">Members</h1>
-          <p className="text-sm text-muted-foreground mt-1">{memberTotalCount} total members</p>
+          <h1 className="text-2xl font-bold font-serif">{label("title", "Members")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{label("total_members", "{{count}} total members", { count: memberTotalCount })}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            {billing.memberLimit === null ? `${memberCount} members / Unlimited` : `${memberCount} / ${billing.memberLimit} members`}
+            {memberUsageText(memberCount)}
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); }}>
-          <DialogTrigger asChild><Button size="sm" disabled={limitReached}><Plus className="mr-2 h-4 w-4" /> Add Member</Button></DialogTrigger>
+          <DialogTrigger asChild><Button size="sm" disabled={limitReached}><Plus className="mr-2 h-4 w-4" /> {label("actions.add_member", "Add Member")}</Button></DialogTrigger>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle className="font-serif">Add New Member</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-serif">{label("dialogs.add_title", "Add New Member")}</DialogTitle></DialogHeader>
             <MemberForm
               isEdit={false}
               churchId={trustedChurchId}
@@ -695,23 +738,23 @@ export default function MembersPage() {
       <Card className={`glass-card ${nearLimit ? "border-primary/30" : ""}`}>
         <CardContent className="flex flex-col gap-2 p-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-medium">Member usage</p>
+            <p className="text-sm font-medium">{label("billing.member_usage", "Member usage")}</p>
             <p className="text-sm text-muted-foreground">
-              {billing.memberLimit === null ? `${memberCount} members / Unlimited` : `${memberCount} / ${billing.memberLimit} members`}
+              {memberUsageText(memberCount)}
             </p>
           </div>
           {billing.isTrial ? (
-            <Badge className="gradient-gold text-primary-foreground">Trial includes unlimited members</Badge>
+            <Badge className="gradient-gold text-primary-foreground">{label("billing.trial_unlimited", "Trial includes unlimited members")}</Badge>
           ) : limitReached ? (
             <Badge variant="outline" className="border-destructive/30 text-destructive">
-              You have reached your member limit. Upgrade your plan to add more members.
+              {label("billing.limit_reached", "You have reached your member limit. Upgrade your plan to add more members.")}
             </Badge>
           ) : nearLimit ? (
             <Badge variant="outline" className="border-primary/30 text-primary">
-              Approaching limit - Upgrade to unlock more capacity
+              {label("billing.near_limit", "Approaching limit - Upgrade to unlock more capacity")}
             </Badge>
           ) : (
-            <Badge variant="outline">Within plan limit</Badge>
+            <Badge variant="outline">{label("billing.within_limit", "Within plan limit")}</Badge>
           )}
         </CardContent>
       </Card>
@@ -721,27 +764,33 @@ export default function MembersPage() {
           <div className="p-4 border-b border-border">
             <div className="relative max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search members..." className="pl-9 bg-secondary border-border/50" value={search} onChange={handleSearchChange} />
+              <Input
+                placeholder={label("search_placeholder", "Search members...")}
+                aria-label={label("search_aria", "Search members")}
+                className="pl-9 bg-secondary border-border/50"
+                value={search}
+                onChange={handleSearchChange}
+              />
             </div>
           </div>
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-border">
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Gender</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead className="w-10"></TableHead>
+                <TableHead>{label("table.name", "Name")}</TableHead>
+                <TableHead>{label("table.email", "Email")}</TableHead>
+                <TableHead>{label("table.phone", "Phone")}</TableHead>
+                <TableHead>{label("table.gender", "Gender")}</TableHead>
+                <TableHead>{label("table.status", "Status")}</TableHead>
+                <TableHead>{label("table.joined", "Joined")}</TableHead>
+                <TableHead className="w-10"><span className="sr-only">{label("table.actions", "Actions")}</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">{label("table.loading", "Loading...")}</TableCell></TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                  {search ? "No members match your search" : "No members found or you don’t have access"}
+                  {search ? label("table.no_search_results", "No members match your search") : label("table.empty", "No members found or you don't have access")}
                 </TableCell></TableRow>
               ) : memberRows}
             </TableBody>
@@ -762,7 +811,7 @@ export default function MembersPage() {
       {/* Edit dialog */}
       <Dialog open={editDialogOpen} onOpenChange={(o) => { setEditDialogOpen(o); if (!o) { setEditingMember(null); } }}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle className="font-serif">Edit Member</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="font-serif">{label("dialogs.edit_title", "Edit Member")}</DialogTitle></DialogHeader>
           <MemberForm
             isEdit={true}
             member={editingMember}
@@ -783,11 +832,11 @@ export default function MembersPage() {
       <AlertDialog open={!!deleteConfirm} onOpenChange={(o) => { if (!o) setDeleteConfirm(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove Member?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone. The member record will be permanently deleted.</AlertDialogDescription>
+            <AlertDialogTitle>{label("delete.title", "Remove Member?")}</AlertDialogTitle>
+            <AlertDialogDescription>{label("delete.description", "This action cannot be undone. The member record will be permanently deleted.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{label("actions.cancel", "Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={async () => {
@@ -796,16 +845,16 @@ export default function MembersPage() {
                   const { error } = await supabase.from("members").delete().eq("id", deleteConfirm).eq("church_id", trustedChurchId);
                   if (error) throw error;
                   queryClient.invalidateQueries({ queryKey: ["members"] });
-                  toast({ title: "Member removed" });
+                  toast({ title: label("toasts.member_removed", "Member removed") });
                   setDeleteConfirm(null);
                   setDetailMember(null);
                 } catch (err: any) {
                   console.error("Member deletion failed:", err);
-                  toast({ title: "Error", description: err.message, variant: "destructive" });
+                  toast({ title: label("toasts.error_title", "Error"), description: err.message, variant: "destructive" });
                 }
               }}
             >
-              Remove
+              {label("actions.remove", "Remove")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
