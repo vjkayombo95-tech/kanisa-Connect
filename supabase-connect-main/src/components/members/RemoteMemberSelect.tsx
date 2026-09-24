@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { translateSystemLabel } from "@/lib/localization";
 
 export type RemoteMemberOption = {
   id: string;
@@ -29,11 +31,17 @@ export function RemoteMemberSelect({
   selectedMember,
   onValueChange,
   communityId,
-  placeholder = "Search member by name or phone",
+  placeholder,
   disabled = false,
 }: RemoteMemberSelectProps) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const trimmedSearch = search.trim();
+  const inputPlaceholder = placeholder ?? translateSystemLabel(
+    t,
+    "remote_member_select.placeholder",
+    "Search member by name or phone",
+  );
 
   useEffect(() => {
     if (!value) {
@@ -67,13 +75,25 @@ export function RemoteMemberSelect({
   });
 
   const helperText = useMemo(() => {
-    if (selectedMember) return selectedMember.phone ? selectedMember.phone : "Selected member";
-    if (trimmedSearch.length === 0) return "Type at least 2 characters.";
-    if (trimmedSearch.length < 2) return "Keep typing to search.";
-    if (isFetching) return "Searching...";
-    if (results.length === 0) return "No matching members.";
-    return "Select one of the matching members.";
-  }, [isFetching, results.length, selectedMember, trimmedSearch.length]);
+    if (selectedMember) {
+      return selectedMember.phone
+        ? selectedMember.phone
+        : translateSystemLabel(t, "remote_member_select.helper.selected", "Selected member");
+    }
+    if (trimmedSearch.length === 0) {
+      return translateSystemLabel(t, "remote_member_select.helper.start", "Type at least 2 characters.");
+    }
+    if (trimmedSearch.length < 2) {
+      return translateSystemLabel(t, "remote_member_select.helper.keep_typing", "Keep typing to search.");
+    }
+    if (isFetching) {
+      return translateSystemLabel(t, "remote_member_select.helper.searching", "Searching...");
+    }
+    if (results.length === 0) {
+      return translateSystemLabel(t, "remote_member_select.helper.no_matches", "No matching members.");
+    }
+    return translateSystemLabel(t, "remote_member_select.helper.select_match", "Select one of the matching members.");
+  }, [isFetching, results.length, selectedMember, t, trimmedSearch.length]);
 
   return (
     <div className="space-y-2">
@@ -85,7 +105,8 @@ export function RemoteMemberSelect({
             onValueChange(null);
             setSearch(event.target.value);
           }}
-          placeholder={placeholder}
+          placeholder={inputPlaceholder}
+          aria-label={inputPlaceholder}
           disabled={disabled}
           className="pl-9"
         />
