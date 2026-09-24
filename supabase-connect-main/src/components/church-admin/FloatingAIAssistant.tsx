@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, BrainCircuit, MessageSquareText, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -15,9 +16,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const QUICK_PROMPTS = [
-  "Show top contributors",
-  "Generate monthly report",
-  "Show category breakdown for offerings",
+  { prompt: "Show top contributors", labelKey: "church_admin_shell.ai.quick_prompts.top_contributors" },
+  { prompt: "Generate monthly report", labelKey: "church_admin_shell.ai.quick_prompts.monthly_report" },
+  { prompt: "Show category breakdown for offerings", labelKey: "church_admin_shell.ai.quick_prompts.category_breakdown" },
 ];
 
 function FloatingOrb({ state, panelOpen }: { state: AnalyticsAssistantPresenceState; panelOpen: boolean }) {
@@ -113,6 +114,7 @@ function FloatingOrb({ state, panelOpen }: { state: AnalyticsAssistantPresenceSt
 }
 
 export function FloatingAIAssistant() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [panelOpen, setPanelOpen] = useState(false);
   const [draftQuery, setDraftQuery] = useState("");
@@ -132,10 +134,10 @@ export function FloatingAIAssistant() {
   }, [presenceState]);
 
   const badgeText = useMemo(() => {
-    if (presenceState === "thinking") return "Thinking";
-    if (presenceState === "success") return "Ready";
-    return "AI";
-  }, [presenceState]);
+    if (presenceState === "thinking") return t("church_admin_shell.ai.badge.thinking");
+    if (presenceState === "success") return t("church_admin_shell.ai.badge.ready");
+    return t("church_admin_shell.ai.badge.idle");
+  }, [presenceState, t]);
 
   const openFullAI = (prompt?: string) => {
     const search = prompt?.trim() ? `?q=${encodeURIComponent(prompt.trim())}` : "";
@@ -163,10 +165,10 @@ export function FloatingAIAssistant() {
             <div className="relative z-10 space-y-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">Ask AI</p>
-                  <h3 className="mt-1 text-lg font-semibold text-foreground">Analytics Copilot</h3>
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary/80">{t("church_admin_shell.ai.eyebrow")}</p>
+                  <h3 className="mt-1 text-lg font-semibold text-foreground">{t("church_admin_shell.ai.title")}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Ask about giving, contributors, or category trends.
+                    {t("church_admin_shell.ai.description")}
                   </p>
                 </div>
                 <span className="rounded-full border border-primary/20 bg-white/[0.05] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-primary/90">
@@ -184,7 +186,8 @@ export function FloatingAIAssistant() {
                       openFullAI(draftQuery);
                     }
                   }}
-                  placeholder="Ask anything..."
+                  aria-label={t("church_admin_shell.ai.input_label")}
+                  placeholder={t("church_admin_shell.ai.input_placeholder")}
                   className="h-11 border-white/10 bg-background/60"
                 />
               </div>
@@ -192,14 +195,14 @@ export function FloatingAIAssistant() {
               <div className="flex flex-wrap gap-2">
                 {QUICK_PROMPTS.map((prompt) => (
                   <motion.button
-                    key={prompt}
+                    key={prompt.prompt}
                     type="button"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => openFullAI(prompt)}
+                    onClick={() => openFullAI(prompt.prompt)}
                     className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
                   >
-                    {prompt}
+                    {t(prompt.labelKey)}
                   </motion.button>
                 ))}
               </div>
@@ -207,11 +210,11 @@ export function FloatingAIAssistant() {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Sparkles className="h-3.5 w-3.5 text-primary" />
-                  Always one click away
+                  {t("church_admin_shell.ai.helper")}
                 </div>
                 <Button className="rounded-2xl" onClick={() => openFullAI(draftQuery)}>
                   <MessageSquareText className="h-4 w-4" />
-                  Open full AI
+                  {t("church_admin_shell.ai.open_full")}
                   <ArrowUpRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -225,6 +228,7 @@ export function FloatingAIAssistant() {
           <TooltipTrigger asChild>
             <motion.button
               type="button"
+              aria-label={panelOpen ? t("church_admin_shell.ai.close") : t("church_admin_shell.ai.open")}
               onClick={handleFabClick}
               animate={{
                 y: [-2, 2, -2],
@@ -265,7 +269,7 @@ export function FloatingAIAssistant() {
             </motion.button>
           </TooltipTrigger>
           <TooltipContent side="left" className="border-white/10 bg-[#0d1118]/95 text-foreground backdrop-blur-xl">
-            Ask AI
+            {panelOpen ? t("church_admin_shell.ai.close") : t("church_admin_shell.ai.open")}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

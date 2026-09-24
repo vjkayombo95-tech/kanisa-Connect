@@ -17,6 +17,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { getChurchAdminFeatureForPath } from "@/lib/church-admin-features";
+import { translateChurchAdminRouteTitle } from "@/lib/localization";
 import { Card, CardContent } from "@/components/ui/card";
 import { StaffMobileBackHeader, StaffMobileBottomNav } from "@/components/staff-mobile/StaffMobileExperience";
 import { STAFF_MOBILE_CONFIGS, canSuperAdminEnterChurchWorkspace, isStaffRouteAllowed } from "@/lib/staff-mobile-registry";
@@ -42,10 +43,7 @@ export function ChurchAdminLayout() {
     ? !canSuperAdminEnterChurchWorkspace(churchId)
     : !isStaffRouteAllowed(staffWorkspace, location.pathname);
   const isHome = location.pathname.replace(/\/$/, "") === "/church-admin";
-  const pageSegment = location.pathname.split("/").filter(Boolean).at(-1)?.replace(/-/g, " ") ?? "dashboard";
-  const pageTitle = location.pathname.startsWith("/church-admin/event-requests")
-    ? t("church_admin_layout.route_titles.event_requests")
-    : pageSegment.replace(/\b\w/g, (character) => character.toUpperCase());
+  const pageTitle = translateChurchAdminRouteTitle(t, location.pathname);
   const mobileTitle = pageTitle;
   const pageOwnsHeading = location.pathname.startsWith("/church-admin/event-requests");
   const workspaceLabel =

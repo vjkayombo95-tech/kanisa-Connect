@@ -47,13 +47,13 @@ export function ChurchAdminCommandMenu() {
         </DialogHeader>
         <label className="flex items-center gap-3 border-b border-white/10 px-4">
           <Search className="h-5 w-5 text-muted-foreground" />
-          <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("staff_mobile.search_approved_services_placeholder")} className="h-14 min-w-0 flex-1 bg-transparent text-base outline-none" />
+          <input autoFocus aria-label={t("church_admin_shell.command.input_label")} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("staff_mobile.search_approved_services_placeholder")} className="h-14 min-w-0 flex-1 bg-transparent text-base outline-none" />
         </label>
         <div className="premium-scrollbar max-h-[min(55vh,calc(100dvh-7rem))] overflow-y-auto p-2">
           {results.map((service) => {
             const Icon = service.icon;
             return (
-              <button key={service.id} type="button" onClick={() => { setOpen(false); setQuery(""); navigate(service.route); }} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-white/70 hover:bg-white/[0.05] hover:text-white">
+              <button key={service.id} type="button" aria-label={t("church_admin_shell.command.open_service", { service: translateStaffServiceLabel(t, service) })} onClick={() => { setOpen(false); setQuery(""); navigate(service.route); }} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-white/70 hover:bg-white/[0.05] hover:text-white">
                 <Icon className="h-4 w-4 text-primary" />
                 <span className="flex-1">{translateStaffServiceLabel(t, service)}</span>
                 <span className="text-xs text-white/35">{translateStaffServiceGroup(t, service)}</span>
@@ -68,7 +68,7 @@ export function ChurchAdminCommandMenu() {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="flex h-10 w-full items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.035] px-3.5 text-left text-sm text-muted-foreground transition hover:border-primary/20 hover:text-foreground">
+      <button type="button" aria-label={t("church_admin_shell.command.open")} onClick={() => setOpen(true)} className="flex h-10 w-full items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.035] px-3.5 text-left text-sm text-muted-foreground transition hover:border-primary/20 hover:text-foreground">
         <Search className="h-4 w-4" />
         <span className="flex-1">{t("staff_mobile.search_workspace")}</span>
         <kbd className="rounded-md border border-white/10 bg-black/20 px-2 py-0.5 text-[10px]">Ctrl K</kbd>

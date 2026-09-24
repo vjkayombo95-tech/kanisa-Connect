@@ -287,7 +287,41 @@
       "staff": "Huduma za Wafanyakazi"
     },
     "route_titles": {
-      "event_requests": "Huduma za Ofisi"
+      "analytics": "Uchambuzi",
+      "analytics_assistant": "Msaidizi wa Uchambuzi",
+      "announcements": "Matangazo",
+      "audit_logs": "Kumbukumbu za Ukaguzi",
+      "bible_verses": "Mistari ya Biblia",
+      "billing": "Malipo ya Kanisa",
+      "billing_settings": "Mipangilio ya Malipo",
+      "calendar": "Kalenda ya Parokia",
+      "channels": "Mawasiliano",
+      "communities": "Jumuiya",
+      "community_help": "Msaada wa Jamii",
+      "contributions": "Michango",
+      "dashboard": "Muhtasari",
+      "data_import": "Uingizaji Data",
+      "event_requests": "Huduma za Ofisi",
+      "event_registrations": "Usajili wa Matukio",
+      "events": "Matukio",
+      "families": "Familia",
+      "invite_members": "Alika Wanachama",
+      "livestreams": "Matangazo Mubashara",
+      "mass_intentions": "Nia za Misa",
+      "mass_schedule": "Ratiba ya Misa",
+      "mass_timetable": "Ratiba za Misa",
+      "members": "Wanachama",
+      "ministries": "Huduma za Parokia",
+      "notifications": "Arifa",
+      "pledges": "Ahadi",
+      "prayer_requests": "Maombi",
+      "qr_payments": "Malipo ya QR",
+      "radio": "Radio",
+      "reports": "Ripoti",
+      "roles": "Majukumu na Mialiko",
+      "sermons": "Mahubiri",
+      "services": "Huduma",
+      "settings": "Mipangilio ya Kanisa"
     },
     "parish_operations": "Uendeshaji wa parokia",
     "settings": "Mipangilio ya Kanisa",
@@ -295,6 +329,60 @@
     "open_notifications": "Fungua arifa",
     "open_profile": "Fungua wasifu",
     "mobile_back_from": "Rudi kutoka {{title}}"
+  },
+  "church_admin_shell": {
+    "sidebar": {
+      "checking_access": "Inakagua ruhusa...",
+      "workspace_access_limited": "Ruhusa za nafasi zimepunguzwa",
+      "current_plan": "Mpango wa {{plan}}",
+      "renew_subscription": "Sasisha usajili wa parokia ili kurejesha huduma zilizoidhinishwa.",
+      "feature_access_enforced": "Ruhusa za vipengele vya uzalishaji bado zinalindwa.",
+      "view_billing": "Tazama malipo"
+    },
+    "command": {
+      "open": "Fungua menyu ya huduma za Usimamizi wa Kanisa",
+      "input_label": "Tafuta huduma zilizoidhinishwa za Usimamizi wa Kanisa",
+      "open_service": "Fungua {{service}}"
+    },
+    "live_media": {
+      "aria_label": "Media Mubashara",
+      "eyebrow": "Media Mubashara",
+      "title": "Ufuatiliaji wa matangazo",
+      "description": "Hali ya sasa ya matangazo mubashara na radio yaliyoidhinishwa. Uchezaji hauanzi kiotomatiki.",
+      "schedule_fallback": "Ratiba inapatikana kwenye Matangazo Mubashara",
+      "livestream": "Matangazo Mubashara",
+      "livestream_unavailable": "Hali haipatikani kwa muda.",
+      "live_now": "INAENDELEA SASA",
+      "scheduled": "Imepangwa",
+      "no_broadcast": "Hakuna matangazo yanayoendelea au yaliyopangwa yaliyochapishwa kwa sasa.",
+      "open_livestreams": "Fungua Matangazo Mubashara",
+      "radio": "Radio",
+      "radio_unavailable": "Hali ya kituo haipatikani kwa muda.",
+      "available": "Inapatikana",
+      "no_station": "Hakuna kituo kilichoidhinishwa kilichowezeshwa kwa sasa.",
+      "open_radio": "Fungua Radio"
+    },
+    "ai": {
+      "eyebrow": "Uliza AI",
+      "title": "Msaidizi wa Uchambuzi",
+      "description": "Uliza kuhusu michango, wachangiaji au mwenendo wa makundi.",
+      "badge": {
+        "thinking": "Inafikiri",
+        "ready": "Tayari",
+        "idle": "AI"
+      },
+      "input_label": "Uliza msaidizi wa uchambuzi",
+      "input_placeholder": "Uliza chochote...",
+      "quick_prompts": {
+        "top_contributors": "Onyesha wachangiaji wakuu",
+        "monthly_report": "Tengeneza ripoti ya mwezi",
+        "category_breakdown": "Onyesha mgawanyo wa makundi ya michango"
+      },
+      "helper": "Ipo karibu kila wakati",
+      "open_full": "Fungua AI kamili",
+      "open": "Uliza AI",
+      "close": "Funga msaidizi wa AI"
+    }
   },
   "mass_intention": {
     "title": "Nia ya Misa"

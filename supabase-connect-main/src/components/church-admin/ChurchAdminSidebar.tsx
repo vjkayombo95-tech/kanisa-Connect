@@ -141,30 +141,30 @@ export function ChurchAdminSidebar() {
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-white">
                       {billing.isLoading
-                        ? "Checking access..."
+                        ? t("church_admin_shell.sidebar.checking_access")
                         : billing.isExpired
-                          ? "Workspace access limited"
-                          : `${billing.currentPlanDefinition.name} plan`}
+                          ? t("church_admin_shell.sidebar.workspace_access_limited")
+                          : t("church_admin_shell.sidebar.current_plan", { plan: billing.currentPlanDefinition.name })}
                     </p>
 
                     <p className="mt-1 text-[11px] leading-4 text-white/45">
                       {billing.isExpired
-                        ? "Renew the parish subscription to restore approved services."
-                        : "Production feature access remains enforced."}
+                        ? t("church_admin_shell.sidebar.renew_subscription")
+                        : t("church_admin_shell.sidebar.feature_access_enforced")}
                     </p>
 
                     <Link
                       to="/church-admin/billing"
                       className="mt-2 inline-block text-[11px] font-semibold text-primary"
                     >
-                      View billing
+                      {t("church_admin_shell.sidebar.view_billing")}
                     </Link>
                   </div>
                 </div>
               </div>
             ) : (
               <Link
-                aria-label="View billing"
+                aria-label={t("church_admin_shell.sidebar.view_billing")}
                 to="/church-admin/billing"
                 className="flex h-10 items-center justify-center rounded-xl text-primary hover:bg-primary/10"
               >

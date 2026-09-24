@@ -4,6 +4,12 @@ import type { StaffMobileConfig, StaffService } from "@/lib/staff-mobile-registr
 import type { StaffMobileWorkspace } from "@/lib/staff-mobile-role";
 
 type Translator = (key: string, options?: Record<string, unknown>) => string;
+type ChurchAdminRouteTitle = {
+  path: string;
+  key: string;
+  fallback: string;
+  match?: (normalizedPath: string) => boolean;
+};
 
 const DATE_TIME_ZONE = "Africa/Dar_es_Salaam";
 
@@ -45,6 +51,49 @@ export const SYSTEM_ROLE_LABEL_KEYS: Record<string, string> = {
   treasurer: "role_labels.treasurer",
 };
 
+export const CHURCH_ADMIN_ROUTE_TITLE_KEYS: readonly ChurchAdminRouteTitle[] = [
+  { path: "/church-admin/analytics-assistant", key: "church_admin_layout.route_titles.analytics_assistant", fallback: "Analytics Assistant" },
+  { path: "/church-admin/mass-intentions", key: "church_admin_layout.route_titles.mass_intentions", fallback: "Mass Intentions" },
+  { path: "/church-admin/prayer-requests", key: "church_admin_layout.route_titles.prayer_requests", fallback: "Prayer Requests" },
+  { path: "/church-admin/mass-timetable", key: "church_admin_layout.route_titles.mass_timetable", fallback: "Mass Timetable" },
+  { path: "/church-admin/mass-schedule", key: "church_admin_layout.route_titles.mass_schedule", fallback: "Mass Schedule" },
+  { path: "/church-admin/event-requests", key: "church_admin_layout.route_titles.event_requests", fallback: "Parish Office Services" },
+  { path: "/church-admin/invite-members", key: "church_admin_layout.route_titles.invite_members", fallback: "Invite Members" },
+  { path: "/church-admin/community-help", key: "church_admin_layout.route_titles.community_help", fallback: "Community Help" },
+  { path: "/church-admin/bible-verses", key: "church_admin_layout.route_titles.bible_verses", fallback: "Bible Verses" },
+  { path: "/church-admin/qr-payments", key: "church_admin_layout.route_titles.qr_payments", fallback: "QR Payments" },
+  { path: "/church-admin/audit-logs", key: "church_admin_layout.route_titles.audit_logs", fallback: "Audit Logs" },
+  { path: "/church-admin/data-import", key: "church_admin_layout.route_titles.data_import", fallback: "Data Import" },
+  { path: "/church-admin/settings/billing", key: "church_admin_layout.route_titles.billing_settings", fallback: "Billing Settings" },
+  { path: "/church-admin/settings", key: "church_admin_layout.route_titles.settings", fallback: "Church Settings" },
+  { path: "/church-admin/announcements", key: "church_admin_layout.route_titles.announcements", fallback: "Announcements" },
+  { path: "/church-admin/contributions", key: "church_admin_layout.route_titles.contributions", fallback: "Contributions" },
+  { path: "/church-admin/communities", key: "church_admin_layout.route_titles.communities", fallback: "Communities" },
+  { path: "/church-admin/notifications", key: "church_admin_layout.route_titles.notifications", fallback: "Notifications" },
+  { path: "/church-admin/livestreams", key: "church_admin_layout.route_titles.livestreams", fallback: "Livestreams" },
+  { path: "/church-admin/ministries", key: "church_admin_layout.route_titles.ministries", fallback: "Ministries" },
+  { path: "/church-admin/analytics", key: "church_admin_layout.route_titles.analytics", fallback: "Analytics" },
+  { path: "/church-admin/billing", key: "church_admin_layout.route_titles.billing", fallback: "Church Billing" },
+  { path: "/church-admin/reports", key: "church_admin_layout.route_titles.reports", fallback: "Reports" },
+  { path: "/church-admin/pledges", key: "church_admin_layout.route_titles.pledges", fallback: "Pledges" },
+  { path: "/church-admin/members", key: "church_admin_layout.route_titles.members", fallback: "Members" },
+  { path: "/church-admin/families", key: "church_admin_layout.route_titles.families", fallback: "Families" },
+  { path: "/church-admin/sermons", key: "church_admin_layout.route_titles.sermons", fallback: "Sermons" },
+  {
+    path: "/church-admin/events/:eventId/registrations",
+    key: "church_admin_layout.route_titles.event_registrations",
+    fallback: "Event Registrations",
+    match: (normalizedPath) => /^\/church-admin\/events\/[^/]+\/registrations$/.test(normalizedPath),
+  },
+  { path: "/church-admin/events", key: "church_admin_layout.route_titles.events", fallback: "Events" },
+  { path: "/church-admin/calendar", key: "church_admin_layout.route_titles.calendar", fallback: "Parish Calendar" },
+  { path: "/church-admin/channels", key: "church_admin_layout.route_titles.channels", fallback: "Communication" },
+  { path: "/church-admin/roles", key: "church_admin_layout.route_titles.roles", fallback: "Roles & Invitations" },
+  { path: "/church-admin/radio", key: "church_admin_layout.route_titles.radio", fallback: "Radio" },
+  { path: "/church-admin/services", key: "church_admin_layout.route_titles.services", fallback: "Services" },
+  { path: "/church-admin", key: "church_admin_layout.route_titles.dashboard", fallback: "Dashboard" },
+] as const;
+
 export function normalizeAppLanguage(language: string | undefined): AppLanguage {
   return language === "sw" ? "sw" : "en";
 }
@@ -80,6 +129,14 @@ export function translateSystemLabel(t: Translator, key: string | undefined, fal
   if (!key) return fallback;
   const translated = t(key, { defaultValue: fallback });
   return translated === key ? fallback : translated;
+}
+
+export function translateChurchAdminRouteTitle(t: Translator, pathname: string) {
+  const normalizedPath = pathname.replace(/\/$/, "") || "/church-admin";
+  const routeTitle = CHURCH_ADMIN_ROUTE_TITLE_KEYS.find(({ path, match }) =>
+    match?.(normalizedPath) || normalizedPath === path || normalizedPath.startsWith(`${path}/`),
+  );
+  return translateSystemLabel(t, routeTitle?.key, routeTitle?.fallback ?? "Dashboard");
 }
 
 export function translateStatusLabel(t: Translator, status: string | null | undefined) {
