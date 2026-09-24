@@ -716,6 +716,99 @@
     "status_scheduled": "Scheduled",
     "status_cancelled": "Cancelled"
   },
+  "members_admin": {
+    "title": "Members",
+    "total_members": "{{count}} total members",
+    "loading": "Loading members...",
+    "search_placeholder": "Search members...",
+    "search_aria": "Search members",
+    "not_available": "None",
+    "no_email": "No email",
+    "no_phone": "No phone",
+    "auth": {
+      "sign_in_required": "You need to sign in to view members.",
+      "no_member_record": "No member record was found for your account. You don't have access to this page yet."
+    },
+    "actions": {
+      "add_member": "Add Member",
+      "edit": "Edit",
+      "remove": "Remove",
+      "cancel": "Cancel",
+      "send_invite": "Send Invite",
+      "invited": "Invited",
+      "share_birthday": "Share Birthday Wish to WhatsApp",
+      "share_anniversary": "Share Anniversary Wish to WhatsApp",
+      "open_menu_for": "Open actions for {{name}}",
+      "view_profile_for": "View profile for {{name}}"
+    },
+    "dialogs": {
+      "add_title": "Add New Member",
+      "edit_title": "Edit Member"
+    },
+    "billing": {
+      "member_usage": "Member usage",
+      "usage_unlimited": "{{count}} members / Unlimited",
+      "usage_limited": "{{count}} / {{limit}} members",
+      "trial_unlimited": "Trial includes unlimited members",
+      "limit_reached": "You have reached your member limit. Upgrade your plan to add more members.",
+      "near_limit": "Approaching limit - Upgrade to unlock more capacity",
+      "within_limit": "Within plan limit"
+    },
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "gender": "Gender",
+      "status": "Status",
+      "joined": "Joined",
+      "actions": "Actions",
+      "loading": "Loading...",
+      "no_search_results": "No members match your search",
+      "empty": "No members found or you don't have access"
+    },
+    "profile": {
+      "title": "Member Profile",
+      "joined": "Joined",
+      "birthdate": "Birthdate",
+      "community": "Jumuiya",
+      "ministry": "Ministry",
+      "family": "Family",
+      "total": "Total",
+      "recent_contributions": "Recent Contributions",
+      "uncategorized": "Uncategorized"
+    },
+    "delete": {
+      "title": "Remove Member?",
+      "description": "This action cannot be undone. The member record will be permanently deleted."
+    },
+    "toasts": {
+      "member_context_error_title": "Unable to load member context",
+      "member_context_error_description": "We couldn't verify your member access right now.",
+      "load_error_title": "Unable to load members",
+      "load_error_description": "The member list could not be loaded. Please try again.",
+      "error_title": "Error",
+      "invite_missing_email": "This member needs an email address before you can send an invite.",
+      "invite_saved_email_failed": "Invite saved, email not sent",
+      "invite_sent": "Invite sent successfully",
+      "invite_email_failed_description": "The invitation was created successfully, but the email could not be sent: {{message}}",
+      "member_removed": "Member removed"
+    },
+    "errors": {
+      "no_logged_in_user": "No logged in user found",
+      "email_service_rejected": "The email service rejected this request."
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "family_roles": {
+      "father": "Father",
+      "mother": "Mother",
+      "child": "Child",
+      "guardian": "Guardian",
+      "other": "Other"
+    }
+  },
   "event_requests_admin": {
     "page_title": "Parish Office Services",
     "page_description": "Review and manage service and event requests from members.",

@@ -716,6 +716,99 @@
     "status_scheduled": "Limepangwa",
     "status_cancelled": "Limefutwa"
   },
+  "members_admin": {
+    "title": "Wanachama",
+    "total_members": "Wanachama {{count}} jumla",
+    "loading": "Inapakia wanachama...",
+    "search_placeholder": "Tafuta wanachama...",
+    "search_aria": "Tafuta wanachama",
+    "not_available": "Hakuna",
+    "no_email": "Hakuna barua pepe",
+    "no_phone": "Hakuna simu",
+    "auth": {
+      "sign_in_required": "Unahitaji kuingia ili kuona wanachama.",
+      "no_member_record": "Hakuna rekodi ya mwanachama iliyopatikana kwa akaunti yako. Bado huna ruhusa ya ukurasa huu."
+    },
+    "actions": {
+      "add_member": "Ongeza Mwanachama",
+      "edit": "Hariri",
+      "remove": "Ondoa",
+      "cancel": "Ghairi",
+      "send_invite": "Tuma Mwaliko",
+      "invited": "Amealikiwa",
+      "share_birthday": "Tuma salamu za siku ya kuzaliwa WhatsApp",
+      "share_anniversary": "Tuma salamu za kumbukumbu ya ndoa WhatsApp",
+      "open_menu_for": "Fungua vitendo vya {{name}}",
+      "view_profile_for": "Angalia wasifu wa {{name}}"
+    },
+    "dialogs": {
+      "add_title": "Ongeza Mwanachama Mpya",
+      "edit_title": "Hariri Mwanachama"
+    },
+    "billing": {
+      "member_usage": "Matumizi ya wanachama",
+      "usage_unlimited": "Wanachama {{count}} / Bila kikomo",
+      "usage_limited": "{{count}} / {{limit}} wanachama",
+      "trial_unlimited": "Majaribio yanajumuisha wanachama bila kikomo",
+      "limit_reached": "Umefikia kikomo cha wanachama. Boresha mpango wako ili kuongeza wanachama zaidi.",
+      "near_limit": "Unakaribia kikomo - Boresha ili kupata nafasi zaidi",
+      "within_limit": "Ndani ya kikomo cha mpango"
+    },
+    "table": {
+      "name": "Jina",
+      "email": "Barua pepe",
+      "phone": "Simu",
+      "gender": "Jinsia",
+      "status": "Hali",
+      "joined": "Alijiunga",
+      "actions": "Vitendo",
+      "loading": "Inapakia...",
+      "no_search_results": "Hakuna wanachama wanaolingana na utafutaji wako",
+      "empty": "Hakuna wanachama waliopatikana au huna ruhusa"
+    },
+    "profile": {
+      "title": "Wasifu wa Mwanachama",
+      "joined": "Alijiunga",
+      "birthdate": "Tarehe ya kuzaliwa",
+      "community": "Jumuiya",
+      "ministry": "Huduma",
+      "family": "Familia",
+      "total": "Jumla",
+      "recent_contributions": "Michango ya Karibuni",
+      "uncategorized": "Haijapangwa"
+    },
+    "delete": {
+      "title": "Ondoa Mwanachama?",
+      "description": "Kitendo hiki hakiwezi kutenduliwa. Rekodi ya mwanachama itafutwa kabisa."
+    },
+    "toasts": {
+      "member_context_error_title": "Imeshindikana kupakia muktadha wa mwanachama",
+      "member_context_error_description": "Hatukuweza kuthibitisha ruhusa zako za wanachama kwa sasa.",
+      "load_error_title": "Imeshindikana kupakia wanachama",
+      "load_error_description": "Orodha ya wanachama haikuweza kupakiwa. Tafadhali jaribu tena.",
+      "error_title": "Hitilafu",
+      "invite_missing_email": "Mwanachama huyu anahitaji barua pepe kabla ya kutuma mwaliko.",
+      "invite_saved_email_failed": "Mwaliko umehifadhiwa, barua pepe haikutumwa",
+      "invite_sent": "Mwaliko umetumwa kikamilifu",
+      "invite_email_failed_description": "Mwaliko uliundwa kikamilifu, lakini barua pepe haikuweza kutumwa: {{message}}",
+      "member_removed": "Mwanachama ameondolewa"
+    },
+    "errors": {
+      "no_logged_in_user": "Hakuna mtumiaji aliyeingia",
+      "email_service_rejected": "Huduma ya barua pepe imekataa ombi hili."
+    },
+    "gender": {
+      "male": "Mwanaume",
+      "female": "Mwanamke"
+    },
+    "family_roles": {
+      "father": "Baba",
+      "mother": "Mama",
+      "child": "Mtoto",
+      "guardian": "Mlezi",
+      "other": "Mwingine"
+    }
+  },
   "event_requests_admin": {
     "page_title": "Huduma za Ofisi",
     "page_description": "Pitia na simamia maombi ya ibada na matukio kutoka kwa wanachama.",
