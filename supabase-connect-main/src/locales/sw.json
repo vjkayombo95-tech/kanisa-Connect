@@ -118,6 +118,17 @@
     "switch_to_english": "Badili lugha kwenda Kiingereza",
     "switch_to_swahili": "Badili lugha kwenda Kiswahili"
   },
+  "remote_member_select": {
+    "placeholder": "Tafuta mwanachama kwa jina au simu",
+    "helper": {
+      "selected": "Mwanachama amechaguliwa",
+      "start": "Andika angalau herufi 2.",
+      "keep_typing": "Endelea kuandika ili kutafuta.",
+      "searching": "Inatafuta...",
+      "no_matches": "Hakuna wanachama wanaolingana.",
+      "select_match": "Chagua mmoja kati ya wanachama wanaolingana."
+    }
+  },
   "nav": {
     "home": "Nyumbani",
     "more": "Zaidi"
@@ -875,6 +886,58 @@
       "create_missing_id": "Mwanachama hakuweza kuundwa.",
       "no_member_to_update": "Hakuna mwanachama wa kusasisha",
       "invalid_photo": "Tafadhali chagua picha halali."
+    }
+  },
+  "families_admin": {
+    "title": "Familia",
+    "description": "Simamia familia za kanisa na wanachama wake",
+    "loading": "Inapakia familia...",
+    "actions": {
+      "add_family": "Ongeza Familia",
+      "add": "Ongeza",
+      "assign": "Pangia",
+      "cancel": "Ghairi",
+      "create": "Unda"
+    },
+    "dialogs": {
+      "new_family": "Familia Mpya"
+    },
+    "fields": {
+      "family_name": "Jina la Familia",
+      "family_name_required": "Jina la Familia *",
+      "member": "Mwanachama",
+      "role": "Jukumu"
+    },
+    "placeholders": {
+      "family_name": "mf. Familia ya Shumbusho",
+      "select_member": "Chagua mwanachama"
+    },
+    "empty": {
+      "no_families": "Bado hakuna familia zilizosajiliwa.",
+      "no_assigned_members": "Hakuna wanachama waliopangiwa"
+    },
+    "cards": {
+      "members_count": "Wanachama {{count}}"
+    },
+    "details": {
+      "total_contributions": "Michango Jumla",
+      "family_members": "Wanafamilia"
+    },
+    "table": {
+      "name": "Jina",
+      "role": "Jukumu"
+    },
+    "toasts": {
+      "family_added": "Familia imeongezwa",
+      "member_added": "Mwanachama ameongezwa kwenye familia",
+      "member_removed": "Mwanachama ameondolewa kwenye familia",
+      "error_title": "Hitilafu"
+    },
+    "errors": {
+      "missing_data": "Taarifa hazijakamilika"
+    },
+    "accessibility": {
+      "remove_member_for": "Ondoa {{name}} kwenye familia"
     }
   },
   "event_requests_admin": {

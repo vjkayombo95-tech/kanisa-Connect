@@ -118,6 +118,17 @@
     "switch_to_english": "Switch language to English",
     "switch_to_swahili": "Switch language to Kiswahili"
   },
+  "remote_member_select": {
+    "placeholder": "Search member by name or phone",
+    "helper": {
+      "selected": "Selected member",
+      "start": "Type at least 2 characters.",
+      "keep_typing": "Keep typing to search.",
+      "searching": "Searching...",
+      "no_matches": "No matching members.",
+      "select_match": "Select one of the matching members."
+    }
+  },
   "nav": {
     "home": "Home",
     "more": "More"
@@ -875,6 +886,58 @@
       "create_missing_id": "Member could not be created.",
       "no_member_to_update": "No member to update",
       "invalid_photo": "Please choose a valid photo."
+    }
+  },
+  "families_admin": {
+    "title": "Families",
+    "description": "Manage church families and their members",
+    "loading": "Loading families...",
+    "actions": {
+      "add_family": "Add Family",
+      "add": "Add",
+      "assign": "Assign",
+      "cancel": "Cancel",
+      "create": "Create"
+    },
+    "dialogs": {
+      "new_family": "New Family"
+    },
+    "fields": {
+      "family_name": "Family Name",
+      "family_name_required": "Family Name *",
+      "member": "Member",
+      "role": "Role"
+    },
+    "placeholders": {
+      "family_name": "e.g. The Shumbusho Family",
+      "select_member": "Select member"
+    },
+    "empty": {
+      "no_families": "No families registered yet.",
+      "no_assigned_members": "No members assigned"
+    },
+    "cards": {
+      "members_count": "{{count}} members"
+    },
+    "details": {
+      "total_contributions": "Total Contributions",
+      "family_members": "Family Members"
+    },
+    "table": {
+      "name": "Name",
+      "role": "Role"
+    },
+    "toasts": {
+      "family_added": "Family added",
+      "member_added": "Member added to family",
+      "member_removed": "Member removed from family",
+      "error_title": "Error"
+    },
+    "errors": {
+      "missing_data": "Missing data"
+    },
+    "accessibility": {
+      "remove_member_for": "Remove {{name}} from family"
     }
   },
   "event_requests_admin": {
