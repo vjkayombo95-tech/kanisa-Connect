@@ -809,6 +809,74 @@
       "other": "Other"
     }
   },
+  "member_form": {
+    "photo": {
+      "upload": "Upload Photo",
+      "remove": "Remove photo",
+      "help": "Max 500KB - JPG, PNG, WebP - Auto-optimized"
+    },
+    "fields": {
+      "full_name": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "gender": "Gender",
+      "birthdate": "Birthdate",
+      "married": "Are you married?",
+      "communities": "Jumuiya",
+      "ministries": "Ministry",
+      "family_name": "Family Name",
+      "wedding_date": "Wedding Date",
+      "spouse_name": "Spouse Name",
+      "name": "Name",
+      "role": "Role"
+    },
+    "placeholders": {
+      "full_name": "John Doe",
+      "email": "john@example.com",
+      "phone": "+255...",
+      "select": "Select",
+      "family_name": "e.g. John Family",
+      "spouse_name": "Enter spouse full name",
+      "family_member_name": "Full name"
+    },
+    "options": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "empty": {
+      "communities": "No communities available.",
+      "ministries": "No ministries available."
+    },
+    "family": {
+      "title": "Family Details",
+      "description": "Create the family record and optionally add spouse and other family members now.",
+      "other_members": "Other Family Members",
+      "other_members_help": "Add children or other household members now if you want."
+    },
+    "actions": {
+      "add_member": "Add Member",
+      "save_changes": "Save Changes",
+      "cancel": "Cancel",
+      "add_family_member": "Add Member",
+      "remove_family_member": "Remove"
+    },
+    "toasts": {
+      "invalid_photo": "Invalid photo",
+      "member_added": "Member added successfully",
+      "member_updated": "Member updated successfully",
+      "error_title": "Error",
+      "add_failed": "Failed to add member.",
+      "update_failed": "Failed to update member."
+    },
+    "errors": {
+      "sign_in_required": "You must be signed in to manage members.",
+      "no_church_context": "No church context found for the signed-in user.",
+      "full_name_required": "Full name is required.",
+      "create_missing_id": "Member could not be created.",
+      "no_member_to_update": "No member to update",
+      "invalid_photo": "Please choose a valid photo."
+    }
+  },
   "event_requests_admin": {
     "page_title": "Parish Office Services",
     "page_description": "Review and manage service and event requests from members.",

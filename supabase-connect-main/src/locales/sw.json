@@ -809,6 +809,74 @@
       "other": "Mwingine"
     }
   },
+  "member_form": {
+    "photo": {
+      "upload": "Pakia Picha",
+      "remove": "Ondoa picha",
+      "help": "Upeo 500KB - JPG, PNG, WebP - Inaboreshwa kiotomatiki"
+    },
+    "fields": {
+      "full_name": "Jina Kamili",
+      "email": "Barua pepe",
+      "phone": "Simu",
+      "gender": "Jinsia",
+      "birthdate": "Tarehe ya kuzaliwa",
+      "married": "Je, umeoa au umeolewa?",
+      "communities": "Jumuiya",
+      "ministries": "Huduma",
+      "family_name": "Jina la Familia",
+      "wedding_date": "Tarehe ya Ndoa",
+      "spouse_name": "Jina la Mwenza",
+      "name": "Jina",
+      "role": "Jukumu"
+    },
+    "placeholders": {
+      "full_name": "John Doe",
+      "email": "john@example.com",
+      "phone": "+255...",
+      "select": "Chagua",
+      "family_name": "mf. Familia ya John",
+      "spouse_name": "Weka jina kamili la mwenza",
+      "family_member_name": "Jina kamili"
+    },
+    "options": {
+      "yes": "Ndiyo",
+      "no": "Hapana"
+    },
+    "empty": {
+      "communities": "Hakuna jumuiya zilizopo.",
+      "ministries": "Hakuna huduma zilizopo."
+    },
+    "family": {
+      "title": "Taarifa za Familia",
+      "description": "Unda rekodi ya familia na, ukitaka, ongeza mwenza na wanafamilia wengine sasa.",
+      "other_members": "Wanafamilia Wengine",
+      "other_members_help": "Ongeza watoto au wanafamilia wengine sasa ukitaka."
+    },
+    "actions": {
+      "add_member": "Ongeza Mwanachama",
+      "save_changes": "Hifadhi Mabadiliko",
+      "cancel": "Ghairi",
+      "add_family_member": "Ongeza Mwanachama",
+      "remove_family_member": "Ondoa"
+    },
+    "toasts": {
+      "invalid_photo": "Picha si sahihi",
+      "member_added": "Mwanachama ameongezwa kikamilifu",
+      "member_updated": "Mwanachama amesasishwa kikamilifu",
+      "error_title": "Hitilafu",
+      "add_failed": "Imeshindikana kuongeza mwanachama.",
+      "update_failed": "Imeshindikana kusasisha mwanachama."
+    },
+    "errors": {
+      "sign_in_required": "Unahitaji kuingia ili kusimamia wanachama.",
+      "no_church_context": "Hakuna taarifa ya kanisa iliyopatikana kwa mtumiaji aliyeingia.",
+      "full_name_required": "Jina kamili linahitajika.",
+      "create_missing_id": "Mwanachama hakuweza kuundwa.",
+      "no_member_to_update": "Hakuna mwanachama wa kusasisha",
+      "invalid_photo": "Tafadhali chagua picha halali."
+    }
+  },
   "event_requests_admin": {
     "page_title": "Huduma za Ofisi",
     "page_description": "Pitia na simamia maombi ya ibada na matukio kutoka kwa wanachama.",
