@@ -26,6 +26,7 @@ export const SYSTEM_STATUS_LABEL_KEYS: Record<string, string> = {
   completed: "statuses.completed",
   converted: "statuses.converted",
   draft: "statuses.draft",
+  expired: "statuses.expired",
   inactive: "statuses.inactive",
   pending: "statuses.pending",
   rejected: "statuses.rejected",
@@ -34,6 +35,7 @@ export const SYSTEM_STATUS_LABEL_KEYS: Record<string, string> = {
   sent: "statuses.sent",
   submitted: "statuses.submitted",
   suspended: "statuses.suspended",
+  trial: "statuses.trial",
   under_review: "statuses.under_review",
 };
 

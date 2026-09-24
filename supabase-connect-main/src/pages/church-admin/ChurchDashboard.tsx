@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { BarChart3, Church, Copy, Link2, MessageCircle, Megaphone } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { formatTZS } from "@/lib/currency";
 import { buildMemberJoinUrl, buildMemberJoinWhatsAppMessage } from "@/lib/invite-flow";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { getStaffMobileConfig } from "@/lib/staff-mobile-registry";
+import { formatAppDate, translateStatusLabel } from "@/lib/localization";
 import { openWhatsAppShare } from "@/lib/whatsapp-share";
 
 type ContributionRow = {
@@ -150,15 +152,8 @@ function startOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
-function relativeDate(value: string) {
-  return new Date(value).toLocaleDateString("en-TZ", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 export default function ChurchDashboard() {
+  const { i18n, t } = useTranslation();
   const prefersReducedMotion = useReducedMotion();
   const { churchId, profile, staffWorkspace, user, userRole } = useAuth();
   const { toast } = useToast();
@@ -352,7 +347,7 @@ export default function ChurchDashboard() {
     const payments = recentContributions.map((item) => ({
       kind: "record" as const,
       id: `payment-${item.id}`,
-      title: `${item.donor_name || "Member"} recorded a contribution`,
+      title: t("church_admin_dashboard.activity.payment_title", { name: item.donor_name || t("common.member") }),
       detail: formatTZS(Number(item.amount || 0)),
       date: item.created_at,
     }));
@@ -360,21 +355,21 @@ export default function ChurchDashboard() {
       kind: "record" as const,
       id: `announcement-${item.id}`,
       title: item.title,
-      detail: "Announcement published",
+      detail: t("church_admin_dashboard.activity.announcement_published"),
       date: item.created_at,
     }));
     const events = deferredData.upcomingEvents.slice(0, 5).map((item) => ({
       kind: "record" as const,
       id: `event-${item.id}`,
       title: item.title,
-      detail: "Upcoming event scheduled",
+      detail: t("church_admin_dashboard.activity.upcoming_event_scheduled"),
       date: item.created_at,
     }));
     const birthdays = deferredData.birthdayMembers.map((member) => ({
       kind: "message" as const,
       id: `birthday-${member.id}`,
-      title: `${member.full_name} has a birthday today`,
-      detail: "Birthday reminder",
+      title: t("church_admin_dashboard.activity.birthday_title", { name: member.full_name }),
+      detail: t("church_admin_dashboard.activity.birthday_reminder"),
       date: now.toISOString(),
       memberName: member.full_name,
       spouseName: null,
@@ -383,8 +378,8 @@ export default function ChurchDashboard() {
     const anniversaries = deferredData.anniversaryMembers.map((member) => ({
       kind: "message" as const,
       id: `anniversary-${member.id}`,
-      title: `${member.full_name} has a wedding anniversary today`,
-      detail: "Wedding anniversary reminder",
+      title: t("church_admin_dashboard.activity.anniversary_title", { name: member.full_name }),
+      detail: t("church_admin_dashboard.activity.anniversary_reminder"),
       date: now.toISOString(),
       memberName: member.full_name,
       spouseName: member.spouse_name ?? null,
@@ -393,25 +388,30 @@ export default function ChurchDashboard() {
     return [...birthdays, ...anniversaries, ...payments, ...notices, ...events]
       .sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())
       .slice(0, 4);
-  }, [data?.announcements, deferredData.anniversaryMembers, deferredData.birthdayMembers, deferredData.upcomingEvents, now, recentContributions]);
+  }, [data?.announcements, deferredData.anniversaryMembers, deferredData.birthdayMembers, deferredData.upcomingEvents, now, recentContributions, t]);
 
-  const administratorName = profile?.full_name || user?.user_metadata?.full_name || "Administrator";
-  const greeting = new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening";
+  const administratorName = profile?.full_name || user?.user_metadata?.full_name || t("church_admin_dashboard.defaults.administrator");
+  const hour = new Date().getHours();
+  const greeting = hour < 12
+    ? t("church_admin_dashboard.greetings.morning")
+    : hour < 18
+      ? t("church_admin_dashboard.greetings.afternoon")
+      : t("church_admin_dashboard.greetings.evening");
   const joinLink = buildMemberJoinUrl(data?.churchSlug) ?? "";
 
   const copyJoinLink = async () => {
     if (!joinLink) return;
     try {
       await navigator.clipboard.writeText(joinLink);
-      toast({ title: "Join link copied", description: "You can now send it to your members." });
+      toast({ title: t("church_admin_dashboard.enrollment.copy_success_title"), description: t("church_admin_dashboard.enrollment.copy_success_description") });
     } catch {
-      toast({ title: "Unable to copy link", description: "Select and copy the link manually.", variant: "destructive" });
+      toast({ title: t("church_admin_dashboard.enrollment.copy_error_title"), description: t("church_admin_dashboard.enrollment.copy_error_description"), variant: "destructive" });
     }
   };
 
   const shareJoinLinkOnWhatsApp = () => {
     if (!joinLink) return;
-    openWhatsAppShare(buildMemberJoinWhatsAppMessage({ churchName: data?.churchName || "our church", joinUrl: joinLink }));
+    openWhatsAppShare(buildMemberJoinWhatsAppMessage({ churchName: data?.churchName || t("church_admin_dashboard.defaults.our_church"), joinUrl: joinLink }));
   };
 
   const shareBirthdayWishOnWhatsApp = (memberName: string) => {
@@ -420,7 +420,7 @@ export default function ChurchDashboard() {
       renderChurchMessageTemplate(birthdayTemplate, {
         church_name: data?.churchName,
         member_name: memberName,
-        date: now.toLocaleDateString("en-TZ"),
+        date: formatAppDate(now, i18n.language),
       }),
     );
   };
@@ -432,7 +432,7 @@ export default function ChurchDashboard() {
         church_name: data?.churchName,
         member_name: memberName,
         spouse_name: spouseName,
-        date: now.toLocaleDateString("en-TZ"),
+        date: formatAppDate(now, i18n.language),
       }),
     );
   };
@@ -467,7 +467,7 @@ export default function ChurchDashboard() {
       >
         {isError ? (
           <p className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-            Some dashboard records could not be loaded. Refresh after confirming database access.
+            {t("church_admin_dashboard.errors.critical_records")}
           </p>
         ) : null}
 
@@ -490,22 +490,22 @@ export default function ChurchDashboard() {
         />
 
         <div className="border-t border-border/70 pt-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Production Utilities</p>
-          <h2 className="mt-2 font-serif text-xl font-semibold text-foreground">Church administration tools</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Existing Release B production tools and records remain available below the daily workspace.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{t("church_admin_dashboard.utilities.eyebrow")}</p>
+          <h2 className="mt-2 font-serif text-xl font-semibold text-foreground">{t("church_admin_dashboard.utilities.title")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("church_admin_dashboard.utilities.description")}</p>
         </div>
 
         <section className="rounded-2xl border border-primary/15 bg-primary/[0.045] p-5 sm:p-6">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Plan & Billing</p>
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <h2 className="text-2xl font-semibold text-white">
-                  {billingLoading ? "Loading subscription..." : `${billing.currentPlanDefinition.name} Plan`}
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">{t("church_admin_dashboard.billing.eyebrow")}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <h2 className="text-2xl font-semibold text-white">
+                  {billingLoading ? t("church_admin_dashboard.billing.loading_subscription") : t("church_admin_dashboard.billing.plan_name", { plan: t(`church_admin_dashboard.billing.plans.${billing.currentPlanDefinition.id}.name`) })}
                 </h2>
                 {!billingLoading && (
                   <Badge variant="outline" className="border-primary/30 text-primary capitalize">
-                    {billing.currentStatus}
+                    {translateStatusLabel(t, billing.currentStatus)}
                   </Badge>
                 )}
               </div>
@@ -513,23 +513,26 @@ export default function ChurchDashboard() {
                 <Skeleton className="mt-4 h-5 w-full max-w-md rounded bg-white/10" />
               ) : billing.isTrial && billing.subscription.expires_at ? (
                 <p className="mt-3 text-sm text-white/65">
-                  Trial expires on {new Date(billing.subscription.expires_at).toLocaleDateString()} ({billing.trialDaysRemaining} day(s) remaining).
+                  {t("church_admin_dashboard.billing.trial_expires", {
+                    date: formatAppDate(billing.subscription.expires_at, i18n.language),
+                    count: billing.trialDaysRemaining,
+                  })}
                 </p>
               ) : (
-              <p className="mt-3 text-sm text-white/65">{billing.currentPlanDefinition.description}</p>
+              <p className="mt-3 text-sm text-white/65">{t(`church_admin_dashboard.billing.plans.${billing.currentPlanDefinition.id}.description`, { defaultValue: billing.currentPlanDefinition.description })}</p>
               )}
               {approachingMemberLimit && (
                 <p className="mt-4 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary">
-                  You are approaching your member limit. Review plans before adding more members.
+                  {t("church_admin_dashboard.billing.member_limit_warning")}
                 </p>
               )}
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-white/65">Member usage</span>
+                <span className="text-white/65">{t("church_admin_dashboard.billing.member_usage")}</span>
                 <span className="font-medium text-white">
-                  {memberLimit === null ? `${memberUsage} / Unlimited` : `${memberUsage} / ${memberLimit}`}
+                  {memberLimit === null ? t("church_admin_dashboard.billing.member_usage_unlimited", { count: memberUsage }) : t("church_admin_dashboard.billing.member_usage_limited", { count: memberUsage, limit: memberLimit })}
                 </span>
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
@@ -537,7 +540,7 @@ export default function ChurchDashboard() {
               </div>
               <Button asChild className="mt-5 w-full" variant={approachingMemberLimit ? "default" : "outline"}>
                 <Link to="/church-admin/settings/billing">
-                  {approachingMemberLimit ? "Review Upgrade Options" : "Manage Billing"}
+                  {approachingMemberLimit ? t("church_admin_dashboard.billing.review_upgrade_options") : t("church_admin_dashboard.billing.manage_billing")}
                 </Link>
               </Button>
             </div>
@@ -550,31 +553,31 @@ export default function ChurchDashboard() {
               <div className="flex items-center gap-3">
                 <Link2 className="h-5 w-5 text-primary" />
                 <div>
-                  <p className="text-xs font-semibold uppercase text-primary/75">Member Enrollment</p>
-                  <h2 className="mt-1 text-2xl font-semibold text-white">Invite Members</h2>
+                  <p className="text-xs font-semibold uppercase text-primary/75">{t("church_admin_dashboard.enrollment.eyebrow")}</p>
+                  <h2 className="mt-1 text-2xl font-semibold text-white">{t("church_admin_dashboard.enrollment.title")}</h2>
                 </div>
               </div>
               <p className="mt-4 max-w-xl text-sm leading-6 text-white/60">
-                Share this unique link. Members who register through it are securely joined to {data?.churchName || "your church"}.
+                {t("church_admin_dashboard.enrollment.description", { church: data?.churchName || t("church_admin_dashboard.defaults.your_church") })}
               </p>
 
               {joinLink ? (
                 <>
-                  <Input value={joinLink} readOnly className="mt-6 h-12 border-white/10 bg-black/20 text-white" aria-label="Member join link" />
+                  <Input value={joinLink} readOnly className="mt-6 h-12 border-white/10 bg-black/20 text-white" aria-label={t("church_admin_dashboard.enrollment.join_link_label")} />
                   <div className="mt-4 flex flex-wrap gap-3">
                     <Button onClick={copyJoinLink}>
                       <Copy className="mr-2 h-4 w-4" />
-                      Copy Link
+                      {t("church_admin_dashboard.enrollment.copy_link")}
                     </Button>
                     <Button variant="outline" onClick={shareJoinLinkOnWhatsApp} className="border-white/15 bg-transparent">
                       <MessageCircle className="mr-2 h-4 w-4" />
-                      Share on WhatsApp
+                      {t("church_admin_dashboard.enrollment.share_whatsapp")}
                     </Button>
                   </div>
                 </>
               ) : (
                 <p className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-white/62">
-                  Your join link will appear after the church join-link database update is applied.
+                  {t("church_admin_dashboard.enrollment.join_link_unavailable")}
                 </p>
               )}
             </div>
@@ -582,7 +585,7 @@ export default function ChurchDashboard() {
             <div className="flex min-h-[230px] items-center justify-center rounded-2xl border border-white/[0.08] bg-black/15 p-5">
               {joinLink ? (
                 <div className="rounded-xl bg-white p-3">
-                  <QRCodeSVG value={joinLink} size={190} level="H" marginSize={2} title={`${data?.churchName || "Church"} member join link`} />
+                  <QRCodeSVG value={joinLink} size={190} level="H" marginSize={2} title={t("church_admin_dashboard.enrollment.qr_title", { church: data?.churchName || t("church_admin_dashboard.defaults.church") })} />
                 </div>
               ) : (
                 <Church className="h-12 w-12 text-white/20" />
@@ -595,8 +598,8 @@ export default function ChurchDashboard() {
           <div className="rounded-2xl border border-white/[0.08] bg-white/[0.035] p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase text-primary/75">Contributions</p>
-                <h2 className="mt-2 text-2xl font-semibold text-white">Giving Over Time</h2>
+                <p className="text-xs font-semibold uppercase text-primary/75">{t("church_admin_dashboard.giving.eyebrow")}</p>
+                <h2 className="mt-2 text-2xl font-semibold text-white">{t("church_admin_dashboard.giving.title")}</h2>
               </div>
               <BarChart3 className="h-5 w-5 text-primary" />
             </div>
@@ -617,13 +620,13 @@ export default function ChurchDashboard() {
                 </div>
               ))}
             </div>
-            {!hasGiving ? <p className="mt-5 text-sm text-white/55">No contributions recorded yet.</p> : null}
+            {!hasGiving ? <p className="mt-5 text-sm text-white/55">{t("church_admin_dashboard.giving.empty")}</p> : null}
           </div>
 
           <div className="rounded-2xl border border-white/[0.08] bg-white/[0.035] p-5 sm:p-6">
             <div className="flex items-center gap-3">
               <Megaphone className="h-5 w-5 text-primary" />
-              <h2 className="text-2xl font-semibold text-white">Recent Records</h2>
+              <h2 className="text-2xl font-semibold text-white">{t("church_admin_dashboard.records.title")}</h2>
             </div>
             <div className="mt-8 space-y-4">
               {isDeferredPending && !recentActivity.length ? (
@@ -634,7 +637,11 @@ export default function ChurchDashboard() {
                 <div key={item.id} className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
                   <p className="text-sm font-medium text-white">{item.title}</p>
                   <p className="mt-1 text-sm text-white/58">{item.detail}</p>
-                  <p className="mt-2 text-xs text-white/40">{relativeDate(item.date)}</p>
+                  <p className="mt-2 text-xs text-white/40">{formatAppDate(item.date, i18n.language, {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}</p>
                   {item.kind === "message" && item.memberName ? (
                     <Button
                       type="button"
@@ -648,14 +655,14 @@ export default function ChurchDashboard() {
                       }
                     >
                       <MessageCircle className="mr-2 h-3.5 w-3.5" />
-                      {item.messageType === "anniversary" ? "Share Anniversary Wish to WhatsApp" : "Share Birthday Wish to WhatsApp"}
+                      {item.messageType === "anniversary" ? t("church_admin_dashboard.records.share_anniversary") : t("church_admin_dashboard.records.share_birthday")}
                     </Button>
                   ) : null}
                 </div>
               ))}
               {!recentActivity.length ? (
                 <p className="rounded-2xl border border-white/[0.08] bg-black/15 p-4 text-sm text-white/55">
-                  No activity has been recorded yet.
+                  {t("church_admin_dashboard.records.empty")}
                 </p>
               ) : null}
             </div>

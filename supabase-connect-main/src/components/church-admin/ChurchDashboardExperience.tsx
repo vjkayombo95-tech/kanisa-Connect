@@ -19,7 +19,7 @@ import {
   getStaffMobileConfig,
   type StaffMobileConfig,
 } from "@/lib/staff-mobile-registry";
-import { translateStaffServiceLabel } from "@/lib/localization";
+import { formatAppDate, translateRoleLabel, translateStaffServiceLabel, translateSystemLabel } from "@/lib/localization";
 import { useTranslation } from "react-i18next";
 
 type AttendanceSummary = {
@@ -156,6 +156,7 @@ export function ChurchDashboardExperience({
   criticalLoading,
   deferredLoading,
 }: ChurchDashboardExperienceProps) {
+  const { i18n, t } = useTranslation();
   const counts =
     intelligence.pending.data ?? EMPTY_PENDING_COUNTS;
 
@@ -176,32 +177,20 @@ export function ChurchDashboardExperience({
     intelligence.staffWorkspace,
   );
 
- const workspaceLabel =
-  userRole === "church_admin"
-    ? "Msimamizi wa Kanisa"
-    : userRole === "secretary"
-      ? "Sekretarieti"
-      : userRole === "pastor" || userRole === "priest"
-        ? "Kichungaji"
-        : userRole === "treasurer" || userRole === "finance"
-          ? "Fedha na Michango"
-          : userRole === "super_admin"
-            ? "Super Admin"
-            : intelligence.staffWorkspace === "admin"
-              ? "Usimamizi wa Kanisa"
-              : "Staff";
+  const workspaceLabel =
+    userRole ? translateRoleLabel(t, userRole) : translateSystemLabel(t, "role_labels.staff", "Staff");
   const firstName =
     administratorName.trim().split(" ")[0] ||
     administratorName;
 
   const statusMessage =
     intelligence.pending.isLoading
-      ? "Tunakusanya kazi zinazohitaji umakini wako."
+      ? t("church_admin_dashboard.hero.status.loading")
       : intelligence.pending.isError
-        ? "Baadhi ya taarifa hazipatikani kwa sasa."
+        ? t("church_admin_dashboard.hero.status.error")
         : pendingTotal > 0
-          ? `Una kazi ${pendingTotal} zinazohitaji umakini wako leo.`
-          : "Hakuna kazi ya haraka inayosubiri kwa sasa.";
+          ? t("church_admin_dashboard.hero.status.pending", { count: pendingTotal })
+          : t("church_admin_dashboard.hero.status.clear");
 
   return (
     <div
@@ -209,7 +198,7 @@ export function ChurchDashboardExperience({
       data-testid="church-dashboard-parity-core"
     >
       <section
-        aria-label="Workspace briefing"
+        aria-label={t("church_admin_dashboard.hero.aria_label")}
         className={`relative overflow-hidden rounded-2xl border border-primary/20 p-5 shadow-sm sm:p-6 ${bannerUrl ? "min-h-[250px] bg-cover text-white sm:min-h-[260px]" : "bg-card/85"}`}
         style={bannerUrl ? { backgroundImage: `url("${bannerUrl}")`, backgroundPosition: `center ${bannerPositionY}%` } : undefined}
       >
@@ -252,8 +241,8 @@ export function ChurchDashboardExperience({
       >
         <SectionHeading
           id="church-dashboard-priorities"
-          title="Cha kufanya leo"
-          description="Kazi muhimu zinazohitaji hatua kutoka kwako."
+          title={t("church_admin_dashboard.priorities.title")}
+          description={t("church_admin_dashboard.priorities.description")}
         />
 
         {intelligence.pending.isLoading ? (
@@ -263,8 +252,7 @@ export function ChurchDashboardExperience({
           </div>
         ) : intelligence.pending.isError ? (
           <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
-            Kazi zinazohitaji hatua hazipatikani kwa muda.
-            Ruhusa zako hazijabadilishwa.
+            {t("church_admin_dashboard.priorities.error")}
           </div>
         ) : priorities.length ? (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -276,20 +264,20 @@ export function ChurchDashboardExperience({
               >
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                    Inahitaji hatua
+                    {t("church_admin_dashboard.priorities.badge")}
                   </p>
 
                   <h3 className="mt-3 text-sm font-semibold text-foreground">
-                    {item.label}
+                    {translateSystemLabel(t, item.labelKey, item.label)}
                   </h3>
 
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {item.count} zinahitaji kuangaliwa
+                    {t("church_admin_dashboard.priorities.waiting", { count: item.count })}
                   </p>
                 </div>
 
                 <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                  Fungua
+                  {t("church_admin_dashboard.actions.open")}
                   <ChevronRight className="h-3.5 w-3.5" />
                 </span>
               </Link>
@@ -303,11 +291,11 @@ export function ChurchDashboardExperience({
 
             <div>
               <p className="text-sm font-semibold text-foreground">
-                Uko sawa kwa sasa
+                {t("church_admin_dashboard.priorities.clear_title")}
               </p>
 
               <p className="text-sm text-muted-foreground">
-                Hakuna kazi ya haraka inayosubiri hatua yako.
+                {t("church_admin_dashboard.priorities.clear_description")}
               </p>
             </div>
           </div>
@@ -320,8 +308,8 @@ export function ChurchDashboardExperience({
       >
         <SectionHeading
           id="church-dashboard-actions"
-          title="Haraka"
-          description="Fungua kazi unayotumia mara nyingi."
+          title={t("church_admin_dashboard.quick_actions.title")}
+          description={t("church_admin_dashboard.quick_actions.description")}
         />
 
         <ChurchDashboardQuickActions
@@ -336,8 +324,8 @@ export function ChurchDashboardExperience({
         >
           <SectionHeading
             id="church-dashboard-today"
-            title="Ratiba ya leo"
-            description="Misa, shughuli na taarifa muhimu za leo."
+            title={t("church_admin_dashboard.today.title")}
+            description={t("church_admin_dashboard.today.description")}
           />
 
           <div className="rounded-xl border border-border/70 bg-card/85 p-5">
@@ -356,7 +344,7 @@ export function ChurchDashboardExperience({
                     </p>
 
                     <p className="text-xs text-muted-foreground">
-                      Wamethibitisha
+                      {t("church_admin_dashboard.today.confirmed")}
                     </p>
                   </div>
 
@@ -366,7 +354,7 @@ export function ChurchDashboardExperience({
                     </p>
 
                     <p className="text-xs text-muted-foreground">
-                      Labda
+                      {t("church_admin_dashboard.today.maybe")}
                     </p>
                   </div>
 
@@ -376,22 +364,21 @@ export function ChurchDashboardExperience({
                     </p>
 
                     <p className="text-xs text-muted-foreground">
-                      Majibu
+                      {t("church_admin_dashboard.today.responses")}
                     </p>
                   </div>
                 </div>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Hakuna Misa inayofuata iliyoratibiwa kwa
-                sasa.
+                {t("church_admin_dashboard.today.no_mass")}
               </p>
             )}
 
             {!deferredLoading &&
             upcomingEventCount > 0 ? (
               <p className="mt-4 border-t border-border/60 pt-4 text-sm text-muted-foreground">
-                Pia kuna shughuli {upcomingEventCount} zijazo.
+                {t("church_admin_dashboard.today.upcoming_events", { count: upcomingEventCount })}
               </p>
             ) : null}
           </div>
@@ -403,14 +390,14 @@ export function ChurchDashboardExperience({
         >
           <SectionHeading
             id="church-dashboard-summary"
-            title="Muhtasari wa kanisa"
-            description="Taarifa chache muhimu bila kukujaza takwimu nyingi."
+            title={t("church_admin_dashboard.summary.title")}
+            description={t("church_admin_dashboard.summary.description")}
           />
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-border/70 bg-card/85 p-4">
               <p className="text-sm text-muted-foreground">
-                Waumini hai
+                {t("church_admin_dashboard.summary.active_members")}
               </p>
 
               {criticalLoading ? (
@@ -422,13 +409,13 @@ export function ChurchDashboardExperience({
               )}
 
               <p className="mt-1 text-xs text-muted-foreground">
-                kati ya {totalMembers} waliosajiliwa
+                {t("church_admin_dashboard.summary.registered_members", { count: totalMembers })}
               </p>
             </div>
 
             <div className="rounded-xl border border-border/70 bg-card/85 p-4">
               <p className="text-sm text-muted-foreground">
-                Matangazo ya karibuni
+                {t("church_admin_dashboard.summary.recent_announcements")}
               </p>
 
               {criticalLoading ? (
@@ -440,21 +427,21 @@ export function ChurchDashboardExperience({
               )}
 
               <p className="mt-1 text-xs text-muted-foreground">
-                taarifa zilizochapishwa
+                {t("church_admin_dashboard.summary.published_notices")}
               </p>
             </div>
 
             {intelligence.financialEnabled ? (
               <div className="rounded-xl border border-border/70 bg-card/85 p-4 sm:col-span-2">
                 <p className="text-sm text-muted-foreground">
-                  Michango iliyothibitishwa mwezi huu
+                  {t("church_admin_dashboard.summary.verified_contributions")}
                 </p>
 
                 {intelligence.financial.isLoading ? (
                   <Skeleton className="mt-3 h-8 w-32" />
                 ) : intelligence.financial.isError ? (
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Muhtasari wa fedha haupatikani kwa muda.
+                    {t("church_admin_dashboard.summary.financial_unavailable")}
                   </p>
                 ) : (
                   <>
@@ -465,7 +452,7 @@ export function ChurchDashboardExperience({
                     </p>
 
                     <p className="mt-1 text-xs text-muted-foreground">
-                      miamala {financial.transactionCount}
+                      {t("church_admin_dashboard.summary.transactions", { count: financial.transactionCount })}
                     </p>
                   </>
                 )}
@@ -481,8 +468,8 @@ export function ChurchDashboardExperience({
       >
         <SectionHeading
           id="church-dashboard-activity"
-          title="Shughuli za karibuni"
-          description="Mambo ya mwisho yaliyorekodiwa kwenye kanisa."
+          title={t("church_admin_dashboard.activity.title")}
+          description={t("church_admin_dashboard.activity.description")}
         />
 
         <div className="rounded-xl border border-border/70 bg-card/85 p-4 sm:p-5">
@@ -501,12 +488,7 @@ export function ChurchDashboardExperience({
                   >
                     <Clock3 className="h-3.5 w-3.5" />
 
-                    {new Date(
-                      item.date,
-                    ).toLocaleDateString("sw-TZ", {
-                      day: "numeric",
-                      month: "short",
-                    })}
+                    {formatAppDate(item.date, i18n.language, { day: "numeric", month: "short" })}
                   </time>
 
                   <div>
@@ -523,7 +505,7 @@ export function ChurchDashboardExperience({
             </ol>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Hakuna shughuli za karibuni.
+              {t("church_admin_dashboard.activity.empty")}
             </p>
           )}
         </div>

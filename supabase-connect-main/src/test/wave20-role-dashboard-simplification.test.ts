@@ -9,6 +9,7 @@ const read = (relative: string) =>
 
 describe("Wave 20 role dashboard simplification", () => {
   const sw = JSON.parse(read("src/locales/sw.json"));
+  const en = JSON.parse(read("src/locales/en.json"));
   const sidebar = read(
     "src/components/church-admin/ChurchAdminSidebar.tsx",
   );
@@ -41,11 +42,11 @@ describe("Wave 20 role dashboard simplification", () => {
 
   it("uses a simple task-first desktop dashboard hierarchy", () => {
     const sections = [
-      "Cha kufanya leo",
-      "Haraka",
-      "Ratiba ya leo",
-      "Muhtasari wa kanisa",
-      "Shughuli za karibuni",
+      "church_admin_dashboard.priorities.title",
+      "church_admin_dashboard.quick_actions.title",
+      "church_admin_dashboard.today.title",
+      "church_admin_dashboard.summary.title",
+      "church_admin_dashboard.activity.title",
     ];
 
     const positions = sections.map((section) =>
@@ -58,6 +59,22 @@ describe("Wave 20 role dashboard simplification", () => {
 
     expect(positions).toEqual(
       [...positions].sort((left, right) => left - right),
+    );
+
+    expect(sw.church_admin_dashboard.priorities.title).toBe(
+      "Cha kufanya leo",
+    );
+    expect(sw.church_admin_dashboard.quick_actions.title).toBe(
+      "Haraka",
+    );
+    expect(sw.church_admin_dashboard.today.title).toBe(
+      "Ratiba ya leo",
+    );
+    expect(sw.church_admin_dashboard.summary.title).toBe(
+      "Muhtasari wa kanisa",
+    );
+    expect(sw.church_admin_dashboard.activity.title).toBe(
+      "Shughuli za karibuni",
     );
   });
 
@@ -107,31 +124,27 @@ describe("Wave 20 role dashboard simplification", () => {
 
   it("distinguishes exact staff roles in the desktop dashboard presentation", () => {
     expect(dashboard).toContain(
-      'userRole === "church_admin"',
-    );
-    expect(dashboard).toContain(
-      '"Msimamizi wa Kanisa"',
+      "translateRoleLabel(t, userRole)",
     );
 
-    expect(dashboard).toContain(
-      'userRole === "secretary"',
+    expect(sw.role_labels.church_admin).toBe(
+      "Usimamizi wa Kanisa",
     );
-    expect(dashboard).toContain(
-      '"Sekretarieti"',
-    );
-
-    expect(dashboard).toContain(
-      'userRole === "pastor" || userRole === "priest"',
-    );
-    expect(dashboard).toContain(
-      '"Kichungaji"',
+    expect(en.role_labels.church_admin).toBe(
+      "Church Admin",
     );
 
-    expect(dashboard).toContain(
-      'userRole === "treasurer" || userRole === "finance"',
-    );
-    expect(dashboard).toContain(
-      '"Fedha na Michango"',
-    );
+    expect(sw.role_labels.secretary).toBe("Katibu");
+    expect(en.role_labels.secretary).toBe("Secretary");
+
+    expect(sw.role_labels.pastor).toBe("Mchungaji");
+    expect(sw.role_labels.priest).toBe("Padri");
+    expect(en.role_labels.pastor).toBe("Pastor");
+    expect(en.role_labels.priest).toBe("Priest");
+
+    expect(sw.role_labels.treasurer).toBe("Mhazini");
+    expect(sw.role_labels.finance).toBe("Kitengo cha Fedha");
+    expect(en.role_labels.treasurer).toBe("Treasurer");
+    expect(en.role_labels.finance).toBe("Finance");
   });
 });

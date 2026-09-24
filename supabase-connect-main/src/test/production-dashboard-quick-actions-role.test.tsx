@@ -16,6 +16,7 @@ vi.mock("@/components/staff-mobile/StaffMobileExperience", () => ({
 import {
   ChurchDashboardQuickActions,
 } from "@/components/church-admin/ChurchDashboardExperience";
+import i18n from "@/i18n";
 import {
   STAFF_MOBILE_CONFIGS,
   getCommunityMobileConfig,
@@ -27,6 +28,7 @@ import { resolveStaffMobileWorkspace } from "@/lib/staff-mobile-role";
 const quickActionIds = new Set(["members", "contributions", "announcements", "mass-intentions", "events"]);
 
 function renderedRoutes(config: StaffMobileConfig | null) {
+  void i18n.changeLanguage("en");
   const markup = renderToStaticMarkup(
     <ChurchDashboardQuickActions config={config} />,
   );

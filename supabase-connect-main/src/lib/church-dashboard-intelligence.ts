@@ -46,15 +46,15 @@ export const EMPTY_FINANCIAL_SUMMARY: FinancialSummary = {
 };
 
 const actionDefinitions = [
-  { key: "events", label: "Event approvals", route: "/church-admin/event-requests" },
-  { key: "massIntentions", label: "Mass intentions", route: "/church-admin/mass-intentions" },
-  { key: "prayerRequests", label: "Prayer requests", route: "/church-admin/prayer-requests" },
-  { key: "communityHelp", label: "Community help", route: "/church-admin/community-help" },
-  { key: "invitations", label: "Invitations and roles", route: "/church-admin/roles" },
-  { key: "announcements", label: "Draft announcements", route: "/church-admin/announcements" },
-  { key: "payments", label: "Payment verification", route: "/church-admin/qr-payments" },
-  { key: "memberships", label: "Community requests", route: "/church-admin/communities" },
-  { key: "volunteers", label: "Ministry volunteers", route: "/church-admin/ministries" },
+  { key: "events", label: "Event approvals", labelKey: "church_admin_dashboard.pending_actions.events", route: "/church-admin/event-requests" },
+  { key: "massIntentions", label: "Mass intentions", labelKey: "church_admin_dashboard.pending_actions.mass_intentions", route: "/church-admin/mass-intentions" },
+  { key: "prayerRequests", label: "Prayer requests", labelKey: "church_admin_dashboard.pending_actions.prayer_requests", route: "/church-admin/prayer-requests" },
+  { key: "communityHelp", label: "Community help", labelKey: "church_admin_dashboard.pending_actions.community_help", route: "/church-admin/community-help" },
+  { key: "invitations", label: "Invitations and roles", labelKey: "church_admin_dashboard.pending_actions.invitations", route: "/church-admin/roles" },
+  { key: "announcements", label: "Draft announcements", labelKey: "church_admin_dashboard.pending_actions.announcements", route: "/church-admin/announcements" },
+  { key: "payments", label: "Payment verification", labelKey: "church_admin_dashboard.pending_actions.payments", route: "/church-admin/qr-payments" },
+  { key: "memberships", label: "Community requests", labelKey: "church_admin_dashboard.pending_actions.memberships", route: "/church-admin/communities" },
+  { key: "volunteers", label: "Ministry volunteers", labelKey: "church_admin_dashboard.pending_actions.volunteers", route: "/church-admin/ministries" },
 ] as const;
 
 const readNumber = (value: unknown) => {

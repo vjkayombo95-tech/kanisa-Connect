@@ -130,6 +130,7 @@
     "completed": "Completed",
     "converted": "Added to schedule",
     "draft": "Draft",
+    "expired": "Expired",
     "inactive": "Inactive",
     "pending": "Pending",
     "rejected": "Rejected",
@@ -138,6 +139,7 @@
     "sent": "Sent",
     "submitted": "Submitted",
     "suspended": "Suspended",
+    "trial": "Trial",
     "under_review": "Under review"
   },
   "role_labels": {
@@ -382,6 +384,228 @@
       "open_full": "Open full AI",
       "open": "Ask AI",
       "close": "Close AI assistant"
+    }
+  },
+  "church_admin_dashboard": {
+    "greetings": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "defaults": {
+      "administrator": "Administrator",
+      "church": "Church",
+      "our_church": "our church",
+      "your_church": "your church"
+    },
+    "errors": {
+      "critical_records": "Some dashboard records could not be loaded. Refresh after confirming database access."
+    },
+    "hero": {
+      "aria_label": "Workspace briefing",
+      "status": {
+        "loading": "Gathering work that needs your attention.",
+        "error": "Some dashboard information is temporarily unavailable.",
+        "pending": "Items needing attention today: {{count}}.",
+        "pending_plural": "Items needing attention today: {{count}}.",
+        "clear": "No urgent dashboard work is waiting right now."
+      }
+    },
+    "priorities": {
+      "title": "What to do today",
+      "description": "Important work that needs action from you.",
+      "badge": "Needs action",
+      "waiting": "Needs review: {{count}}",
+      "waiting_plural": "Needs review: {{count}}",
+      "error": "Actionable work is temporarily unavailable. Your permissions have not changed.",
+      "clear_title": "You are all set for now",
+      "clear_description": "No urgent work is waiting for your action."
+    },
+    "actions": {
+      "open": "Open"
+    },
+    "quick_actions": {
+      "title": "Quick Actions",
+      "description": "Open the work you use most often."
+    },
+    "today": {
+      "title": "Today's schedule",
+      "description": "Masses, events and important notices for today.",
+      "confirmed": "Confirmed",
+      "maybe": "Maybe",
+      "responses": "Responses",
+      "no_mass": "No next Mass is scheduled right now.",
+      "upcoming_events": "Upcoming events also scheduled: {{count}}.",
+      "upcoming_events_plural": "Upcoming events also scheduled: {{count}}."
+    },
+    "summary": {
+      "title": "Church summary",
+      "description": "A few important details without overwhelming you with numbers.",
+      "active_members": "Active members",
+      "registered_members": "of {{count}} registered",
+      "recent_announcements": "Recent announcements",
+      "published_notices": "published notices",
+      "verified_contributions": "Verified contributions this month",
+      "financial_unavailable": "Financial summary is temporarily unavailable.",
+      "transactions": "Transactions: {{count}}",
+      "transactions_plural": "Transactions: {{count}}"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "description": "The latest things recorded for the church.",
+      "empty": "No recent activity.",
+      "payment_title": "{{name}} recorded a contribution",
+      "announcement_published": "Announcement published",
+      "upcoming_event_scheduled": "Upcoming event scheduled",
+      "birthday_title": "{{name}} has a birthday today",
+      "birthday_reminder": "Birthday reminder",
+      "anniversary_title": "{{name}} has a wedding anniversary today",
+      "anniversary_reminder": "Wedding anniversary reminder"
+    },
+    "utilities": {
+      "eyebrow": "Production Utilities",
+      "title": "Church administration tools",
+      "description": "Existing Release B production tools and records remain available below the daily workspace."
+    },
+    "billing": {
+      "eyebrow": "Plan & Billing",
+      "loading_subscription": "Loading subscription...",
+      "plan_name": "{{plan}} Plan",
+      "trial_expires": "Trial expires on {{date}} ({{count}} day remaining).",
+      "trial_expires_plural": "Trial expires on {{date}} ({{count}} days remaining).",
+      "member_limit_warning": "You are approaching your member limit. Review plans before adding more members.",
+      "member_usage": "Member usage",
+      "member_usage_unlimited": "{{count}} / Unlimited",
+      "member_usage_limited": "{{count}} / {{limit}}",
+      "review_upgrade_options": "Review Upgrade Options",
+      "manage_billing": "Manage Billing",
+      "plans": {
+        "free": {
+          "name": "Free",
+          "description": "For small congregations getting started with Kanisa Connect."
+        },
+        "basic": {
+          "name": "Basic",
+          "description": "Core church operations for growing ministries."
+        },
+        "intermediate": {
+          "name": "Intermediate",
+          "description": "The most balanced plan for a modern, engaging church experience."
+        },
+        "pro": {
+          "name": "Pro",
+          "description": "Communication and insights for multi-ministry churches."
+        },
+        "enterprise": {
+          "name": "Enterprise",
+          "description": "For large churches that need scale, branding, and integrations."
+        }
+      }
+    },
+    "enrollment": {
+      "eyebrow": "Member Enrollment",
+      "title": "Invite Members",
+      "description": "Share this unique link. Members who register through it are securely joined to {{church}}.",
+      "join_link_label": "Member join link",
+      "copy_link": "Copy Link",
+      "share_whatsapp": "Share on WhatsApp",
+      "join_link_unavailable": "Your join link will appear after the church join-link database update is applied.",
+      "qr_title": "{{church}} member join link",
+      "copy_success_title": "Join link copied",
+      "copy_success_description": "You can now send it to your members.",
+      "copy_error_title": "Unable to copy link",
+      "copy_error_description": "Select and copy the link manually."
+    },
+    "giving": {
+      "eyebrow": "Contributions",
+      "title": "Giving Over Time",
+      "empty": "No contributions recorded yet."
+    },
+    "records": {
+      "title": "Recent Records",
+      "empty": "No activity has been recorded yet.",
+      "share_anniversary": "Share Anniversary Wish to WhatsApp",
+      "share_birthday": "Share Birthday Wish to WhatsApp"
+    },
+    "pending_actions": {
+      "events": "Event approvals",
+      "mass_intentions": "Mass intentions",
+      "prayer_requests": "Prayer requests",
+      "community_help": "Community help",
+      "invitations": "Invitations and roles",
+      "announcements": "Draft announcements",
+      "payments": "Payment verification",
+      "memberships": "Community requests",
+      "volunteers": "Ministry volunteers"
+    },
+    "mobile": {
+      "hero_aria_label": "Mobile workspace briefing",
+      "focus": {
+        "title": "Today's Focus",
+        "priority": "{{label}} needing attention: {{count}}.",
+        "priority_plural": "{{label}} needing attention: {{count}}.",
+        "mass": "{{title}}: {{yes}} confirmed and {{maybe}} maybe.",
+        "events": "Upcoming events to prepare for: {{count}}.",
+        "events_plural": "Upcoming events to prepare for: {{count}}.",
+        "announcements": "Recent announcements published: {{count}}.",
+        "announcements_plural": "Recent announcements published: {{count}}.",
+        "unavailable": "Some of today's dashboard information is temporarily unavailable.",
+        "clear": "No urgent dashboard work needs attention."
+      },
+      "priorities": {
+        "title": "Today's Priorities",
+        "description": "Your highest-value authorized work queues.",
+        "error": "Priorities are temporarily unavailable. Access remains restricted.",
+        "waiting": "{{count}} waiting",
+        "clear_title": "No priorities need attention",
+        "clear_description": "Your authorized work queues are clear."
+      },
+      "quick_actions": {
+        "description": "Role-aware production services.",
+        "empty": "No authorized primary actions are available."
+      },
+      "briefing": {
+        "title": "Assistant Daily Briefing",
+        "description": "Current production signals, summarized deterministically.",
+        "members": "{{active}} active of {{total}} registered members",
+        "members_unavailable": "Member activity is temporarily unavailable.",
+        "pending": "Authorized pending items: {{count}}",
+        "pending_plural": "Authorized pending items: {{count}}",
+        "pending_clear": "Authorized work queues are clear",
+        "pending_unavailable": "Pending work status is temporarily unavailable.",
+        "mass": "{{title}}: {{yes}} confirmed",
+        "schedule": "{{announcements}} announcements - {{events}} upcoming events",
+        "events": "Upcoming events: {{count}}",
+        "events_plural": "Upcoming events: {{count}}",
+        "schedule_unavailable": "Mass and event information is temporarily unavailable."
+      },
+      "snapshot": {
+        "title": "Operational Snapshot",
+        "description": "Compact parish metrics.",
+        "active_members": "Active members",
+        "announcements": "Announcements",
+        "upcoming_events": "Upcoming events",
+        "mass_confirmed": "Mass confirmed",
+        "next_mass": "Next Mass"
+      },
+      "release_b": {
+        "title": "Pending Work + Financial Summary",
+        "description": "Existing Release B authorization and data contracts."
+      }
+    },
+    "intelligence": {
+      "aria_label": "Dashboard intelligence",
+      "needs_attention": "Needs Attention",
+      "pending_work": "Pending work",
+      "pending_error": "Pending work could not be loaded. The rest of the dashboard remains available.",
+      "pending_empty": "No pending work is available for your current role.",
+      "financial_summary": "Financial summary",
+      "verified_receipts": "Verified receipts",
+      "financial_error": "Financial summary is temporarily unavailable.",
+      "this_month": "This month",
+      "all_received": "All received",
+      "transactions": "Transactions",
+      "contributions": "Contributions"
     }
   },
   "mass_intention": {

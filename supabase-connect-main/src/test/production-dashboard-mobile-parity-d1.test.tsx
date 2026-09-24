@@ -13,6 +13,7 @@ vi.mock("@/components/staff-mobile/StaffMobileExperience", () => ({
 }));
 
 import { ChurchDashboardMobileExperience } from "@/components/church-admin/ChurchDashboardMobileExperience";
+import i18n, { changeAppLanguage } from "@/i18n";
 import type { ChurchDashboardIntelligenceState } from "@/components/church-admin/ChurchDashboardIntelligence";
 import { EMPTY_FINANCIAL_SUMMARY, EMPTY_PENDING_COUNTS } from "@/lib/church-dashboard-intelligence";
 import { getStaffMobileConfig } from "@/lib/staff-mobile-registry";
@@ -43,7 +44,8 @@ function intelligence(financialEnabled = false, options: RenderOptions = {}): Ch
   } as ChurchDashboardIntelligenceState;
 }
 
-function renderFor(role: "church_admin" | "secretary" | "pastor" | "treasurer", financialEnabled = false, options: RenderOptions = {}) {
+function renderFor(role: "church_admin" | "secretary" | "pastor" | "treasurer", financialEnabled = false, options: RenderOptions = {}, language: "en" | "sw" = "en") {
+  void i18n.changeLanguage(language);
   const config = getStaffMobileConfig(resolveStaffMobileWorkspace([role]));
   if (!config) return "";
   return renderToStaticMarkup(<ChurchDashboardMobileExperience config={config} intelligence={{ ...intelligence(financialEnabled, options), staffWorkspace: config.workspace === "community" ? null : config.workspace }} administratorName="Amina Admin" greeting="Good morning" churchName="St Joseph" bannerUrl={options.bannerUrl ?? null} bannerPositionY={options.bannerPositionY ?? 38} activeMembers={82} totalMembers={100} announcementCount={2} upcomingEventCount={options.upcomingEventCount ?? 1} attendance={{ title: options.deferredError || options.noMass ? null : "Sunday Mass", yes: 20, maybe: 4, responseRate: 60 }} criticalLoading={!!options.criticalLoading} criticalError={!!options.criticalError} deferredLoading={!!options.deferredLoading} deferredError={!!options.deferredError} />);
@@ -52,7 +54,7 @@ function renderFor(role: "church_admin" | "secretary" | "pastor" | "treasurer", 
 describe("Release D.1 mobile and tablet dashboard parity", () => {
   it("renders the approved task-first hierarchy in order", () => {
     const markup = renderFor("church_admin");
-    const labels = ["Good morning", "Today&#x27;s Focus", "Today&#x27;s Priorities", "Quick Actions", "Assistant Daily Briefing", "Operational Snapshot", "Pending Work + Financial Summary", "Huduma zote"];
+    const labels = ["Good morning", "Today&#x27;s Focus", "Today&#x27;s Priorities", "Quick Actions", "Assistant Daily Briefing", "Operational Snapshot", "Pending Work + Financial Summary", "All services"];
     const positions = labels.map((label) => markup.indexOf(label));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((left, right) => left - right));
@@ -66,7 +68,7 @@ describe("Release D.1 mobile and tablet dashboard parity", () => {
     expect(markup).toContain("from-black/75");
     expect(markup).toContain("Good morning");
     expect(markup).toContain("St Joseph");
-    expect(markup).toContain("Uendeshaji wa parokia");
+    expect(markup).toContain("Parish operations");
     expect(markup).toContain("Today&#x27;s Focus");
     expect(markup).toContain("Today&#x27;s Priorities");
     expect(markup).toContain("Quick Actions");
@@ -102,6 +104,24 @@ describe("Release D.1 mobile and tablet dashboard parity", () => {
     expect(getStaffMobileConfig(resolveStaffMobileWorkspace(["unknown-role"]))).toBeNull();
     expect(renderFor("pastor")).not.toContain("Financial summary");
     expect(renderFor("treasurer", true)).toContain("Financial summary");
+  });
+
+  it("updates the mobile dashboard shell when the selected language changes", async () => {
+    await changeAppLanguage("sw");
+    const swMarkup = renderFor("church_admin", false, {}, "sw");
+    expect(swMarkup).toContain("Kipaumbele cha Leo");
+    expect(swMarkup).toContain("Vipaumbele vya Leo");
+    expect(swMarkup).toContain("Haraka");
+    expect(swMarkup).toContain("Taarifa ya Kila Siku ya Msaidizi");
+    expect(swMarkup).toContain("Huduma zote");
+
+    await changeAppLanguage("en");
+    const enMarkup = renderFor("church_admin");
+    expect(enMarkup).toContain("Today&#x27;s Focus");
+    expect(enMarkup).toContain("Today&#x27;s Priorities");
+    expect(enMarkup).toContain("Quick Actions");
+    expect(enMarkup).toContain("Assistant Daily Briefing");
+    expect(enMarkup).toContain("All services");
   });
 
   it("documents the exact 1023/1024 CSS boundary without a visible collision", () => {
@@ -145,12 +165,12 @@ describe("Release D.1 mobile and tablet dashboard parity", () => {
     const markup = renderFor("church_admin", false, { criticalError: true, pendingZero: true });
     expect(markup).toContain("Member activity is temporarily unavailable");
     expect(markup).not.toContain("0 active of 0 registered members");
-    expect((markup.match(/>—</g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect((markup.match(/>-</g) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 
   it("can show a valid event focus while pending remains explicitly unavailable", () => {
     const markup = renderFor("church_admin", false, { pendingError: true, pendingZero: true, noMass: true, upcomingEventCount: 2 });
-    expect(markup).toContain("2 upcoming events to prepare for");
+    expect(markup).toContain("Upcoming events to prepare for: 2");
     expect(markup).toContain("Priorities are temporarily unavailable");
     expect(markup).not.toContain("Authorized work queues are clear");
   });

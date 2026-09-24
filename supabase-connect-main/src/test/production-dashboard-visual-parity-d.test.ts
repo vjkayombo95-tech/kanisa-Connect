@@ -26,12 +26,12 @@ describe("production dashboard visual parity D", () => {
 
   it("renders the simplified task-first dashboard hierarchy in the required order", () => {
     const sections = [
-      "Workspace briefing",
-      "Cha kufanya leo",
-      "Haraka",
-      "Ratiba ya leo",
-      "Muhtasari wa kanisa",
-      "Shughuli za karibuni",
+      "church_admin_dashboard.hero.aria_label",
+      "church_admin_dashboard.priorities.title",
+      "church_admin_dashboard.quick_actions.title",
+      "church_admin_dashboard.today.title",
+      "church_admin_dashboard.summary.title",
+      "church_admin_dashboard.activity.title",
     ];
 
     const positions = sections.map((section) =>
@@ -49,7 +49,7 @@ describe("production dashboard visual parity D", () => {
     expect(
       dashboard.indexOf("<ChurchDashboardExperience"),
     ).toBeLessThan(
-      dashboard.indexOf("Production Utilities"),
+      dashboard.indexOf("church_admin_dashboard.utilities.eyebrow"),
     );
   });
 
@@ -121,10 +121,10 @@ describe("production dashboard visual parity D", () => {
 
   it("retains production utilities and existing loaded-record sources", () => {
     for (const utility of [
-      "Plan & Billing",
-      "Invite Members",
-      "Giving Over Time",
-      "Recent Records",
+      "church_admin_dashboard.billing.eyebrow",
+      "church_admin_dashboard.enrollment.title",
+      "church_admin_dashboard.giving.title",
+      "church_admin_dashboard.records.title",
     ]) {
       expect(dashboard).toContain(utility);
     }
