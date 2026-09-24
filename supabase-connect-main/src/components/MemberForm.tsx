@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Loader2, X, User } from "lucide-react";
 import { validateFile, optimizeImage, uploadFile } from "@/lib/file-upload";
+import { useTranslation } from "react-i18next";
+import { translateSystemLabel } from "@/lib/localization";
 
 type FamilyRole = "father" | "mother" | "child" | "guardian" | "other";
 
@@ -65,6 +67,19 @@ export function MemberForm({
   const photoRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  const label = useCallback((key: string, fallback: string, options?: Record<string, unknown>) => {
+    const translationKey = `member_form.${key}`;
+    const translated = t(translationKey, { defaultValue: fallback, ...options });
+    return translated === translationKey ? fallback : translated;
+  }, [t]);
+
+  const displayGender = useCallback((value: string) =>
+    translateSystemLabel(t, `members_admin.gender.${value}`, value.replace(/_/g, " ")), [t]);
+
+  const displayFamilyRole = useCallback((value: FamilyRole) =>
+    translateSystemLabel(t, `members_admin.family_roles.${value}`, value.replace(/_/g, " ")), [t]);
 
   const getAuthenticatedContext = useCallback(async (): Promise<AuthenticatedContext> => {
     const {
@@ -78,7 +93,7 @@ export function MemberForm({
     }
 
     if (!user) {
-      throw new Error("You must be signed in to manage members.");
+      throw new Error(label("errors.sign_in_required", "You must be signed in to manage members."));
     }
 
     const { data: currentMember, error: memberError } = await supabase
@@ -97,7 +112,7 @@ export function MemberForm({
     const trustedChurchId = currentMember?.church_id || churchId;
 
     if (!trustedChurchId) {
-      throw new Error("No church context found for the signed-in user.");
+      throw new Error(label("errors.no_church_context", "No church context found for the signed-in user."));
     }
 
     if (currentMember?.church_id && churchId && currentMember.church_id !== churchId) {
@@ -108,7 +123,7 @@ export function MemberForm({
     }
 
     return { userId: user.id, churchId: trustedChurchId };
-  }, [churchId]);
+  }, [churchId, label]);
 
   const normalizeOptional = useCallback((value: string) => {
     const trimmed = value.trim();
@@ -120,12 +135,16 @@ export function MemberForm({
     if (!file) return;
     const validation = validateFile(file, "member-photo");
     if (!validation.valid) {
-      toast({ title: "Invalid photo", description: validation.error, variant: "destructive" });
+      toast({
+        title: label("toasts.invalid_photo", "Invalid photo"),
+        description: validation.error || label("errors.invalid_photo", "Please choose a valid photo."),
+        variant: "destructive",
+      });
       return;
     }
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
-  }, [toast]);
+  }, [label, toast]);
 
   const uploadPhoto = useCallback(async (memberId: string): Promise<string | null> => {
     if (!photoFile) return null;
@@ -202,7 +221,7 @@ export function MemberForm({
 
       const normalizedFullName = fullName.trim();
       if (!normalizedFullName) {
-        throw new Error("Full name is required.");
+        throw new Error(label("errors.full_name_required", "Full name is required."));
       }
 
       const validAdditionalMembers = familyMembers.filter((familyMember) => familyMember.full_name.trim().length > 0);
@@ -238,7 +257,7 @@ export function MemberForm({
       const newMemberId = (createResult as { member_id?: string } | null)?.member_id;
 
       if (!newMemberId) {
-        throw new Error("Member could not be created.");
+        throw new Error(label("errors.create_missing_id", "Member could not be created."));
       }
 
       // Upload photo if provided
@@ -271,12 +290,12 @@ export function MemberForm({
       queryClient.invalidateQueries({ queryKey: ["family-memberships"] });
       queryClient.invalidateQueries({ queryKey: ["communities"] });
       queryClient.invalidateQueries({ queryKey: ["ministries"] });
-      toast({ title: "Member added successfully" });
+      toast({ title: label("toasts.member_added", "Member added successfully") });
       onSuccess();
     },
     onError: (err: any) => {
       console.error("Member creation failed:", err);
-      toast({ title: "Error", description: err.message || "Failed to add member.", variant: "destructive" });
+      toast({ title: label("toasts.error_title", "Error"), description: err.message || label("toasts.add_failed", "Failed to add member."), variant: "destructive" });
     },
     onSettled: () => setUploading(false),
   });
@@ -284,12 +303,12 @@ export function MemberForm({
   const updateMember = useMutation({
     mutationFn: async () => {
       await getAuthenticatedContext();
-      if (!member) throw new Error("No member to update");
+      if (!member) throw new Error(label("errors.no_member_to_update", "No member to update"));
       setUploading(true);
 
       const normalizedFullName = fullName.trim();
       if (!normalizedFullName) {
-        throw new Error("Full name is required.");
+        throw new Error(label("errors.full_name_required", "Full name is required."));
       }
 
       // Update basic info
@@ -371,12 +390,12 @@ export function MemberForm({
       queryClient.invalidateQueries({ queryKey: ["ministry-members-all"] });
       queryClient.invalidateQueries({ queryKey: ["communities"] });
       queryClient.invalidateQueries({ queryKey: ["ministries"] });
-      toast({ title: "Member updated successfully" });
+      toast({ title: label("toasts.member_updated", "Member updated successfully") });
       onSuccess();
     },
     onError: (err: any) => {
       console.error("Member update failed:", err);
-      toast({ title: "Error", description: err.message || "Failed to update member.", variant: "destructive" });
+      toast({ title: label("toasts.error_title", "Error"), description: err.message || label("toasts.update_failed", "Failed to update member."), variant: "destructive" });
     },
     onSettled: () => setUploading(false),
   });
@@ -421,6 +440,7 @@ export function MemberForm({
                 size="icon"
                 className="absolute -top-1 -right-1 h-5 w-5"
                 onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
+                aria-label={label("photo.remove", "Remove photo")}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -445,76 +465,80 @@ export function MemberForm({
             size="sm"
             onClick={() => photoRef.current?.click()}
           >
-            <UserPlus className="mr-2 h-4 w-4" /> Upload Photo
+            <UserPlus className="mr-2 h-4 w-4" /> {label("photo.upload", "Upload Photo")}
           </Button>
-          <p className="text-xs text-muted-foreground mt-1">Max 500KB · JPG, PNG, WebP · Auto-optimized</p>
+          <p className="text-xs text-muted-foreground mt-1">{label("photo.help", "Max 500KB - JPG, PNG, WebP - Auto-optimized")}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>Full Name *</Label>
+          <Label>{label("fields.full_name", "Full Name")} *</Label>
           <Input
-            placeholder="John Doe"
+            placeholder={label("placeholders.full_name", "John Doe")}
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
+            aria-label={label("fields.full_name", "Full Name")}
             required
           />
         </div>
         <div className="space-y-2">
-          <Label>Email</Label>
+          <Label>{label("fields.email", "Email")}</Label>
           <Input
             type="email"
-            placeholder="john@example.com"
+            placeholder={label("placeholders.email", "john@example.com")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            aria-label={label("fields.email", "Email")}
           />
         </div>
         <div className="space-y-2">
-          <Label>Phone</Label>
+          <Label>{label("fields.phone", "Phone")}</Label>
           <Input
-            placeholder="+255..."
+            placeholder={label("placeholders.phone", "+255...")}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            aria-label={label("fields.phone", "Phone")}
           />
         </div>
         <div className="space-y-2">
-          <Label>Gender</Label>
+          <Label>{label("fields.gender", "Gender")}</Label>
           <Select value={gender} onValueChange={setGender}>
             <SelectTrigger>
-              <SelectValue placeholder="Select" />
+              <SelectValue placeholder={label("placeholders.select", "Select")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="male">Male</SelectItem>
-              <SelectItem value="female">Female</SelectItem>
+              <SelectItem value="male">{displayGender("male")}</SelectItem>
+              <SelectItem value="female">{displayGender("female")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Birthdate</Label>
+          <Label>{label("fields.birthdate", "Birthdate")}</Label>
           <Input
             type="date"
             value={dateOfBirth}
             onChange={(e) => setDateOfBirth(e.target.value)}
+            aria-label={label("fields.birthdate", "Birthdate")}
           />
         </div>
         <div className="space-y-2">
-          <Label>Are you married?</Label>
+          <Label>{label("fields.married", "Are you married?")}</Label>
           <Select value={isMarried} onValueChange={setIsMarried}>
             <SelectTrigger>
-              <SelectValue placeholder="Select" />
+              <SelectValue placeholder={label("placeholders.select", "Select")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="no">No</SelectItem>
-              <SelectItem value="yes">Yes</SelectItem>
+              <SelectItem value="no">{label("options.no", "No")}</SelectItem>
+              <SelectItem value="yes">{label("options.yes", "Yes")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Jumuiya</Label>
+          <Label>{label("fields.communities", "Jumuiya")}</Label>
           <div className="max-h-40 space-y-2 overflow-y-auto rounded-md border border-border p-3">
             {communities.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No communities available.</p>
+              <p className="text-sm text-muted-foreground">{label("empty.communities", "No communities available.")}</p>
             ) : (
               communities.map((community: any) => (
                 <label key={community.id} className="flex items-center gap-3 text-sm">
@@ -529,10 +553,10 @@ export function MemberForm({
           </div>
         </div>
         <div className="space-y-2">
-          <Label>Ministry</Label>
+          <Label>{label("fields.ministries", "Ministry")}</Label>
           <div className="max-h-40 space-y-2 overflow-y-auto rounded-md border border-border p-3">
             {ministries.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No ministries available.</p>
+              <p className="text-sm text-muted-foreground">{label("empty.ministries", "No ministries available.")}</p>
             ) : (
               ministries.map((ministry: any) => (
                 <label key={ministry.id} className="flex items-center gap-3 text-sm">
@@ -551,38 +575,41 @@ export function MemberForm({
       {(isMarried === "yes" || familyMembers.length > 0) && !isEdit ? (
         <div className="space-y-4 rounded-lg border border-border p-4">
           <div>
-            <p className="text-sm font-medium">Family Details</p>
-            <p className="text-xs text-muted-foreground">Create the family record and optionally add spouse and other family members now.</p>
+            <p className="text-sm font-medium">{label("family.title", "Family Details")}</p>
+            <p className="text-xs text-muted-foreground">{label("family.description", "Create the family record and optionally add spouse and other family members now.")}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Family Name</Label>
+              <Label>{label("fields.family_name", "Family Name")}</Label>
               <Input
-                placeholder="e.g. John Family"
+                placeholder={label("placeholders.family_name", "e.g. John Family")}
                 value={familyName}
                 onChange={(e) => setFamilyName(e.target.value)}
+                aria-label={label("fields.family_name", "Family Name")}
               />
             </div>
 
             {isMarried === "yes" ? (
               <div className="space-y-2">
-                <Label>Wedding Date</Label>
+                <Label>{label("fields.wedding_date", "Wedding Date")}</Label>
                 <Input
                   type="date"
                   value={weddingDate}
                   onChange={(e) => setWeddingDate(e.target.value)}
+                  aria-label={label("fields.wedding_date", "Wedding Date")}
                 />
               </div>
             ) : null}
 
             {isMarried === "yes" ? (
-              <div className="space-y-2 col-span-2">
-                <Label>Spouse Name</Label>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>{label("fields.spouse_name", "Spouse Name")}</Label>
                 <Input
-                  placeholder="Enter spouse full name"
+                  placeholder={label("placeholders.spouse_name", "Enter spouse full name")}
                   value={spouseName}
                   onChange={(e) => setSpouseName(e.target.value)}
+                  aria-label={label("fields.spouse_name", "Spouse Name")}
                 />
               </div>
             ) : null}
@@ -591,60 +618,62 @@ export function MemberForm({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Other Family Members</p>
-                <p className="text-xs text-muted-foreground">Add children or other household members now if you want.</p>
+                <p className="text-sm font-medium">{label("family.other_members", "Other Family Members")}</p>
+                <p className="text-xs text-muted-foreground">{label("family.other_members_help", "Add children or other household members now if you want.")}</p>
               </div>
               <Button type="button" variant="outline" size="sm" onClick={addFamilyMember}>
-                Add Member
+                {label("actions.add_family_member", "Add Member")}
               </Button>
             </div>
 
             {familyMembers.map((familyMember, index) => (
-              <div key={index} className="grid grid-cols-2 gap-4 rounded-md border border-border p-3">
+              <div key={index} className="grid grid-cols-1 gap-4 rounded-md border border-border p-3 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Name</Label>
+                  <Label>{label("fields.name", "Name")}</Label>
                   <Input
-                    placeholder="Full name"
+                    placeholder={label("placeholders.family_member_name", "Full name")}
                     value={familyMember.full_name}
                     onChange={(e) => updateFamilyMember(index, "full_name", e.target.value)}
+                    aria-label={label("fields.name", "Name")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Role</Label>
+                  <Label>{label("fields.role", "Role")}</Label>
                   <Select value={familyMember.role} onValueChange={(value) => updateFamilyMember(index, "role", value as FamilyRole)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="child">Child</SelectItem>
-                      <SelectItem value="guardian">Guardian</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="child">{displayFamilyRole("child")}</SelectItem>
+                      <SelectItem value="guardian">{displayFamilyRole("guardian")}</SelectItem>
+                      <SelectItem value="other">{displayFamilyRole("other")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Gender</Label>
+                  <Label>{label("fields.gender", "Gender")}</Label>
                   <Select value={familyMember.gender} onValueChange={(value) => updateFamilyMember(index, "gender", value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select" />
+                      <SelectValue placeholder={label("placeholders.select", "Select")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="male">{displayGender("male")}</SelectItem>
+                      <SelectItem value="female">{displayGender("female")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Birthdate</Label>
+                  <Label>{label("fields.birthdate", "Birthdate")}</Label>
                   <Input
                     type="date"
                     value={familyMember.date_of_birth}
                     onChange={(e) => updateFamilyMember(index, "date_of_birth", e.target.value)}
+                    aria-label={label("fields.birthdate", "Birthdate")}
                   />
                 </div>
-                <div className="col-span-2 flex justify-end">
+                <div className="flex justify-end sm:col-span-2">
                   <Button type="button" variant="ghost" size="sm" onClick={() => removeFamilyMember(index)}>
-                    Remove
+                    {label("actions.remove_family_member", "Remove")}
                   </Button>
                 </div>
               </div>
@@ -655,11 +684,11 @@ export function MemberForm({
 
       <div className="flex justify-end gap-2 pt-2">
         <Button variant="outline" type="button" onClick={onCancel}>
-          Cancel
+          {label("actions.cancel", "Cancel")}
         </Button>
         <Button type="submit" disabled={createMember.isPending || updateMember.isPending || uploading || !fullName}>
           {(uploading || createMember.isPending || updateMember.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          <UserPlus className="mr-2 h-4 w-4" /> {isEdit ? "Save Changes" : "Add Member"}
+          <UserPlus className="mr-2 h-4 w-4" /> {isEdit ? label("actions.save_changes", "Save Changes") : label("actions.add_member", "Add Member")}
         </Button>
       </div>
     </form>
