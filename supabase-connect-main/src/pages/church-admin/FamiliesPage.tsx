@@ -13,6 +13,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -50,6 +59,8 @@ export default function FamiliesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailFamily, setDetailFamily] = useState<any>(null);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [memberPendingRemoval, setMemberPendingRemoval] = useState<any>(null);
+  const [familyPendingDelete, setFamilyPendingDelete] = useState<any>(null);
   const [name, setName] = useState("");
   const [weddingDate, setWeddingDate] = useState("");
   const [selectedMemberId, setSelectedMemberId] = useState("");
@@ -183,6 +194,20 @@ export default function FamiliesPage() {
     (member: any) => !membersInFamilies.has(member.id)
   );
 
+  const refreshFamilyQueries = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["families", churchId],
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: ["family-members-all", churchId],
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: ["members-for-families", churchId],
+    });
+  };
+
   // Create a family within the current church.
   const create = useMutation({
     mutationFn: async () => {
@@ -214,9 +239,7 @@ export default function FamiliesPage() {
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["families"],
-      });
+      refreshFamilyQueries();
 
       toast({
         title: label("toasts.family_added", "Family added"),
@@ -286,9 +309,7 @@ export default function FamiliesPage() {
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["family-members-all", churchId],
-      });
+      refreshFamilyQueries();
 
       toast({
         title: label(
@@ -350,9 +371,7 @@ export default function FamiliesPage() {
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["family-members-all", churchId],
-      });
+      refreshFamilyQueries();
 
       toast({
         title: label(
@@ -360,6 +379,66 @@ export default function FamiliesPage() {
           "Member removed from family"
         ),
       });
+
+      setMemberPendingRemoval(null);
+    },
+
+    onError: (err: any) =>
+      toast({
+        title: label("toasts.error_title", "Error"),
+        description: err.message,
+        variant: "destructive",
+      }),
+  });
+
+  const deleteFamily = useMutation({
+    mutationFn: async (family: any) => {
+      if (!churchId || !family || family.church_id !== churchId) {
+        throw new Error(
+          label(
+            "errors.missing_data",
+            "Missing or invalid family context"
+          )
+        );
+      }
+
+      if (getFamilyMembersList(family.id).length > 0) {
+        throw new Error(
+          label(
+            "errors.delete_nonempty_family",
+            "Remove all members before deleting this family"
+          )
+        );
+      }
+
+      const { data, error } = await supabase
+        .from("families")
+        .delete()
+        .eq("id", family.id)
+        .eq("church_id", churchId)
+        .select("id");
+
+      if (error) throw error;
+
+      if (!data?.length) {
+        throw new Error(
+          label(
+            "errors.family_delete_blocked",
+            "Family could not be deleted or was not found"
+          )
+        );
+      }
+    },
+
+    onSuccess: () => {
+      refreshFamilyQueries();
+
+      toast({
+        title: label("toasts.family_deleted", "Family deleted"),
+      });
+
+      setFamilyPendingDelete(null);
+      setDetailFamily(null);
     },
 
     onError: (err: any) =>
@@ -489,10 +568,53 @@ export default function FamiliesPage() {
                 className="glass-card hover:gold-glow transition-shadow cursor-pointer"
                 onClick={() => setDetailFamily(family)}
               >
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-sans">
+                <CardHeader className="pb-2 flex-row items-start justify-between gap-3 space-y-0">
+                  <CardTitle className="text-base font-sans pr-2">
                     {family.name}
                   </CardTitle>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 text-destructive"
+                    disabled={
+                      members.length > 0 ||
+                      deleteFamily.isPending
+                    }
+                    aria-label={label(
+                      "accessibility.delete_family_for",
+                      "Delete family {{name}}",
+                      { name: family.name }
+                    )}
+                    title={
+                      members.length > 0
+                        ? label(
+                            "actions.delete_family_disabled",
+                            "Remove all members before deleting this family"
+                          )
+                        : label("actions.delete_family", "Delete Family")
+                    }
+                    onClick={(event) => {
+                      event.stopPropagation();
+
+                      if (members.length > 0) {
+                        toast({
+                          title: label("toasts.error_title", "Error"),
+                          description: label(
+                            "errors.delete_nonempty_family",
+                            "Remove all members before deleting this family"
+                          ),
+                          variant: "destructive",
+                        });
+
+                        return;
+                      }
+
+                      setFamilyPendingDelete(family);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </CardHeader>
 
                 <CardContent className="space-y-2">
@@ -558,6 +680,7 @@ export default function FamiliesPage() {
                   size="sm"
                   variant="outline"
                   onClick={() => setAddMemberOpen(true)}
+                  disabled={addFamilyMember.isPending}
                 >
                   <UserPlus className="mr-2 h-3 w-3" />
                   {label("actions.add", "Add")}
@@ -621,10 +744,9 @@ export default function FamiliesPage() {
                               "Remove {{name}} from family",
                               { name: member.full_name }
                             )}
+                            disabled={removeFamilyMember.isPending}
                             onClick={() =>
-                              removeFamilyMember.mutate(
-                                member.id
-                              )
+                              setMemberPendingRemoval(member)
                             }
                           >
                             <Trash2 className="h-3 w-3" />
@@ -732,6 +854,113 @@ export default function FamiliesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!memberPendingRemoval}
+        onOpenChange={(open) => {
+          if (!open && !removeFamilyMember.isPending) {
+            setMemberPendingRemoval(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {label(
+                "dialogs.remove_member_title",
+                "Remove member from family?"
+              )}
+            </AlertDialogTitle>
+
+            <AlertDialogDescription>
+              {label(
+                "dialogs.remove_member_description",
+                "{{name}} will be removed from this family. Their member record and contributions will remain intact.",
+                { name: memberPendingRemoval?.full_name ?? "" }
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={removeFamilyMember.isPending}
+            >
+              {label("actions.cancel", "Cancel")}
+            </AlertDialogCancel>
+
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={
+                !memberPendingRemoval ||
+                removeFamilyMember.isPending
+              }
+              onClick={() => {
+                if (memberPendingRemoval) {
+                  removeFamilyMember.mutate(
+                    memberPendingRemoval.id
+                  );
+                }
+              }}
+            >
+              {removeFamilyMember.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {label("actions.confirm_remove", "Remove member")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!familyPendingDelete}
+        onOpenChange={(open) => {
+          if (!open && !deleteFamily.isPending) {
+            setFamilyPendingDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {label("dialogs.delete_family_title", "Delete family?")}
+            </AlertDialogTitle>
+
+            <AlertDialogDescription>
+              {label(
+                "dialogs.delete_family_description",
+                "Delete {{name}}? This is only allowed when the family has no members.",
+                { name: familyPendingDelete?.name ?? "" }
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteFamily.isPending}>
+              {label("actions.cancel", "Cancel")}
+            </AlertDialogCancel>
+
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={
+                !familyPendingDelete ||
+                deleteFamily.isPending
+              }
+              onClick={() => {
+                if (familyPendingDelete) {
+                  deleteFamily.mutate(familyPendingDelete);
+                }
+              }}
+            >
+              {deleteFamily.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {label("actions.confirm_delete_family", "Delete family")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

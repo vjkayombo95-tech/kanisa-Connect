@@ -27,12 +27,24 @@ type UpdateResult = {
   error: { message: string } | null;
 };
 
+type DeleteCall = {
+  table: string;
+  filters: UpdateFilter[];
+};
+
+type DeleteResult = {
+  data: Array<{ id: string }> | [];
+  error: { message: string } | null;
+};
+
 const state = vi.hoisted(() => ({
   language: "sw" as "sw" | "en",
   toasts: [] as Array<Record<string, unknown>>,
   inserts: [] as Array<{ table: string; payload: unknown }>,
   updates: [] as UpdateCall[],
   updateResults: [] as UpdateResult[],
+  deletes: [] as DeleteCall[],
+  deleteResults: [] as DeleteResult[],
   remoteSelection: null as {
     id: string;
     full_name: string;
@@ -99,6 +111,11 @@ const families = [
   {
     id: "family-a",
     name: "Familia ya Nyerere",
+    church_id: "church-a",
+  },
+  {
+    id: "family-empty",
+    name: "Familia Tupu",
     church_id: "church-a",
   },
 ];
@@ -323,6 +340,54 @@ vi.mock("@/integrations/supabase/client", () => {
             return chain;
           }
         ),
+
+        delete: vi.fn(() => {
+          const call: DeleteCall = {
+            table,
+            filters: [],
+          };
+
+          state.deletes.push(call);
+
+          const chain: Record<string, any> = {};
+
+          chain.eq = vi.fn(
+            (column: string, value: unknown) => {
+              call.filters.push({
+                method: "eq",
+                column,
+                value,
+              });
+
+              return chain;
+            }
+          );
+
+          chain.select = vi.fn(() => chain);
+
+          chain.then = (
+            resolve: (value: unknown) => unknown,
+            reject?: (reason: unknown) => unknown
+          ) =>
+            Promise.resolve(
+              state.deleteResults.shift() ?? {
+                data: [
+                  {
+                    id: String(
+                      call.filters.find(
+                        (filter) =>
+                          filter.method === "eq" &&
+                          filter.column === "id"
+                      )?.value ?? "family-empty"
+                    ),
+                  },
+                ],
+                error: null,
+              }
+            ).then(resolve, reject);
+
+          return chain;
+        }),
       })),
     },
   };
@@ -570,6 +635,7 @@ async function renderFamilies() {
   await act(async () => {
     root!.render(<FamiliesPage />);
     await Promise.resolve();
+    await Promise.resolve();
   });
 }
 
@@ -697,6 +763,7 @@ async function clickByText(
   await act(async () => {
     target.click();
     await Promise.resolve();
+    await Promise.resolve();
   });
 }
 
@@ -724,6 +791,27 @@ async function selectByIndex(
       })
     );
 
+    await Promise.resolve();
+  });
+}
+
+async function clickButtonByAriaLabel(
+  label: string
+) {
+  const button =
+    host.querySelector<HTMLButtonElement>(
+      `button[aria-label="${label}"]`
+    );
+
+  if (!button) {
+    throw new Error(
+      `Button not found: ${label}`
+    );
+  }
+
+  await act(async () => {
+    button.click();
+    await Promise.resolve();
     await Promise.resolve();
   });
 }
@@ -757,6 +845,8 @@ beforeEach(() => {
   state.inserts = [];
   state.updates = [];
   state.updateResults = [];
+  state.deletes = [];
+  state.deleteResults = [];
   state.remoteSelection = null;
 
   invalidateQueries.mockClear();
@@ -1178,16 +1268,13 @@ describe(
           "Familia ya Nyerere"
         );
 
-        const remove =
-          host.querySelector<HTMLButtonElement>(
-            'button[aria-label="Ondoa Amina Nyerere kwenye familia"]'
-          )!;
+        await clickButtonByAriaLabel(
+          "Ondoa Amina Nyerere kwenye familia"
+        );
 
-        await act(async () => {
-          remove.click();
-          await Promise.resolve();
-          await Promise.resolve();
-        });
+        await clickByText(
+          "Ondoa mwanachama"
+        );
 
         expect(
           state.updates[1]
@@ -1320,16 +1407,17 @@ describe(
           "Familia ya Nyerere"
         );
 
-        const remove =
-          host.querySelector<HTMLButtonElement>(
-            'button[aria-label="Ondoa Amina Nyerere kwenye familia"]'
-          )!;
+        await clickButtonByAriaLabel(
+          "Ondoa Amina Nyerere kwenye familia"
+        );
 
-        await act(async () => {
-          remove.click();
-          await Promise.resolve();
-          await Promise.resolve();
-        });
+        expect(text()).toContain(
+          "Rekodi yake ya uanachama na michango yake vitabaki salama."
+        );
+
+        await clickByText(
+          "Ondoa mwanachama"
+        );
 
         expect(
           state.updates[0].filters
@@ -1426,6 +1514,200 @@ describe(
     );
 
     it(
+      "cancels member removal without changing the member or contributions",
+      async () => {
+        await renderFamilies();
+
+        await clickByText(
+          "Familia ya Nyerere"
+        );
+
+        await clickButtonByAriaLabel(
+          "Ondoa Amina Nyerere kwenye familia"
+        );
+
+        expect(text()).toContain(
+          "Michango Jumla"
+        );
+
+        expect(text()).toContain(
+          "Rekodi yake ya uanachama na michango yake vitabaki salama."
+        );
+
+        await clickByText(
+          "Ghairi"
+        );
+
+        expect(state.updates).toEqual([]);
+        expect(text()).not.toContain(
+          "Ondoa mwanachama kwenye familia?"
+        );
+      }
+    );
+
+    it(
+      "deletes an empty family with church-scoped filters after confirmation",
+      async () => {
+        await renderFamilies();
+
+        await clickButtonByAriaLabel(
+          "Futa familia Familia Tupu"
+        );
+
+        expect(text()).toContain(
+          "Futa Familia Tupu?"
+        );
+
+        await clickByText(
+          "Futa familia"
+        );
+
+        expect(
+          state.deletes[0]
+        ).toMatchObject({
+          table: "families",
+        });
+
+        expect(
+          state.deletes[0].filters
+        ).toEqual(
+          expect.arrayContaining([
+            {
+              method: "eq",
+              column: "id",
+              value: "family-empty",
+            },
+            {
+              method: "eq",
+              column: "church_id",
+              value: "church-a",
+            },
+          ])
+        );
+
+        expect(
+          state.toasts.some(
+            (toast) =>
+              toast.title === "Familia imefutwa"
+          )
+        ).toBe(true);
+      }
+    );
+
+    it(
+      "does not allow deleting a nonempty family from the UI",
+      async () => {
+        await renderFamilies();
+
+        const deleteNonempty =
+          host.querySelector<HTMLButtonElement>(
+            'button[aria-label="Futa familia Familia ya Nyerere"]'
+          )!;
+
+        expect(deleteNonempty.disabled).toBe(true);
+        expect(state.deletes).toEqual([]);
+      }
+    );
+
+    it(
+      "shows an error instead of success when deleting updates zero rows",
+      async () => {
+        state.deleteResults = [
+          {
+            data: [],
+            error: null,
+          },
+        ];
+
+        await renderFamilies();
+
+        await clickButtonByAriaLabel(
+          "Futa familia Familia Tupu"
+        );
+
+        await clickByText(
+          "Futa familia"
+        );
+
+        expect(
+          state.deletes[0].filters
+        ).toEqual(
+          expect.arrayContaining([
+            {
+              method: "eq",
+              column: "id",
+              value: "family-empty",
+            },
+            {
+              method: "eq",
+              column: "church_id",
+              value: "church-a",
+            },
+          ])
+        );
+
+        expect(
+          state.toasts.some(
+            (toast) =>
+              toast.title === "Hitilafu"
+          )
+        ).toBe(true);
+
+        expect(
+          state.toasts.some(
+            (toast) =>
+              toast.title === "Familia imefutwa"
+          )
+        ).toBe(false);
+      }
+    );
+
+    it(
+      "shows Supabase delete errors without reporting family deletion success",
+      async () => {
+        state.deleteResults = [
+          {
+            data: [],
+            error: {
+              message:
+                "Simulated delete failure",
+            },
+          },
+        ];
+
+        await renderFamilies();
+
+        await clickButtonByAriaLabel(
+          "Futa familia Familia Tupu"
+        );
+
+        await clickByText(
+          "Futa familia"
+        );
+
+        expect(
+          state.toasts
+        ).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              title: "Hitilafu",
+              description:
+                "Simulated delete failure",
+              variant: "destructive",
+            }),
+          ])
+        );
+
+        expect(
+          state.toasts.some(
+            (toast) =>
+              toast.title === "Familia imefutwa"
+          )
+        ).toBe(false);
+      }
+    );
+
+    it(
       "documents church-scoped family queries and mutations",
       () => {
         const source = readFileSync(
@@ -1454,6 +1736,10 @@ describe(
         );
 
         expect(source).toContain(
+          '.delete()'
+        );
+
+        expect(source).toContain(
           '.from("members")'
         );
 
@@ -1467,6 +1753,10 @@ describe(
 
         expect(source).toContain(
           '.eq("family_id", detailFamily.id)'
+        );
+
+        expect(source).toContain(
+          '.eq("id", family.id)'
         );
       }
     );

@@ -896,11 +896,19 @@
       "add_family": "Add Family",
       "add": "Add",
       "assign": "Assign",
+      "confirm_delete_family": "Delete family",
+      "confirm_remove": "Remove member",
       "cancel": "Cancel",
-      "create": "Create"
+      "create": "Create",
+      "delete_family": "Delete Family",
+      "delete_family_disabled": "Remove all members before deleting this family"
     },
     "dialogs": {
-      "new_family": "New Family"
+      "new_family": "New Family",
+      "remove_member_title": "Remove member from family?",
+      "remove_member_description": "{{name}} will be removed from this family. Their member record and contributions will remain intact.",
+      "delete_family_title": "Delete family?",
+      "delete_family_description": "Delete {{name}}? This is only allowed when the family has no members."
     },
     "fields": {
       "family_name": "Family Name",
@@ -929,15 +937,19 @@
     },
     "toasts": {
       "family_added": "Family added",
+      "family_deleted": "Family deleted",
       "member_added": "Member added to family",
       "member_removed": "Member removed from family",
       "error_title": "Error"
     },
     "errors": {
-      "missing_data": "Missing data"
+      "missing_data": "Missing data",
+      "delete_nonempty_family": "Remove all members before deleting this family",
+      "family_delete_blocked": "Family could not be deleted or was not found"
     },
     "accessibility": {
-      "remove_member_for": "Remove {{name}} from family"
+      "remove_member_for": "Remove {{name}} from family",
+      "delete_family_for": "Delete family {{name}}"
     }
   },
   "event_requests_admin": {
