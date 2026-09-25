@@ -1,16 +1,26 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Heart, Users, Loader2, Calendar, HandCoins, UserPlus, Trash2 } from "lucide-react";
+import { Plus, Heart, Users, Loader2, HandCoins, UserPlus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatTZS } from "@/lib/currency";
 
@@ -20,13 +30,29 @@ export default function FamiliesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailFamily, setDetailFamily] = useState<any>(null);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [memberPendingRemoval, setMemberPendingRemoval] = useState<any>(null);
+  const [familyPendingDelete, setFamilyPendingDelete] = useState<any>(null);
   const [name, setName] = useState("");
   const [weddingDate, setWeddingDate] = useState("");
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("other");
   const { churchId } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
+
+  const label = (key: string, fallback: string, options?: Record<string, unknown>) => {
+    const translationKey = `families_admin.${key}`;
+    const translated = t(translationKey, {
+      defaultValue: fallback,
+      ...options,
+    }) as unknown;
+
+    return typeof translated === "string" && translated !== translationKey ? translated : fallback;
+  };
+
+  const displayFamilyRole = (role: string | null | undefined) =>
+    role ? label(`roles.${role}`, role.replace(/_/g, " ")) : "";
 
   const { data: families = [], isLoading } = useQuery({
     queryKey: ["families", churchId],
@@ -86,101 +112,201 @@ export default function FamiliesPage() {
     return contributions.filter((c: any) => memberIds.includes(c.member_id)).reduce((s: number, c: any) => s + (c.amount || 0), 0);
   };
 
-  // Members already in any family
   const membersInFamilies = new Set(familyMembers.map((fm: any) => fm.id));
   const availableMembers = allMembers.filter((m: any) => !membersInFamilies.has(m.id));
 
+  const refreshFamilyQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["families", churchId] });
+    queryClient.invalidateQueries({ queryKey: ["family-members-all", churchId] });
+    queryClient.invalidateQueries({ queryKey: ["members-for-families", churchId] });
+  };
+
   const create = useMutation({
     mutationFn: async () => {
-      if (!churchId) throw new Error("No active church workspace");
+      if (!churchId) throw new Error(label("errors.missing_data", "Missing church context"));
+
+      const familyName = name.trim();
+      if (!familyName) throw new Error(label("fields.family_name_required", "Family name is required"));
+
       const { error } = await supabase.from("families").insert({
         church_id: churchId,
-        name: name.trim(),
+        name: familyName,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["families"] });
-      toast({ title: "Family added" });
+      refreshFamilyQueries();
+      toast({ title: label("toasts.family_added", "Family added") });
       setDialogOpen(false); setName(""); setWeddingDate("");
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: any) => toast({ title: label("toasts.error_title", "Error"), description: err.message, variant: "destructive" }),
   });
 
   const addFamilyMember = useMutation({
     mutationFn: async () => {
-      if (!detailFamily || !selectedMemberId) throw new Error("Missing data");
-      const { error } = await supabase
+      if (!churchId || !detailFamily || !selectedMemberId || detailFamily.church_id !== churchId) {
+        throw new Error(label("errors.missing_data", "Missing or invalid family context"));
+      }
+
+      if (!availableMembers.some((member: any) => member.id === selectedMemberId)) {
+        throw new Error(label("errors.missing_data", "Invalid member selection"));
+      }
+
+      const { data, error } = await supabase
         .from("members")
         .update({
           family_id: detailFamily.id,
           family_role: selectedRole,
         })
-        .eq("id", selectedMemberId);
+        .eq("id", selectedMemberId)
+        .eq("church_id", churchId)
+        .is("family_id", null)
+        .select("id");
       if (error) throw error;
+
+      if (!data?.length) {
+        throw new Error(label("errors.member_assign_blocked", "Member could not be assigned"));
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["family-members-all"] });
-      toast({ title: "Member added to family" });
+      refreshFamilyQueries();
+      toast({ title: label("toasts.member_added", "Member added to family") });
       setAddMemberOpen(false); setSelectedMemberId(""); setSelectedRole("other");
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: any) => toast({ title: label("toasts.error_title", "Error"), description: err.message, variant: "destructive" }),
   });
 
   const removeFamilyMember = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      if (!churchId || !detailFamily || detailFamily.church_id !== churchId) {
+        throw new Error(label("errors.missing_data", "Missing or invalid family context"));
+      }
+
+      const { data, error } = await supabase
         .from("members")
         .update({
           family_id: null,
           family_role: null,
         })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("church_id", churchId)
+        .eq("family_id", detailFamily.id)
+        .select("id");
       if (error) throw error;
+
+      if (!data?.length) {
+        throw new Error(label("errors.member_remove_blocked", "Member could not be removed from this family"));
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["family-members-all"] });
-      toast({ title: "Member removed from family" });
+      refreshFamilyQueries();
+      toast({ title: label("toasts.member_removed", "Member removed from family") });
+      setMemberPendingRemoval(null);
     },
+    onError: (err: any) => toast({ title: label("toasts.error_title", "Error"), description: err.message, variant: "destructive" }),
+  });
+
+  const deleteFamily = useMutation({
+    mutationFn: async (family: any) => {
+      if (!churchId || !family || family.church_id !== churchId) {
+        throw new Error(label("errors.missing_data", "Missing or invalid family context"));
+      }
+
+      if (getFamilyMembersList(family.id).length > 0) {
+        throw new Error(label("errors.delete_nonempty_family", "Remove all members before deleting this family"));
+      }
+
+      const { data, error } = await supabase
+        .from("families")
+        .delete()
+        .eq("id", family.id)
+        .eq("church_id", churchId)
+        .select("id");
+      if (error) throw error;
+
+      if (!data?.length) {
+        throw new Error(label("errors.family_delete_blocked", "Family could not be deleted or was not found"));
+      }
+    },
+    onSuccess: () => {
+      refreshFamilyQueries();
+      toast({ title: label("toasts.family_deleted", "Family deleted") });
+      setFamilyPendingDelete(null);
+      setDetailFamily(null);
+    },
+    onError: (err: any) => toast({ title: label("toasts.error_title", "Error"), description: err.message, variant: "destructive" }),
   });
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold font-serif">Families</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage church families and their members</p>
+          <h1 className="text-2xl font-bold font-serif">{label("title", "Families")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{label("description", "Manage church families and their members")}</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button size="sm"><Plus className="mr-2 h-4 w-4" /> Add Family</Button></DialogTrigger>
+          <DialogTrigger asChild><Button size="sm"><Plus className="mr-2 h-4 w-4" /> {label("actions.add_family", "Add Family")}</Button></DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle className="font-serif">New Family</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="font-serif">{label("dialogs.new_family", "New Family")}</DialogTitle></DialogHeader>
             <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); create.mutate(); }}>
-              <div className="space-y-2"><Label>Family Name *</Label><Input placeholder="e.g. The Shumbusho Family" value={name} onChange={(e) => setName(e.target.value)} required /></div>
+              <div className="space-y-2">
+                <Label>{label("fields.family_name_required", "Family Name *")}</Label>
+                <Input
+                  aria-label={label("fields.family_name", "Family Name")}
+                  placeholder={label("placeholders.family_name", "e.g. The Shumbusho Family")}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={create.isPending || !name}>{create.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Create</Button>
+                <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>{label("actions.cancel", "Cancel")}</Button>
+                <Button type="submit" disabled={create.isPending || !name.trim()}>{create.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} {label("actions.create", "Create")}</Button>
               </div>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      {isLoading ? <p className="text-muted-foreground">Loading...</p> : families.length === 0 ? (
+      {isLoading ? <p className="text-muted-foreground">{label("loading", "Loading families...")}</p> : families.length === 0 ? (
         <Card className="glass-card"><CardContent className="py-16 text-center text-muted-foreground">
           <Heart className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
-          <p>No families registered yet.</p>
+          <p>{label("empty.no_families", "No families registered yet.")}</p>
         </CardContent></Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {families.map((f: any) => {
-            const fMembers = getFamilyMembersList(f.id);
-            const total = getFamilyTotal(f.id);
+          {families.map((family: any) => {
+            const members = getFamilyMembersList(family.id);
+            const total = getFamilyTotal(family.id);
             return (
-              <Card key={f.id} className="glass-card hover:gold-glow transition-shadow cursor-pointer" onClick={() => setDetailFamily(f)}>
-                <CardHeader className="pb-2"><CardTitle className="text-base font-sans">{f.name}</CardTitle></CardHeader>
+              <Card key={family.id} className="glass-card hover:gold-glow transition-shadow cursor-pointer" onClick={() => setDetailFamily(family)}>
+                <CardHeader className="pb-2 flex-row items-start justify-between gap-3 space-y-0">
+                  <CardTitle className="text-base font-sans pr-2">{family.name}</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 text-destructive"
+                    disabled={members.length > 0 || deleteFamily.isPending}
+                    aria-label={label("accessibility.delete_family_for", "Delete family {{name}}", { name: family.name })}
+                    title={members.length > 0 ? label("actions.delete_family_disabled", "Remove all members before deleting this family") : label("actions.delete_family", "Delete Family")}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      if (members.length > 0) {
+                        toast({
+                          title: label("toasts.error_title", "Error"),
+                          description: label("errors.delete_nonempty_family", "Remove all members before deleting this family"),
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      setFamilyPendingDelete(family);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </CardHeader>
                 <CardContent className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground"><Users className="h-3 w-3" /> {fMembers.length} members</div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground"><Users className="h-3 w-3" /> {label("cards.members_count", "{{count}} members", { count: members.length })}</div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground"><HandCoins className="h-3 w-3" /> {formatTZS(total)}</div>
                 </CardContent>
               </Card>
@@ -189,56 +315,65 @@ export default function FamiliesPage() {
         </div>
       )}
 
-      {/* Family detail */}
-      <Dialog open={!!detailFamily} onOpenChange={(o) => { if (!o) setDetailFamily(null); }}>
+      <Dialog open={!!detailFamily} onOpenChange={(open) => { if (!open) setDetailFamily(null); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle className="font-serif">{detailFamily?.name}</DialogTitle></DialogHeader>
           {detailFamily && (
             <div className="space-y-4">
-              <p className="text-sm font-medium">Total Contributions: <span className="text-primary">{formatTZS(getFamilyTotal(detailFamily.id))}</span></p>
+              <p className="text-sm font-medium">{label("details.total_contributions", "Total Contributions")}: <span className="text-primary">{formatTZS(getFamilyTotal(detailFamily.id))}</span></p>
 
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold">Family Members</h4>
-                <Button size="sm" variant="outline" onClick={() => setAddMemberOpen(true)}><UserPlus className="mr-2 h-3 w-3" /> Add</Button>
+                <h4 className="text-sm font-semibold">{label("details.family_members", "Family Members")}</h4>
+                <Button size="sm" variant="outline" onClick={() => setAddMemberOpen(true)} disabled={addFamilyMember.isPending}><UserPlus className="mr-2 h-3 w-3" /> {label("actions.add", "Add")}</Button>
               </div>
 
               <Table>
-                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Role</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>{label("table.name", "Name")}</TableHead><TableHead>{label("table.role", "Role")}</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
                 <TableBody>
                   {getFamilyMembersList(detailFamily.id).length === 0 ? (
-                    <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-4">No members assigned</TableCell></TableRow>
-                  ) : getFamilyMembersList(detailFamily.id).map((fm: any) => (
-                    <TableRow key={fm.id}>
-                      <TableCell className="font-medium">{fm.full_name}</TableCell>
-                      <TableCell><Badge variant="outline" className="capitalize">{fm.family_role}</Badge></TableCell>
-                      <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeFamilyMember.mutate(fm.id)}><Trash2 className="h-3 w-3" /></Button></TableCell>
+                    <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-4">{label("empty.no_assigned_members", "No members assigned")}</TableCell></TableRow>
+                  ) : getFamilyMembersList(detailFamily.id).map((member: any) => (
+                    <TableRow key={member.id}>
+                      <TableCell className="font-medium">{member.full_name}</TableCell>
+                      <TableCell><Badge variant="outline">{displayFamilyRole(member.family_role)}</Badge></TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive"
+                          aria-label={label("accessibility.remove_member_for", "Remove {{name}} from family", { name: member.full_name })}
+                          disabled={removeFamilyMember.isPending}
+                          onClick={() => setMemberPendingRemoval(member)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
 
-              {/* Add member sub-dialog */}
               {addMemberOpen && (
                 <div className="border border-border rounded-lg p-4 space-y-3 bg-secondary/30">
                   <div className="space-y-2">
-                    <Label>Member</Label>
+                    <Label>{label("fields.member", "Member")}</Label>
                     <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
-                      <SelectTrigger><SelectValue placeholder="Select member" /></SelectTrigger>
-                      <SelectContent>{availableMembers.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>)}</SelectContent>
+                      <SelectTrigger><SelectValue placeholder={label("placeholders.select_member", "Select member")} /></SelectTrigger>
+                      <SelectContent>{availableMembers.map((member: any) => <SelectItem key={member.id} value={member.id}>{member.full_name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Role</Label>
+                    <Label>{label("fields.role", "Role")}</Label>
                     <Select value={selectedRole} onValueChange={setSelectedRole}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{FAMILY_ROLES.map((r) => <SelectItem key={r} value={r} className="capitalize">{r === "father" ? "Husband" : r === "mother" ? "Wife" : r === "child" ? "Child" : r}</SelectItem>)}</SelectContent>
+                      <SelectContent>{FAMILY_ROLES.map((role) => <SelectItem key={role} value={role}>{displayFamilyRole(role)}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => addFamilyMember.mutate()} disabled={!selectedMemberId || addFamilyMember.isPending}>
-                      {addFamilyMember.isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />} Assign
+                      {addFamilyMember.isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />} {label("actions.assign", "Assign")}
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => setAddMemberOpen(false)}>Cancel</Button>
+                    <Button size="sm" variant="outline" onClick={() => setAddMemberOpen(false)}>{label("actions.cancel", "Cancel")}</Button>
                   </div>
                 </div>
               )}
@@ -246,6 +381,66 @@ export default function FamiliesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!memberPendingRemoval}
+        onOpenChange={(open) => {
+          if (!open && !removeFamilyMember.isPending) setMemberPendingRemoval(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{label("dialogs.remove_member_title", "Remove member from family?")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {label("dialogs.remove_member_description", "{{name}} will be removed from this family. Their member record and contributions will remain intact.", { name: memberPendingRemoval?.full_name ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removeFamilyMember.isPending}>{label("actions.cancel", "Cancel")}</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={!memberPendingRemoval || removeFamilyMember.isPending}
+              onClick={() => {
+                if (memberPendingRemoval) removeFamilyMember.mutate(memberPendingRemoval.id);
+              }}
+            >
+              {removeFamilyMember.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {label("actions.confirm_remove", "Remove member")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!familyPendingDelete}
+        onOpenChange={(open) => {
+          if (!open && !deleteFamily.isPending) setFamilyPendingDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{label("dialogs.delete_family_title", "Delete family?")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {label("dialogs.delete_family_description", "Delete {{name}}? This is only allowed when the family has no members.", { name: familyPendingDelete?.name ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteFamily.isPending}>{label("actions.cancel", "Cancel")}</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={!familyPendingDelete || deleteFamily.isPending}
+              onClick={() => {
+                if (familyPendingDelete) deleteFamily.mutate(familyPendingDelete);
+              }}
+            >
+              {deleteFamily.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {label("actions.confirm_delete_family", "Delete family")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

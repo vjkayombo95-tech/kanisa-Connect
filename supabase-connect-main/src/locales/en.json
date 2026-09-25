@@ -244,6 +244,79 @@
     "english": "English",
     "swahili": "Kiswahili"
   },
+  "families_admin": {
+    "title": "Families",
+    "description": "Manage church families and their members",
+    "loading": "Loading families...",
+    "actions": {
+      "add_family": "Add Family",
+      "add": "Add",
+      "assign": "Assign",
+      "confirm_delete_family": "Delete family",
+      "confirm_remove": "Remove member",
+      "cancel": "Cancel",
+      "create": "Create",
+      "delete_family": "Delete Family",
+      "delete_family_disabled": "Remove all members before deleting this family"
+    },
+    "dialogs": {
+      "new_family": "New Family",
+      "remove_member_title": "Remove member from family?",
+      "remove_member_description": "{{name}} will be removed from this family. Their member record and contributions will remain intact.",
+      "delete_family_title": "Delete family?",
+      "delete_family_description": "Delete {{name}}? This is only allowed when the family has no members."
+    },
+    "fields": {
+      "family_name": "Family Name",
+      "family_name_required": "Family Name *",
+      "member": "Member",
+      "role": "Role"
+    },
+    "placeholders": {
+      "family_name": "e.g. The Shumbusho Family",
+      "select_member": "Select member"
+    },
+    "cards": {
+      "members_count": "{{count}} members"
+    },
+    "details": {
+      "total_contributions": "Total Contributions",
+      "family_members": "Family Members"
+    },
+    "table": {
+      "name": "Name",
+      "role": "Role"
+    },
+    "empty": {
+      "no_families": "No families registered yet.",
+      "no_assigned_members": "No members assigned"
+    },
+    "roles": {
+      "father": "Father",
+      "mother": "Mother",
+      "child": "Child",
+      "guardian": "Guardian",
+      "other": "Other"
+    },
+    "toasts": {
+      "family_added": "Family added",
+      "family_deleted": "Family deleted",
+      "member_added": "Member added to family",
+      "member_removed": "Member removed from family",
+      "error_title": "Error"
+    },
+    "errors": {
+      "missing_data": "Missing data",
+      "member_assign_blocked": "Member could not be assigned",
+      "member_remove_blocked": "Member could not be removed from this family",
+      "delete_nonempty_family": "Remove all members before deleting this family",
+      "family_delete_blocked": "Family could not be deleted or was not found"
+    },
+    "accessibility": {
+      "remove_member_for": "Remove {{name}} from family",
+      "delete_family_for": "Delete family {{name}}"
+    }
+  },
   "mass_intention": {
     "title": "Mass Intention"
   },

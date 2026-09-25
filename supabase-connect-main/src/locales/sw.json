@@ -244,6 +244,79 @@
     "english": "English",
     "swahili": "Kiswahili"
   },
+  "families_admin": {
+    "title": "Familia",
+    "description": "Simamia familia za kanisa na wanachama wake",
+    "loading": "Inapakia familia...",
+    "actions": {
+      "add_family": "Ongeza Familia",
+      "add": "Ongeza",
+      "assign": "Pangia",
+      "confirm_delete_family": "Futa familia",
+      "confirm_remove": "Ondoa mwanachama",
+      "cancel": "Ghairi",
+      "create": "Unda",
+      "delete_family": "Futa Familia",
+      "delete_family_disabled": "Ondoa wanachama wote kabla ya kufuta familia"
+    },
+    "dialogs": {
+      "new_family": "Familia Mpya",
+      "remove_member_title": "Ondoa mwanachama kwenye familia?",
+      "remove_member_description": "{{name}} ataondolewa kwenye familia hii. Rekodi yake ya uanachama na michango yake vitabaki salama.",
+      "delete_family_title": "Futa familia?",
+      "delete_family_description": "Futa {{name}}? Hii inaruhusiwa tu kama familia haina wanachama."
+    },
+    "fields": {
+      "family_name": "Jina la Familia",
+      "family_name_required": "Jina la Familia *",
+      "member": "Mwanachama",
+      "role": "Jukumu"
+    },
+    "placeholders": {
+      "family_name": "mf. Familia ya Shumbusho",
+      "select_member": "Chagua mwanachama"
+    },
+    "cards": {
+      "members_count": "Wanachama {{count}}"
+    },
+    "details": {
+      "total_contributions": "Michango Jumla",
+      "family_members": "Wanafamilia"
+    },
+    "table": {
+      "name": "Jina",
+      "role": "Jukumu"
+    },
+    "empty": {
+      "no_families": "Bado hakuna familia zilizosajiliwa.",
+      "no_assigned_members": "Hakuna wanachama waliopangiwa"
+    },
+    "roles": {
+      "father": "Baba",
+      "mother": "Mama",
+      "child": "Mtoto",
+      "guardian": "Mlezi",
+      "other": "Nyingine"
+    },
+    "toasts": {
+      "family_added": "Familia imeongezwa",
+      "family_deleted": "Familia imefutwa",
+      "member_added": "Mwanachama ameongezwa kwenye familia",
+      "member_removed": "Mwanachama ameondolewa kwenye familia",
+      "error_title": "Hitilafu"
+    },
+    "errors": {
+      "missing_data": "Taarifa hazijakamilika",
+      "member_assign_blocked": "Mwanachama hakuweza kupangiwa",
+      "member_remove_blocked": "Mwanachama hakuweza kuondolewa kwenye familia hii",
+      "delete_nonempty_family": "Ondoa wanachama wote kabla ya kufuta familia hii",
+      "family_delete_blocked": "Familia haikuweza kufutwa au haikupatikana"
+    },
+    "accessibility": {
+      "remove_member_for": "Ondoa {{name}} kwenye familia",
+      "delete_family_for": "Futa familia {{name}}"
+    }
+  },
   "mass_intention": {
     "title": "Nia ya Misa"
   },

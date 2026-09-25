@@ -14,7 +14,7 @@ describe("family workspace tenant scope", () => {
   });
 
   it("includes the trusted active church in family inserts", () => {
-    expect(source).toContain('if (!churchId) throw new Error("No active church workspace")');
+    expect(source).toContain('if (!churchId) throw new Error(label("errors.missing_data", "Missing church context"))');
     expect(source).toContain("church_id: churchId");
   });
 });
