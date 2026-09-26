@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { AuthorizationBootstrapError, classifyAuthorizationFailure, isActiveAuthorizationLoad, isTransientAuthorizationFailure, runAuthorizationOperation, safeAuthorizationDiagnostic } from "@/lib/authorization-bootstrap";
+import { getAuthorizationRealtimeStatusAction } from "@/lib/authorization-realtime-lifecycle";
 
 describe("production authorization resilience", () => {
   it.each([
@@ -23,7 +24,30 @@ describe("production authorization resilience", () => {
   it("accepts only the active success or failure", () => { expect(isActiveAuthorizationLoad(2,2)).toBe(true); expect(isActiveAuthorizationLoad(1,2)).toBe(false) });
   it("emits no sensitive diagnostic values", () => { const value=safeAuthorizationDiagnostic({code:"42501",status:403,access_token:"secret",refresh_token:"secret",profile:{email:"private"}}); expect(value).toEqual({classification:"HTTP_AUTH",code:"42501",status:403}); expect(JSON.stringify(value)).not.toMatch(/secret|private/) });
   it("marks only connectivity classes transient", () => { expect(["NETWORK","OFFLINE","TIMEOUT"].every(value=>isTransientAuthorizationFailure(value as any))).toBe(true); expect(["HTTP_AUTH","DATABASE","INVALID_CONTEXT","UNKNOWN"].some(value=>isTransientAuthorizationFailure(value as any))).toBe(false) });
-  it("wires stale guards, dedup, coalescing, advisory realtime and reset invalidation", () => { const source=readFileSync("src/contexts/AuthContext.tsx","utf8"); expect(source).toContain("++sequence.current"); expect(source).toContain("isActiveAuthorizationLoad"); expect(source).toContain("inFlight.current?.userId"); expect(source).toContain("scheduled.current=setTimeout"); expect(source).toContain('window.addEventListener("online"'); expect(source).toContain('["CHANNEL_ERROR","TIMED_OUT","CLOSED"]'); expect(source).toContain("sequence.current+=1"); expect(source).not.toMatch(/CHANNEL_ERROR[\s\S]{0,200}clearAuthorization/) });
+  it("wires stale guards, dedup, coalescing, advisory realtime and reset invalidation", () => { const source=readFileSync("src/contexts/AuthContext.tsx","utf8"), realtime=readFileSync("src/lib/authorization-realtime-lifecycle.ts","utf8"); expect(source).toContain("++sequence.current"); expect(source).toContain("isActiveAuthorizationLoad"); expect(source).toContain("inFlight.current?.userId"); expect(source).toContain("scheduled.current=setTimeout"); expect(source).toContain('window.addEventListener("online"'); expect(realtime).toContain('"CHANNEL_ERROR"'); expect(realtime).toContain('"TIMED_OUT"'); expect(realtime).toContain('"CLOSED"'); expect(source).toContain("sequence.current+=1"); expect(`${source}\n${realtime}`).not.toMatch(/CHANNEL_ERROR[\s\S]{0,200}clearAuthorization/) });
+  it("ignores realtime statuses after cleanup and avoids cleanup-triggered refresh", () => {
+    expect(getAuthorizationRealtimeStatusAction("CLOSED", false)).toEqual({ shouldLog: false, level: "default", refreshReason: null });
+    expect(getAuthorizationRealtimeStatusAction("CHANNEL_ERROR", false)).toEqual({ shouldLog: false, level: "default", refreshReason: null });
+    expect(getAuthorizationRealtimeStatusAction("TIMED_OUT", false)).toEqual({ shouldLog: false, level: "default", refreshReason: null });
+  });
+  it("keeps normal and duplicate realtime statuses informational", () => {
+    const subscribed = getAuthorizationRealtimeStatusAction("SUBSCRIBED", true);
+    expect(subscribed).toEqual({ shouldLog: true, level: "info", refreshReason: null });
+    expect(getAuthorizationRealtimeStatusAction("SUBSCRIBED", true)).toEqual(subscribed);
+    expect(getAuthorizationRealtimeStatusAction("CLOSED", true)).toEqual({ shouldLog: true, level: "info", refreshReason: "REALTIME_CLOSED" });
+  });
+  it("keeps unexpected realtime failures actionable", () => {
+    expect(getAuthorizationRealtimeStatusAction("CHANNEL_ERROR", true)).toEqual({ shouldLog: true, level: "warn", refreshReason: "REALTIME_CHANNEL_ERROR" });
+    expect(getAuthorizationRealtimeStatusAction("TIMED_OUT", true)).toEqual({ shouldLog: true, level: "warn", refreshReason: "REALTIME_TIMED_OUT" });
+  });
+  it("guards realtime callbacks through cleanup and recreates channels when auth user changes", () => {
+    const source=readFileSync("src/contexts/AuthContext.tsx","utf8");
+    expect(source).toContain('},()=>{if(active)scheduleRefresh("REALTIME_PROFILE")}');
+    expect(source).toContain('},()=>{if(active)scheduleRefresh("REALTIME_ROLE")}');
+    expect(source).toContain("getAuthorizationRealtimeStatusAction(status,active)");
+    expect(source).toContain("return()=>{active=false;void supabase.removeChannel(channel)}");
+    expect(source).toContain("},[scheduleRefresh,user]);");
+  });
   it("keeps authentication errors separate from authorization connectivity UX", () => { const login=readFileSync("src/pages/auth/LoginPage.tsx","utf8"), route=readFileSync("src/components/auth/ProtectedRoute.tsx","utf8"); expect(login).toContain("authorizationConnectivityIssue"); expect(login).toContain("still signed in"); expect(login).toContain("invalid login credentials"); expect(route).toContain("shared.auth.workspace_access_title"); expect(route).toContain("shared.actions.retry") });
   it("does not introduce forbidden architecture or sensitive logging", () => { const auth=readFileSync("src/contexts/AuthContext.tsx","utf8"); expect(auth).toContain('rpc("get_current_user_context"'); expect(auth).not.toMatch(/church_memberships|multi-church|access_token|refresh_token|password/i) });
 });

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { clearSensitiveOfflineData, readOfflineCache } from "@/lib/offline-cache";
 import { captureException, logSupabaseError } from "@/lib/error-logger";
 import { AuthorizationBootstrapError, classifyAuthorizationFailure, isActiveAuthorizationLoad, isTransientAuthorizationFailure, runAuthorizationOperation, safeAuthorizationDiagnostic, type AuthorizationFailureClassification } from "@/lib/authorization-bootstrap";
+import { getAuthorizationRealtimeStatusAction, type AuthorizationRealtimeDiagnosticLevel } from "@/lib/authorization-realtime-lifecycle";
 import { hasUnsupportedProductionRole, normalizeProductionRoles, resolveStaffMobileWorkspace, type ProductionUserRole, type StaffMobileWorkspace } from "@/lib/staff-mobile-role";
 
 type AppRole = "super_admin" | "church_admin" | "pastor" | "secretary" | "treasurer" | "member";
@@ -14,10 +15,11 @@ interface AuthContextType { session: Session | null; user: User | null; profile:
 const AuthContext = createContext<AuthContextType>({ session:null,user:null,profile:null,isSuperAdmin:false,churchId:null,userRole:null,userRoles:[],staffWorkspace:null,isLoading:true,authorizationError:null,authorizationFailure:null,authorizationReady:false,signOut:async()=>{},refreshUserData:async()=>{} });
 export const useAuth = () => useContext(AuthContext);
 
-function diagnostic(stage: string, metadata: Record<string, unknown> = {}) {
+function diagnostic(stage: string, metadata: Record<string, unknown> = {}, level: AuthorizationRealtimeDiagnosticLevel = "default") {
   const safe = { stage, operation:"get_current_user_context", navigatorOnline:typeof navigator!=="undefined"?navigator.onLine:undefined, visibilityState:typeof document!=="undefined"?document.visibilityState:undefined, ...metadata };
   if (import.meta.env.DEV || import.meta.env.VITE_APP_ENV === "staging") console.info("[authorization]", safe);
-  else if (stage.endsWith("FAILED") || stage === "REALTIME_CHANNEL_STATUS") console.warn("[authorization]", safe);
+  else if (level === "warn" || stage.endsWith("FAILED")) console.warn("[authorization]", safe);
+  else if (level === "info") console.info("[authorization]", safe);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -66,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void supabase.auth.getSession().then(async({data:{session:existing},error})=>{if(error){diagnostic("AUTH_SESSION_FAILED",safeAuthorizationDiagnostic(error));if(invalidRefresh(error)){logSupabaseError(error,{page:"Authentication",component:"AuthProvider",function:"restoreSession",operation:"auth.getSession"});await supabase.auth.signOut({scope:"local"});resetUserData();expiredLogin();return}resetUserData();return}diagnostic("AUTH_SESSION_OK",{hasSession:!!existing});setSession(existing);setUser(existing?.user??null);void loadUserData(existing?.user??null,{reason:"INITIAL_SESSION"})}).catch(error=>{diagnostic("AUTH_SESSION_FAILED",safeAuthorizationDiagnostic(error));resetUserData()});return()=>subscription.unsubscribe()},[expiredLogin,invalidRefresh,loadUserData,resetUserData]);
 
   useEffect(()=>{const focus=()=>{if(document.visibilityState==="visible")scheduleRefresh("FOCUS_VISIBILITY")},online=()=>scheduleRefresh("ONLINE");window.addEventListener("focus",focus);document.addEventListener("visibilitychange",focus);window.addEventListener("online",online);return()=>{window.removeEventListener("focus",focus);document.removeEventListener("visibilitychange",focus);window.removeEventListener("online",online)}},[scheduleRefresh]);
-  useEffect(()=>{if(!user)return;let active=true;diagnostic("REALTIME_AUTH_STARTED");void supabase.realtime.setAuth().then(()=>{if(!active)return;diagnostic("REALTIME_AUTH_OK")}).catch(error=>{if(!active)return;diagnostic("REALTIME_AUTH_FAILED",safeAuthorizationDiagnostic(error));scheduleRefresh("REALTIME_AUTH_FAILED")});const channel=supabase.channel(`authorization:${user.id}`).on("postgres_changes",{event:"*",schema:"public",table:"profiles",filter:`id=eq.${user.id}`},()=>scheduleRefresh("REALTIME_PROFILE")).on("postgres_changes",{event:"*",schema:"public",table:"user_roles",filter:`user_id=eq.${user.id}`},()=>scheduleRefresh("REALTIME_ROLE")).subscribe(status=>{diagnostic("REALTIME_CHANNEL_STATUS",{status});if(["CHANNEL_ERROR","TIMED_OUT","CLOSED"].includes(status))scheduleRefresh(`REALTIME_${status}`)});return()=>{active=false;void supabase.removeChannel(channel)}},[scheduleRefresh,user]);
+  useEffect(()=>{if(!user)return;let active=true;diagnostic("REALTIME_AUTH_STARTED");void supabase.realtime.setAuth().then(()=>{if(!active)return;diagnostic("REALTIME_AUTH_OK")}).catch(error=>{if(!active)return;diagnostic("REALTIME_AUTH_FAILED",safeAuthorizationDiagnostic(error));scheduleRefresh("REALTIME_AUTH_FAILED")});const channel=supabase.channel(`authorization:${user.id}`).on("postgres_changes",{event:"*",schema:"public",table:"profiles",filter:`id=eq.${user.id}`},()=>{if(active)scheduleRefresh("REALTIME_PROFILE")}).on("postgres_changes",{event:"*",schema:"public",table:"user_roles",filter:`user_id=eq.${user.id}`},()=>{if(active)scheduleRefresh("REALTIME_ROLE")}).subscribe(status=>{const action=getAuthorizationRealtimeStatusAction(status,active);if(!action.shouldLog)return;diagnostic("REALTIME_CHANNEL_STATUS",{status},action.level);if(action.refreshReason)scheduleRefresh(action.refreshReason)});return()=>{active=false;void supabase.removeChannel(channel)}},[scheduleRefresh,user]);
 
   const signOut=async()=>{sequence.current+=1;await supabase.auth.signOut();resetUserData()};
   const refreshUserData=async()=>{if(user){setIsLoading(true);await loadUserData(user,{force:true,reason:"RETRY"})}};
