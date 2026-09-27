@@ -9,11 +9,21 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Church, Loader2, CheckCircle, XCircle, Mail, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { translateRoleLabel } from "@/lib/localization";
+import { useTranslation } from "react-i18next";
 
 type InviteState = "loading" | "valid" | "invalid" | "expired" | "accepted" | "revoked" | "already_accepted";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+type AuthTranslator = (key: string, options?: Record<string, unknown>) => string;
+
+function formatInviteAuthError(t: AuthTranslator) {
+  return t("auth.invite.toasts.accept_failed.description");
+}
+
 export default function AcceptInvitePage() {
+  const { i18n, t } = useTranslation();
   const { token } = useParams<{ token: string }>();
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -49,7 +59,7 @@ export default function AcceptInvitePage() {
       }
 
       setInvitation(data);
-      setChurchName((data as any).churches?.name || "Church");
+      setChurchName((data as any).churches?.name || t("auth.invite.default_church"));
       setEmail(data.email);
 
       if (data.status === "accepted") {
@@ -64,7 +74,7 @@ export default function AcceptInvitePage() {
     };
 
     loadInvitation();
-  }, [token]);
+  }, [t, token]);
 
   // Accept invitation as logged-in user
   const handleAccept = async () => {
@@ -78,12 +88,12 @@ export default function AcceptInvitePage() {
 
       const result = data as any;
       if (!result?.success) {
-        toast({ title: "Could not accept", description: result?.error || "Unknown error", variant: "destructive" });
+        toast({ title: t("auth.invite.toasts.accept_failed.title"), description: formatInviteAuthError(t), variant: "destructive" });
         setAccepting(false);
         return;
       }
 
-      toast({ title: "Welcome!", description: `You've joined ${result.church_name} as ${result.role.replace("_", " ")}` });
+      toast({ title: t("auth.invite.toasts.welcome.title"), description: t("auth.invite.toasts.welcome.with_role", { church: result.church_name, role: translateRoleLabel(t, result.role) }) });
       setState("accepted");
 
       // Redirect based on role
@@ -95,8 +105,8 @@ export default function AcceptInvitePage() {
           navigate("/portal");
         }
       }, 1500);
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch {
+      toast({ title: t("auth.common.error"), description: formatInviteAuthError(t), variant: "destructive" });
     } finally {
       setAccepting(false);
     }
@@ -108,7 +118,7 @@ export default function AcceptInvitePage() {
     const normalizedEmail = email.trim();
 
     if (!normalizedEmail || !EMAIL_REGEX.test(normalizedEmail)) {
-      toast({ title: "Invalid email", description: "Please enter a valid email address", variant: "destructive" });
+      toast({ title: t("auth.invite.toasts.invalid_email.title"), description: t("auth.invite.toasts.invalid_email.description"), variant: "destructive" });
       return;
     }
     if (!fullName || !password) return;
@@ -129,8 +139,8 @@ export default function AcceptInvitePage() {
       // If email confirmation is required
       if (!signupData.session) {
         toast({
-          title: "Check your email",
-          description: "Please confirm your email, then revisit this invitation link to join.",
+          title: t("auth.invite.toasts.check_email.title"),
+          description: t("auth.invite.toasts.check_email.description"),
         });
         setSigningUp(false);
         return;
@@ -142,17 +152,17 @@ export default function AcceptInvitePage() {
 
       const result = data as any;
       if (result?.success) {
-        toast({ title: "Welcome!", description: `You've joined ${result.church_name}` });
+        toast({ title: t("auth.invite.toasts.welcome.title"), description: t("auth.invite.toasts.welcome.basic", { church: result.church_name }) });
         setState("accepted");
         setTimeout(() => {
           const adminRoles = ["church_admin", "pastor", "secretary", "treasurer"];
           navigate(adminRoles.includes(result.role) ? "/church-admin" : "/portal");
         }, 1500);
       } else {
-        toast({ title: "Account created", description: "Please log in and revisit this link to accept." });
+        toast({ title: t("auth.invite.toasts.account_created.title"), description: t("auth.invite.toasts.account_created.description") });
       }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch {
+      toast({ title: t("auth.common.error"), description: formatInviteAuthError(t), variant: "destructive" });
     } finally {
       setSigningUp(false);
     }
@@ -181,15 +191,15 @@ export default function AcceptInvitePage() {
 
       const result = data as any;
       if (result?.success) {
-        toast({ title: "Welcome!", description: `You've joined ${result.church_name}` });
+        toast({ title: t("auth.invite.toasts.welcome.title"), description: t("auth.invite.toasts.welcome.basic", { church: result.church_name }) });
         setState("accepted");
         setTimeout(() => {
           const adminRoles = ["church_admin", "pastor", "secretary", "treasurer"];
           navigate(adminRoles.includes(result.role) ? "/church-admin" : "/portal");
         }, 1500);
       }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch {
+      toast({ title: t("auth.common.error"), description: formatInviteAuthError(t), variant: "destructive" });
     } finally {
       setLoggingIn(false);
     }
@@ -207,6 +217,9 @@ export default function AcceptInvitePage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
+          <div className="mb-4 flex justify-center">
+            <LanguageSwitcher />
+          </div>
           <Link to="/" className="inline-flex items-center gap-3 mb-6">
             <div className="h-11 w-11 rounded-xl gradient-gold flex items-center justify-center">
               <Church className="h-6 w-6 text-primary-foreground" />
@@ -221,9 +234,9 @@ export default function AcceptInvitePage() {
             {state === "invalid" && (
               <div className="text-center py-6">
                 <XCircle className="h-12 w-12 mx-auto mb-4 text-destructive" />
-                <h2 className="text-xl font-bold font-serif mb-2">Invalid Invitation</h2>
-                <p className="text-muted-foreground text-sm">This invitation link is not valid. Please contact your church administrator.</p>
-                <Button className="mt-6" asChild><Link to="/login">Go to Login</Link></Button>
+                <h2 className="text-xl font-bold font-serif mb-2">{t("auth.invite.invalid_title")}</h2>
+                <p className="text-muted-foreground text-sm">{t("auth.invite.invalid_description")}</p>
+                <Button className="mt-6" asChild><Link to="/login">{t("auth.invite.go_to_login")}</Link></Button>
               </div>
             )}
 
@@ -231,9 +244,9 @@ export default function AcceptInvitePage() {
             {state === "expired" && (
               <div className="text-center py-6">
                 <XCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h2 className="text-xl font-bold font-serif mb-2">Invitation Expired</h2>
-                <p className="text-muted-foreground text-sm">This invitation has expired. Please ask your church administrator to send a new one.</p>
-                <Button className="mt-6" asChild><Link to="/login">Go to Login</Link></Button>
+                <h2 className="text-xl font-bold font-serif mb-2">{t("auth.invite.expired_title")}</h2>
+                <p className="text-muted-foreground text-sm">{t("auth.invite.expired_description")}</p>
+                <Button className="mt-6" asChild><Link to="/login">{t("auth.invite.go_to_login")}</Link></Button>
               </div>
             )}
 
@@ -241,9 +254,9 @@ export default function AcceptInvitePage() {
             {state === "revoked" && (
               <div className="text-center py-6">
                 <XCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h2 className="text-xl font-bold font-serif mb-2">Invitation Revoked</h2>
-                <p className="text-muted-foreground text-sm">This invitation has been revoked by the church administrator.</p>
-                <Button className="mt-6" asChild><Link to="/login">Go to Login</Link></Button>
+                <h2 className="text-xl font-bold font-serif mb-2">{t("auth.invite.revoked_title")}</h2>
+                <p className="text-muted-foreground text-sm">{t("auth.invite.revoked_description")}</p>
+                <Button className="mt-6" asChild><Link to="/login">{t("auth.invite.go_to_login")}</Link></Button>
               </div>
             )}
 
@@ -251,9 +264,9 @@ export default function AcceptInvitePage() {
             {state === "already_accepted" && (
               <div className="text-center py-6">
                 <CheckCircle className="h-12 w-12 mx-auto mb-4 text-primary" />
-                <h2 className="text-xl font-bold font-serif mb-2">Already Accepted</h2>
-                <p className="text-muted-foreground text-sm">This invitation has already been accepted.</p>
-                <Button className="mt-6" asChild><Link to="/login">Go to Dashboard</Link></Button>
+                <h2 className="text-xl font-bold font-serif mb-2">{t("auth.invite.already_accepted_title")}</h2>
+                <p className="text-muted-foreground text-sm">{t("auth.invite.already_accepted_description")}</p>
+                <Button className="mt-6" asChild><Link to="/login">{t("auth.invite.go_to_dashboard")}</Link></Button>
               </div>
             )}
 
@@ -261,8 +274,8 @@ export default function AcceptInvitePage() {
             {state === "accepted" && (
               <div className="text-center py-6">
                 <CheckCircle className="h-12 w-12 mx-auto mb-4 text-primary" />
-                <h2 className="text-xl font-bold font-serif mb-2">Welcome!</h2>
-                <p className="text-muted-foreground text-sm">You've joined {churchName}. Redirecting to your dashboard...</p>
+                <h2 className="text-xl font-bold font-serif mb-2">{t("auth.invite.accepted_title")}</h2>
+                <p className="text-muted-foreground text-sm">{t("auth.invite.accepted_description", { church: churchName })}</p>
                 <Loader2 className="h-5 w-5 animate-spin mx-auto mt-4 text-primary" />
               </div>
             )}
@@ -271,30 +284,30 @@ export default function AcceptInvitePage() {
             {state === "valid" && invitation && (
               <>
                 <div className="text-center">
-                  <h2 className="text-xl font-bold font-serif mb-2">You're Invited!</h2>
+                  <h2 className="text-xl font-bold font-serif mb-2">{t("auth.invite.invited_title")}</h2>
                   <p className="text-muted-foreground text-sm">
-                    You've been invited to join <span className="text-foreground font-medium">{churchName}</span>
+                    {t("auth.invite.invited_description")} <span className="text-foreground font-medium">{churchName}</span>
                   </p>
                 </div>
 
                 <div className="bg-secondary/50 rounded-lg p-4 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Church</span>
+                    <span className="text-muted-foreground">{t("auth.invite.fields.church")}</span>
                     <span className="font-medium">{churchName}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Role</span>
+                    <span className="text-muted-foreground">{t("auth.invite.fields.role")}</span>
                     <Badge variant="outline" className="bg-primary/20 text-primary border-primary/30">
-                      {invitation.role.replace("_", " ")}
+                      {translateRoleLabel(t, invitation.role)}
                     </Badge>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Email</span>
+                    <span className="text-muted-foreground">{t("auth.fields.email")}</span>
                     <span>{invitation.email}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Expires</span>
-                    <span>{new Date(invitation.expires_at).toLocaleDateString()}</span>
+                    <span className="text-muted-foreground">{t("auth.invite.fields.expires")}</span>
+                    <span>{new Date(invitation.expires_at).toLocaleDateString(i18n.language === "sw" ? "sw-TZ" : "en-TZ")}</span>
                   </div>
                 </div>
 
@@ -302,11 +315,11 @@ export default function AcceptInvitePage() {
                 {user ? (
                   <div className="space-y-3">
                     <p className="text-sm text-muted-foreground text-center">
-                      Signed in as <span className="text-foreground">{user.email}</span>
+                      {t("auth.invite.signed_in_as")} <span className="text-foreground">{user.email}</span>
                     </p>
                     <Button className="w-full" onClick={handleAccept} disabled={accepting}>
                       {accepting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Accept Invitation
+                      {t("auth.invite.accept_button")}
                     </Button>
                   </div>
                 ) : (
@@ -316,44 +329,44 @@ export default function AcceptInvitePage() {
                       <>
                         {showLogin ? (
                           <form onSubmit={handleLoginAndAccept} className="space-y-3">
-                            <p className="text-sm text-muted-foreground">Sign in to accept this invitation:</p>
+                            <p className="text-sm text-muted-foreground">{t("auth.invite.sign_in_prompt")}</p>
                             <div className="space-y-2">
-                              <Label>Email</Label>
+                              <Label>{t("auth.fields.email")}</Label>
                               <Input type="email" value={email} disabled className="bg-muted/50" />
                             </div>
                             <div className="space-y-2">
-                              <Label>Password</Label>
+                              <Label>{t("auth.fields.password")}</Label>
                               <Input
                                 type="password"
                                 value={loginPassword}
                                 onChange={(e) => setLoginPassword(e.target.value)}
-                                placeholder="Your password"
+                                placeholder={t("auth.placeholders.password")}
                                 required
                               />
                             </div>
                             <Button className="w-full" type="submit" disabled={loggingIn}>
                               {loggingIn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                              Sign In & Accept
+                              {t("auth.invite.sign_in_accept")}
                             </Button>
                             <button
                               type="button"
                               onClick={() => { setShowLogin(false); setShowSignup(true); }}
                               className="text-sm text-primary hover:underline w-full text-center"
                             >
-                              Don't have an account? Sign up
+                              {t("auth.invite.no_account_signup")}
                             </button>
                           </form>
                         ) : (
                           <>
                             <Button className="w-full" onClick={() => setShowLogin(true)}>
-                              <Mail className="mr-2 h-4 w-4" /> Sign In to Accept
+                              <Mail className="mr-2 h-4 w-4" /> {t("auth.invite.sign_in_to_accept")}
                             </Button>
                             <button
                               type="button"
                               onClick={() => setShowSignup(true)}
                               className="text-sm text-primary hover:underline w-full text-center"
                             >
-                              New here? Create an account
+                              {t("auth.invite.create_account_prompt")}
                             </button>
                           </>
                         )}
@@ -363,23 +376,23 @@ export default function AcceptInvitePage() {
                     {/* Signup option */}
                     {showSignup && (
                       <form onSubmit={handleSignupAndAccept} className="space-y-3">
-                        <p className="text-sm text-muted-foreground">Create your account to join:</p>
+                        <p className="text-sm text-muted-foreground">{t("auth.invite.create_account_to_join")}</p>
                         <div className="space-y-2">
-                          <Label>Full Name</Label>
-                          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" required />
+                          <Label>{t("auth.fields.full_name")}</Label>
+                          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t("auth.placeholders.full_name")} required />
                         </div>
                         <div className="space-y-2">
-                          <Label>Email</Label>
+                          <Label>{t("auth.fields.email")}</Label>
                           <Input type="email" value={email} disabled className="bg-muted/50" />
                         </div>
                         <div className="space-y-2">
-                          <Label>Password</Label>
+                          <Label>{t("auth.fields.password")}</Label>
                           <div className="relative">
                             <Input
                               type={showPassword ? "text" : "password"}
                               value={password}
                               onChange={(e) => setPassword(e.target.value)}
-                              placeholder="Choose a password"
+                              placeholder={t("auth.placeholders.choose_password")}
                               required
                               minLength={6}
                             />
@@ -390,14 +403,14 @@ export default function AcceptInvitePage() {
                         </div>
                         <Button className="w-full" type="submit" disabled={signingUp}>
                           {signingUp && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          Create Account & Accept
+                          {t("auth.invite.create_account_accept")}
                         </Button>
                         <button
                           type="button"
                           onClick={() => { setShowSignup(false); setShowLogin(true); }}
                           className="text-sm text-primary hover:underline w-full text-center"
                         >
-                          Already have an account? Sign in
+                          {t("auth.invite.already_have_account_signin")}
                         </button>
                       </form>
                     )}
