@@ -282,6 +282,167 @@
         }
       }
     },
+    "onboarding": {
+      "actions": {
+        "back": "Back",
+        "create": "Create Church",
+        "next": "Next"
+      },
+      "admin_account": {
+        "description": "Use this email to sign back in and manage the church after logout.",
+        "title": "Church admin login account"
+      },
+      "badge": "Premium onboarding",
+      "branding_points": {
+        "dark_theme": "Dark theme ready",
+        "gold_accent": "Gold-accent presentation",
+        "responsive": "Looks polished on desktop and mobile"
+      },
+      "errors": {
+        "fallback": "Church workspace could not be created. Please try again or contact support.",
+        "setup_missing": "The latest database setup has not been applied. Apply the Supabase workspace-creation migration, then try again.",
+        "workspace_missing": "Church workspace could not be created."
+      },
+      "fields": {
+        "address": "Address",
+        "church_email_required": "Church Contact Email *",
+        "church_name_required": "Church Name *",
+        "pastor": "Pastor",
+        "phone": "Phone",
+        "secretary": "Secretary",
+        "signed_in_account": "Signed-in account",
+        "treasurer": "Treasurer"
+      },
+      "intro": {
+        "description": "These details power your workspace identity and communication touchpoints. Your admin login is the signed-in account below.",
+        "title": "Set the foundation for your church workspace"
+      },
+      "leadership_cards": {
+        "financial": {
+          "copy": "Make stewardship roles visible from the first login.",
+          "title": "Financial confidence"
+        },
+        "operations": {
+          "copy": "Keep communication and approvals clearly assigned.",
+          "title": "Operational alignment"
+        },
+        "pastoral": {
+          "copy": "Clarify who leads ministry direction and member care.",
+          "title": "Pastoral oversight"
+        }
+      },
+      "mobile": {
+        "setup_flow": "Setup flow",
+        "steps_button": "Steps"
+      },
+      "placeholders": {
+        "address": "Church address",
+        "church_email": "info@church.org",
+        "church_name": "e.g. St. Mary's Parish",
+        "pastor": "Lead pastor name",
+        "phone": "+255...",
+        "secretary": "Secretary name",
+        "treasurer": "Treasurer name"
+      },
+      "progress": {
+        "completed": "{{count}} of 3 setup stages completed",
+        "description": "One final step unlocks your full admin workspace.",
+        "label": "Progress",
+        "step_of": "Step {{step}} of {{total}}"
+      },
+      "review": {
+        "address": "Address",
+        "admin_email": "Admin login email",
+        "church_email": "Church contact email",
+        "church_information": "Church Information",
+        "church_name": "Church name",
+        "no_banner": "No banner uploaded",
+        "no_logo": "No logo uploaded",
+        "not_assigned": "Not assigned during onboarding",
+        "not_provided": "Not provided",
+        "phone": "Phone number"
+      },
+      "sidebar": {
+        "description": "Complete a polished setup flow with branding, leadership details, and a final launch review.",
+        "eyebrow": "Kanisa Connect Setup",
+        "title": "Launch your church workspace"
+      },
+      "status": {
+        "creating": "Creating your church workspace...",
+        "creation_failed": "Creation failed. Review the message above and try again.",
+        "opening_dashboard": "Church created. Opening your dashboard...",
+        "progress_saved": "Your progress is saved in this session while you finish setup.",
+        "ready_for_launch": "Everything looks ready for launch."
+      },
+      "steps": {
+        "branding": {
+          "description": "Upload premium visuals for your workspace.",
+          "title": "Branding"
+        },
+        "church": {
+          "description": "Core church details and workspace identity.",
+          "title": "Church Information"
+        },
+        "leadership": {
+          "description": "Add your leadership team for a polished setup.",
+          "title": "Leadership Roles"
+        },
+        "review": {
+          "description": "Confirm everything before launching the workspace.",
+          "title": "Review & Create"
+        }
+      },
+      "summary": {
+        "description": "Your church will launch with a church admin role, default contribution categories, and a Pro trial subscription.",
+        "ready": "Ready to create",
+        "title": "Workspace creation summary"
+      },
+      "toasts": {
+        "create_failed": {
+          "title": "Error creating church"
+        },
+        "created": {
+          "description": "{{name}} ({{code}}) is ready.",
+          "title": "Church created!"
+        },
+        "created_without_images": {
+          "description": "You can upload your branding later from settings.",
+          "title": "Church created without images"
+        },
+        "file_too_large": {
+          "description": "Maximum file size is 2MB.",
+          "title": "File too large"
+        },
+        "invalid_file_type": {
+          "description": "Please use JPG, PNG, or WebP.",
+          "title": "Invalid file type"
+        },
+        "missing_details": {
+          "description": "Church name and email are required before continuing.",
+          "title": "Finish church details"
+        },
+        "not_authenticated": {
+          "description": "Please sign in first.",
+          "title": "Not authenticated"
+        }
+      },
+      "upload": {
+        "banner": {
+          "description": "Wide hero image, 2MB max, JPG PNG or WebP.",
+          "label": "Banner",
+          "preview_alt": "Banner preview",
+          "remove": "Remove banner",
+          "upload": "Upload banner"
+        },
+        "logo": {
+          "description": "Square mark, 2MB max, JPG PNG or WebP.",
+          "label": "Logo",
+          "preview_alt": "Logo preview",
+          "remove": "Remove logo",
+          "upload": "Upload logo"
+        }
+      }
+    },
     "register": {
       "alert_failed_title": "Registration could not be completed",
       "already_connected_description": "This account already belongs to {{church}}. A second membership will not be created.",

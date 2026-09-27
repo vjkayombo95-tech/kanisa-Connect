@@ -282,6 +282,167 @@
         }
       }
     },
+    "onboarding": {
+      "actions": {
+        "back": "Rudi",
+        "create": "Unda Kanisa",
+        "next": "Endelea"
+      },
+      "admin_account": {
+        "description": "Tumia barua pepe hii kuingia tena na kusimamia kanisa baada ya kutoka.",
+        "title": "Akaunti ya kuingia ya msimamizi wa kanisa"
+      },
+      "badge": "Usanidi maalumu",
+      "branding_points": {
+        "dark_theme": "Tayari kwa mandhari meusi",
+        "gold_accent": "Muonekano wenye rangi ya dhahabu",
+        "responsive": "Inaonekana vizuri kwenye kompyuta na simu"
+      },
+      "errors": {
+        "fallback": "Nafasi ya kazi ya kanisa haikuweza kuundwa. Tafadhali jaribu tena au wasiliana na msaada.",
+        "setup_missing": "Usanidi wa hivi karibuni wa hifadhidata haujatumika. Tumia migration ya Supabase ya kuunda workspace, kisha ujaribu tena.",
+        "workspace_missing": "Nafasi ya kazi ya kanisa haikuweza kuundwa."
+      },
+      "fields": {
+        "address": "Anwani",
+        "church_email_required": "Barua Pepe ya Mawasiliano ya Kanisa *",
+        "church_name_required": "Jina la Kanisa *",
+        "pastor": "Mchungaji",
+        "phone": "Simu",
+        "secretary": "Katibu",
+        "signed_in_account": "Akaunti uliyoingia nayo",
+        "treasurer": "Mweka Hazina"
+      },
+      "intro": {
+        "description": "Taarifa hizi zinaunda utambulisho wa workspace yako na njia za mawasiliano. Akaunti yako ya msimamizi ni akaunti uliyoingia nayo hapa chini.",
+        "title": "Weka msingi wa workspace ya kanisa lako"
+      },
+      "leadership_cards": {
+        "financial": {
+          "copy": "Onyesha majukumu ya usimamizi wa fedha tangu kuingia kwa kwanza.",
+          "title": "Uhakika wa fedha"
+        },
+        "operations": {
+          "copy": "Weka mawasiliano na idhini zikiwa zimepangiwa wazi.",
+          "title": "Mpangilio wa uendeshaji"
+        },
+        "pastoral": {
+          "copy": "Fafanua anayesimamia mwelekeo wa huduma na malezi ya wanachama.",
+          "title": "Usimamizi wa kichungaji"
+        }
+      },
+      "mobile": {
+        "setup_flow": "Mtiririko wa usanidi",
+        "steps_button": "Hatua"
+      },
+      "placeholders": {
+        "address": "Anwani ya kanisa",
+        "church_email": "info@church.org",
+        "church_name": "mf. Parokia ya Mt. Maria",
+        "pastor": "Jina la mchungaji mkuu",
+        "phone": "+255...",
+        "secretary": "Jina la katibu",
+        "treasurer": "Jina la mweka hazina"
+      },
+      "progress": {
+        "completed": "Hatua {{count}} kati ya 3 za usanidi zimekamilika",
+        "description": "Hatua moja ya mwisho inafungua workspace yako kamili ya usimamizi.",
+        "label": "Maendeleo",
+        "step_of": "Hatua {{step}} kati ya {{total}}"
+      },
+      "review": {
+        "address": "Anwani",
+        "admin_email": "Barua pepe ya kuingia ya msimamizi",
+        "church_email": "Barua pepe ya mawasiliano ya kanisa",
+        "church_information": "Taarifa za Kanisa",
+        "church_name": "Jina la kanisa",
+        "no_banner": "Hakuna bango lililopakiwa",
+        "no_logo": "Hakuna nembo iliyopakiwa",
+        "not_assigned": "Haikupangiwa wakati wa usanidi",
+        "not_provided": "Haijatolewa",
+        "phone": "Namba ya simu"
+      },
+      "sidebar": {
+        "description": "Kamilisha mtiririko mzuri wa usanidi wenye chapa, taarifa za uongozi, na uhakiki wa mwisho.",
+        "eyebrow": "Usanidi wa Kanisa Connect",
+        "title": "Fungua workspace ya kanisa lako"
+      },
+      "status": {
+        "creating": "Inaunda workspace ya kanisa lako...",
+        "creation_failed": "Uundaji umeshindikana. Kagua ujumbe hapo juu kisha ujaribu tena.",
+        "opening_dashboard": "Kanisa limeundwa. Inafungua dashibodi yako...",
+        "progress_saved": "Maendeleo yako yamehifadhiwa kwenye kikao hiki unapoendelea na usanidi.",
+        "ready_for_launch": "Kila kitu kiko tayari kuzinduliwa."
+      },
+      "steps": {
+        "branding": {
+          "description": "Pakia vielelezo bora kwa workspace yako.",
+          "title": "Chapa"
+        },
+        "church": {
+          "description": "Taarifa kuu za kanisa na utambulisho wa workspace.",
+          "title": "Taarifa za Kanisa"
+        },
+        "leadership": {
+          "description": "Ongeza timu yako ya uongozi kwa usanidi uliokamilika.",
+          "title": "Majukumu ya Uongozi"
+        },
+        "review": {
+          "description": "Thibitisha kila kitu kabla ya kuzindua workspace.",
+          "title": "Kagua na Unda"
+        }
+      },
+      "summary": {
+        "description": "Kanisa lako litaanza na jukumu la msimamizi wa kanisa, aina chaguo-msingi za sadaka, na jaribio la Pro.",
+        "ready": "Tayari kuunda",
+        "title": "Muhtasari wa kuunda workspace"
+      },
+      "toasts": {
+        "create_failed": {
+          "title": "Hitilafu wakati wa kuunda kanisa"
+        },
+        "created": {
+          "description": "{{name}} ({{code}}) iko tayari.",
+          "title": "Kanisa limeundwa!"
+        },
+        "created_without_images": {
+          "description": "Unaweza kupakia chapa yako baadaye kutoka kwenye mipangilio.",
+          "title": "Kanisa limeundwa bila picha"
+        },
+        "file_too_large": {
+          "description": "Ukubwa wa juu wa faili ni MB 2.",
+          "title": "Faili ni kubwa mno"
+        },
+        "invalid_file_type": {
+          "description": "Tafadhali tumia JPG, PNG, au WebP.",
+          "title": "Aina ya faili si sahihi"
+        },
+        "missing_details": {
+          "description": "Jina la kanisa na barua pepe vinahitajika kabla ya kuendelea.",
+          "title": "Kamilisha taarifa za kanisa"
+        },
+        "not_authenticated": {
+          "description": "Tafadhali ingia kwanza.",
+          "title": "Hujaingia"
+        }
+      },
+      "upload": {
+        "banner": {
+          "description": "Picha pana ya juu, kiwango cha juu MB 2, JPG PNG au WebP.",
+          "label": "Bango",
+          "preview_alt": "Hakikisho la bango",
+          "remove": "Ondoa bango",
+          "upload": "Pakia bango"
+        },
+        "logo": {
+          "description": "Nembo ya mraba, kiwango cha juu MB 2, JPG PNG au WebP.",
+          "label": "Nembo",
+          "preview_alt": "Hakikisho la nembo",
+          "remove": "Ondoa nembo",
+          "upload": "Pakia nembo"
+        }
+      }
+    },
     "register": {
       "alert_failed_title": "Usajili haukukamilika",
       "already_connected_description": "Akaunti hii tayari ni ya {{church}}. Uanachama wa pili hautaundwa.",
