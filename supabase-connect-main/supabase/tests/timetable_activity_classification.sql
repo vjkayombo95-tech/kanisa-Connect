@@ -93,6 +93,15 @@ insert into public.mass_schedules (
   (now() at time zone 'Africa/Dar_es_Salaam')::date,
   null,
   true
+), (
+  '97000000-0000-4000-8000-000000000304',
+  '97000000-0000-4000-8000-000000000101',
+  'Reclassifiable Mass',
+  extract(dow from (now() at time zone 'Africa/Dar_es_Salaam')::date)::integer,
+  '12:30',
+  (now() at time zone 'Africa/Dar_es_Salaam')::date,
+  'mass',
+  true
 );
 
 select set_config('request.jwt.claim.sub', '97000000-0000-4000-8000-000000000001', true);
@@ -104,7 +113,7 @@ select pg_temp.assert_true(
     '97000000-0000-4000-8000-000000000101',
     (now() at time zone 'Africa/Dar_es_Salaam')::date,
     (now() at time zone 'Africa/Dar_es_Salaam')::date
-  ) = 3,
+  ) = 4,
   'generate_mass_occurrences creates classified and unclassified occurrences without backfill'
 );
 
@@ -136,6 +145,91 @@ select pg_temp.assert_true(
       and activity_type is null
   ),
   'unclassified schedule remains NULL after generation'
+);
+
+insert into public.mass_occurrences (
+  id,
+  church_id,
+  mass_schedule_id,
+  occurrence_date,
+  start_time,
+  name,
+  location_name,
+  activity_type,
+  status
+) values (
+  '97000000-0000-4000-8000-000000000401',
+  '97000000-0000-4000-8000-000000000101',
+  '97000000-0000-4000-8000-000000000304',
+  (now() at time zone 'Africa/Dar_es_Salaam')::date - 1,
+  '12:30',
+  'Past Reclassifiable Mass',
+  'Historical Chapel',
+  'mass',
+  'scheduled'
+);
+
+update public.mass_occurrences
+set name = 'Manual Override Name',
+    location_name = 'Manual Chapel'
+where mass_schedule_id = '97000000-0000-4000-8000-000000000304'
+  and occurrence_date = (now() at time zone 'Africa/Dar_es_Salaam')::date;
+
+select pg_temp.assert_true(
+  (public.classify_mass_schedule_activity(
+    '97000000-0000-4000-8000-000000000101',
+    '97000000-0000-4000-8000-000000000304',
+    'prayer'
+  )->>'success')::boolean,
+  'transactional schedule classification succeeds for authorized church admin'
+);
+
+select pg_temp.assert_true(
+  exists (
+    select 1
+    from public.mass_schedules
+    where id = '97000000-0000-4000-8000-000000000304'
+      and church_id = '97000000-0000-4000-8000-000000000101'
+      and activity_type = 'prayer'
+  ),
+  'transactional classification updates the schedule activity type'
+);
+
+select pg_temp.assert_true(
+  exists (
+    select 1
+    from public.mass_occurrences
+    where mass_schedule_id = '97000000-0000-4000-8000-000000000304'
+      and occurrence_date = (now() at time zone 'Africa/Dar_es_Salaam')::date
+      and activity_type = 'prayer'
+      and name = 'Manual Override Name'
+      and location_name = 'Manual Chapel'
+  ),
+  'transactional classification preserves occurrence ID and manual override fields'
+);
+
+select pg_temp.assert_true(
+  exists (
+    select 1
+    from public.mass_occurrences
+    where id = '97000000-0000-4000-8000-000000000401'
+      and activity_type = 'mass'
+  ),
+  'transactional classification does not rewrite historical occurrences'
+);
+
+select set_config('request.jwt.claim.sub', '97000000-0000-4000-8000-000000000003', true);
+select set_config('request.jwt.claim.email', 'activity-member-b@test.invalid', true);
+select set_config('request.jwt.claims', '{}', true);
+
+select pg_temp.assert_raises(
+  $$select public.classify_mass_schedule_activity(
+      '97000000-0000-4000-8000-000000000101',
+      '97000000-0000-4000-8000-000000000304',
+      'adoration'
+    )$$,
+  '42501',
+  'transactional schedule classification rejects cross-church access'
 );
 
 select set_config('request.jwt.claim.sub', '97000000-0000-4000-8000-000000000002', true);
@@ -225,6 +319,40 @@ select pg_temp.assert_true(
     'mass-allowed'
   )->>'success')::boolean,
   'portal Mass intention submission accepts explicit Mass occurrence'
+);
+
+select set_config('request.jwt.claim.sub', '97000000-0000-4000-8000-000000000001', true);
+select set_config('request.jwt.claim.email', 'activity-admin@test.invalid', true);
+select set_config('request.jwt.claims', '{}', true);
+
+select pg_temp.assert_raises(
+  $$select public.classify_mass_schedule_activity(
+      '97000000-0000-4000-8000-000000000101',
+      '97000000-0000-4000-8000-000000000301',
+      'confession'
+    )$$,
+  'P0001',
+  'transactional classification blocks changing a future booked Mass away from Mass'
+);
+
+select pg_temp.assert_true(
+  exists (
+    select 1
+    from public.mass_schedules
+    where id = '97000000-0000-4000-8000-000000000301'
+      and activity_type = 'mass'
+  ),
+  'blocked classification leaves the schedule activity type unchanged'
+);
+
+select pg_temp.assert_true(
+  exists (
+    select 1
+    from public.mass_occurrences
+    where mass_schedule_id = '97000000-0000-4000-8000-000000000301'
+      and activity_type = 'mass'
+  ),
+  'blocked classification leaves booked future occurrence activity type unchanged'
 );
 
 rollback;
