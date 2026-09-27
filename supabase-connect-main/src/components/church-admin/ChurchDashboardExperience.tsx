@@ -15,6 +15,7 @@ import {
   visiblePendingActions,
 } from "@/lib/church-dashboard-intelligence";
 import { formatTZS } from "@/lib/currency";
+import type { TodayScheduleItem } from "@/lib/church-dashboard-today-schedule";
 import {
   getStaffMobileConfig,
   type StaffMobileConfig,
@@ -49,6 +50,8 @@ type ChurchDashboardExperienceProps = {
   announcementCount: number;
   upcomingEventCount: number;
   attendance: AttendanceSummary;
+  todaySchedule?: TodayScheduleItem[];
+  todayScheduleError?: boolean;
   recentActivity: ChurchDashboardActivityItem[];
   criticalLoading: boolean;
   deferredLoading: boolean;
@@ -152,6 +155,8 @@ export function ChurchDashboardExperience({
   announcementCount,
   upcomingEventCount,
   attendance,
+  todaySchedule = [],
+  todayScheduleError = false,
   recentActivity,
   criticalLoading,
   deferredLoading,
@@ -331,6 +336,67 @@ export function ChurchDashboardExperience({
           <div className="rounded-xl border border-border/70 bg-card/85 p-5">
             {deferredLoading ? (
               <Skeleton className="h-28 rounded-lg" />
+            ) : todayScheduleError ? (
+              <p className="text-sm text-muted-foreground">
+                {t("church_admin_dashboard.today.unavailable")}
+              </p>
+            ) : todaySchedule.length ? (
+              <div className="space-y-3">
+                <ol className="space-y-2">
+                  {todaySchedule.map((item) => (
+                    <li key={item.id} className="grid gap-2 rounded-lg border border-border/60 bg-background/50 p-3 sm:grid-cols-[5rem_minmax(0,1fr)]">
+                      <time className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+                        <Clock3 className="h-3.5 w-3.5" />
+                        {item.time ?? t("church_admin_dashboard.today.time_tba")}
+                      </time>
+
+                      <div className="min-w-0">
+                        <p className="break-words text-sm font-semibold text-foreground">
+                          {item.title}
+                        </p>
+
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {[item.eventType || item.status, item.location].filter(Boolean).join(" - ") || t("church_admin_dashboard.today.scheduled")}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+
+                {attendance.title ? (
+                  <div className="grid grid-cols-3 gap-3 border-t border-border/60 pt-4">
+                    <div>
+                      <p className="text-2xl font-semibold text-foreground">
+                        {attendance.yes}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        {t("church_admin_dashboard.today.confirmed")}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-2xl font-semibold text-foreground">
+                        {attendance.maybe}
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        {t("church_admin_dashboard.today.maybe")}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-2xl font-semibold text-foreground">
+                        {attendance.responseRate.toFixed(0)}%
+                      </p>
+
+                      <p className="text-xs text-muted-foreground">
+                        {t("church_admin_dashboard.today.responses")}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             ) : attendance.title ? (
               <div>
                 <p className="text-sm font-semibold text-foreground">
@@ -371,7 +437,7 @@ export function ChurchDashboardExperience({
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
-                {t("church_admin_dashboard.today.no_mass")}
+                {t("church_admin_dashboard.today.empty")}
               </p>
             )}
 

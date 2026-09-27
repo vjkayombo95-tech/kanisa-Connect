@@ -9,6 +9,7 @@ import {
 import { useVisibleStaffServices } from "@/components/staff-mobile/StaffMobileExperience";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EMPTY_PENDING_COUNTS, visiblePendingActions } from "@/lib/church-dashboard-intelligence";
+import type { TodayScheduleItem } from "@/lib/church-dashboard-today-schedule";
 import { translateStaffServiceLabel, translateStaffWorkspaceLabel, translateSystemLabel } from "@/lib/localization";
 import type { StaffMobileConfig, StaffService } from "@/lib/staff-mobile-registry";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,8 @@ type ChurchDashboardMobileExperienceProps = {
   announcementCount: number;
   upcomingEventCount: number;
   attendance: AttendanceSummary;
+  todaySchedule?: TodayScheduleItem[];
+  todayScheduleError?: boolean;
   criticalLoading: boolean;
   criticalError: boolean;
   deferredLoading: boolean;
@@ -75,6 +78,8 @@ export function ChurchDashboardMobileExperience({
   announcementCount,
   upcomingEventCount,
   attendance,
+  todaySchedule = [],
+  todayScheduleError = false,
   criticalLoading,
   criticalError,
   deferredLoading,
@@ -95,11 +100,14 @@ export function ChurchDashboardMobileExperience({
   // Focus order is deliberately stable: authorized pending work, next Mass,
   // upcoming events, recent announcements, then the calm state.
   const focusLoading = !priorities.length && (intelligence.pending.isLoading || criticalLoading || deferredLoading || servicesLoading);
+  const nextTodayScheduleItem = todaySchedule[0] ?? null;
   const focus = priorities.length && !intelligence.pending.isError
     ? t("church_admin_dashboard.mobile.focus.priority", {
       count: priorities[0].count,
       label: translateSystemLabel(t, priorities[0].labelKey, priorities[0].label).toLocaleLowerCase(),
     })
+    : !deferredError && !todayScheduleError && nextTodayScheduleItem
+      ? t("church_admin_dashboard.mobile.focus.schedule_item", { title: nextTodayScheduleItem.title, time: nextTodayScheduleItem.time ?? t("church_admin_dashboard.today.time_tba") })
     : !deferredError && attendance.title
       ? t("church_admin_dashboard.mobile.focus.mass", { title: attendance.title, yes: attendance.yes, maybe: attendance.maybe })
       : !deferredError && upcomingEventCount
@@ -113,13 +121,13 @@ export function ChurchDashboardMobileExperience({
   const briefing = [
     { key: "members", loading: criticalLoading, value: criticalError ? t("church_admin_dashboard.mobile.briefing.members_unavailable") : t("church_admin_dashboard.mobile.briefing.members", { active: activeMembers, total: totalMembers }) },
     { key: "pending", loading: intelligence.pending.isLoading || servicesLoading, value: intelligence.pending.isError ? t("church_admin_dashboard.mobile.briefing.pending_unavailable") : pendingTotal ? t("church_admin_dashboard.mobile.briefing.pending", { count: pendingTotal }) : t("church_admin_dashboard.mobile.briefing.pending_clear") },
-    { key: "schedule", loading: deferredLoading, value: deferredError ? t("church_admin_dashboard.mobile.briefing.schedule_unavailable") : attendance.title ? t("church_admin_dashboard.mobile.briefing.mass", { title: attendance.title, yes: attendance.yes }) : !criticalError ? t("church_admin_dashboard.mobile.briefing.schedule", { announcements: announcementCount, events: upcomingEventCount }) : t("church_admin_dashboard.mobile.briefing.events", { count: upcomingEventCount }) },
+    { key: "schedule", loading: deferredLoading, value: deferredError || todayScheduleError ? t("church_admin_dashboard.mobile.briefing.schedule_unavailable") : todaySchedule.length ? t(todaySchedule.length === 1 ? "church_admin_dashboard.mobile.briefing.today_schedule" : "church_admin_dashboard.mobile.briefing.today_schedule_plural", { count: todaySchedule.length, title: nextTodayScheduleItem?.title }) : attendance.title ? t("church_admin_dashboard.mobile.briefing.mass", { title: attendance.title, yes: attendance.yes }) : !criticalError ? t("church_admin_dashboard.mobile.briefing.schedule", { announcements: announcementCount, events: upcomingEventCount }) : t("church_admin_dashboard.mobile.briefing.events", { count: upcomingEventCount }) },
   ];
   const snapshot = [
     { label: t("church_admin_dashboard.mobile.snapshot.active_members"), value: criticalError ? "-" : String(activeMembers), loading: criticalLoading },
     { label: t("church_admin_dashboard.mobile.snapshot.announcements"), value: criticalError ? "-" : String(announcementCount), loading: criticalLoading },
     { label: t("church_admin_dashboard.mobile.snapshot.upcoming_events"), value: deferredError ? "-" : String(upcomingEventCount), loading: deferredLoading },
-    { label: !deferredError && attendance.title ? t("church_admin_dashboard.mobile.snapshot.mass_confirmed") : t("church_admin_dashboard.mobile.snapshot.next_mass"), value: deferredError ? "-" : attendance.title ? String(attendance.yes) : "-", loading: deferredLoading },
+    { label: !deferredError && !todayScheduleError && todaySchedule.length ? t("church_admin_dashboard.mobile.snapshot.today_schedule") : !deferredError && attendance.title ? t("church_admin_dashboard.mobile.snapshot.mass_confirmed") : t("church_admin_dashboard.mobile.snapshot.next_mass"), value: deferredError || todayScheduleError ? "-" : todaySchedule.length ? String(todaySchedule.length) : attendance.title ? String(attendance.yes) : "-", loading: deferredLoading },
   ];
 
   return (
