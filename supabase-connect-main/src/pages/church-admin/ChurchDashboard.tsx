@@ -18,6 +18,14 @@ import { useChurchDashboardIntelligence } from "@/hooks/use-church-dashboard-int
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureBirthdayAnnouncements } from "@/lib/birthday-announcements";
+import {
+  combineTodaySchedule,
+  getTanzaniaDateKey,
+  getTanzaniaTimestampBounds,
+  type TodayEventRow,
+  type TodayMassOccurrenceRow,
+  type TodayScheduleItem,
+} from "@/lib/church-dashboard-today-schedule";
 import { fetchChurchMessageTemplate, renderChurchMessageTemplate } from "@/lib/church-message-templates";
 import { formatTZS } from "@/lib/currency";
 import { buildMemberJoinUrl, buildMemberJoinWhatsAppMessage } from "@/lib/invite-flow";
@@ -125,6 +133,8 @@ type DeferredDashboardData = {
     no: number;
     responseRate: number;
   };
+  todaySchedule: TodayScheduleItem[];
+  todayScheduleError: boolean;
   upcomingEvents: EventRow[];
   birthdayMembers: BirthdayMemberRow[];
   anniversaryMembers: BirthdayMemberRow[];
@@ -143,6 +153,8 @@ const emptyDeferredDashboardData: DeferredDashboardData = {
     no: 0,
     responseRate: 0,
   },
+  todaySchedule: [],
+  todayScheduleError: false,
   upcomingEvents: [],
   birthdayMembers: [],
   anniversaryMembers: [],
@@ -249,7 +261,9 @@ export default function ChurchDashboard() {
     queryFn: async (): Promise<DeferredDashboardData> => {
       if (!churchId) return emptyDeferredDashboardData;
 
-      const [birthdayAutomation, birthdayCandidates, metrics, nextMassSummary] = await Promise.all([
+      const todayKey = getTanzaniaDateKey();
+      const todayBounds = getTanzaniaTimestampBounds(todayKey);
+      const [birthdayAutomation, birthdayCandidates, metrics, nextMassSummary, todayMassOccurrences, todayEvents] = await Promise.all([
         ensureBirthdayAnnouncements(churchId).catch((error) => {
           console.warn("Birthday announcement automation was deferred but failed:", error);
           return null;
@@ -263,11 +277,27 @@ export default function ChurchDashboard() {
           .limit(200),
         supabase.rpc("get_church_dashboard_metrics" as never, { p_church_id: churchId } as never),
         supabase.rpc("get_next_mass_summary" as never, { p_church_id: churchId } as never),
+        supabase
+          .from("mass_occurrences")
+          .select("id, church_id, occurrence_date, start_time, end_time, name, location_name, status")
+          .eq("church_id", churchId)
+          .eq("occurrence_date", todayKey)
+          .in("status", ["scheduled", "rescheduled"])
+          .order("start_time", { ascending: true }),
+        supabase
+          .from("events")
+          .select("id, church_id, title, start_date, end_date, location, event_type, archived_at")
+          .eq("church_id", churchId)
+          .gte("start_date", todayBounds.start)
+          .lt("start_date", todayBounds.end)
+          .is("archived_at", null)
+          .order("start_date", { ascending: true }),
       ]);
 
       void birthdayAutomation;
 
-      const failures = [birthdayCandidates.error, metrics.error, nextMassSummary.error].filter(Boolean);
+      const todayScheduleError = Boolean(todayMassOccurrences.error || todayEvents.error);
+      const failures = [birthdayCandidates.error, metrics.error, nextMassSummary.error, todayMassOccurrences.error, todayEvents.error].filter(Boolean);
       if (failures.length) {
         console.warn("Some deferred church dashboard records could not be loaded:", failures);
       }
@@ -286,6 +316,10 @@ export default function ChurchDashboard() {
 
       const dashboardMetrics = (metrics.data ?? {}) as ChurchDashboardMetrics;
       const massSummary = (nextMassSummary.data ?? {}) as NextMassSummary;
+      const todaySchedule = combineTodaySchedule({
+        occurrences: ((todayMassOccurrences.data ?? []) as TodayMassOccurrenceRow[]).filter((row) => row.church_id === churchId),
+        events: ((todayEvents.data ?? []) as TodayEventRow[]).filter((row) => row.church_id === churchId && !row.archived_at),
+      });
 
       return {
         thisMonthGiving: Number(dashboardMetrics.this_month_giving ?? 0),
@@ -300,6 +334,8 @@ export default function ChurchDashboard() {
           no: Number(massSummary.no_count ?? 0),
           responseRate: Number(massSummary.response_rate ?? 0),
         },
+        todaySchedule,
+        todayScheduleError,
         upcomingEvents: dashboardMetrics.upcoming_events ?? [],
         birthdayMembers,
         anniversaryMembers,
@@ -453,6 +489,8 @@ export default function ChurchDashboard() {
           announcementCount={data?.announcements.length ?? 0}
           upcomingEventCount={deferredData.upcomingEvents.length}
           attendance={deferredData.expectedAttendance}
+          todaySchedule={deferredData.todaySchedule}
+          todayScheduleError={deferredData.todayScheduleError}
           criticalLoading={isLoading}
           criticalError={isError}
           deferredLoading={isDeferredPending}
@@ -484,6 +522,8 @@ export default function ChurchDashboard() {
           announcementCount={data?.announcements.length ?? 0}
           upcomingEventCount={deferredData.upcomingEvents.length}
           attendance={deferredData.expectedAttendance}
+          todaySchedule={deferredData.todaySchedule}
+          todayScheduleError={deferredData.todayScheduleError}
           recentActivity={recentActivity}
           criticalLoading={isLoading}
           deferredLoading={isDeferredPending}
