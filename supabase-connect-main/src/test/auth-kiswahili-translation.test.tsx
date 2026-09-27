@@ -1,11 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import AcceptInvitePage from "@/pages/auth/AcceptInvitePage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
+import InvitePage from "@/pages/auth/InvitePage";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import { changeAppLanguage } from "@/i18n";
@@ -14,6 +16,7 @@ import en from "@/locales/en.json";
 import sw from "@/locales/sw.json";
 
 type LocaleTree = Record<string, unknown>;
+const readFile = (relative: string) => readFileSync(path.join(process.cwd(), relative), "utf8");
 
 const state = vi.hoisted(() => ({
   auth: {
@@ -31,6 +34,7 @@ const state = vi.hoisted(() => ({
     id: "invite-1",
     token: "token-1",
     email: "member@example.test",
+    church_id: "church-1",
     role: "church_admin",
     status: "pending",
     expires_at: "2026-12-31T00:00:00.000Z",
@@ -83,11 +87,16 @@ vi.mock("@/lib/public-registration", () => ({
   }),
 }));
 
+vi.mock("@/lib/invite-flow", () => ({
+  getInviteChurch: vi.fn(async () => ({ id: "church-1", name: "St. Joseph Parish" })),
+}));
+
 vi.mock("@/integrations/supabase/client", () => ({
   PASSWORD_RECOVERY_PENDING_KEY: "password-recovery-pending",
   supabase: {
     auth: {
       getSession: vi.fn(async () => ({ data: { session: null }, error: null })),
+      getUser: vi.fn(async () => ({ data: { user: state.auth.user }, error: null })),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
       resend: vi.fn(),
       resetPasswordForEmail: vi.fn(),
@@ -247,29 +256,39 @@ describe("auth Kiswahili translation", () => {
     expect(text()).toContain("Tuma Kiungo cha Kuweka Upya");
   });
 
-  it("renders AcceptInvitePage in both languages", async () => {
+  it("renders active InvitePage in both languages", async () => {
     render(
       <MemoryRouter initialEntries={["/invite/token-1"]}>
         <Routes>
-          <Route path="/invite/:token" element={<AcceptInvitePage />} />
+          <Route path="/invite/:token" element={<InvitePage />} />
         </Routes>
       </MemoryRouter>,
     );
     await flush();
-    expect(text()).toContain("You're Invited!");
-    expect(text()).toContain("Sign In to Accept");
+    await flush();
+    await waitForElement(() => text().includes("Church Invitation") ? host : null);
+    expect(text()).toContain("Church Invitation");
+    expect(text()).toContain("You have been invited");
+    expect(text()).toContain("Login");
+    expect(text()).toContain("Sign Up");
+    expect(host.querySelector("[aria-label='Switch language to Kiswahili']")).toBeTruthy();
 
     await changeAppLanguage("sw");
     render(
       <MemoryRouter initialEntries={["/invite/token-1"]}>
         <Routes>
-          <Route path="/invite/:token" element={<AcceptInvitePage />} />
+          <Route path="/invite/:token" element={<InvitePage />} />
         </Routes>
       </MemoryRouter>,
     );
     await flush();
-    expect(text()).toContain("Umealikwa!");
-    expect(text()).toContain("Ingia ili Kubali");
+    await flush();
+    await waitForElement(() => text().includes("Mwaliko wa Kanisa") ? host : null);
+    expect(text()).toContain("Mwaliko wa Kanisa");
+    expect(text()).toContain("Umealikwa");
+    expect(text()).toContain("Ingia");
+    expect(text()).toContain("Jisajili");
+    expect(host.querySelector("[aria-label='Badili lugha kwenda Kiingereza']")).toBeTruthy();
   });
 
   it("renders RegisterPage fallback in both languages", async () => {
@@ -383,7 +402,7 @@ describe("auth Kiswahili translation", () => {
   it.each([
     ["en", "Unknown error"],
     ["sw", "Hitilafu isiyojulikana"],
-  ] as const)("uses localized AcceptInvitePage fallback for raw RPC errors in %s", async (language, expectedDescription) => {
+  ] as const)("uses localized active InvitePage fallback for raw RPC errors in %s", async (language, expectedDescription) => {
     await changeAppLanguage(language);
     state.auth.user = { id: "user-1", email: "member@example.test" };
     vi.mocked(supabase.rpc).mockResolvedValueOnce({
@@ -394,7 +413,7 @@ describe("auth Kiswahili translation", () => {
     render(
       <MemoryRouter initialEntries={["/invite/token-1"]}>
         <Routes>
-          <Route path="/invite/:token" element={<AcceptInvitePage />} />
+          <Route path="/invite/:token" element={<InvitePage />} />
         </Routes>
       </MemoryRouter>,
     );
@@ -416,5 +435,19 @@ describe("auth Kiswahili translation", () => {
       variant: "destructive",
     }));
     expect(JSON.stringify(state.toast.mock.calls)).not.toContain("internal_acl");
+  });
+
+  it("keeps active invite route lookup and acceptance mechanics wired", () => {
+    const appSource = readFile("src/App.tsx");
+    const inviteSource = readFile("src/pages/auth/InvitePage.tsx");
+
+    expect(appSource).toContain('<Route path="/invite" element={<InvitePage />} />');
+    expect(appSource).toContain('<Route path="/invite/:token" element={<InvitePage />} />');
+    expect(appSource).not.toContain("/accept-invite");
+    expect(inviteSource).toContain('.from("invites" as never)');
+    expect(inviteSource).toContain('rpc("get_public_invitation"');
+    expect(inviteSource).toContain('rpc("accept_invitation"');
+    expect(inviteSource).toContain("refreshUserData()");
+    expect(inviteSource).toContain('navigate("/portal"');
   });
 });

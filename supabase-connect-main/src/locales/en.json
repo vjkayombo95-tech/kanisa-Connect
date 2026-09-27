@@ -211,27 +211,54 @@
       "create_account_prompt": "New here? Create an account",
       "create_account_to_join": "Create your account to join:",
       "default_church": "Church",
+      "email_mismatch_description": "This invite is for {{email}}. Sign in with that email to continue.",
+      "email_mismatch_title": "Email mismatch",
+      "help": "Need help? Contact your church administrator for a fresh invite.",
       "expired_description": "This invitation has expired. Please ask your church administrator to send a new one.",
       "expired_title": "Invitation Expired",
       "go_to_dashboard": "Go to Dashboard",
       "go_to_login": "Go to Login",
       "invalid_description": "This invitation link is not valid. Please contact your church administrator.",
+      "invalid_or_expired_title": "Invalid or expired invite",
       "invalid_title": "Invalid Invitation",
       "invited_description": "You've been invited to join",
+      "invited_heading": "You have been invited",
       "invited_title": "You're Invited!",
+      "loading": "Checking your invite...",
+      "login_button": "Login",
       "no_account_signup": "Don't have an account? Sign up",
+      "page_description": "Join your church workspace on Kanisa Connect with a secure invite link.",
+      "page_title": "Church Invitation",
+      "redirect_description": "Sign in or create your account, and we'll bring you right back to this invite.",
       "revoked_description": "This invitation has been revoked by the church administrator.",
       "revoked_title": "Invitation Revoked",
       "sign_in_accept": "Sign In & Accept",
       "sign_in_prompt": "Sign in to accept this invitation:",
       "sign_in_to_accept": "Sign In to Accept",
       "signed_in_as": "Signed in as",
+      "signed_in_title": "Signed in",
+      "signup_button": "Sign Up",
       "fields": {
         "church": "Church",
         "expires": "Expires",
+        "invited_email": "Invited email",
         "role": "Role"
       },
+      "status": {
+        "pending": "Pending"
+      },
+      "errors": {
+        "accept_failed": "Could not accept this invitation.",
+        "email_mismatch": "Please sign in as {{email}} to accept this invite.",
+        "invalid_or_expired": "Invalid or expired invite.",
+        "login_required": "You must be logged in to accept this invite.",
+        "not_found": "Invite not found."
+      },
       "toasts": {
+        "accepted": {
+          "description": "Your account is now linked to the church.",
+          "title": "Invite accepted"
+        },
         "accept_failed": {
           "description": "Unknown error",
           "title": "Could not accept"

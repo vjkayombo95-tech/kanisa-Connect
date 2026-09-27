@@ -211,27 +211,54 @@
       "create_account_prompt": "Mgeni hapa? Unda akaunti",
       "create_account_to_join": "Unda akaunti yako ili kujiunga:",
       "default_church": "Kanisa",
+      "email_mismatch_description": "Mwaliko huu ni wa {{email}}. Ingia kwa barua pepe hiyo ili kuendelea.",
+      "email_mismatch_title": "Barua pepe hazilingani",
+      "help": "Unahitaji msaada? Wasiliana na msimamizi wa kanisa lako kwa mwaliko mpya.",
       "expired_description": "Mwaliko huu umeisha muda. Tafadhali mwombe msimamizi wa kanisa akutumie mpya.",
       "expired_title": "Mwaliko Umeisha Muda",
       "go_to_dashboard": "Nenda kwenye Dashibodi",
       "go_to_login": "Nenda Kuingia",
       "invalid_description": "Kiungo hiki cha mwaliko si sahihi. Tafadhali wasiliana na msimamizi wa kanisa lako.",
+      "invalid_or_expired_title": "Mwaliko si sahihi au umeisha muda",
       "invalid_title": "Mwaliko Si Sahihi",
       "invited_description": "Umealikiwa kujiunga na",
+      "invited_heading": "Umealikwa",
       "invited_title": "Umealikwa!",
+      "loading": "Inakagua mwaliko wako...",
+      "login_button": "Ingia",
       "no_account_signup": "Huna akaunti? Jisajili",
+      "page_description": "Jiunge na nafasi ya kanisa lako kwenye Kanisa Connect kwa kiungo salama cha mwaliko.",
+      "page_title": "Mwaliko wa Kanisa",
+      "redirect_description": "Ingia au unda akaunti, nasi tutakurudisha kwenye mwaliko huu.",
       "revoked_description": "Mwaliko huu umefutwa na msimamizi wa kanisa.",
       "revoked_title": "Mwaliko Umefutwa",
       "sign_in_accept": "Ingia na Kubali",
       "sign_in_prompt": "Ingia ili ukubali mwaliko huu:",
       "sign_in_to_accept": "Ingia ili Kubali",
       "signed_in_as": "Umeingia kama",
+      "signed_in_title": "Umeingia",
+      "signup_button": "Jisajili",
       "fields": {
         "church": "Kanisa",
         "expires": "Mwisho wa muda",
+        "invited_email": "Barua pepe iliyoalikwa",
         "role": "Jukumu"
       },
+      "status": {
+        "pending": "Inasubiri"
+      },
+      "errors": {
+        "accept_failed": "Imeshindikana kukubali mwaliko huu.",
+        "email_mismatch": "Tafadhali ingia kama {{email}} ili ukubali mwaliko huu.",
+        "invalid_or_expired": "Mwaliko si sahihi au umeisha muda.",
+        "login_required": "Lazima uwe umeingia ili ukubali mwaliko huu.",
+        "not_found": "Mwaliko haujapatikana."
+      },
       "toasts": {
+        "accepted": {
+          "description": "Akaunti yako sasa imeunganishwa na kanisa.",
+          "title": "Mwaliko umekubaliwa"
+        },
         "accept_failed": {
           "description": "Hitilafu isiyojulikana",
           "title": "Imeshindikana kukubali"
