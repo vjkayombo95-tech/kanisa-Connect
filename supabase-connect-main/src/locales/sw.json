@@ -61,6 +61,279 @@
   "this_feature_is_locked": "Kipengele hiki kimefungwa",
   "super_admin_locked_feature": "Super admin amekifunga kipengele hiki kwa wanachama.",
   "all_rights_reserved": "Haki zote zimehifadhiwa.",
+  "auth": {
+    "common": {
+      "error": "Hitilafu"
+    },
+    "actions": {
+      "hide_password": "Ficha nenosiri",
+      "show_password": "Onyesha nenosiri"
+    },
+    "fields": {
+      "confirm_new_password": "Thibitisha nenosiri jipya",
+      "email": "Barua pepe",
+      "email_or_phone": "Barua pepe au namba ya simu",
+      "email_required": "Barua pepe *",
+      "full_name": "Jina kamili",
+      "full_name_required": "Jina kamili *",
+      "gender_required": "Jinsia *",
+      "jumuiya": "Jumuiya",
+      "ministries": "Huduma",
+      "new_password": "Nenosiri jipya",
+      "password": "Nenosiri",
+      "password_required": "Nenosiri *",
+      "phone": "Namba ya simu",
+      "phone_required": "Simu *",
+      "photo": "Picha"
+    },
+    "placeholders": {
+      "choose_password": "Chagua nenosiri",
+      "create_password": "Unda nenosiri",
+      "email": "you@example.com",
+      "email_or_phone": "Barua pepe au namba ya simu",
+      "full_name": "Jina lako kamili",
+      "password": "Nenosiri lako",
+      "phone": "07XXXXXXXX"
+    },
+    "phone_hint": "Inakubali 07XXXXXXXX, +2557XXXXXXXX, au 2557XXXXXXXX.",
+    "login": {
+      "already_have_account": "Tayari una akaunti?",
+      "confirmation_waiting_description": "Thibitisha {{email}}, kisha ingia tena ili kuendelea kuunda kanisa lako.",
+      "confirmation_waiting_title": "Inasubiri uthibitisho wa barua pepe",
+      "continue_google": "Endelea kwa Google",
+      "create_account_button": "Unda Akaunti",
+      "create_account_description": "Jisajili ili kuanza kutumia Kanisa Connect",
+      "create_account_title": "Unda akaunti yako",
+      "forgot_password": "Umesahau nenosiri?",
+      "no_account": "Huna akaunti?",
+      "or": "au",
+      "resend_confirmation": "Tuma tena kiungo cha uthibitisho",
+      "sign_in_button": "Ingia",
+      "sign_in_link": "Ingia",
+      "sign_up_link": "Jisajili",
+      "welcome_description": "Ingia ili kuendelea kwenye dashibodi yako",
+      "welcome_title": "Karibu tena",
+      "errors": {
+        "email_required_for_signup": "Tafadhali weka barua pepe halali ili kuunda akaunti ya nenosiri. Usajili kwa simu pekee utapatikana SMS OTP itakapowezeshwa.",
+        "no_email_login": "Akaunti hii haijaunganishwa na kuingia kwa barua pepe halali. Tafadhali wasiliana na ofisi ya kanisa lako."
+      },
+      "toasts": {
+        "account_created": {
+          "description": "Inafungua usanidi wa kanisa...",
+          "title": "Akaunti imeundwa"
+        },
+        "authentication_error": {
+          "email_not_confirmed": "Akaunti yako ipo, lakini barua pepe yako bado haijathibitishwa. Angalia kikasha chako kisha uingie tena.",
+          "fallback": "Kuna jambo halikwenda sawa.",
+          "invalid_credentials": "Barua pepe/namba ya simu au nenosiri si sahihi.",
+          "invalid_signup_phone": "Tafadhali weka namba halali ya simu ya Tanzania kama 07XXXXXXXX, +2557XXXXXXXX, au 2557XXXXXXXX.",
+          "invalid_phone": "Namba ya simu au PIN si sahihi. Tafadhali jaribu tena.",
+          "title": "Hitilafu ya kuingia"
+        },
+        "confirm_email": {
+          "description": "Tumetuma kiungo cha uthibitisho kwenda {{email}}.",
+          "title": "Thibitisha barua pepe yako"
+        },
+        "confirmation_resent": {
+          "description": "Angalia {{email}} kwa kiungo kipya.",
+          "title": "Uthibitisho umetumwa tena"
+        },
+        "google_failed": {
+          "description": "Imeshindikana kuanzisha kuingia kwa Google. Tafadhali jaribu tena.",
+          "title": "Kuingia kwa Google kumeshindikana"
+        },
+        "missing_fields": {
+          "description": "Tafadhali weka barua pepe au namba ya simu na nenosiri.",
+          "title": "Taarifa hazijakamilika"
+        },
+        "missing_name": {
+          "description": "Tafadhali weka jina lako kamili.",
+          "title": "Jina linahitajika"
+        },
+        "resend_failed": {
+          "description": "Tafadhali kagua mipangilio ya barua pepe ya Supabase kisha ujaribu tena.",
+          "title": "Imeshindikana kutuma uthibitisho tena"
+        },
+        "session_expired": {
+          "description": "Tafadhali ingia tena kabla ya kuunda nafasi ya kazi ya kanisa lako.",
+          "title": "Kikao kimeisha muda"
+        }
+      }
+    },
+    "forgot": {
+      "email_sent_inline": "Angalia kikasha chako kwa kiungo cha kuweka upya nenosiri. Kinaweza kuchukua dakika moja kufika.",
+      "recovery_description": "Unda nenosiri jipya la akaunti yako",
+      "recovery_title": "Chagua nenosiri jipya",
+      "remember_password": "Unakumbuka nenosiri lako?",
+      "request_description": "Weka barua pepe yako na tutatuma kiungo cha kuweka upya",
+      "request_title": "Umesahau nenosiri lako?",
+      "send_reset_link": "Tuma Kiungo cha Kuweka Upya",
+      "update_password": "Sasisha Nenosiri",
+      "toasts": {
+        "check_email": {
+          "description": "Kiungo cha kuweka upya nenosiri kimetumwa kama akaunti ipo kwa barua pepe hiyo.",
+          "title": "Angalia barua pepe yako"
+        },
+        "enter_email": {
+          "description": "Viungo vya kuweka upya nenosiri vinaweza kutumwa tu kwa barua pepe halali.",
+          "title": "Weka barua pepe yako"
+        },
+        "enter_password": {
+          "description": "Nenosiri lako jipya haliwezi kuwa tupu.",
+          "title": "Weka nenosiri jipya"
+        },
+        "passwords_mismatch": {
+          "description": "Weka nenosiri lilelile kwenye sehemu zote mbili.",
+          "title": "Nenosiri halifanani"
+        },
+        "send_failed": {
+          "description": "Hatukuweza kutuma kiungo cha kuweka upya. Tafadhali jaribu tena.",
+          "title": "Imeshindikana kutuma kiungo"
+        },
+        "update_failed": {
+          "description": "Hatukuweza kusasisha nenosiri lako. Tafadhali jaribu tena.",
+          "title": "Imeshindikana kusasisha nenosiri"
+        },
+        "updated": {
+          "description": "Ingia kwa kutumia nenosiri lako jipya.",
+          "title": "Nenosiri limesasishwa"
+        }
+      }
+    },
+    "invite": {
+      "accept_button": "Kubali Mwaliko",
+      "accepted_description": "Umejiunga na {{church}}. Tunakuelekeza kwenye dashibodi yako...",
+      "accepted_title": "Karibu!",
+      "already_accepted_description": "Mwaliko huu tayari umekubaliwa.",
+      "already_accepted_title": "Tayari Umekubaliwa",
+      "already_have_account_signin": "Tayari una akaunti? Ingia",
+      "create_account_accept": "Unda Akaunti na Kubali",
+      "create_account_prompt": "Mgeni hapa? Unda akaunti",
+      "create_account_to_join": "Unda akaunti yako ili kujiunga:",
+      "default_church": "Kanisa",
+      "expired_description": "Mwaliko huu umeisha muda. Tafadhali mwombe msimamizi wa kanisa akutumie mpya.",
+      "expired_title": "Mwaliko Umeisha Muda",
+      "go_to_dashboard": "Nenda kwenye Dashibodi",
+      "go_to_login": "Nenda Kuingia",
+      "invalid_description": "Kiungo hiki cha mwaliko si sahihi. Tafadhali wasiliana na msimamizi wa kanisa lako.",
+      "invalid_title": "Mwaliko Si Sahihi",
+      "invited_description": "Umealikiwa kujiunga na",
+      "invited_title": "Umealikwa!",
+      "no_account_signup": "Huna akaunti? Jisajili",
+      "revoked_description": "Mwaliko huu umefutwa na msimamizi wa kanisa.",
+      "revoked_title": "Mwaliko Umefutwa",
+      "sign_in_accept": "Ingia na Kubali",
+      "sign_in_prompt": "Ingia ili ukubali mwaliko huu:",
+      "sign_in_to_accept": "Ingia ili Kubali",
+      "signed_in_as": "Umeingia kama",
+      "fields": {
+        "church": "Kanisa",
+        "expires": "Mwisho wa muda",
+        "role": "Jukumu"
+      },
+      "toasts": {
+        "accept_failed": {
+          "description": "Hitilafu isiyojulikana",
+          "title": "Imeshindikana kukubali"
+        },
+        "account_created": {
+          "description": "Tafadhali ingia kisha urudi kwenye kiungo hiki ili ukubali.",
+          "title": "Akaunti imeundwa"
+        },
+        "check_email": {
+          "description": "Tafadhali thibitisha barua pepe yako, kisha urudi kwenye kiungo hiki cha mwaliko ili kujiunga.",
+          "title": "Angalia barua pepe yako"
+        },
+        "invalid_email": {
+          "description": "Tafadhali weka barua pepe halali",
+          "title": "Barua pepe si sahihi"
+        },
+        "welcome": {
+          "basic": "Umejiunga na {{church}}",
+          "title": "Karibu!",
+          "with_role": "Umejiunga na {{church}} kama {{role}}"
+        }
+      }
+    },
+    "register": {
+      "alert_failed_title": "Usajili haukukamilika",
+      "already_connected_description": "Akaunti hii tayari ni ya {{church}}. Uanachama wa pili hautaundwa.",
+      "already_connected_title": "Tayari imeunganishwa",
+      "already_registered": "Tayari umesajiliwa?",
+      "back_to_onboarding": "Rudi kwenye usanidi wa kanisa",
+      "choose_jumuiya": "Chagua Jumuiya yako",
+      "church_code": "Msimbo wa Kanisa",
+      "church_code_hint": "Chagua Jumuiya na huduma sasa ili kanisa likusajili haraka zaidi.",
+      "complete_button": "Kamilisha Usajili",
+      "cooldown_message": "Usajili wa barua pepe umepunguzwa kwa muda kwa anwani hii. Tafadhali subiri sekunde {{seconds}} kabla ya kujaribu tena.",
+      "eyebrow": "Usajili wa Umma",
+      "hidden_description": "Usajili wa umma umefichwa kwa sasa kwa kanisa hili. Tafadhali wasiliana na ofisi ya kanisa kwa ufikiaji.",
+      "include_ministry": "Jumuisha huduma hii kwenye usajili wangu",
+      "join_description": "Kamilisha usajili wako ili uwe sehemu ya jumuiya hii ya kanisa na upate ufikiaji wa mwanachama mara moja.",
+      "join_description_signed_in": "Kamilisha usajili wako wa mwanachama kwa kanisa hili kwa kutumia akaunti uliyoingia nayo.",
+      "join_title": "Jiunge na {{church}}",
+      "link_required_description": "Fungua ukurasa huu kwa kutumia kiungo cha usajili wa kanisa kilichoshirikiwa na msimamizi wa kanisa lako.",
+      "link_required_title": "Kiungo cha Kanisa Kinahitajika",
+      "loading": "Inapakia fomu ya usajili...",
+      "ministries_help": "Chagua huduma zozote ambazo ungependa kanisa lihusishe na usajili wako.",
+      "no_jumuiya": "Hakuna Jumuiya iliyopo",
+      "no_ministries": "Hakuna huduma zilizopo kwa sasa.",
+      "not_found_description": "Kiungo cha usajili si sahihi au hakitumiki tena.",
+      "not_found_title": "Kanisa Halijapatikana",
+      "offline_draft_note": "Taarifa zako za usajili zinahifadhiwa kwenye kifaa hiki unapoandika. Nenosiri na picha havihifadhiwi nje ya mtandao.",
+      "photo_help": "Hiari. Pakia picha ya uso iliyo wazi katika JPG, PNG, au WebP.",
+      "photo_preview_alt": "Hakikisho",
+      "profile_description": "Jaza taarifa zako hapa chini. Sehemu zilizo na * zinahitajika.",
+      "profile_description_signed_in": "Kanisa lako tayari limejazwa. Kamilisha taarifa zilizosalia hapa chini.",
+      "profile_title": "Unda wasifu wako wa mwanachama",
+      "requested_church_code": "Msimbo wa kanisa ulioombwa: {{value}}",
+      "requested_church_id": "ID ya kanisa iliyoombwa: {{value}}",
+      "requested_church_link": "Kiungo cha kanisa kilichoombwa: {{value}}",
+      "select_gender": "Chagua jinsia",
+      "signed_in_as": "Umeingia kama {{email}}",
+      "submit_button": "Tuma Usajili",
+      "wait_seconds": "Subiri {{seconds}}s",
+      "errors": {
+        "account_create_failed": "Akaunti haikuweza kuundwa. Tafadhali jaribu tena.",
+        "already_linked": "Akaunti hii tayari imeunganishwa na kanisa lingine. Tafadhali wasiliana na msimamizi wa kanisa lako.",
+        "already_registered": "Barua pepe hiyo tayari imesajiliwa. Tafadhali ingia badala yake.",
+        "email_not_confirmed": "Akaunti yako ipo, lakini barua pepe yako bado haijathibitishwa. Angalia kikasha chako, kisha uingie tena.",
+        "fallback": "Usajili haukuweza kukamilika. Tafadhali jaribu tena au wasiliana na msimamizi wa kanisa lako.",
+        "invalid_church": "Kiungo hiki cha usajili wa kanisa si sahihi au hakitumiki tena.",
+        "invalid_login_credentials": "Barua pepe hii tayari ina akaunti, lakini nenosiri hilo halilingani. Tafadhali ingia au tumia nenosiri sahihi.",
+        "offline": "Huna intaneti. Rasimu yako ya usajili imehifadhiwa kwenye kifaa hiki. Unganisha tena ili kuituma.",
+        "phone": "Tafadhali kagua namba ya simu na ujaribu tena.",
+        "public_registration_disabled": "Usajili wa umma haupatikani kwa sasa kwa kanisa hili.",
+        "rate_limited": "Usajili wa barua pepe umepunguzwa kwa muda. Tafadhali subiri sekunde {{seconds}} kabla ya kujaribu tena."
+      },
+      "gender": {
+        "female": "Mwanamke",
+        "male": "Mwanaume"
+      },
+      "ministry_summary": {
+        "many": "Huduma {{count}} zimechaguliwa",
+        "none": "Hakuna huduma iliyochaguliwa",
+        "one": "Huduma 1 imechaguliwa"
+      },
+      "toasts": {
+        "confirm_email": {
+          "description": "Akaunti yako imeundwa. Angalia barua pepe yako, kisha ingia ili kuendelea na usajili wa kanisa lako.",
+          "title": "Thibitisha barua pepe yako"
+        },
+        "failed": {
+          "title": "Usajili umeshindikana"
+        },
+        "invalid_photo": {
+          "description": "Tafadhali pakia picha ya JPG, PNG, au WebP yenye ukubwa wa MB 2 au chini.",
+          "title": "Picha si sahihi"
+        },
+        "welcome": {
+          "description": "Sasa uko hai ndani ya {{church}}.",
+          "title": "Karibu Kanisa Connect"
+        }
+      }
+    }
+  },
   "common": {
     "loading": "Inapakia...",
     "cancel": "Ghairi",

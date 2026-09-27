@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -23,6 +25,7 @@ function hasRecoveryParameters() {
 }
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -63,8 +66,8 @@ export default function ForgotPasswordPage() {
 
     if (!EMAIL_REGEX.test(normalizedEmail)) {
       toast({
-        title: "Enter your email",
-        description: "Password reset links can only be sent to a valid email address.",
+        title: t("auth.forgot.toasts.enter_email.title"),
+        description: t("auth.forgot.toasts.enter_email.description"),
         variant: "destructive",
       });
       return;
@@ -77,23 +80,23 @@ export default function ForgotPasswordPage() {
     setIsLoading(false);
 
     if (error) {
-      toast({ title: "Unable to send reset link", description: error.message, variant: "destructive" });
+      toast({ title: t("auth.forgot.toasts.send_failed.title"), description: t("auth.forgot.toasts.send_failed.description"), variant: "destructive" });
       return;
     }
 
     setEmailSent(true);
-    toast({ title: "Check your email", description: "A password reset link has been sent if an account exists for that email." });
+    toast({ title: t("auth.forgot.toasts.check_email.title"), description: t("auth.forgot.toasts.check_email.description") });
   };
 
   const handleUpdatePassword = async (event: React.FormEvent) => {
     event.preventDefault();
 
     if (!password) {
-      toast({ title: "Enter a new password", description: "Your new password cannot be empty.", variant: "destructive" });
+      toast({ title: t("auth.forgot.toasts.enter_password.title"), description: t("auth.forgot.toasts.enter_password.description"), variant: "destructive" });
       return;
     }
     if (password !== confirmPassword) {
-      toast({ title: "Passwords do not match", description: "Enter the same new password in both fields.", variant: "destructive" });
+      toast({ title: t("auth.forgot.toasts.passwords_mismatch.title"), description: t("auth.forgot.toasts.passwords_mismatch.description"), variant: "destructive" });
       return;
     }
 
@@ -101,13 +104,13 @@ export default function ForgotPasswordPage() {
     const { error } = await supabase.auth.updateUser({ password });
     if (error) {
       setIsLoading(false);
-      toast({ title: "Unable to update password", description: error.message, variant: "destructive" });
+      toast({ title: t("auth.forgot.toasts.update_failed.title"), description: t("auth.forgot.toasts.update_failed.description"), variant: "destructive" });
       return;
     }
 
     await supabase.auth.signOut();
     window.sessionStorage.removeItem(PASSWORD_RECOVERY_PENDING_KEY);
-    toast({ title: "Password updated", description: "Sign in with your new password." });
+    toast({ title: t("auth.forgot.toasts.updated.title"), description: t("auth.forgot.toasts.updated.description") });
     navigate("/login", { replace: true });
   };
 
@@ -115,6 +118,9 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
+          <div className="mb-4 flex justify-center">
+            <LanguageSwitcher />
+          </div>
           <Link to="/" className="inline-flex items-center gap-3 mb-6">
             <div className="h-11 w-11 rounded-xl gradient-gold flex items-center justify-center">
               <Church className="h-6 w-6 text-primary-foreground" />
@@ -122,12 +128,12 @@ export default function ForgotPasswordPage() {
             <span className="text-2xl font-bold font-serif">Kanisa Connect</span>
           </Link>
           <h1 className="text-xl font-bold font-serif mt-4">
-            {isRecoveryMode ? "Choose a new password" : "Forgot your password?"}
+            {isRecoveryMode ? t("auth.forgot.recovery_title") : t("auth.forgot.request_title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {isRecoveryMode
-              ? "Create a new password for your account"
-              : "Enter your email and we will send a reset link"}
+              ? t("auth.forgot.recovery_description")
+              : t("auth.forgot.request_description")}
           </p>
         </div>
 
@@ -136,7 +142,7 @@ export default function ForgotPasswordPage() {
             {isRecoveryMode ? (
               <form onSubmit={handleUpdatePassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
+                  <Label htmlFor="new-password">{t("auth.fields.new_password")}</Label>
                   <div className="relative">
                     <Input
                       id="new-password"
@@ -151,14 +157,14 @@ export default function ForgotPasswordPage() {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-label={showPassword ? t("auth.actions.hide_password") : t("auth.actions.show_password")}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm New Password</Label>
+                  <Label htmlFor="confirm-password">{t("auth.fields.confirm_new_password")}</Label>
                   <Input
                     id="confirm-password"
                     type={showPassword ? "text" : "password"}
@@ -170,19 +176,19 @@ export default function ForgotPasswordPage() {
                 </div>
                 <Button className="w-full" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Update Password
+                  {t("auth.forgot.update_password")}
                 </Button>
               </form>
             ) : (
               <form onSubmit={handleRequestReset} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="reset-email">Email</Label>
+                  <Label htmlFor="reset-email">{t("auth.fields.email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="reset-email"
                       type="email"
-                      placeholder="you@example.com"
+                      placeholder={t("auth.placeholders.email")}
                       className="pl-9"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
@@ -193,20 +199,20 @@ export default function ForgotPasswordPage() {
                 </div>
                 {emailSent && (
                   <p className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
-                    Check your inbox for the password reset link. It may take a minute to arrive.
+                    {t("auth.forgot.email_sent_inline")}
                   </p>
                 )}
                 <Button className="w-full" disabled={isLoading}>
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Send Reset Link
+                  {t("auth.forgot.send_reset_link")}
                 </Button>
               </form>
             )}
 
             <p className="text-center text-sm text-muted-foreground">
-              Remember your password?{" "}
+              {t("auth.forgot.remember_password")}{" "}
               <Link to="/login" className="text-primary hover:underline font-medium">
-                Sign in
+                {t("auth.login.sign_in_link")}
               </Link>
             </p>
           </CardContent>

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import {
   fetchPublicJoinChurch,
   fetchPublicRegistrationChurch,
@@ -29,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { assertPhoneIsAvailable, normalizeTanzanianPhone } from "@/lib/phone-auth";
 import { logSupabaseError } from "@/lib/error-logger";
+import { useTranslation } from "react-i18next";
 
 type ChurchRow = PublicChurch;
 type CommunityRow = Pick<Tables<"communities">, "id" | "name">;
@@ -129,51 +131,56 @@ function parseSignupRateLimit(errorMessage: string) {
   };
 }
 
-function formatRegistrationError(error: unknown) {
+type AuthTranslator = (key: string, options?: Record<string, unknown>) => string;
+
+function formatRegistrationError(error: unknown, t: AuthTranslator) {
   const rawMessage = error instanceof Error ? error.message : String(error ?? "");
   const lowerMessage = rawMessage.toLowerCase();
   const { isRateLimited, cooldownSeconds } = parseSignupRateLimit(rawMessage);
 
   if (lowerMessage.includes("offline")) {
-    return "You are offline. Your registration draft is saved on this device. Reconnect to submit.";
+    return t("auth.register.errors.offline");
   }
 
   if (lowerMessage.includes("already registered") || lowerMessage.includes("already exists")) {
-    return "That email is already registered. Please log in instead.";
+    return t("auth.register.errors.already_registered");
   }
 
   if (lowerMessage.includes("already linked") || lowerMessage.includes("another church")) {
-    return "This account is already connected to another church. Please contact your church administrator.";
+    return t("auth.register.errors.already_linked");
   }
 
   if (lowerMessage.includes("invalid login credentials")) {
-    return "This email already has an account, but that password does not match. Please sign in or use the correct password.";
+    return t("auth.register.errors.invalid_login_credentials");
   }
 
   if (lowerMessage.includes("email not confirmed")) {
-    return "Your account exists, but your email is not confirmed yet. Check your inbox, then sign in again.";
+    return t("auth.register.errors.email_not_confirmed");
   }
 
   if (isRateLimited && cooldownSeconds > 0) {
-    return `Email signup is temporarily rate-limited. Please wait ${cooldownSeconds} seconds before trying again.`;
+    return t("auth.register.errors.rate_limited", { seconds: cooldownSeconds });
   }
 
   if (lowerMessage.includes("phone")) {
-    return "Please check the phone number and try again.";
+    return t("auth.register.errors.phone");
   }
 
   if (lowerMessage.includes("invalid church") || lowerMessage.includes("church not found")) {
-    return "This church registration link is invalid or no longer active.";
+    return t("auth.register.errors.invalid_church");
   }
 
   if (lowerMessage.includes("public registration")) {
-    return "Public registration is currently unavailable for this church.";
+    return t("auth.register.errors.public_registration_disabled");
   }
 
-  return "Registration could not be completed. Please try again or contact your church administrator.";
+  return t("auth.register.errors.fallback", {
+    defaultValue: "Registration could not be completed. Please try again or contact your church administrator.",
+  });
 }
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const { churchCode = "", slug = "" } = useParams<{ churchCode: string; slug: string }>();
   const [searchParams] = useSearchParams();
   const churchIdParam = searchParams.get("churchId")?.trim() || "";
@@ -303,7 +310,7 @@ export default function RegisterPage() {
 
     const validation = validateRegistrationPhoto(file);
     if (!validation.valid) {
-      toast({ title: "Invalid photo", description: validation.error, variant: "destructive" });
+      toast({ title: t("auth.register.toasts.invalid_photo.title"), description: t("auth.register.toasts.invalid_photo.description"), variant: "destructive" });
       return;
     }
 
@@ -324,7 +331,7 @@ export default function RegisterPage() {
   const registerMutation = useMutation({
     mutationFn: async () => {
       if (!isOnline) {
-        throw new Error("You are offline. Your registration draft is saved on this device. Reconnect to submit.");
+        throw new Error("offline registration draft saved");
       }
 
       const church = churchQuery.data;
@@ -390,7 +397,7 @@ export default function RegisterPage() {
 
             authUserId = signUpData.user?.id ?? null;
             if (!authUserId) {
-              throw new Error("Account could not be created. Please try again.");
+              throw new Error(t("auth.register.errors.account_create_failed"));
             }
 
             if (!signUpData.session) {
@@ -505,8 +512,8 @@ export default function RegisterPage() {
     onSuccess: (result) => {
       if (result.pendingConfirmation) {
         toast({
-          title: "Confirm your email",
-          description: "Your account was created. Check your email, then sign in to continue your church registration.",
+          title: t("auth.register.toasts.confirm_email.title"),
+          description: t("auth.register.toasts.confirm_email.description"),
         });
         navigate(result.redirectPath, { replace: true });
         return;
@@ -517,7 +524,7 @@ export default function RegisterPage() {
       storePendingRegistrationRedirect(result.email, null);
       storePendingRegistrationAutocomplete(result.email, null);
       clearOfflineDraft(registrationDraftKey);
-      toast({ title: "Welcome to Kanisa Connect", description: `You're now active in ${result.churchName}.` });
+      toast({ title: t("auth.register.toasts.welcome.title"), description: t("auth.register.toasts.welcome.description", { church: result.churchName }) });
       navigate("/portal", { replace: true });
     },
     onError: (error: Error) => {
@@ -531,19 +538,19 @@ export default function RegisterPage() {
         storeSignupCooldown(normalizedEmail, until);
       }
 
-      toast({ title: "Registration failed", description: formatRegistrationError(error), variant: "destructive" });
+      toast({ title: t("auth.register.toasts.failed.title"), description: formatRegistrationError(error, t), variant: "destructive" });
     },
   });
 
   const isLoadingPage = churchQuery.isLoading || communitiesQuery.isLoading || ministriesQuery.isLoading;
   const pageError = churchQuery.error || communitiesQuery.error || ministriesQuery.error;
   const registrationEnabled = isPublicRegistrationEnabled(churchQuery.data?.metadata);
-  const registrationErrorMessage = registerMutation.error ? formatRegistrationError(registerMutation.error) : null;
+  const registrationErrorMessage = registerMutation.error ? formatRegistrationError(registerMutation.error, t) : null;
   const ministrySummary = useMemo(() => {
-    if (selectedMinistryIds.length === 0) return "No ministries selected";
-    if (selectedMinistryIds.length === 1) return "1 ministry selected";
-    return `${selectedMinistryIds.length} ministries selected`;
-  }, [selectedMinistryIds.length]);
+    if (selectedMinistryIds.length === 0) return t("auth.register.ministry_summary.none");
+    if (selectedMinistryIds.length === 1) return t("auth.register.ministry_summary.one");
+    return t("auth.register.ministry_summary.many", { count: selectedMinistryIds.length });
+  }, [selectedMinistryIds.length, t]);
 
   const signupCooldownSeconds = useMemo(() => {
     if (!signupCooldownUntil) return 0;
@@ -607,7 +614,7 @@ export default function RegisterPage() {
         <div className="mx-auto flex min-h-screen max-w-5xl items-center justify-center">
           <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/90 px-5 py-4 shadow-sm">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <span className="text-sm text-muted-foreground">Loading registration form...</span>
+            <span className="text-sm text-muted-foreground">{t("auth.register.loading")}</span>
           </div>
         </div>
       </div>
@@ -620,24 +627,27 @@ export default function RegisterPage() {
         <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-4xl items-center justify-center">
           <Card className="w-full max-w-lg border-destructive/20 bg-card/95 shadow-xl">
             <CardContent className="space-y-5 p-8 text-center">
+              <div className="flex justify-center">
+                <LanguageSwitcher />
+              </div>
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
                 <ShieldAlert className="h-7 w-7" />
               </div>
               <div className="space-y-2">
-                <h1 className="text-2xl font-serif font-bold">Church Not Found</h1>
+                <h1 className="text-2xl font-serif font-bold">{t("auth.register.not_found_title")}</h1>
                 <p className="text-sm text-muted-foreground">
-                  The registration link is invalid or no longer active.
+                  {t("auth.register.not_found_description")}
                 </p>
                 {churchIdParam ? (
-                  <p className="text-xs text-muted-foreground">Requested church ID: {churchIdParam}</p>
+                  <p className="text-xs text-muted-foreground">{t("auth.register.requested_church_id", { value: churchIdParam })}</p>
                  ) : churchSlugParam ? (
-                   <p className="text-xs text-muted-foreground">Requested church link: {churchSlugParam}</p>
+                   <p className="text-xs text-muted-foreground">{t("auth.register.requested_church_link", { value: churchSlugParam })}</p>
                  ) : churchCode ? (
-                  <p className="text-xs text-muted-foreground">Requested church code: {churchCode}</p>
+                  <p className="text-xs text-muted-foreground">{t("auth.register.requested_church_code", { value: churchCode })}</p>
                 ) : null}
               </div>
               <Button asChild>
-                <Link to="/">Return Home</Link>
+                <Link to="/">{t("shared.actions.return_home")}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -652,17 +662,20 @@ export default function RegisterPage() {
         <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-4xl items-center justify-center">
           <Card className="w-full max-w-lg border-border/60 bg-card/95 shadow-xl">
             <CardContent className="space-y-5 p-8 text-center">
+              <div className="flex justify-center">
+                <LanguageSwitcher />
+              </div>
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Church className="h-7 w-7" />
               </div>
               <div className="space-y-2">
-                <h1 className="text-2xl font-serif font-bold">Church Link Required</h1>
+                <h1 className="text-2xl font-serif font-bold">{t("auth.register.link_required_title")}</h1>
                 <p className="text-sm text-muted-foreground">
-                  Open this page using a church registration link shared by your church administrator.
+                  {t("auth.register.link_required_description")}
                 </p>
               </div>
               <Button asChild>
-                <Link to="/">Return Home</Link>
+                <Link to="/">{t("shared.actions.return_home")}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -677,17 +690,20 @@ export default function RegisterPage() {
         <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-4xl items-center justify-center">
           <Card className="w-full max-w-xl border-border/60 bg-card/95 shadow-xl">
             <CardContent className="space-y-5 p-8 text-center">
+              <div className="flex justify-center">
+                <LanguageSwitcher />
+              </div>
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Church className="h-7 w-7" />
               </div>
               <div className="space-y-2">
                 <h1 className="text-2xl font-serif font-bold">{churchQuery.data.name}</h1>
                 <p className="text-sm text-muted-foreground">
-                  Public registration is currently hidden for this church. Please contact the church office for access.
+                  {t("auth.register.hidden_description")}
                 </p>
               </div>
               <Button asChild variant="outline">
-                <Link to={churchQuery.data.slug ? `/join/${churchQuery.data.slug}` : registrationPath}>Back to church onboarding</Link>
+                <Link to={churchQuery.data.slug ? `/join/${churchQuery.data.slug}` : registrationPath}>{t("auth.register.back_to_onboarding")}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -702,6 +718,9 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.14),_transparent_28%),linear-gradient(180deg,_hsl(var(--background)),_hsl(var(--muted)/0.2))] px-4 py-10">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-6xl items-center justify-center">
         <Card className="w-full max-w-4xl overflow-hidden border-border/60 bg-card/95 shadow-2xl">
+          <div className="flex justify-end px-6 pt-6">
+            <LanguageSwitcher />
+          </div>
           <div className="grid lg:grid-cols-[1.05fr_1.35fr]">
             <div className="border-b border-border/60 bg-muted/30 p-8 lg:border-b-0 lg:border-r">
               <div className="space-y-6">
@@ -710,22 +729,22 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-sm font-medium uppercase tracking-[0.24em] text-primary/80">Public Registration</p>
+                  <p className="text-sm font-medium uppercase tracking-[0.24em] text-primary/80">{t("auth.register.eyebrow")}</p>
                   <h1 className="text-3xl font-bold font-serif leading-tight">
-                    Join {churchQuery.data.name}
+                    {t("auth.register.join_title", { church: churchQuery.data.name })}
                   </h1>
                   <p className="text-sm leading-6 text-muted-foreground">
                     {user
-                      ? "Complete your member registration for this church using your signed-in account."
-                      : "Complete your registration to become part of this church community and get instant member access."}
+                      ? t("auth.register.join_description_signed_in")
+                      : t("auth.register.join_description")}
                   </p>
                 </div>
 
                 <div className="rounded-2xl border border-border/60 bg-background/80 p-5">
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Church Code</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{t("auth.register.church_code")}</p>
                   <p className="mt-2 text-lg font-semibold">{churchQuery.data.code}</p>
                   <p className="mt-3 text-sm text-muted-foreground">
-                    Choose your Jumuiya and ministries now so the church can onboard you faster.
+                    {t("auth.register.church_code_hint")}
                   </p>
                 </div>
               </div>
@@ -733,11 +752,11 @@ export default function RegisterPage() {
 
             <div className="p-8">
               <CardHeader className="p-0 pb-6">
-                <CardTitle className="text-2xl font-serif">Create your member profile</CardTitle>
+                <CardTitle className="text-2xl font-serif">{t("auth.register.profile_title")}</CardTitle>
                 <CardDescription>
                   {user
-                    ? "Your church is already prefilled. Complete the remaining details below."
-                    : "Fill in your details below. Fields marked with * are required."}
+                    ? t("auth.register.profile_description_signed_in")
+                    : t("auth.register.profile_description")}
                 </CardDescription>
               </CardHeader>
 
@@ -745,16 +764,16 @@ export default function RegisterPage() {
                 {registrationErrorMessage ? (
                   <Alert variant="destructive" className="mb-6">
                     <ShieldAlert className="h-4 w-4" />
-                    <AlertTitle>Registration could not be completed</AlertTitle>
+                    <AlertTitle>{t("auth.register.alert_failed_title")}</AlertTitle>
                     <AlertDescription>{registrationErrorMessage}</AlertDescription>
                   </Alert>
                 ) : null}
                 {alreadyInSameChurch && (
                   <Alert className="mb-6 border-primary/30 bg-primary/5">
                     <CheckCircle2 className="h-4 w-4" />
-                    <AlertTitle>Already connected</AlertTitle>
+                    <AlertTitle>{t("auth.register.already_connected_title")}</AlertTitle>
                     <AlertDescription>
-                      This account already belongs to {churchQuery.data.name}. A second membership will not be created.
+                      {t("auth.register.already_connected_description", { church: churchQuery.data.name })}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -769,7 +788,7 @@ export default function RegisterPage() {
                   <div className="flex flex-col gap-4 rounded-2xl border border-dashed border-border/70 bg-muted/20 p-4 sm:flex-row sm:items-center">
                     <div className="relative h-24 w-24 overflow-hidden rounded-2xl border border-border/70 bg-background">
                       {photoPreview ? (
-                        <img src={photoPreview} alt="Preview" className="h-full w-full object-cover" />
+                        <img src={photoPreview} alt={t("auth.register.photo_preview_alt")} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full items-center justify-center text-muted-foreground">
                           <Camera className="h-8 w-8" />
@@ -778,7 +797,7 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="flex-1">
-                      <Label htmlFor="photo-upload">Photo</Label>
+                      <Label htmlFor="photo-upload">{t("auth.fields.photo")}</Label>
                       <Input
                         id="photo-upload"
                         type="file"
@@ -787,7 +806,7 @@ export default function RegisterPage() {
                         onChange={handlePhotoChange}
                       />
                       <p className="mt-2 text-xs text-muted-foreground">
-                        Optional. Upload a clear headshot in JPG, PNG, or WebP format.
+                        {t("auth.register.photo_help")}
                       </p>
                     </div>
 
@@ -809,18 +828,18 @@ export default function RegisterPage() {
 
                   <div className="grid gap-5 md:grid-cols-2">
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="full_name">Full name *</Label>
-                      <Input id="full_name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" required />
+                      <Label htmlFor="full_name">{t("auth.fields.full_name_required")}</Label>
+                      <Input id="full_name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={t("auth.placeholders.full_name")} required />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email *</Label>
+                      <Label htmlFor="email">{t("auth.fields.email_required")}</Label>
                       <Input
                         id="email"
                         type="email"
                         value={user?.email || email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@example.com"
+                        placeholder={t("auth.placeholders.email")}
                         autoComplete={user ? "email" : "off"}
                         required
                         disabled={!!user}
@@ -828,20 +847,20 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone *</Label>
-                      <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="07XXXXXXXX" required />
-                      <p className="text-xs text-muted-foreground">Supports 07XXXXXXXX, +2557XXXXXXXX, or 2557XXXXXXXX.</p>
+                      <Label htmlFor="phone">{t("auth.fields.phone_required")}</Label>
+                      <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t("auth.placeholders.phone")} required />
+                      <p className="text-xs text-muted-foreground">{t("auth.phone_hint")}</p>
                     </div>
 
                     {!user && (
                       <div className="space-y-2">
-                        <Label htmlFor="password">Password *</Label>
+                        <Label htmlFor="password">{t("auth.fields.password_required")}</Label>
                         <Input
                           id="password"
                           type="password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder="Create a password"
+                          placeholder={t("auth.placeholders.create_password")}
                           autoComplete="new-password"
                           minLength={6}
                           required
@@ -850,23 +869,23 @@ export default function RegisterPage() {
                     )}
 
                     <div className="space-y-2">
-                      <Label>Gender *</Label>
+                      <Label>{t("auth.fields.gender_required")}</Label>
                       <Select value={gender} onValueChange={(value: "male" | "female") => setGender(value)}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
+                          <SelectValue placeholder={t("auth.register.select_gender")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="male">{t("auth.register.gender.male")}</SelectItem>
+                          <SelectItem value="female">{t("auth.register.gender.female")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
-                      <Label>Jumuiya</Label>
+                      <Label>{t("auth.fields.jumuiya")}</Label>
                       <Select value={selectedCommunityId} onValueChange={setSelectedCommunityId}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Choose your Jumuiya" />
+                          <SelectValue placeholder={t("auth.register.choose_jumuiya")} />
                         </SelectTrigger>
                         <SelectContent>
                           {communitiesQuery.data?.length ? (
@@ -876,7 +895,7 @@ export default function RegisterPage() {
                               </SelectItem>
                             ))
                           ) : (
-                            <SelectItem value="no-jumuiya" disabled>No Jumuiya available</SelectItem>
+                            <SelectItem value="no-jumuiya" disabled>{t("auth.register.no_jumuiya")}</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -886,9 +905,9 @@ export default function RegisterPage() {
                   <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/20 p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <Label className="text-base">Ministries</Label>
+                        <Label className="text-base">{t("auth.fields.ministries")}</Label>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          Select any ministries you would like the church to associate with your registration.
+                          {t("auth.register.ministries_help")}
                         </p>
                       </div>
                       <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -912,22 +931,22 @@ export default function RegisterPage() {
                               />
                               <div className="space-y-1">
                                 <p className="text-sm font-medium leading-none">{ministry.name}</p>
-                                <p className="text-xs text-muted-foreground">Include this ministry in my registration</p>
+                                <p className="text-xs text-muted-foreground">{t("auth.register.include_ministry")}</p>
                               </div>
                             </label>
                           );
                         })}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">No ministries are available right now.</p>
+                      <p className="text-sm text-muted-foreground">{t("auth.register.no_ministries")}</p>
                     )}
                   </div>
 
                   <div className="flex flex-col gap-3 border-t border-border/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm text-muted-foreground">
                       {user
-                        ? `Signed in as ${user.email}`
-                        : <><span>Already registered? </span><Link to={`/login?redirect=${encodeURIComponent(registrationPath)}`} className="font-medium text-primary hover:underline">Sign in</Link></>}
+                        ? t("auth.register.signed_in_as", { email: user.email })
+                        : <><span>{t("auth.register.already_registered")} </span><Link to={`/login?redirect=${encodeURIComponent(registrationPath)}`} className="font-medium text-primary hover:underline">{t("auth.login.sign_in_link")}</Link></>}
                     </p>
                     <Button
                       type="submit"
@@ -945,19 +964,19 @@ export default function RegisterPage() {
                     >
                       {registerMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
                       {signupCooldownSeconds > 0
-                        ? `Wait ${signupCooldownSeconds}s`
+                        ? t("auth.register.wait_seconds", { seconds: signupCooldownSeconds })
                         : user
-                          ? "Complete Registration"
-                          : "Submit Registration"}
+                          ? t("auth.register.complete_button")
+                          : t("auth.register.submit_button")}
                     </Button>
                   </div>
                   {!user && signupCooldownSeconds > 0 ? (
                     <p className="text-sm text-amber-500">
-                      Email signup is temporarily rate-limited for this address. Please wait {signupCooldownSeconds} seconds before trying again.
+                      {t("auth.register.cooldown_message", { seconds: signupCooldownSeconds })}
                     </p>
                   ) : null}
                   <p className="text-xs text-muted-foreground">
-                    Your registration details are saved on this device while you type. Password and photo are not stored offline.
+                    {t("auth.register.offline_draft_note")}
                   </p>
                 </form>
               </CardContent>

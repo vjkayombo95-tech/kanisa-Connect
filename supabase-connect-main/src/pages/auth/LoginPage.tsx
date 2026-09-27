@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Church, Eye, EyeOff, Loader2, Mail, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 import {
   assertPhoneIsAvailable,
   looksLikeEmail,
@@ -21,6 +23,30 @@ import { isTransientAuthorizationFailure } from "@/lib/authorization-bootstrap";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PENDING_REGISTRATION_REDIRECT_PREFIX = "pending-registration-redirect:";
+
+type AuthTranslator = (key: string, options?: Record<string, unknown>) => string;
+
+function formatLoginAuthError(message: string, options: { isSignUp: boolean; phoneLoginAttempt: boolean }, t: AuthTranslator) {
+  const normalizedMessage = message.toLowerCase();
+
+  if (options.phoneLoginAttempt) {
+    return t("auth.login.toasts.authentication_error.invalid_phone");
+  }
+
+  if (options.isSignUp && normalizedMessage.includes("phone")) {
+    return t("auth.login.toasts.authentication_error.invalid_signup_phone");
+  }
+
+  if (normalizedMessage.includes("email not confirmed")) {
+    return t("auth.login.toasts.authentication_error.email_not_confirmed");
+  }
+
+  if (normalizedMessage.includes("invalid login credentials")) {
+    return t("auth.login.toasts.authentication_error.invalid_credentials");
+  }
+
+  return t("auth.login.toasts.authentication_error.fallback");
+}
 
 function getPendingRegistrationRedirect(email: string) {
   if (typeof window === "undefined") return null;
@@ -37,6 +63,7 @@ function clearPendingRegistrationRedirect(email: string) {
 }
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [identity, setIdentity] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
@@ -70,11 +97,11 @@ export default function LoginPage() {
     if (searchParams.get("reason") !== "session_expired" || expiredSessionNoticeShown.current) return;
     expiredSessionNoticeShown.current = true;
     toast({
-      title: "Session expired",
-      description: "Please sign in again before creating your church workspace.",
+      title: t("auth.login.toasts.session_expired.title"),
+      description: t("auth.login.toasts.session_expired.description"),
       variant: "destructive",
     });
-  }, [searchParams, toast]);
+  }, [searchParams, t, toast]);
 
   useEffect(() => {
     if (initialMode === "signup") {
@@ -127,11 +154,11 @@ export default function LoginPage() {
     const rawIdentity = identity.trim();
 
     if (!rawIdentity || !password) {
-      toast({ title: "Missing fields", description: "Please enter your email or phone number and password.", variant: "destructive" });
+      toast({ title: t("auth.login.toasts.missing_fields.title"), description: t("auth.login.toasts.missing_fields.description"), variant: "destructive" });
       return;
     }
     if (isSignUp && !fullName) {
-      toast({ title: "Missing name", description: "Please enter your full name.", variant: "destructive" });
+      toast({ title: t("auth.login.toasts.missing_name.title"), description: t("auth.login.toasts.missing_name.description"), variant: "destructive" });
       return;
     }
     setIsLoading(true);
@@ -141,7 +168,7 @@ export default function LoginPage() {
 
       if (isSignUp) {
         if (!isEmail) {
-          throw new Error("Please enter a valid email address to create a password account. Phone-only signup will be available when SMS OTP is enabled.");
+          throw new Error(t("auth.login.errors.email_required_for_signup"));
         }
 
         const normalizedEmail = rawIdentity.toLowerCase();
@@ -172,13 +199,13 @@ export default function LoginPage() {
         }
 
         if (signUpData.session) {
-          toast({ title: "Account created", description: "Opening church setup..." });
+          toast({ title: t("auth.login.toasts.account_created.title"), description: t("auth.login.toasts.account_created.description") });
           setIsAwaitingRedirect(true);
           return;
         }
 
         setConfirmationEmail(normalizedEmail);
-        toast({ title: "Confirm your email", description: `We sent a confirmation link to ${normalizedEmail}.` });
+        toast({ title: t("auth.login.toasts.confirm_email.title"), description: t("auth.login.toasts.confirm_email.description", { email: normalizedEmail }) });
       } else {
         let authEmail = "";
         if (isEmail) {
@@ -193,7 +220,7 @@ export default function LoginPage() {
         }
 
         if (!EMAIL_REGEX.test(authEmail)) {
-          throw new Error("This account is not linked to a valid email login. Please contact your church office.");
+          throw new Error(t("auth.login.errors.no_email_login"));
         }
 
         const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password });
@@ -223,14 +250,8 @@ export default function LoginPage() {
       });
 
       toast({
-        title: "Authentication error",
-        description: phoneLoginAttempt
-          ? "Invalid phone number or PIN. Please try again."
-          : normalizedMessage.includes("email not confirmed")
-          ? "Your account exists, but your email is not confirmed yet. Check your inbox and then sign in again."
-          : normalizedMessage.includes("invalid login credentials")
-            ? "The email/phone number or password is incorrect."
-            : message || "Something went wrong.",
+        title: t("auth.login.toasts.authentication_error.title"),
+        description: formatLoginAuthError(message, { isSignUp, phoneLoginAttempt }, t),
         variant: "destructive",
       });
 
@@ -265,11 +286,11 @@ export default function LoginPage() {
         });
         throw error;
       }
-      toast({ title: "Confirmation resent", description: `Check ${normalizedEmail} for the new link.` });
-    } catch (err: any) {
+      toast({ title: t("auth.login.toasts.confirmation_resent.title"), description: t("auth.login.toasts.confirmation_resent.description", { email: normalizedEmail }) });
+    } catch {
       toast({
-        title: "Could not resend confirmation",
-        description: err?.message || "Please check your Supabase email settings and try again.",
+        title: t("auth.login.toasts.resend_failed.title"),
+        description: t("auth.login.toasts.resend_failed.description"),
         variant: "destructive",
       });
     } finally {
@@ -294,8 +315,8 @@ export default function LoginPage() {
         });
         throw error;
       }
-    } catch (error: any) {
-      toast({ title: "Google login failed", description: error.message, variant: "destructive" });
+    } catch {
+      toast({ title: t("auth.login.toasts.google_failed.title"), description: t("auth.login.toasts.google_failed.description"), variant: "destructive" });
     }
   };
 
@@ -303,15 +324,18 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
+          <div className="mb-4 flex justify-center">
+            <LanguageSwitcher />
+          </div>
           <Link to="/" className="inline-flex items-center gap-3 mb-6">
             <div className="h-11 w-11 rounded-xl gradient-gold flex items-center justify-center">
               <Church className="h-6 w-6 text-primary-foreground" />
             </div>
             <span className="text-2xl font-bold font-serif">Kanisa Connect</span>
           </Link>
-          <h1 className="text-xl font-bold font-serif mt-4">{isSignUp ? "Create your account" : "Welcome back"}</h1>
+          <h1 className="text-xl font-bold font-serif mt-4">{isSignUp ? t("auth.login.create_account_title") : t("auth.login.welcome_title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {isSignUp ? "Sign up to get started with Kanisa Connect" : "Sign in to continue to your dashboard"}
+            {isSignUp ? t("auth.login.create_account_description") : t("auth.login.welcome_description")}
           </p>
         </div>
 
@@ -319,34 +343,34 @@ export default function LoginPage() {
           <CardContent className="p-6 space-y-5">
             {authorizationConnectivityIssue && (
               <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
-                <p className="font-semibold">We're having trouble connecting.</p>
-                <p className="mt-1 text-muted-foreground">Your account is still signed in. Check your connection and try again.</p>
-                <Button type="button" variant="outline" className="mt-3 w-full" onClick={() => void refreshUserData()}>Retry</Button>
+                <p className="font-semibold">{t("shared.auth.connectivity_title")}</p>
+                <p className="mt-1 text-muted-foreground">{t("shared.auth.connectivity_description")}</p>
+                <Button type="button" variant="outline" className="mt-3 w-full" onClick={() => void refreshUserData()}>{t("shared.actions.retry")}</Button>
               </div>
             )}
             <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>
               <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-              Continue with Google
+              {t("auth.login.continue_google")}
             </Button>
 
             <div className="relative">
               <Separator />
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">or</span>
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">{t("auth.login.or")}</span>
             </div>
 
             <form onSubmit={handleEmailAuth} className="space-y-4">
               {isSignUp && (
                 <div className="space-y-2">
-                  <Label>Full Name</Label>
+                  <Label>{t("auth.fields.full_name")}</Label>
                   <Input
-                    placeholder="Your full name"
+                    placeholder={t("auth.placeholders.full_name")}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                   />
                 </div>
               )}
               <div className="space-y-2">
-                <Label>{isSignUp ? "Email" : "Email or Phone Number"}</Label>
+                <Label>{isSignUp ? t("auth.fields.email") : t("auth.fields.email_or_phone")}</Label>
                 <div className="relative">
                   {isSignUp ? (
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -355,7 +379,7 @@ export default function LoginPage() {
                   )}
                   <Input
                     type={isSignUp ? "email" : "text"}
-                    placeholder={isSignUp ? "you@example.com" : "Email or Phone Number"}
+                    placeholder={isSignUp ? t("auth.placeholders.email") : t("auth.placeholders.email_or_phone")}
                     className="pl-9"
                     value={identity}
                     onChange={(e) => setIdentity(e.target.value)}
@@ -365,27 +389,27 @@ export default function LoginPage() {
               </div>
               {isSignUp && (
                 <div className="space-y-2">
-                  <Label>Phone Number</Label>
+                  <Label>{t("auth.fields.phone")}</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       type="tel"
-                      placeholder="07XXXXXXXX"
+                      placeholder={t("auth.placeholders.phone")}
                       className="pl-9"
                       value={signupPhone}
                       onChange={(e) => setSignupPhone(e.target.value)}
                       autoComplete="tel"
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">Supports 07XXXXXXXX, +2557XXXXXXXX, or 2557XXXXXXXX.</p>
+                  <p className="text-xs text-muted-foreground">{t("auth.phone_hint")}</p>
                 </div>
               )}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>Password</Label>
+                  <Label>{t("auth.fields.password")}</Label>
                   {!isSignUp && (
                     <Link to="/forgot-password" className="text-xs font-medium text-primary hover:underline">
-                      Forgot password?
+                      {t("auth.login.forgot_password")}
                     </Link>
                   )}
                 </div>
@@ -407,15 +431,15 @@ export default function LoginPage() {
               </div>
               <Button className="w-full" disabled={isLoading || isAwaitingRedirect}>
                 {(isLoading || isAwaitingRedirect) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isSignUp ? "Create Account" : "Sign In"}
+                {isSignUp ? t("auth.login.create_account_button") : t("auth.login.sign_in_button")}
               </Button>
             </form>
 
             {confirmationEmail && (
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
-                <p className="font-medium">Waiting for email confirmation</p>
+                <p className="font-medium">{t("auth.login.confirmation_waiting_title")}</p>
                 <p className="mt-1 text-muted-foreground">
-                  Confirm {confirmationEmail}, then sign in again to continue creating your church.
+                  {t("auth.login.confirmation_waiting_description", { email: confirmationEmail })}
                 </p>
                 <Button
                   type="button"
@@ -425,15 +449,15 @@ export default function LoginPage() {
                   onClick={handleResendConfirmation}
                 >
                   {isResendingConfirmation && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Resend confirmation link
+                  {t("auth.login.resend_confirmation")}
                 </Button>
               </div>
             )}
 
             <p className="text-center text-sm text-muted-foreground">
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+              {isSignUp ? t("auth.login.already_have_account") : t("auth.login.no_account")}{" "}
               <button onClick={() => { setIsSignUp(!isSignUp); setConfirmationEmail(""); }} className="text-primary hover:underline font-medium">
-                {isSignUp ? "Sign in" : "Sign up"}
+                {isSignUp ? t("auth.login.sign_in_link") : t("auth.login.sign_up_link")}
               </button>
             </p>
           </CardContent>

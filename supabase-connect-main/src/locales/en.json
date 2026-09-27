@@ -61,6 +61,279 @@
   "this_feature_is_locked": "This feature is locked",
   "super_admin_locked_feature": "The super admin has locked this feature for members.",
   "all_rights_reserved": "All rights reserved.",
+  "auth": {
+    "common": {
+      "error": "Error"
+    },
+    "actions": {
+      "hide_password": "Hide password",
+      "show_password": "Show password"
+    },
+    "fields": {
+      "confirm_new_password": "Confirm new password",
+      "email": "Email",
+      "email_or_phone": "Email or phone number",
+      "email_required": "Email *",
+      "full_name": "Full name",
+      "full_name_required": "Full name *",
+      "gender_required": "Gender *",
+      "jumuiya": "Jumuiya",
+      "ministries": "Ministries",
+      "new_password": "New password",
+      "password": "Password",
+      "password_required": "Password *",
+      "phone": "Phone number",
+      "phone_required": "Phone *",
+      "photo": "Photo"
+    },
+    "placeholders": {
+      "choose_password": "Choose a password",
+      "create_password": "Create a password",
+      "email": "you@example.com",
+      "email_or_phone": "Email or phone number",
+      "full_name": "Your full name",
+      "password": "Your password",
+      "phone": "07XXXXXXXX"
+    },
+    "phone_hint": "Supports 07XXXXXXXX, +2557XXXXXXXX, or 2557XXXXXXXX.",
+    "login": {
+      "already_have_account": "Already have an account?",
+      "confirmation_waiting_description": "Confirm {{email}}, then sign in again to continue creating your church.",
+      "confirmation_waiting_title": "Waiting for email confirmation",
+      "continue_google": "Continue with Google",
+      "create_account_button": "Create Account",
+      "create_account_description": "Sign up to get started with Kanisa Connect",
+      "create_account_title": "Create your account",
+      "forgot_password": "Forgot password?",
+      "no_account": "Don't have an account?",
+      "or": "or",
+      "resend_confirmation": "Resend confirmation link",
+      "sign_in_button": "Sign In",
+      "sign_in_link": "Sign in",
+      "sign_up_link": "Sign up",
+      "welcome_description": "Sign in to continue to your dashboard",
+      "welcome_title": "Welcome back",
+      "errors": {
+        "email_required_for_signup": "Please enter a valid email address to create a password account. Phone-only signup will be available when SMS OTP is enabled.",
+        "no_email_login": "This account is not linked to a valid email login. Please contact your church office."
+      },
+      "toasts": {
+        "account_created": {
+          "description": "Opening church setup...",
+          "title": "Account created"
+        },
+        "authentication_error": {
+          "email_not_confirmed": "Your account exists, but your email is not confirmed yet. Check your inbox and then sign in again.",
+          "fallback": "Something went wrong.",
+          "invalid_credentials": "The email/phone number or password is incorrect.",
+          "invalid_signup_phone": "Please enter a valid Tanzanian phone number like 07XXXXXXXX, +2557XXXXXXXX, or 2557XXXXXXXX.",
+          "invalid_phone": "Invalid phone number or PIN. Please try again.",
+          "title": "Authentication error"
+        },
+        "confirm_email": {
+          "description": "We sent a confirmation link to {{email}}.",
+          "title": "Confirm your email"
+        },
+        "confirmation_resent": {
+          "description": "Check {{email}} for the new link.",
+          "title": "Confirmation resent"
+        },
+        "google_failed": {
+          "description": "Google login could not be started. Please try again.",
+          "title": "Google login failed"
+        },
+        "missing_fields": {
+          "description": "Please enter your email or phone number and password.",
+          "title": "Missing fields"
+        },
+        "missing_name": {
+          "description": "Please enter your full name.",
+          "title": "Missing name"
+        },
+        "resend_failed": {
+          "description": "Please check your Supabase email settings and try again.",
+          "title": "Could not resend confirmation"
+        },
+        "session_expired": {
+          "description": "Please sign in again before creating your church workspace.",
+          "title": "Session expired"
+        }
+      }
+    },
+    "forgot": {
+      "email_sent_inline": "Check your inbox for the password reset link. It may take a minute to arrive.",
+      "recovery_description": "Create a new password for your account",
+      "recovery_title": "Choose a new password",
+      "remember_password": "Remember your password?",
+      "request_description": "Enter your email and we will send a reset link",
+      "request_title": "Forgot your password?",
+      "send_reset_link": "Send Reset Link",
+      "update_password": "Update Password",
+      "toasts": {
+        "check_email": {
+          "description": "A password reset link has been sent if an account exists for that email.",
+          "title": "Check your email"
+        },
+        "enter_email": {
+          "description": "Password reset links can only be sent to a valid email address.",
+          "title": "Enter your email"
+        },
+        "enter_password": {
+          "description": "Your new password cannot be empty.",
+          "title": "Enter a new password"
+        },
+        "passwords_mismatch": {
+          "description": "Enter the same new password in both fields.",
+          "title": "Passwords do not match"
+        },
+        "send_failed": {
+          "description": "We could not send the reset link. Please try again.",
+          "title": "Unable to send reset link"
+        },
+        "update_failed": {
+          "description": "We could not update your password. Please try again.",
+          "title": "Unable to update password"
+        },
+        "updated": {
+          "description": "Sign in with your new password.",
+          "title": "Password updated"
+        }
+      }
+    },
+    "invite": {
+      "accept_button": "Accept Invitation",
+      "accepted_description": "You've joined {{church}}. Redirecting to your dashboard...",
+      "accepted_title": "Welcome!",
+      "already_accepted_description": "This invitation has already been accepted.",
+      "already_accepted_title": "Already Accepted",
+      "already_have_account_signin": "Already have an account? Sign in",
+      "create_account_accept": "Create Account & Accept",
+      "create_account_prompt": "New here? Create an account",
+      "create_account_to_join": "Create your account to join:",
+      "default_church": "Church",
+      "expired_description": "This invitation has expired. Please ask your church administrator to send a new one.",
+      "expired_title": "Invitation Expired",
+      "go_to_dashboard": "Go to Dashboard",
+      "go_to_login": "Go to Login",
+      "invalid_description": "This invitation link is not valid. Please contact your church administrator.",
+      "invalid_title": "Invalid Invitation",
+      "invited_description": "You've been invited to join",
+      "invited_title": "You're Invited!",
+      "no_account_signup": "Don't have an account? Sign up",
+      "revoked_description": "This invitation has been revoked by the church administrator.",
+      "revoked_title": "Invitation Revoked",
+      "sign_in_accept": "Sign In & Accept",
+      "sign_in_prompt": "Sign in to accept this invitation:",
+      "sign_in_to_accept": "Sign In to Accept",
+      "signed_in_as": "Signed in as",
+      "fields": {
+        "church": "Church",
+        "expires": "Expires",
+        "role": "Role"
+      },
+      "toasts": {
+        "accept_failed": {
+          "description": "Unknown error",
+          "title": "Could not accept"
+        },
+        "account_created": {
+          "description": "Please log in and revisit this link to accept.",
+          "title": "Account created"
+        },
+        "check_email": {
+          "description": "Please confirm your email, then revisit this invitation link to join.",
+          "title": "Check your email"
+        },
+        "invalid_email": {
+          "description": "Please enter a valid email address",
+          "title": "Invalid email"
+        },
+        "welcome": {
+          "basic": "You've joined {{church}}",
+          "title": "Welcome!",
+          "with_role": "You've joined {{church}} as {{role}}"
+        }
+      }
+    },
+    "register": {
+      "alert_failed_title": "Registration could not be completed",
+      "already_connected_description": "This account already belongs to {{church}}. A second membership will not be created.",
+      "already_connected_title": "Already connected",
+      "already_registered": "Already registered?",
+      "back_to_onboarding": "Back to church onboarding",
+      "choose_jumuiya": "Choose your Jumuiya",
+      "church_code": "Church Code",
+      "church_code_hint": "Choose your Jumuiya and ministries now so the church can onboard you faster.",
+      "complete_button": "Complete Registration",
+      "cooldown_message": "Email signup is temporarily rate-limited for this address. Please wait {{seconds}} seconds before trying again.",
+      "eyebrow": "Public Registration",
+      "hidden_description": "Public registration is currently hidden for this church. Please contact the church office for access.",
+      "include_ministry": "Include this ministry in my registration",
+      "join_description": "Complete your registration to become part of this church community and get instant member access.",
+      "join_description_signed_in": "Complete your member registration for this church using your signed-in account.",
+      "join_title": "Join {{church}}",
+      "link_required_description": "Open this page using a church registration link shared by your church administrator.",
+      "link_required_title": "Church Link Required",
+      "loading": "Loading registration form...",
+      "ministries_help": "Select any ministries you would like the church to associate with your registration.",
+      "no_jumuiya": "No Jumuiya available",
+      "no_ministries": "No ministries are available right now.",
+      "not_found_description": "The registration link is invalid or no longer active.",
+      "not_found_title": "Church Not Found",
+      "offline_draft_note": "Your registration details are saved on this device while you type. Password and photo are not stored offline.",
+      "photo_help": "Optional. Upload a clear headshot in JPG, PNG, or WebP format.",
+      "photo_preview_alt": "Preview",
+      "profile_description": "Fill in your details below. Fields marked with * are required.",
+      "profile_description_signed_in": "Your church is already prefilled. Complete the remaining details below.",
+      "profile_title": "Create your member profile",
+      "requested_church_code": "Requested church code: {{value}}",
+      "requested_church_id": "Requested church ID: {{value}}",
+      "requested_church_link": "Requested church link: {{value}}",
+      "select_gender": "Select gender",
+      "signed_in_as": "Signed in as {{email}}",
+      "submit_button": "Submit Registration",
+      "wait_seconds": "Wait {{seconds}}s",
+      "errors": {
+        "account_create_failed": "Account could not be created. Please try again.",
+        "already_linked": "This account is already connected to another church. Please contact your church administrator.",
+        "already_registered": "That email is already registered. Please log in instead.",
+        "email_not_confirmed": "Your account exists, but your email is not confirmed yet. Check your inbox, then sign in again.",
+        "fallback": "Registration could not be completed. Please try again or contact your church administrator.",
+        "invalid_church": "This church registration link is invalid or no longer active.",
+        "invalid_login_credentials": "This email already has an account, but that password does not match. Please sign in or use the correct password.",
+        "offline": "You are offline. Your registration draft is saved on this device. Reconnect to submit.",
+        "phone": "Please check the phone number and try again.",
+        "public_registration_disabled": "Public registration is currently unavailable for this church.",
+        "rate_limited": "Email signup is temporarily rate-limited. Please wait {{seconds}} seconds before trying again."
+      },
+      "gender": {
+        "female": "Female",
+        "male": "Male"
+      },
+      "ministry_summary": {
+        "many": "{{count}} ministries selected",
+        "none": "No ministries selected",
+        "one": "1 ministry selected"
+      },
+      "toasts": {
+        "confirm_email": {
+          "description": "Your account was created. Check your email, then sign in to continue your church registration.",
+          "title": "Confirm your email"
+        },
+        "failed": {
+          "title": "Registration failed"
+        },
+        "invalid_photo": {
+          "description": "Please upload a JPG, PNG, or WebP image that is 2MB or smaller.",
+          "title": "Invalid photo"
+        },
+        "welcome": {
+          "description": "You're now active in {{church}}.",
+          "title": "Welcome to Kanisa Connect"
+        }
+      }
+    }
+  },
   "common": {
     "loading": "Loading...",
     "cancel": "Cancel",
