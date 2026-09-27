@@ -367,6 +367,71 @@
     "reviewed_tab": "Zilizopitiwa ({{count}})",
     "offering": "Sadaka: {{amount}}"
   },
+  "mass_timetable_admin": {
+    "title": "Ratiba za Misa",
+    "description": "Ratiba za kila wiki na shughuli zilizotengenezwa.",
+    "default_location": "Kanisa kuu",
+    "upcoming_title": "Shughuli zijazo kwenye ratiba",
+    "empty_occurrences": "Hakuna shughuli zijazo kwenye ratiba. Tumia kitufe cha kutengeneza.",
+    "actions": {
+      "add": "Ongeza",
+      "disable": "Zima",
+      "edit": "Hariri",
+      "enable": "Washa",
+      "generate": "Tengeneza siku 90",
+      "save": "Hifadhi"
+    },
+    "activity_types": {
+      "adoration": "Kuabudu Ekaristi",
+      "confession": "Maungamo",
+      "mass": "Misa",
+      "other": "Nyingine",
+      "prayer": "Sala / Ibada",
+      "unclassified": "Haijaainishwa"
+    },
+    "dialogs": {
+      "edit": "Hariri ratiba",
+      "new": "Ratiba mpya"
+    },
+    "errors": {
+      "activity_required": "Chagua aina ya shughuli kabla ya kuhifadhi.",
+      "classification_blocked_by_intentions": "Ratiba hii haiwezi kubadilishwa kutoka Misa kwa sababu shughuli zijazo tayari zina nia za Misa. Shughulikia nia hizo kwanza.",
+      "invalid_form": "Jaza jina na muda sahihi.",
+      "load_failed": "Ratiba haikupatikana.",
+      "migration_required": "Migration ya database ya aina za shughuli za ratiba lazima itumike kabla ya kuhifadhi sehemu hii.",
+      "no_church": "Muktadha wa kanisa unahitajika"
+    },
+    "fields": {
+      "accepts_intentions": "Inapokea nia",
+      "activity_type": "Aina ya shughuli",
+      "capacity": "Uwezo wa nia",
+      "day": "Siku",
+      "effective_from": "Kuanzia",
+      "effective_until": "Mpaka",
+      "end_time": "Muda wa mwisho",
+      "fee": "Ada ya nia",
+      "language": "Lugha",
+      "location": "Mahali",
+      "name": "Jina",
+      "start_time": "Muda wa kuanza"
+    },
+    "placeholders": {
+      "activity_type": "Chagua aina ya shughuli"
+    },
+    "status": {
+      "active": "Inatumika",
+      "inactive": "Imezimwa"
+    },
+    "toasts": {
+      "generate_failed": "Imeshindikana kutengeneza",
+      "generated": {
+        "description": "Shughuli mpya {{count}} zimeongezwa kwenye ratiba.",
+        "title": "Ratiba imetengenezwa"
+      },
+      "save_failed": "Haijahifadhiwa",
+      "saved": "Ratiba imehifadhiwa"
+    }
+  },
   "mass_intentions_labels": {
     "departed": "Marehemu",
     "healing": "Uponyaji",

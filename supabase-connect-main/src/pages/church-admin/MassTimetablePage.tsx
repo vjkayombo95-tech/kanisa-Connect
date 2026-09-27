@@ -17,6 +17,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,20 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { formatTZS } from "@/lib/currency";
-import { MASS_RESERVING_STATUSES, MASS_WEEKDAYS, formatMassDate, formatMassTime, validateMassTimes, type MassOccurrence, type MassOccurrenceStatus, type MassSchedule } from "@/lib/mass-timetable";
+import {
+  MASS_RESERVING_STATUSES,
+  MASS_WEEKDAYS,
+  TIMETABLE_ACTIVITY_LABEL_KEYS,
+  TIMETABLE_ACTIVITY_TYPES,
+  formatMassDate,
+  formatMassTime,
+  validateMassTimes,
+  type MassOccurrence,
+  type MassOccurrenceStatus,
+  type MassSchedule,
+  type TimetableActivityClassification,
+  type TimetableActivityType,
+} from "@/lib/mass-timetable";
 
 const db = supabase as unknown as SupabaseClient;
 const tanzaniaDate = (days = 0) => {
@@ -58,6 +72,8 @@ type ScheduleForm = {
   location_name: string; language: string; default_celebrant_name: string;
   intention_capacity: string; default_intention_fee: string; accepts_intentions: boolean;
   effective_from: string; effective_until: string; is_active: boolean;
+  activity_type: TimetableActivityType | "";
+  original_activity_type?: TimetableActivityClassification;
 };
 
 type OccurrenceForm = {
@@ -70,6 +86,7 @@ const emptySchedule = (): ScheduleForm => ({
   name: "", day_of_week: "0", start_time: "06:30", end_time: "", location_name: "",
   language: "Kiswahili", default_celebrant_name: "", intention_capacity: "",
   default_intention_fee: "", accepts_intentions: true, effective_from: today(), effective_until: "", is_active: true,
+  activity_type: "mass",
 });
 const emptyOccurrence = (special = true): OccurrenceForm => ({
   name: "", occurrence_date: today(), start_time: "10:00", end_time: "", location_name: "",
@@ -93,6 +110,28 @@ function validateSchedule(form: ScheduleForm) {
   if (form.effective_until && form.effective_until < form.effective_from) return "Tarehe ya mwisho haiwezi kutangulia tarehe ya kuanza.";
   return null;
 }
+const isActivityType = (value: string): value is TimetableActivityType =>
+  TIMETABLE_ACTIVITY_TYPES.includes(value as TimetableActivityType);
+
+const activityKey = (value?: TimetableActivityClassification) =>
+  value ? TIMETABLE_ACTIVITY_LABEL_KEYS[value] : TIMETABLE_ACTIVITY_LABEL_KEYS.unclassified;
+
+const isMissingActivityTypeColumn = (error: Error) =>
+  error.message.toLowerCase().includes("activity_type") &&
+  error.message.toLowerCase().includes("column");
+
+const isMissingActivityClassificationRpc = (error: Error) => {
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("classify_mass_schedule_activity") ||
+    message.includes("could not find the function")
+  );
+};
+
+const isBlockedByFutureIntentions = (error: Error) =>
+  error.message
+    .toLowerCase()
+    .includes("future occurrences already have mass intentions");
 
 function validateOccurrence(form: OccurrenceForm) {
   if (!form.name.trim() || !form.occurrence_date || !form.start_time) return "Jina, tarehe na muda wa kuanza vinahitajika.";
@@ -103,6 +142,7 @@ function validateOccurrence(form: OccurrenceForm) {
 }
 
 export default function MassTimetablePage() {
+  const { t } = useTranslation();
   const { churchId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -152,24 +192,89 @@ export default function MassTimetablePage() {
   });
 
   const saveSchedule = useMutation({
-    mutationFn: async (form: ScheduleForm) => {
-      const validation = validateSchedule(form); if (validation) throw new Error(validation);
-      const payload = {
-        church_id: churchId, name: form.name.trim(), day_of_week: Number(form.day_of_week), start_time: form.start_time,
-        end_time: form.end_time || null, location_name: form.location_name.trim() || null, language: form.language.trim() || null,
-        default_celebrant_name: form.default_celebrant_name.trim() || null, intention_capacity: nullableNumber(form.intention_capacity),
-        default_intention_fee: nullableNumber(form.default_intention_fee), accepts_intentions: form.accepts_intentions,
-        effective_from: form.effective_from, effective_until: form.effective_until || null, is_active: form.is_active,
+    mutationFn: async (value: ScheduleForm) => {
+      const validation = validateSchedule(value);
+      if (validation) throw new Error(validation);
+
+      if (!isActivityType(value.activity_type)) {
+        throw new Error(t("mass_timetable_admin.errors.activity_required"));
+      }
+
+      const activity_type = value.activity_type;
+
+      const scheduleFields = {
+        church_id: churchId,
+        name: value.name.trim(),
+        day_of_week: Number(value.day_of_week),
+        start_time: value.start_time,
+        end_time: value.end_time || null,
+        location_name: value.location_name.trim() || null,
+        language: value.language.trim() || null,
+        default_celebrant_name: value.default_celebrant_name.trim() || null,
+        intention_capacity: nullableNumber(value.intention_capacity),
+        default_intention_fee: nullableNumber(value.default_intention_fee),
+        accepts_intentions: value.accepts_intentions,
+        effective_from: value.effective_from,
+        effective_until: value.effective_until || null,
+        is_active: value.is_active,
       };
-      const result = form.id ? await db.from("mass_schedules").update(payload).eq("id", form.id).eq("church_id", churchId) : await db.from("mass_schedules").insert(payload);
-      if (result.error) throw result.error;
-      const generated = await db.rpc("generate_mass_occurrences", { p_church_id: churchId, p_start_date: today(), p_end_date: inDays(90) });
+
+      if (value.id) {
+        const updated = await db.from("mass_schedules").update(scheduleFields).eq("id", value.id).eq("church_id", churchId);
+
+        if (updated.error) throw updated.error;
+
+        if (value.original_activity_type !== activity_type) {
+          const classified = await db.rpc("classify_mass_schedule_activity", {
+            p_church_id: churchId,
+            p_schedule_id: value.id,
+            p_activity_type: activity_type,
+          });
+
+          if (classified.error) throw classified.error;
+        }
+      } else {
+        const inserted = await db.from("mass_schedules").insert({ ...scheduleFields, activity_type });
+
+        if (inserted.error) throw inserted.error;
+      }
+
+      const generated = await db.rpc("generate_mass_occurrences", {
+        p_church_id: churchId,
+        p_start_date: today(),
+        p_end_date: inDays(90),
+      });
+
       if (generated.error) throw generated.error;
     },
-    onSuccess: () => { setScheduleForm(null); refresh(); toast({ title: "Ratiba imehifadhiwa" }); },
-    onError: (error: Error) => toast({ title: "Ratiba haijahifadhiwa", description: error.message, variant: "destructive" }),
-  });
 
+    onSuccess: () => {
+      setScheduleForm(null);
+      refresh();
+      toast({ title: "Ratiba imehifadhiwa" });
+    },
+
+    onError: (error: Error) => {
+      let description = error.message;
+
+      if (
+        isMissingActivityTypeColumn(error) ||
+        isMissingActivityClassificationRpc(error)
+      ) {
+        description = t("mass_timetable_admin.errors.migration_required");
+      } else if (isBlockedByFutureIntentions(error)) {
+        description = t(
+          "mass_timetable_admin.errors.classification_blocked_by_intentions",
+        );
+      }
+
+      toast({
+        title: "Ratiba haijahifadhiwa",
+        description,
+        variant: "destructive",
+      });
+    },
+  });
   const saveOccurrence = useMutation({
     mutationFn: async (form: OccurrenceForm) => {
       const validation = validateOccurrence(form); if (validation) throw new Error(validation);
@@ -246,7 +351,7 @@ export default function MassTimetablePage() {
           {timetable.isLoading ? <LoadingCards /> : schedules.length === 0 ? <EmptyState text="Bado hakuna ratiba ya kila wiki. Ongeza muda wa kwanza wa Misa." /> : MASS_WEEKDAYS.map((day, index) => {
             const rows = schedules.filter((row) => row.day_of_week === index && (showInactive || row.is_active));
             if (!rows.length) return null;
-            return <section key={day}><h2 className="mb-3 font-serif text-xl font-semibold">{day}</h2><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{rows.map((row) => <ScheduleCard key={row.id} row={row} onEdit={() => setScheduleForm({ id: row.id, name: row.name, day_of_week: String(row.day_of_week), start_time: formatMassTime(row.start_time), end_time: formatMassTime(row.end_time) === "-" ? "" : formatMassTime(row.end_time), location_name: row.location_name ?? "", language: row.language ?? "", default_celebrant_name: row.default_celebrant_name ?? "", intention_capacity: row.intention_capacity == null ? "" : String(row.intention_capacity), default_intention_fee: row.default_intention_fee == null ? "" : String(row.default_intention_fee), accepts_intentions: row.accepts_intentions, effective_from: row.effective_from, effective_until: row.effective_until ?? "", is_active: row.is_active })} onToggle={() => patchSchedule.mutate({ id: row.id, values: { is_active: !row.is_active } })} onDelete={() => setConfirmAction({ title: "Futa ratiba?", description: "Ratiba yenye historia haiwezi kufutwa; izime ili kuhifadhi kumbukumbu.", run: () => deleteSchedule.mutate(row.id) })} />)}</div></section>;
+            return <section key={day}><h2 className="mb-3 font-serif text-xl font-semibold">{day}</h2><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{rows.map((row) => <ScheduleCard key={row.id} row={row} onEdit={() => setScheduleForm({ id: row.id, name: row.name, day_of_week: String(row.day_of_week), start_time: formatMassTime(row.start_time), end_time: formatMassTime(row.end_time) === "-" ? "" : formatMassTime(row.end_time), location_name: row.location_name ?? "", language: row.language ?? "", default_celebrant_name: row.default_celebrant_name ?? "", intention_capacity: row.intention_capacity == null ? "" : String(row.intention_capacity), default_intention_fee: row.default_intention_fee == null ? "" : String(row.default_intention_fee), accepts_intentions: row.accepts_intentions, effective_from: row.effective_from, effective_until: row.effective_until ?? "", is_active: row.is_active, activity_type: row.activity_type ?? "", original_activity_type: row.activity_type ?? null })} onToggle={() => patchSchedule.mutate({ id: row.id, values: { is_active: !row.is_active } })} onDelete={() => setConfirmAction({ title: "Futa ratiba?", description: "Ratiba yenye historia haiwezi kufutwa; izime ili kuhifadhi kumbukumbu.", run: () => deleteSchedule.mutate(row.id) })} />)}</div></section>;
           })}
         </TabsContent>
         <TabsContent value="upcoming" className="space-y-4">
@@ -266,7 +371,19 @@ export default function MassTimetablePage() {
 }
 
 function ScheduleCard({ row, onEdit, onToggle, onDelete }: { row: MassSchedule; onEdit: () => void; onToggle: () => void; onDelete: () => void }) {
-  return <Card className={!row.is_active ? "opacity-65" : ""}><CardHeader className="pb-3"><div className="flex items-start justify-between gap-3"><div><p className="font-serif text-2xl font-bold text-primary">{formatMassTime(row.start_time)}</p><CardTitle className="mt-1 text-lg">{row.name}</CardTitle></div><Badge variant={row.is_active ? "default" : "secondary"}>{row.is_active ? "Active" : "Disabled"}</Badge></div></CardHeader><CardContent className="space-y-3 text-sm"><p className="flex gap-2 text-muted-foreground"><MapPin className="h-4 w-4" />{row.location_name || "Kanisa kuu"}</p><p>{row.language || "-"}</p><div className="flex flex-wrap gap-2"><Badge variant="outline">{row.accepts_intentions ? "Accepts intentions" : "No intentions"}</Badge><Badge variant="outline">Capacity: {row.intention_capacity ?? "Unlimited"}</Badge>{row.default_intention_fee != null && <Badge variant="outline">{formatTZS(row.default_intention_fee)}</Badge>}</div><div className="flex flex-wrap gap-1 pt-2"><Button size="sm" variant="ghost" onClick={onEdit}><Pencil className="mr-1 h-4 w-4" />Edit</Button><Button size="sm" variant="ghost" onClick={onToggle}>{row.is_active ? "Disable" : "Enable"}</Button><Button size="sm" variant="ghost" className="text-destructive" onClick={onDelete}><Trash2 className="mr-1 h-4 w-4" />Delete</Button></div></CardContent></Card>;
+  const { t } = useTranslation();
+
+  const renderActivityBadge = (
+    activityType?: TimetableActivityClassification,
+  ) => (
+    <Badge variant={activityType ? "outline" : "destructive"}>
+      {t(activityKey(activityType))}
+    </Badge>
+  );
+  return <Card className={!row.is_active ? "opacity-65" : ""}><CardHeader className="pb-3"><div className="flex items-start justify-between gap-3"><div><p className="font-serif text-2xl font-bold text-primary">{formatMassTime(row.start_time)}</p><CardTitle className="mt-1 text-lg">{row.name}</CardTitle></div><div className="flex flex-wrap gap-2">
+  {renderActivityBadge(row.activity_type)}
+  <Badge variant={row.is_active ? "default" : "secondary"}>{row.is_active ? "Active" : "Disabled"}</Badge>
+</div></div></CardHeader><CardContent className="space-y-3 text-sm"><p className="flex gap-2 text-muted-foreground"><MapPin className="h-4 w-4" />{row.location_name || "Kanisa kuu"}</p><p>{row.language || "-"}</p><div className="flex flex-wrap gap-2"><Badge variant="outline">{row.accepts_intentions ? "Accepts intentions" : "No intentions"}</Badge><Badge variant="outline">Capacity: {row.intention_capacity ?? "Unlimited"}</Badge>{row.default_intention_fee != null && <Badge variant="outline">{formatTZS(row.default_intention_fee)}</Badge>}</div><div className="flex flex-wrap gap-1 pt-2"><Button size="sm" variant="ghost" onClick={onEdit}><Pencil className="mr-1 h-4 w-4" />Edit</Button><Button size="sm" variant="ghost" onClick={onToggle}>{row.is_active ? "Disable" : "Enable"}</Button><Button size="sm" variant="ghost" className="text-destructive" onClick={onDelete}><Trash2 className="mr-1 h-4 w-4" />Delete</Button></div></CardContent></Card>;
 }
 
 function OccurrenceFilters(props: { dateFrom: string; dateTo: string; setDateFrom: (v: string) => void; setDateTo: (v: string) => void; status: string; setStatus: (v: string) => void; type: string; setType: (v: string) => void; search: string; setSearch: (v: string) => void }) {
@@ -276,14 +393,15 @@ function OccurrenceFilters(props: { dateFrom: string; dateTo: string; setDateFro
 function OccurrencesTable({ loading, rows, onEdit, onStatus }: { loading: boolean; rows: MassOccurrence[]; onEdit: (row: MassOccurrence) => void; onStatus: (row: MassOccurrence, status: MassOccurrenceStatus) => void }) {
   if (loading) return <LoadingCards />;
   if (!rows.length) return <EmptyState text="Hakuna Misa katika kichujio hiki." />;
-  return <Card className="overflow-hidden"><CardContent className="p-0"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Time</TableHead><TableHead>Mass</TableHead><TableHead>Location</TableHead><TableHead>Capacity</TableHead><TableHead>Availability</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader><TableBody>{rows.map((row) => { const booked=row.booked_count??0; const remaining=row.intention_capacity==null?null:Math.max(row.intention_capacity-booked,0); return <TableRow key={row.id}><TableCell className="min-w-48">{formatMassDate(row.occurrence_date)}</TableCell><TableCell>{formatMassTime(row.start_time)}</TableCell><TableCell><p className="font-medium">{row.name}</p>{row.is_special_mass && <Badge variant="outline" className="mt-1">Maalum</Badge>}</TableCell><TableCell>{row.location_name || "-"}</TableCell><TableCell>{booked} / {row.intention_capacity ?? "∞"}</TableCell><TableCell>{remaining == null ? "Unlimited" : remaining === 0 ? <Badge variant="destructive">Full</Badge> : `${remaining} spaces`}</TableCell><TableCell><Badge variant={row.status === "cancelled" ? "destructive" : "outline"}>{statusLabels[row.status]}</Badge></TableCell><TableCell><div className="flex min-w-80 flex-wrap gap-1"><Button asChild size="sm" variant="ghost"><Link to={`/church-admin/mass-intentions?occurrence=${row.id}`}><Eye className="mr-1 h-4 w-4" />View Intentions</Link></Button><Button size="sm" variant="ghost" onClick={() => onEdit(row)}><Pencil className="mr-1 h-4 w-4" />Edit This Mass</Button>{row.status !== "cancelled" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onStatus(row,"cancelled")}>Cancel</Button>}{row.status !== "completed" && <Button size="sm" variant="ghost" onClick={() => onStatus(row,"completed")}>Complete</Button>}</div></TableCell></TableRow>; })}</TableBody></Table></div></CardContent></Card>;
+  return <Card className="overflow-hidden"><CardContent className="p-0"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Time</TableHead><TableHead>Mass</TableHead><TableHead>Location</TableHead><TableHead>Capacity</TableHead><TableHead>Availability</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader><TableBody>{rows.map((row) => { const booked=row.booked_count??0; const remaining=row.intention_capacity==null?null:Math.max(row.intention_capacity-booked,0); return <TableRow key={row.id}><TableCell className="min-w-48">{formatMassDate(row.occurrence_date)}</TableCell><TableCell>{formatMassTime(row.start_time)}</TableCell><TableCell><p className="font-medium">{row.name}</p>{row.is_special_mass && <Badge variant="outline" className="mt-1">Maalum</Badge>}</TableCell><TableCell>{row.location_name || "-"}</TableCell><TableCell>{booked} / {row.intention_capacity ?? "âˆž"}</TableCell><TableCell>{remaining == null ? "Unlimited" : remaining === 0 ? <Badge variant="destructive">Full</Badge> : `${remaining} spaces`}</TableCell><TableCell><Badge variant={row.status === "cancelled" ? "destructive" : "outline"}>{statusLabels[row.status]}</Badge></TableCell><TableCell><div className="flex min-w-80 flex-wrap gap-1"><Button asChild size="sm" variant="ghost"><Link to={`/church-admin/mass-intentions?occurrence=${row.id}`}><Eye className="mr-1 h-4 w-4" />View Intentions</Link></Button><Button size="sm" variant="ghost" onClick={() => onEdit(row)}><Pencil className="mr-1 h-4 w-4" />Edit This Mass</Button>{row.status !== "cancelled" && <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onStatus(row,"cancelled")}>Cancel</Button>}{row.status !== "completed" && <Button size="sm" variant="ghost" onClick={() => onStatus(row,"completed")}>Complete</Button>}</div></TableCell></TableRow>; })}</TableBody></Table></div></CardContent></Card>;
 }
 
 function toOccurrenceForm(row: MassOccurrence): OccurrenceForm { return { id: row.id, name: row.name, occurrence_date: row.occurrence_date, start_time: formatMassTime(row.start_time), end_time: row.end_time ? formatMassTime(row.end_time) : "", location_name: row.location_name ?? "", language: row.language ?? "", celebrant_name: row.celebrant_name ?? "", intention_capacity: row.intention_capacity == null ? "" : String(row.intention_capacity), intention_fee: row.intention_fee == null ? "" : String(row.intention_fee), accepts_intentions: row.accepts_intentions, notes: row.notes ?? "", is_special_mass: row.is_special_mass }; }
 
 function ScheduleDialog({ form, setForm, saving, onSave }: { form: ScheduleForm | null; setForm: (v: ScheduleForm | null) => void; saving: boolean; onSave: () => void }) {
+  const { t } = useTranslation();
   if (!form) return null;
-  return <Dialog open onOpenChange={(open) => !open && setForm(null)}><DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle>{form.id ? "Hariri Ratiba" : "Ongeza Muda wa Misa"}</DialogTitle><DialogDescription>Ratiba hii itatengeneza Misa halisi kwa siku 90 zijazo.</DialogDescription></DialogHeader><div className="grid gap-4 sm:grid-cols-2"><Field label="Jina la Misa *"><Input value={form.name} onChange={(e) => setForm({...form,name:e.target.value})} /></Field><Field label="Siku *"><Select value={form.day_of_week} onValueChange={(v)=>setForm({...form,day_of_week:v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MASS_WEEKDAYS.map((day,index)=><SelectItem key={day} value={String(index)}>{day}</SelectItem>)}</SelectContent></Select></Field><Field label="Muda wa kuanza *"><Input type="time" value={form.start_time} onChange={(e)=>setForm({...form,start_time:e.target.value})} /></Field><Field label="Muda wa kumaliza"><Input type="time" value={form.end_time} onChange={(e)=>setForm({...form,end_time:e.target.value})} /></Field><Field label="Mahali"><Input value={form.location_name} onChange={(e)=>setForm({...form,location_name:e.target.value})} /></Field><Field label="Lugha"><Input value={form.language} onChange={(e)=>setForm({...form,language:e.target.value})} /></Field><Field label="Madhabahu / Celebrant"><Input value={form.default_celebrant_name} onChange={(e)=>setForm({...form,default_celebrant_name:e.target.value})} /></Field><Field label="Uwezo wa nia (wazi = unlimited)"><Input type="number" min="0" value={form.intention_capacity} onChange={(e)=>setForm({...form,intention_capacity:e.target.value})} /></Field><Field label="Ada ya nia (TZS)"><Input type="number" min="0" value={form.default_intention_fee} onChange={(e)=>setForm({...form,default_intention_fee:e.target.value})} /></Field><Field label="Inaanza *"><Input type="date" value={form.effective_from} onChange={(e)=>setForm({...form,effective_from:e.target.value})} /></Field><Field label="Inaisha"><Input type="date" value={form.effective_until} onChange={(e)=>setForm({...form,effective_until:e.target.value})} /></Field><Toggle label="Pokea nia za Misa" checked={form.accepts_intentions} onChange={(v)=>setForm({...form,accepts_intentions:v})} /><Toggle label="Ratiba iko active" checked={form.is_active} onChange={(v)=>setForm({...form,is_active:v})} /></div><DialogFooter><Button variant="outline" onClick={()=>setForm(null)}>Rudi</Button><Button disabled={saving} onClick={onSave}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Hifadhi</Button></DialogFooter></DialogContent></Dialog>;
+  return <Dialog open onOpenChange={(open) => !open && setForm(null)}><DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto"><DialogHeader><DialogTitle>{form.id ? "Hariri Ratiba" : "Ongeza Muda wa Misa"}</DialogTitle><DialogDescription>Ratiba hii itatengeneza Misa halisi kwa siku 90 zijazo.</DialogDescription></DialogHeader><div className="grid gap-4 sm:grid-cols-2"><Field label={t("mass_timetable_admin.fields.activity_type")}><Select value={form.activity_type} onValueChange={(value) => setForm({ ...form, activity_type: value as TimetableActivityType })}><SelectTrigger><SelectValue placeholder={t("mass_timetable_admin.placeholders.activity_type")} /></SelectTrigger><SelectContent>{TIMETABLE_ACTIVITY_TYPES.map((activityType) => (<SelectItem key={activityType} value={activityType}>{t(TIMETABLE_ACTIVITY_LABEL_KEYS[activityType])}</SelectItem>))}</SelectContent></Select></Field><Field label="Jina la Misa *"><Input value={form.name} onChange={(e) => setForm({...form,name:e.target.value})} /></Field><Field label="Siku *"><Select value={form.day_of_week} onValueChange={(v)=>setForm({...form,day_of_week:v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MASS_WEEKDAYS.map((day,index)=><SelectItem key={day} value={String(index)}>{day}</SelectItem>)}</SelectContent></Select></Field><Field label="Muda wa kuanza *"><Input type="time" value={form.start_time} onChange={(e)=>setForm({...form,start_time:e.target.value})} /></Field><Field label="Muda wa kumaliza"><Input type="time" value={form.end_time} onChange={(e)=>setForm({...form,end_time:e.target.value})} /></Field><Field label="Mahali"><Input value={form.location_name} onChange={(e)=>setForm({...form,location_name:e.target.value})} /></Field><Field label="Lugha"><Input value={form.language} onChange={(e)=>setForm({...form,language:e.target.value})} /></Field><Field label="Madhabahu / Celebrant"><Input value={form.default_celebrant_name} onChange={(e)=>setForm({...form,default_celebrant_name:e.target.value})} /></Field><Field label="Uwezo wa nia (wazi = unlimited)"><Input type="number" min="0" value={form.intention_capacity} onChange={(e)=>setForm({...form,intention_capacity:e.target.value})} /></Field><Field label="Ada ya nia (TZS)"><Input type="number" min="0" value={form.default_intention_fee} onChange={(e)=>setForm({...form,default_intention_fee:e.target.value})} /></Field><Field label="Inaanza *"><Input type="date" value={form.effective_from} onChange={(e)=>setForm({...form,effective_from:e.target.value})} /></Field><Field label="Inaisha"><Input type="date" value={form.effective_until} onChange={(e)=>setForm({...form,effective_until:e.target.value})} /></Field><Toggle label="Pokea nia za Misa" checked={form.accepts_intentions} onChange={(v)=>setForm({...form,accepts_intentions:v})} /><Toggle label="Ratiba iko active" checked={form.is_active} onChange={(v)=>setForm({...form,is_active:v})} /></div><DialogFooter><Button variant="outline" onClick={()=>setForm(null)}>Rudi</Button><Button disabled={saving} onClick={onSave}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Hifadhi</Button></DialogFooter></DialogContent></Dialog>;
 }
 
 function OccurrenceDialog({ form, setForm, saving, onSave }: { form: OccurrenceForm | null; setForm: (v: OccurrenceForm | null) => void; saving: boolean; onSave: () => void }) {
