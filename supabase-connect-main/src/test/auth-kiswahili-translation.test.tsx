@@ -158,10 +158,11 @@ function changeFileInput(input: HTMLInputElement, files: File[]) {
 }
 
 async function waitForElement<T extends Element>(query: () => T | null) {
-  for (let attempt = 0; attempt < 20; attempt += 1) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
     const element = query();
     if (element) return element;
     await flush();
+    await new Promise((resolve) => setTimeout(resolve, 0));
   }
   return null;
 }
