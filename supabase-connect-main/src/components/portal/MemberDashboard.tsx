@@ -30,6 +30,7 @@ import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { fetchMemberForUser } from "@/hooks/useMember";
 import { supabase } from "@/integrations/supabase/client";
 import { logWarning } from "@/lib/error-logger";
+import { dailyLifeKeys, fetchNextTimetableMass } from "@/lib/member-daily-life";
 import {
   fetchTodayLiturgicalReadings,
   getTodayDateKey,
@@ -304,6 +305,16 @@ export default function MemberDashboard() {
   const announcementsVisible = getFeatureState("announcements").visible;
   const askVisible = getFeatureState("kanisa_ai").visible;
 
+  const {
+    data: mobileNextMass,
+    isLoading: mobileMassLoading,
+    isError: mobileMassError,
+  } = useQuery({
+    queryKey: dailyLifeKeys.nextTimetableMass(churchId),
+    queryFn: () => fetchNextTimetableMass(churchId!),
+    enabled: !!churchId,
+    staleTime: 60 * 1000,
+  });
   const { data: massSummary } = useQuery({
     queryKey: ["next-mass-summary", churchId],
     queryFn: async () => {
@@ -725,7 +736,9 @@ export default function MemberDashboard() {
         giveVisible={giveVisible}
         home={home}
         isLoading={isLoading}
-        massSummary={massSummary}
+        nextMass={mobileNextMass ?? null}
+        nextMassError={mobileMassError}
+        nextMassLoading={mobileMassLoading}
         massVisible={massVisible}
       />
       <div className="hidden lg:block">
