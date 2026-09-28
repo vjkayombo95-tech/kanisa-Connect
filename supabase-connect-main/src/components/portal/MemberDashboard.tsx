@@ -24,7 +24,7 @@ import { logWarning } from "@/lib/error-logger";
 import { ProductionLiveMassCard } from "@/components/portal/ProductionLiveMassCard";
 import { MobileMemberHome } from "@/components/portal/MobileMemberHome";
 import { fetchMemberContributionTotal } from "@/lib/member-contributions";
-import { dailyLifeKeys, fetchNextMassSummary } from "@/lib/member-daily-life";
+import { dailyLifeKeys, fetchNextMassSummary, fetchNextTimetableMass } from "@/lib/member-daily-life";
 import { useIsDesktop } from "@/hooks/use-mobile";
 
 type MemberHomeData = {
@@ -346,9 +346,15 @@ export default function MemberDashboard() {
   const financials = useMemberFinancialData(churchId, data?.memberId ?? null, isDesktop);
   const home = { ...(data ?? emptyMemberHome("Mshirika")), ...(financials.data ?? {}) };
 
-  const { data: massSummary, isLoading: massLoading, isError: massError } = useQuery({
+  const { data: massSummary } = useQuery({
     queryKey: dailyLifeKeys.nextMass(churchId),
     queryFn: () => fetchNextMassSummary(churchId!),
+    enabled: !!churchId,
+    staleTime: 60 * 1000,
+  });
+  const { data: mobileNextMass, isLoading: mobileMassLoading, isError: mobileMassError } = useQuery({
+    queryKey: dailyLifeKeys.nextTimetableMass(churchId),
+    queryFn: () => fetchNextTimetableMass(churchId!),
     enabled: !!churchId,
     staleTime: 60 * 1000,
   });
@@ -381,9 +387,10 @@ export default function MemberDashboard() {
   const giveVisible = getFeatureState("give").visible;
   const massVisible = getFeatureState("mass_intentions").visible;
   const announcementsVisible = getFeatureState("announcements").visible;
-  const nextMass = massSummary?.mass ?? null;
-  const deadlinePassed = isDeadlinePassed(nextMass?.responseDeadline ?? null);
-  const rsvpDisabled = !nextMass?.askForRsvp || deadlinePassed || !home.memberId || submitMassResponse.isPending;
+  const displayNextMass = mobileNextMass ?? null;
+  const rsvpMass = massSummary?.mass ?? null;
+  const deadlinePassed = isDeadlinePassed(rsvpMass?.responseDeadline ?? null);
+  const rsvpDisabled = !rsvpMass?.askForRsvp || deadlinePassed || !home.memberId || submitMassResponse.isPending;
   const quickActions: HomeQuickAction[] = [];
   if (giveVisible) quickActions.push({ icon: HandCoins, label: "Lipa Sasa", hint: "Toa mchango au sadaka", to: "/portal/give", primary: true });
   if (massVisible) quickActions.push({ icon: HeartHandshake, label: "Nia ya Misa", hint: "Wasilisha nia ya Misa", to: "/portal/mass-intentions" });
@@ -400,9 +407,9 @@ export default function MemberDashboard() {
         latestAnnouncement={home.latestAnnouncement}
         massVisible={massVisible}
         memberName={home.memberName}
-        nextMass={nextMass}
-        nextMassError={massError}
-        nextMassLoading={massLoading}
+        nextMass={mobileNextMass ?? null}
+        nextMassError={mobileMassError}
+        nextMassLoading={mobileMassLoading}
       />
       <div className="mx-auto hidden max-w-6xl space-y-3.5 lg:block">
         <section className="overflow-hidden rounded-[28px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.12),hsl(var(--card))_68%,hsl(var(--card)))] p-4 shadow-sm">
@@ -446,18 +453,13 @@ export default function MemberDashboard() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-primary">Misa ijayo</p>
-                {nextMass ? (
+                {displayNextMass ? (
                   <>
-                    <h2 className="mt-1 text-xl font-bold text-foreground">{nextMass.title}</h2>
+                    <h2 className="mt-1 text-xl font-bold text-foreground">{displayNextMass.title}</h2>
                     <p className="mt-1 text-base font-semibold text-foreground">
-                      {formatDate(nextMass.massDate)} · {formatMassTime(nextMass.startTime)}
+                      {formatDate(displayNextMass.massDate)} - {formatMassTime(displayNextMass.startTime)}
                     </p>
-                    {nextMass.description ? <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{nextMass.description}</p> : null}
-                    {nextMass.responseDeadline ? (
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        RSVP deadline: {new Date(nextMass.responseDeadline).toLocaleString("en-TZ")}
-                      </p>
-                    ) : null}
+                    {displayNextMass.description ? <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{displayNextMass.description}</p> : null}
                   </>
                 ) : (
                   <div className="mt-2 space-y-1">
@@ -467,14 +469,14 @@ export default function MemberDashboard() {
                 )}
               </div>
 
-              {nextMass ? (
+              {rsvpMass ? (
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-foreground">Will you attend?</p>
                   <div className="flex flex-wrap gap-2">
                     {(["yes", "maybe", "no"] as const).map((response) => (
                       <Button
                         key={response}
-                        variant={nextMass.memberResponse === response ? "default" : "outline"}
+                        variant={rsvpMass.memberResponse === response ? "default" : "outline"}
                         className="min-w-24 capitalize"
                         disabled={rsvpDisabled}
                         onClick={() => submitMassResponse.mutate(response)}
@@ -488,6 +490,11 @@ export default function MemberDashboard() {
                     <span>Maybe: {massSummary?.responseCounts.maybe ?? 0}</span>
                     <span>Response rate: {Number(massSummary?.responseRate ?? 0).toFixed(0)}%</span>
                   </div>
+                  {rsvpMass.responseDeadline ? (
+                    <p className="text-xs text-muted-foreground">
+                      RSVP deadline: {new Date(rsvpMass.responseDeadline).toLocaleString("en-TZ")}
+                    </p>
+                  ) : null}
                   {deadlinePassed ? <p className="text-xs text-muted-foreground">RSVP deadline has passed.</p> : null}
                 </div>
               ) : null}

@@ -1138,6 +1138,71 @@
     "reviewed_tab": "Reviewed ({{count}})",
     "offering": "Offering: {{amount}}"
   },
+  "mass_timetable_admin": {
+    "title": "Mass Timetable",
+    "description": "Weekly schedules and generated timetable occurrences.",
+    "default_location": "Main church",
+    "upcoming_title": "Upcoming timetable entries",
+    "empty_occurrences": "No upcoming timetable entries. Use the generate button.",
+    "actions": {
+      "add": "Add",
+      "disable": "Disable",
+      "edit": "Edit",
+      "enable": "Enable",
+      "generate": "Generate 90 days",
+      "save": "Save"
+    },
+    "activity_types": {
+      "adoration": "Eucharistic Adoration",
+      "confession": "Confession",
+      "mass": "Mass",
+      "other": "Other",
+      "prayer": "Prayer / Service",
+      "unclassified": "Unclassified"
+    },
+    "dialogs": {
+      "edit": "Edit schedule",
+      "new": "New schedule"
+    },
+    "errors": {
+      "activity_required": "Choose the activity type before saving.",
+      "classification_blocked_by_intentions": "This schedule cannot be changed away from Mass because future occurrences already have Mass intentions. Resolve those intentions first.",
+      "invalid_form": "Enter a name and valid time range.",
+      "load_failed": "The timetable could not be loaded.",
+      "migration_required": "The timetable activity classification database migration must be deployed before saving this field.",
+      "no_church": "Church context required"
+    },
+    "fields": {
+      "accepts_intentions": "Accepts intentions",
+      "activity_type": "Activity type",
+      "capacity": "Intention capacity",
+      "day": "Day",
+      "effective_from": "From",
+      "effective_until": "Until",
+      "end_time": "End time",
+      "fee": "Intention fee",
+      "language": "Language",
+      "location": "Location",
+      "name": "Name",
+      "start_time": "Start time"
+    },
+    "placeholders": {
+      "activity_type": "Choose activity type"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Disabled"
+    },
+    "toasts": {
+      "generate_failed": "Could not generate",
+      "generated": {
+        "description": "{{count}} new timetable entries.",
+        "title": "Timetable generated"
+      },
+      "save_failed": "Not saved",
+      "saved": "Schedule saved"
+    }
+  },
   "mass_intentions_labels": {
     "departed": "For the departed",
     "healing": "Healing",

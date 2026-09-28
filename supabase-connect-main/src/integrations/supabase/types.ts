@@ -5108,6 +5108,7 @@ export type Database = {
       mass_occurrences: {
         Row: {
           accepts_intentions: boolean
+          activity_type: string | null
           celebrant_name: string | null
           church_id: string
           created_at: string
@@ -5130,6 +5131,7 @@ export type Database = {
         }
         Insert: {
           accepts_intentions?: boolean
+          activity_type?: string | null
           celebrant_name?: string | null
           church_id: string
           created_at?: string
@@ -5152,6 +5154,7 @@ export type Database = {
         }
         Update: {
           accepts_intentions?: boolean
+          activity_type?: string | null
           celebrant_name?: string | null
           church_id?: string
           created_at?: string
@@ -5241,6 +5244,7 @@ export type Database = {
       mass_schedules: {
         Row: {
           accepts_intentions: boolean
+          activity_type: string | null
           church_id: string
           created_at: string
           created_by: string | null
@@ -5263,6 +5267,7 @@ export type Database = {
         }
         Insert: {
           accepts_intentions?: boolean
+          activity_type?: string | null
           church_id: string
           created_at?: string
           created_by?: string | null
@@ -5285,6 +5290,7 @@ export type Database = {
         }
         Update: {
           accepts_intentions?: boolean
+          activity_type?: string | null
           church_id?: string
           created_at?: string
           created_by?: string | null
@@ -8239,6 +8245,14 @@ export type Database = {
         Args: { _church_name?: string }
         Returns: string
       }
+      classify_mass_schedule_activity: {
+        Args: {
+          p_activity_type: string
+          p_church_id: string
+          p_schedule_id: string
+        }
+        Returns: Json
+      }
       generate_mass_occurrences: {
         Args: { p_church_id: string; p_end_date: string; p_start_date: string }
         Returns: number
@@ -8271,6 +8285,18 @@ export type Database = {
           name: string
           occurrence_date: string
           remaining_slots: number
+          start_time: string
+          status: string
+        }[]
+      }
+      get_member_parish_schedule_masses: {
+        Args: { p_church_id: string; p_from_date?: string }
+        Returns: {
+          activity_type: string | null
+          id: string
+          location_name: string | null
+          name: string
+          occurrence_date: string
           start_time: string
           status: string
         }[]

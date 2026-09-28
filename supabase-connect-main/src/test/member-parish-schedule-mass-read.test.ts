@@ -8,7 +8,11 @@ const read = (relativePath: string) =>
 
 const calendar = read("src/pages/ParishCalendarPage.tsx");
 const massIntentions = read("src/pages/portal/PortalMassIntentions.tsx");
-const migration = read("supabase/migrations/20260906120000_member_parish_schedule_masses.sql");
+const migration = read("supabase/migrations/20260927120000_add_timetable_activity_classification.sql");
+const memberScheduleRpc = migration.slice(
+  migration.indexOf("create or replace function public.get_member_parish_schedule_masses"),
+  migration.indexOf("create or replace function public.get_available_mass_occurrences"),
+);
 
 describe("member parish schedule Mass read contract", () => {
   it("uses the member parish schedule RPC for member Calendar Masses", () => {
@@ -19,7 +23,7 @@ describe("member parish schedule Mass read contract", () => {
   });
 
   it("keeps member Calendar off direct mass_occurrences select star", () => {
-    expect(calendar).toContain('type CalendarMass = Pick<MassOccurrence, "id" | "occurrence_date" | "start_time" | "name" | "location_name" | "status">');
+    expect(calendar).toContain('type CalendarMass = Pick<MassOccurrence, "id" | "occurrence_date" | "start_time" | "name" | "location_name" | "status" | "activity_type">');
     expect(calendar).toMatch(
       /const massesQuery\s*=\s*workspace\s*===\s*"member"\s*\?\s*db\.rpc\("get_member_parish_schedule_masses",\s*\{\s*p_church_id:\s*churchId,\s*p_from_date:\s*today\s*\}\s*\)\s*:\s*db\.from\("mass_occurrences"\)\.select\("\*"\)/,
     );
@@ -41,9 +45,10 @@ describe("member parish schedule Mass read contract", () => {
   });
 
   it("documents the display schedule filters in the migration", () => {
-    expect(migration).toContain("o.occurrence_date >= v_from_date");
-    expect(migration).toContain("o.status in ('scheduled', 'rescheduled')");
-    expect(migration).not.toContain("o.accepts_intentions");
-    expect(migration).toContain("order by o.occurrence_date asc, o.start_time asc nulls last, o.id asc");
+    expect(memberScheduleRpc).toContain("o.occurrence_date >= v_from_date");
+    expect(memberScheduleRpc).toContain("o.status in ('scheduled', 'rescheduled')");
+    expect(memberScheduleRpc).toContain("activity_type text");
+    expect(memberScheduleRpc).not.toContain("o.accepts_intentions");
+    expect(memberScheduleRpc).toContain("order by o.occurrence_date asc, o.start_time asc nulls last, o.id asc");
   });
 });

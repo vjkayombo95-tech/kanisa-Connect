@@ -60,18 +60,16 @@ const state = vi.hoisted(() => ({
     data: [] as Array<{ id: string; name: string }>,
   },
   mass: null as null | {
-    mass: {
-      id: string;
-      title: string;
-      description: string | null;
-      massDate: string;
-      startTime: string;
-      endTime: string | null;
-      responseDeadline: string | null;
-      askForRsvp: boolean;
-      memberId: string | null;
-      memberResponse: "yes" | "maybe" | "no" | null;
-    };
+    id: string;
+    title: string;
+    description: string | null;
+    massDate: string;
+    startTime: string;
+    endTime: string | null;
+    responseDeadline: string | null;
+    askForRsvp: boolean;
+    memberId: string | null;
+    memberResponse: "yes" | "maybe" | "no" | null;
   },
   announcement: null as null | { id: string; church_id: string; title: string; content: string | null },
   events: [] as Array<{ id: string; churchId: string; title: string; description: string | null; startDate: string; location: string | null }>,
@@ -397,18 +395,16 @@ describe("My Parish feature-aware quick links", () => {
   });
   it("renders the next Mass section when data exists", () => {
     state.mass = {
-      mass: {
-        id: "mass-a",
-        title: "Misa ya Jumapili",
-        description: "Misa kuu ya parokia",
-        massDate: "2026-09-06",
-        startTime: "09:00",
-        endTime: null,
-        responseDeadline: null,
-        askForRsvp: false,
-        memberId: null,
-        memberResponse: null,
-      },
+      id: "occurrence-a",
+      title: "Misa ya Jumapili",
+      description: "Misa kuu ya parokia",
+      massDate: "2026-09-06",
+      startTime: "09:00",
+      endTime: null,
+      responseDeadline: null,
+      askForRsvp: false,
+      memberId: null,
+      memberResponse: null,
     };
     renderPage();
     expect(host.textContent).toContain("Misa ijayo");
@@ -462,18 +458,16 @@ describe("My Parish feature-aware quick links", () => {
 
   it("renders announcement request failure as an error without hiding successful Mass", () => {
     state.mass = {
-      mass: {
-        id: "mass-a",
-        title: "Misa ya Jioni",
-        description: null,
-        massDate: "2026-09-06",
-        startTime: "18:00",
-        endTime: null,
-        responseDeadline: null,
-        askForRsvp: false,
-        memberId: null,
-        memberResponse: null,
-      },
+      id: "occurrence-a",
+      title: "Misa ya Jioni",
+      description: null,
+      massDate: "2026-09-06",
+      startTime: "18:00",
+      endTime: null,
+      responseDeadline: null,
+      askForRsvp: false,
+      memberId: null,
+      memberResponse: null,
     };
     state.errors.add("portal-announcements");
     state.refetches.set("portal-announcements", vi.fn());
@@ -515,18 +509,16 @@ describe("My Parish feature-aware quick links", () => {
   it("keeps Mass and event information while hiding event route actions when events are unavailable", () => {
     state.features.set("events", false);
     state.mass = {
-      mass: {
-        id: "mass-a",
-        title: "Misa ya Asubuhi",
-        description: null,
-        massDate: "2026-09-06",
-        startTime: "07:00",
-        endTime: null,
-        responseDeadline: null,
-        askForRsvp: false,
-        memberId: null,
-        memberResponse: null,
-      },
+      id: "occurrence-a",
+      title: "Misa ya Asubuhi",
+      description: null,
+      massDate: "2026-09-06",
+      startTime: "07:00",
+      endTime: null,
+      responseDeadline: null,
+      askForRsvp: false,
+      memberId: null,
+      memberResponse: null,
     };
     state.events = [
       { id: "event-a", churchId: "church-a", title: "Semina ya familia", description: null, startDate: "2099-09-06T09:00:00Z", location: "Ukumbi" },

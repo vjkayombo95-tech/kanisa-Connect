@@ -7,14 +7,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { formatMassDate, formatMassTime, type MassOccurrence } from "@/lib/mass-timetable";
+import { formatMassDate, formatMassTime, type MassOccurrence, type TimetableActivityClassification } from "@/lib/mass-timetable";
 import { cn } from "@/lib/utils";
 
 const db = supabase as unknown as SupabaseClient;
 const TANZANIA_TIME_ZONE = "Africa/Dar_es_Salaam";
 
 type CalendarEvent = { id: string; church_id: string; title: string; description: string | null; start_date: string; end_date: string | null; location: string | null; event_type: string | null; registration_type: string | null; archived_at: string | null };
-type CalendarMass = Pick<MassOccurrence, "id" | "occurrence_date" | "start_time" | "name" | "location_name" | "status">;
+type CalendarMass = Pick<MassOccurrence, "id" | "occurrence_date" | "start_time" | "name" | "location_name" | "status" | "activity_type">;
 type Props = { workspace: "member" | "admin" };
 type ScheduleItem = {
   id: string;
@@ -90,6 +90,23 @@ function getEventTimeKey(date: Date | null) {
 
 function getMassTimeKey(startTime: string | null) {
   return startTime?.slice(0, 5) || "99:99";
+}
+
+function getActivityKind(activityType: TimetableActivityClassification) {
+  switch (activityType) {
+    case "mass":
+      return "Misa";
+    case "confession":
+      return "Maungamo";
+    case "adoration":
+      return "Kuabudu Ekaristi";
+    case "prayer":
+      return "Sala / Ibada";
+    case "other":
+      return "Nyingine";
+    default:
+      return "Haijaainishwa";
+  }
 }
 
 function compareScheduleItems(a: ScheduleItem, b: ScheduleItem) {
@@ -280,7 +297,7 @@ export default function ParishCalendarPage({ workspace }: Props) {
       const dateKey = eventDate ? getTanzaniaDateKey(eventDate) : event.start_date.slice(0, 10);
       return { id: `event-${event.id}`, source: "event" as const, dateKey, timeKey: getEventTimeKey(eventDate), title: event.title, kind: event.event_type || "Tukio", detail: event.location, status: calendar.data?.registrationByEvent.get(event.id) ?? (event.registration_type === "paid" ? "Usajili wa malipo" : "Tukio la parokia"), displayDate: eventDate ? dateLabelFormatter.format(eventDate) : formatDateKey(dateKey), displayTime: eventDate ? eventTimeFormatter.format(eventDate) : "Muda haujawekwa" };
     }),
-    ...(calendar.data?.masses ?? []).map((mass) => ({ id: `mass-${mass.id}`, source: "mass" as const, dateKey: mass.occurrence_date, timeKey: getMassTimeKey(mass.start_time), title: mass.name, kind: "Misa", detail: mass.location_name, status: mass.status, displayDate: formatMassDate(mass.occurrence_date), displayTime: formatMassTime(mass.start_time) })),
+    ...(calendar.data?.masses ?? []).map((mass) => ({ id: `mass-${mass.id}`, source: "mass" as const, dateKey: mass.occurrence_date, timeKey: getMassTimeKey(mass.start_time), title: mass.name, kind: getActivityKind(mass.activity_type ?? null), detail: mass.location_name, status: mass.status, displayDate: formatMassDate(mass.occurrence_date), displayTime: formatMassTime(mass.start_time) })),
   ].sort(compareScheduleItems);
   const groups = getGroupedSchedule(items, todayKey);
 

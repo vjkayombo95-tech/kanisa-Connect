@@ -13,7 +13,9 @@ describe("Wave 2 member Today", () => {
     expect(page).toContain("fetchPublishedDailyReading");
     expect(page).not.toContain("getTodayReadingEntry");
     expect(page).toContain("daily-readings-today-saints");
-    expect(page).toContain("dailyLifeKeys.nextMass");
+    expect(page).toContain("dailyLifeKeys.nextTimetableMass");
+    expect(page).toContain("fetchNextTimetableMass");
+    expect(page).not.toContain("fetchNextMassSummary");
     expect(page).toContain("dailyLifeKeys.events");
     expect(page).toContain("dailyLifeKeys.announcements");
     expect(page).toContain("ProductionLiveMassCard");
