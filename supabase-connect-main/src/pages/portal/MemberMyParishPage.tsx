@@ -12,7 +12,7 @@ import { useChurchRadioStations } from "@/hooks/use-church-radio";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { useLinkedMember } from "@/hooks/use-linked-member";
 import { getYouTubeEmbedUrl, presentation } from "@/lib/church-livestreams";
-import { dailyLifeKeys, fetchLatestAnnouncement, fetchNextMassSummary, fetchParishEvents, fetchParishIdentity, getParishDirectionsHref, getParishEmailHref, getParishPhoneHref, isUpcomingEvent } from "@/lib/member-daily-life";
+import { dailyLifeKeys, fetchLatestAnnouncement, fetchNextTimetableMass, fetchParishEvents, fetchParishIdentity, getParishDirectionsHref, getParishEmailHref, getParishPhoneHref, isUpcomingEvent } from "@/lib/member-daily-life";
 import { fetchMemberMinistries, memberMinistriesQueryKey } from "@/lib/member-ministries";
 import type { PortalFeatureKey } from "@/lib/portal-features";
 
@@ -93,7 +93,7 @@ export default function MemberMyParishPage() {
   const { getFeatureState } = useFeatureAccess();
   const parish = useQuery({ queryKey: dailyLifeKeys.parish(churchId), queryFn: () => fetchParishIdentity(churchId!), enabled: !!churchId, staleTime: 5 * 60_000 });
   const member = useLinkedMember();
-  const mass = useQuery({ queryKey: dailyLifeKeys.nextMass(churchId), queryFn: () => fetchNextMassSummary(churchId!), enabled: !!churchId, staleTime: 60_000 });
+  const mass = useQuery({ queryKey: dailyLifeKeys.nextTimetableMass(churchId), queryFn: () => fetchNextTimetableMass(churchId!), enabled: !!churchId, staleTime: 60_000 });
   const announcement = useQuery({ queryKey: dailyLifeKeys.announcements(churchId), queryFn: () => fetchLatestAnnouncement(churchId!), enabled: !!churchId, staleTime: 60_000 });
   const events = useQuery({ queryKey: dailyLifeKeys.events(churchId), queryFn: () => fetchParishEvents(churchId!), enabled: !!churchId, staleTime: 60_000 });
   const ministries = useQuery({ queryKey: memberMinistriesQueryKey(churchId, member.data?.id), queryFn: () => fetchMemberMinistries(churchId!, member.data!.id), enabled: !!churchId && !!member.data?.id, staleTime: 60_000 });
@@ -156,7 +156,7 @@ export default function MemberMyParishPage() {
 
     <section>
       <SectionTitle title="Misa ijayo" action={eventsVisible ? <AppLink to="/portal/calendar" className="text-sm font-bold text-primary">Ratiba</AppLink> : undefined} />
-      {mass.isLoading ? <Skeleton className="h-32 rounded-[24px]" /> : mass.isError ? <SectionFeedback title="Hatukuweza kupakia Misa ijayo kwa sasa." description="Ratiba ya Misa haijapotea. Tafadhali jaribu tena baada ya muda mfupi." tone="error" onRetry={() => void mass.refetch()} isRetrying={mass.isFetching} /> : mass.data?.mass ? <LinkCard to={eventsVisible ? "/portal/calendar" : undefined} title={mass.data.mass.title} detail={`${mass.data.mass.description ? `${mass.data.mass.description} - ` : ""}${new Date(`${mass.data.mass.massDate}T${mass.data.mass.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })}`} icon={Church} /> : <EmptyCard>Hakuna Misa ijayo iliyopangwa kwa sasa.</EmptyCard>}
+      {mass.isLoading ? <Skeleton className="h-32 rounded-[24px]" /> : mass.isError ? <SectionFeedback title="Hatukuweza kupakia Misa ijayo kwa sasa." description="Ratiba ya Misa haijapotea. Tafadhali jaribu tena baada ya muda mfupi." tone="error" onRetry={() => void mass.refetch()} isRetrying={mass.isFetching} /> : mass.data ? <LinkCard to={eventsVisible ? "/portal/calendar" : undefined} title={mass.data.title} detail={`${mass.data.description ? `${mass.data.description} - ` : ""}${new Date(`${mass.data.massDate}T${mass.data.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })}`} icon={Church} /> : <EmptyCard>Hakuna Misa ijayo iliyopangwa kwa sasa.</EmptyCard>}
     </section>
 
     <section>

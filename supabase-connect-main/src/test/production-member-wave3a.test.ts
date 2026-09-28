@@ -97,9 +97,13 @@ describe("Wave 3A member reliability contracts", () => {
     const today = read("pages/portal/MemberTodayPage.tsx");
     const parish = read("pages/portal/MemberMyParishPage.tsx");
     const readings = read("pages/portal/DailyReadingsPage.tsx");
-    for (const source of [dashboard, today, parish]) expect(source).toContain("fetchNextMassSummary");
     expect(dashboard).toContain("fetchNextTimetableMass");
+    expect(dashboard).toContain("fetchNextMassSummary");
     expect(dashboard).toContain("dailyLifeKeys.nextTimetableMass");
+    expect(today).toContain("fetchNextTimetableMass");
+    expect(today).not.toContain("fetchNextMassSummary");
+    expect(parish).toContain("fetchNextTimetableMass");
+    expect(parish).not.toContain("fetchNextMassSummary");
     expect(today).toContain("fetchPublishedDailyReading");
     expect(readings).toContain("fetchPublishedDailyReading");
     expect(dashboard).not.toContain("getTodayReadingEntry");

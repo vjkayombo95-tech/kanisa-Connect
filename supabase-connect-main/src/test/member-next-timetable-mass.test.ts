@@ -41,8 +41,32 @@ describe("member next timetable Mass", () => {
     const dashboard = read("components/portal/MemberDashboard.tsx");
 
     expect(dashboard).toContain("fetchNextMassSummary(churchId!)");
+    expect(dashboard).toContain("const displayNextMass = mobileNextMass ?? null");
+    expect(dashboard).toContain("const rsvpMass = massSummary?.mass ?? null");
+    expect(dashboard).toContain("{displayNextMass ? (");
+    expect(dashboard).toContain("{rsvpMass ? (");
+    expect(dashboard).not.toContain("{displayNextMass && rsvpMass ? (");
     expect(dashboard).toContain('supabase.rpc("submit_mass_response"');
     expect(dashboard).toContain("p_mass_event_id: massSummary.mass.id");
+    expect(dashboard).not.toContain("p_mass_event_id: displayNextMass.id");
+    expect(dashboard).not.toContain("p_mass_event_id: mobileNextMass.id");
+  });
+
+  it("uses the timetable Mass helper for every informational member next Mass surface", () => {
+    const dashboard = read("components/portal/MemberDashboard.tsx");
+    const today = read("pages/portal/MemberTodayPage.tsx");
+    const parish = read("pages/portal/MemberMyParishPage.tsx");
+
+    for (const source of [dashboard, today, parish]) {
+      expect(source).toContain("fetchNextTimetableMass");
+      expect(source).toContain("dailyLifeKeys.nextTimetableMass(churchId)");
+    }
+    expect(today).not.toContain("fetchNextMassSummary");
+    expect(today).not.toContain("dailyLifeKeys.nextMass(churchId)");
+    expect(today).not.toContain("mass.data?.mass");
+    expect(parish).not.toContain("fetchNextMassSummary");
+    expect(parish).not.toContain("dailyLifeKeys.nextMass(churchId)");
+    expect(parish).not.toContain("mass.data?.mass");
   });
 
   it("selects only the nearest future explicitly classified Mass", () => {
