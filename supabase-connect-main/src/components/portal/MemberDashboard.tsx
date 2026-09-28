@@ -24,7 +24,7 @@ import { logWarning } from "@/lib/error-logger";
 import { ProductionLiveMassCard } from "@/components/portal/ProductionLiveMassCard";
 import { MobileMemberHome } from "@/components/portal/MobileMemberHome";
 import { fetchMemberContributionTotal } from "@/lib/member-contributions";
-import { dailyLifeKeys, fetchNextMassSummary } from "@/lib/member-daily-life";
+import { dailyLifeKeys, fetchNextMassSummary, fetchNextTimetableMass } from "@/lib/member-daily-life";
 import { useIsDesktop } from "@/hooks/use-mobile";
 
 type MemberHomeData = {
@@ -352,6 +352,12 @@ export default function MemberDashboard() {
     enabled: !!churchId,
     staleTime: 60 * 1000,
   });
+  const { data: mobileNextMass, isLoading: mobileMassLoading, isError: mobileMassError } = useQuery({
+    queryKey: dailyLifeKeys.nextTimetableMass(churchId),
+    queryFn: () => fetchNextTimetableMass(churchId!),
+    enabled: !!churchId,
+    staleTime: 60 * 1000,
+  });
 
   const submitMassResponse = useMutation({
     mutationFn: async (response: "yes" | "maybe" | "no") => {
@@ -400,9 +406,9 @@ export default function MemberDashboard() {
         latestAnnouncement={home.latestAnnouncement}
         massVisible={massVisible}
         memberName={home.memberName}
-        nextMass={nextMass}
-        nextMassError={massError}
-        nextMassLoading={massLoading}
+        nextMass={mobileNextMass ?? null}
+        nextMassError={mobileMassError}
+        nextMassLoading={mobileMassLoading}
       />
       <div className="mx-auto hidden max-w-6xl space-y-3.5 lg:block">
         <section className="overflow-hidden rounded-[28px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.12),hsl(var(--card))_68%,hsl(var(--card)))] p-4 shadow-sm">

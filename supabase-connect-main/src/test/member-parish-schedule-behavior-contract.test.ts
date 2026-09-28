@@ -13,7 +13,11 @@ const portalLayout = read("src/components/portal/PortalLayout.tsx");
 const memberServices = read("src/pages/portal/MemberServicesPage.tsx");
 const memberMyParish = read("src/pages/portal/MemberMyParishPage.tsx");
 const memberToday = read("src/pages/portal/MemberTodayPage.tsx");
-const migration = read("supabase/migrations/20260906120000_member_parish_schedule_masses.sql");
+const migration = read("supabase/migrations/20260927120000_add_timetable_activity_classification.sql");
+const memberScheduleRpc = migration.slice(
+  migration.indexOf("create or replace function public.get_member_parish_schedule_masses"),
+  migration.indexOf("create or replace function public.get_available_mass_occurrences"),
+);
 
 describe("member Parish schedule behavior contract", () => {
   it("keeps the member schedule route on /portal/calendar", () => {
@@ -36,7 +40,7 @@ describe("member Parish schedule behavior contract", () => {
     expect(calendar).toContain('db.rpc("get_member_parish_schedule_masses"');
     expect(calendar).toContain("p_church_id: churchId");
     expect(calendar).toContain("p_from_date: today");
-    expect(calendar).toContain('type CalendarMass = Pick<MassOccurrence, "id" | "occurrence_date" | "start_time" | "name" | "location_name" | "status">');
+    expect(calendar).toContain('type CalendarMass = Pick<MassOccurrence, "id" | "occurrence_date" | "start_time" | "name" | "location_name" | "status" | "activity_type">');
   });
 
   it("does not restore ordinary-member direct mass_occurrences reads", () => {
@@ -69,7 +73,7 @@ describe("member Parish schedule behavior contract", () => {
   it("keeps the rendered Mass and Event fields within the current display contract", () => {
     for (const fragment of [
       "title: mass.name",
-      'kind: "Misa"',
+      "kind: getActivityKind(mass.activity_type ?? null)",
       "detail: mass.location_name",
       "status: mass.status",
       "title: event.title",
@@ -87,13 +91,13 @@ describe("member Parish schedule behavior contract", () => {
   });
 
   it("keeps the secure RPC contract referenced by the member schedule", () => {
-    expect(migration).toContain("create or replace function public.get_member_parish_schedule_masses");
-    expect(migration).toMatch(/returns table \(\s*id uuid,\s*occurrence_date date,\s*start_time time,\s*name text,\s*location_name text,\s*status text\s*\)/);
-    expect(migration).toContain("public.is_church_member(v_actor, p_church_id)");
-    expect(migration).toContain("public.can_manage_church_workspace(v_actor, p_church_id)");
-    expect(migration).toContain("public.is_super_admin()");
-    expect(migration).toContain("o.status in ('scheduled', 'rescheduled')");
-    expect(migration).not.toContain("o.accepts_intentions");
+    expect(memberScheduleRpc).toContain("create or replace function public.get_member_parish_schedule_masses");
+    expect(memberScheduleRpc).toMatch(/returns table \(\s*id uuid,\s*occurrence_date date,\s*start_time time,\s*name text,\s*location_name text,\s*status text,\s*activity_type text\s*\)/);
+    expect(memberScheduleRpc).toContain("public.is_church_member(v_actor, p_church_id)");
+    expect(memberScheduleRpc).toContain("public.can_manage_church_workspace(v_actor, p_church_id)");
+    expect(memberScheduleRpc).toContain("public.is_super_admin()");
+    expect(memberScheduleRpc).toContain("o.status in ('scheduled', 'rescheduled')");
+    expect(memberScheduleRpc).not.toContain("o.accepts_intentions");
   });
 
   it("keeps member navigation entry points pointing to the existing route", () => {

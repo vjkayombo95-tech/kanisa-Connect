@@ -27,8 +27,20 @@ describe("member parish schedule visual copy contract", () => {
     expect(calendar).toContain("groups.filter((group) => group.items.length > 0)");
   });
 
-  it("keeps Misa and Tukio distinctions visible on agenda items", () => {
-    expect(calendar).toContain('kind: "Misa"');
+  it("keeps timetable classification and Tukio distinctions visible on agenda items", () => {
+    expect(calendar).toContain("function getActivityKind");
+    expect(calendar).toContain('case "mass"');
+    expect(calendar).toContain('return "Misa"');
+    expect(calendar).toContain('case "confession"');
+    expect(calendar).toContain('return "Maungamo"');
+    expect(calendar).toContain('case "adoration"');
+    expect(calendar).toContain('return "Kuabudu Ekaristi"');
+    expect(calendar).toContain('case "prayer"');
+    expect(calendar).toContain('return "Sala / Ibada"');
+    expect(calendar).toContain('case "other"');
+    expect(calendar).toContain('return "Nyingine"');
+    expect(calendar).toContain('return "Haijaainishwa"');
+    expect(calendar).toContain("kind: getActivityKind(mass.activity_type ?? null)");
     expect(calendar).toContain('event.event_type || "Tukio"');
     expect(calendar).toContain('item.source === "mass"');
     expect(calendar).toContain("<MemberScheduleItem");

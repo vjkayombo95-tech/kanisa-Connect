@@ -31,15 +31,39 @@ export type MemberNextMassSummary = {
   responseRate: number;
 };
 
+export type MemberParishScheduleOccurrence = {
+  id: string;
+  occurrence_date: string | null;
+  start_time: string | null;
+  name: string;
+  location_name: string | null;
+  status: string | null;
+  activity_type: string | null;
+};
+
 export const dailyLifeKeys = {
   parish: (churchId?: string | null) => ["member-parish-identity", churchId] as const,
   events: (churchId?: string | null) => ["portal-events", churchId] as const,
   nextMass: (churchId?: string | null) => ["member-daily-life", "next-mass", churchId] as const,
+  nextTimetableMass: (churchId?: string | null) => ["member-daily-life", "next-timetable-mass", churchId] as const,
   announcements: (churchId?: string | null) => ["portal-announcements", churchId, 1] as const,
 };
 
 const PHONE_CHARACTERS = /^[\d\s()+\-.*#,;pPwW]+$/;
 const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const TANZANIA_TIME_ZONE = "Africa/Dar_es_Salaam";
+const dateKeyFormatter = new Intl.DateTimeFormat("en-CA", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: TANZANIA_TIME_ZONE,
+  year: "numeric",
+});
+const timeKeyFormatter = new Intl.DateTimeFormat("en-GB", {
+  hour: "2-digit",
+  hourCycle: "h23",
+  minute: "2-digit",
+  timeZone: TANZANIA_TIME_ZONE,
+});
 
 function hasControlCharacters(value: string) {
   return [...value].some((character) => {
@@ -51,6 +75,55 @@ function hasControlCharacters(value: string) {
 export function normalizeParishContact(value: string | null | undefined) {
   const normalized = value?.trim().replace(/\s+/gu, " ") ?? "";
   return normalized && !hasControlCharacters(normalized) ? normalized : null;
+}
+
+export function getTanzaniaDateKey(value = new Date()) {
+  return dateKeyFormatter.format(value);
+}
+
+export function getTanzaniaTimeKey(value = new Date()) {
+  return timeKeyFormatter.format(value);
+}
+
+function getValidDateKey(value: string | null) {
+  const match = value?.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+
+  const [, yearText, monthText, dayText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day
+    ? value
+    : null;
+}
+
+function getValidTimeKey(value: string | null) {
+  const match = value?.match(/^(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?$/);
+  if (!match) return null;
+
+  const [, hourText, minuteText, secondText = "00"] = match;
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  const second = Number(secondText);
+
+  if (hour > 23 || minute > 59 || second > 59) return null;
+  return `${hourText}:${minuteText}`;
+}
+
+function getFutureTimetableMassCandidate(row: MemberParishScheduleOccurrence, todayKey: string, nowTimeKey: string) {
+  if (row.activity_type !== "mass") return null;
+  if (!["scheduled", "rescheduled"].includes(row.status ?? "")) return null;
+  const dateKey = getValidDateKey(row.occurrence_date);
+  const timeKey = getValidTimeKey(row.start_time);
+  if (!dateKey || !timeKey) return null;
+  if (dateKey < todayKey) return null;
+  if (dateKey === todayKey && timeKey < nowTimeKey) return null;
+  return { row, dateKey, timeKey };
 }
 
 export function getParishPhoneHref(value: string | null | undefined) {
@@ -146,10 +219,51 @@ export function normalizeNextMassSummary(value: unknown): MemberNextMassSummary 
   };
 }
 
+export function selectNextTimetableMass(
+  rows: MemberParishScheduleOccurrence[],
+  now = new Date(),
+): MemberNextMass | null {
+  const todayKey = getTanzaniaDateKey(now);
+  const nowTimeKey = getTanzaniaTimeKey(now);
+  const next = rows
+    .map((row) => getFutureTimetableMassCandidate(row, todayKey, nowTimeKey))
+    .filter((candidate): candidate is { row: MemberParishScheduleOccurrence; dateKey: string; timeKey: string } => candidate !== null)
+    .sort((a, b) =>
+      a.dateKey.localeCompare(b.dateKey)
+      || a.timeKey.localeCompare(b.timeKey)
+      || a.row.id.localeCompare(b.row.id)
+    )[0];
+
+  if (!next) return null;
+
+  return {
+    id: next.row.id,
+    title: next.row.name,
+    description: normalizeParishContact(next.row.location_name),
+    massDate: next.dateKey,
+    startTime: next.timeKey,
+    endTime: null,
+    responseDeadline: null,
+    askForRsvp: false,
+    memberId: null,
+    memberResponse: null,
+  };
+}
+
 export async function fetchNextMassSummary(churchId: string): Promise<MemberNextMassSummary> {
   const { data, error } = await supabase.rpc("get_next_mass_summary" as never, { p_church_id: churchId } as never);
   if (error) throw error;
   return normalizeNextMassSummary(data);
+}
+
+export async function fetchNextTimetableMass(churchId: string): Promise<MemberNextMass | null> {
+  const now = new Date();
+  const { data, error } = await supabase.rpc("get_member_parish_schedule_masses", {
+    p_church_id: churchId,
+    p_from_date: getTanzaniaDateKey(now),
+  });
+  if (error) throw error;
+  return selectNextTimetableMass((data ?? []) as MemberParishScheduleOccurrence[], now);
 }
 
 export async function fetchLatestAnnouncement(churchId: string) {

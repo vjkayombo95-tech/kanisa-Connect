@@ -69,7 +69,7 @@ describe("Wave 3A member reliability contracts", () => {
     expect((home.match(/id: "(?:give|mass|announcements|history)"/g) ?? [])).toHaveLength(4);
     expect(home).toContain('data-testid="mobile-next-mass"');
     expect(home).toContain("Hakuna Misa ijayo iliyopangwa");
-    expect(home).toContain("Taarifa ya Misa haikupatikana");
+    expect(home).toContain("Ratiba ya Misa haikupatikana kwa sasa");
   });
 
   it.each([[390, 844], [430, 932]])("renders a bounded mobile Mass card at %sx%s", (width, height) => {
@@ -98,6 +98,8 @@ describe("Wave 3A member reliability contracts", () => {
     const parish = read("pages/portal/MemberMyParishPage.tsx");
     const readings = read("pages/portal/DailyReadingsPage.tsx");
     for (const source of [dashboard, today, parish]) expect(source).toContain("fetchNextMassSummary");
+    expect(dashboard).toContain("fetchNextTimetableMass");
+    expect(dashboard).toContain("dailyLifeKeys.nextTimetableMass");
     expect(today).toContain("fetchPublishedDailyReading");
     expect(readings).toContain("fetchPublishedDailyReading");
     expect(dashboard).not.toContain("getTodayReadingEntry");
