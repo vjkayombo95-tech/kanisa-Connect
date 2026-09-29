@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const mocks = vi.hoisted(() => ({ fetchMemberContributionTotal: vi.fn() }));
-vi.mock("@/lib/member-contributions", () => ({ fetchMemberContributionTotal: mocks.fetchMemberContributionTotal }));
+const mocks = vi.hoisted(() => ({ fetchMemberContributionTotalForRange: vi.fn() }));
+vi.mock("@/lib/member-contributions", () => ({ fetchMemberContributionTotalForRange: mocks.fetchMemberContributionTotalForRange }));
 
 import {
   MEMBER_ASSISTANT_FALLBACK,
@@ -13,7 +13,7 @@ import {
 } from "@/lib/member-assistant";
 
 describe("production Wave 5B deterministic Uliza Kanisa", () => {
-  beforeEach(() => mocks.fetchMemberContributionTotal.mockReset());
+  beforeEach(() => mocks.fetchMemberContributionTotalForRange.mockReset());
 
   it.each([
     ["nataka kuchangia", "contribute", "/portal/give"],
@@ -36,7 +36,97 @@ describe("production Wave 5B deterministic Uliza Kanisa", () => {
   });
 
   it("distinguishes an own-contribution read from contribution navigation", () => {
-    expect(resolveMemberAssistantIntent("jumla ya michango yangu")).toMatchObject({ intent: "contribution_summary", action: "read", route: null });
+    expect(resolveMemberAssistantIntent("Nimechangia kiasi gani?")).toMatchObject({ intent: "own_contributions", contributionRange: "all_time", action: "read", route: null });
+  });
+
+  it.each([
+    ["Nimechangia kiasi gani leo?", "today"],
+    ["Michango yangu leo", "today"],
+    ["Nimechangia kiasi gani wiki hii?", "this_week"],
+    ["Michango yangu wiki hii", "this_week"],
+    ["Nimechangia kiasi gani mwezi huu?", "this_month"],
+    ["Michango yangu mwezi huu", "this_month"],
+    ["Nimechangia kiasi gani?", "all_time"],
+  ])("resolves the own-contribution range for %s", (input, contributionRange) => {
+    expect(resolveMemberAssistantIntent(input)).toMatchObject({
+      intent: "own_contributions",
+      contributionRange,
+      action: "read",
+      route: null,
+    });
+  });
+
+  it.each([
+    "Misa ijayo ni lini?",
+    "Misa inayofuata ni saa ngapi?",
+    "Misa ijayo ni saa ngapi?",
+    "Misa inayofuata ni lini?",
+    "Misa ijayo ni ipi?",
+  ])("resolves the next timetable Mass intent: %s", (input) => {
+    expect(resolveMemberAssistantIntent(input)).toMatchObject({
+      intent: "next_mass",
+      action: "read",
+      route: null,
+    });
+  });
+
+  it.each([
+    "Nia za Misa",
+    "Nia yangu ya Misa",
+    "Nataka kuweka nia ya Misa",
+  ])("does not collide with Mass Intention wording: %s", (input) => {
+    expect(resolveMemberAssistantIntent(input).intent).toBe("mass_intentions");
+  });
+
+  it.each([
+    "Nia zangu za Misa zikoje?",
+    "Nia yangu ya Misa imekubaliwa?",
+    "Nia zangu zina hali gani?",
+    "Nina Nia za Misa zinazosubiri?",
+    "Nionyeshe hali ya Nia zangu za Misa",
+  ])("resolves own Mass Intention status questions: %s", (input) => {
+    expect(resolveMemberAssistantIntent(input)).toMatchObject({
+      intent: "mass_intentions",
+      action: "read",
+      route: null,
+      massIntentionsMode: "status",
+    });
+  });
+
+  it.each([
+    "Nataka kuweka nia ya Misa",
+    "Niweke Nia ya Misa",
+  ])("preserves create Mass Intention navigation: %s", (input) => {
+    expect(resolveMemberAssistantIntent(input)).toMatchObject({
+      intent: "mass_intentions",
+      action: "navigate",
+      route: "/portal/mass-intentions",
+    });
+  });
+
+  it.each([
+    "Nionyeshe Nia za Misa za John",
+    "Nia za member-foreign-123 zikoje?",
+    "Nia zangu za Misa za John zikoje?",
+    "Nionyeshe Nia zote za kanisa",
+    "Nia za wanachama wote",
+    "Nia zilizokataliwa za watu wote",
+  ])("does not resolve unsafe Mass Intention lookup: %s", (input) => {
+    expect(resolveMemberAssistantIntent(input).intent).toBe("unknown");
+  });
+
+  it.each([
+    "Kuna tangazo jipya?",
+    "Tangazo la mwisho ni lipi?",
+    "Tangazo la hivi karibuni ni lipi?",
+    "Nionyeshe tangazo la mwisho",
+    "Matangazo mapya yapo?",
+  ])("resolves the latest announcement intent: %s", (input) => {
+    expect(resolveMemberAssistantIntent(input)).toMatchObject({
+      intent: "latest_announcement",
+      action: "read",
+      route: null,
+    });
   });
 
   it.each([
@@ -56,8 +146,16 @@ describe("production Wave 5B deterministic Uliza Kanisa", () => {
 
   it("preserves specific contribution intent precedence", () => {
     expect(resolveMemberAssistantIntent("historia ya michango yangu")).toMatchObject({ intent: "contribution_history", matchClass: "keyword" });
-    expect(resolveMemberAssistantIntent("jumla ya michango yangu")).toMatchObject({ intent: "contribution_summary", matchClass: "exact" });
+    expect(resolveMemberAssistantIntent("nimechangia kiasi gani")).toMatchObject({ intent: "own_contributions", contributionRange: "all_time", matchClass: "exact" });
     expect(resolveMemberAssistantIntent("nataka kuchangia")).toMatchObject({ intent: "contribute", route: "/portal/give" });
+  });
+
+  it("preserves the existing all-time contribution summary contract for the legacy question", () => {
+    expect(resolveMemberAssistantIntent("Jumla ya michango yangu")).toMatchObject({
+      intent: "contribution_summary",
+      action: "read",
+      route: null,
+    });
   });
 
   it.each([
@@ -69,9 +167,9 @@ describe("production Wave 5B deterministic Uliza Kanisa", () => {
   });
 
   it("reads contributions only with resolved church and linked-member identifiers", async () => {
-    mocks.fetchMemberContributionTotal.mockResolvedValue(45000);
+    mocks.fetchMemberContributionTotalForRange.mockResolvedValue(45000);
     await expect(readOwnContributionSummary("church-current", "member-linked")).resolves.toBe(45000);
-    expect(mocks.fetchMemberContributionTotal).toHaveBeenCalledWith("church-current", "member-linked");
+    expect(mocks.fetchMemberContributionTotalForRange).toHaveBeenCalledWith("church-current", "member-linked", "all_time");
   });
 
   it("does not accept or resolve a foreign member identifier from question text", () => {
@@ -115,6 +213,15 @@ describe("production Wave 5B deterministic Uliza Kanisa", () => {
     "ripoti ya michango ya kanisa",
     "nipe ripoti ya fedha",
     "onyesha taarifa za wanachama",
+    "top contributors",
+    "inactive contributors",
+    "ripoti ya fedha ya kanisa",
+    "download contribution report pdf",
+    "onyesha michango ya member-foreign-123",
+    "Nimechangia kiasi gani member-123?",
+    "Nionyeshe michango yangu ya John",
+    "Misa ijayo ya church abc ni lini?",
+    "Tangazo jipya la parish nyingine?",
   ])("does not expose the staff-only request: %s", (input) => {
     expect(resolveMemberAssistantIntent(input).intent).toBe("unknown");
   });

@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type MassIntentionStatus = "pending" | "approved" | "rejected";
+export type MassIntentionStatus = "pending" | "approved" | "rejected" | "scheduled" | "completed" | "archived";
 export type CommunityHelpStatus = "pending" | "approved" | "rejected";
 
 export type MassIntention = {
@@ -35,6 +35,16 @@ type MemberJoin = {
 
 export type MassIntentionWithMember = MassIntention & MemberJoin & {
   member_name: string;
+};
+
+export type OwnMassIntentionsSummary = {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  scheduled: number;
+  completed: number;
+  archived: number;
 };
 
 export type CommunityHelpRequestWithMember = CommunityHelpRequest & MemberJoin & {
@@ -77,6 +87,39 @@ export function mapCommunityHelpRecord(row: CommunityHelpRequestWithMember): Com
   return {
     ...row,
     member_name: row.members?.full_name ?? "Unknown",
+  };
+}
+
+async function countOwnMassIntentionsByStatus(churchId: string, memberId: string, status: MassIntentionStatus) {
+  const { count, error } = await supabase
+    .from("mass_intentions")
+    .select("id", { count: "exact", head: true })
+    .eq("church_id", churchId)
+    .eq("member_id", memberId)
+    .eq("status", status);
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function fetchOwnMassIntentionsSummary(churchId: string, memberId: string): Promise<OwnMassIntentionsSummary> {
+  const [pending, approved, rejected, scheduled, completed, archived] = await Promise.all([
+    countOwnMassIntentionsByStatus(churchId, memberId, "pending"),
+    countOwnMassIntentionsByStatus(churchId, memberId, "approved"),
+    countOwnMassIntentionsByStatus(churchId, memberId, "rejected"),
+    countOwnMassIntentionsByStatus(churchId, memberId, "scheduled"),
+    countOwnMassIntentionsByStatus(churchId, memberId, "completed"),
+    countOwnMassIntentionsByStatus(churchId, memberId, "archived"),
+  ]);
+
+  return {
+    total: pending + approved + rejected + scheduled + completed + archived,
+    pending,
+    approved,
+    rejected,
+    scheduled,
+    completed,
+    archived,
   };
 }
 

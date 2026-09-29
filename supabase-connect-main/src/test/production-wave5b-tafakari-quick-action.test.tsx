@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  fetchMemberContributionTotal: vi.fn(),
+  fetchMemberContributionTotalForRange: vi.fn(),
   fetch: vi.fn(),
 }));
 
@@ -25,7 +25,7 @@ vi.mock("@/hooks/use-church-livestream", () => ({
   useChurchLivestream: () => ({ featureEnabled: false, data: null }),
 }));
 vi.mock("@/lib/member-contributions", () => ({
-  fetchMemberContributionTotal: mocks.fetchMemberContributionTotal,
+  fetchMemberContributionTotalForRange: mocks.fetchMemberContributionTotalForRange,
 }));
 
 import { resolveMemberAssistantIntent } from "@/lib/member-assistant";
@@ -35,7 +35,7 @@ describe("Wave 5B Tafakari quick-action hotfix", () => {
   let host: HTMLDivElement;
 
   beforeEach(() => {
-    mocks.fetchMemberContributionTotal.mockReset();
+    mocks.fetchMemberContributionTotalForRange.mockReset();
     mocks.fetch.mockReset();
     vi.stubGlobal("fetch", mocks.fetch);
     host = document.createElement("div");
@@ -64,7 +64,7 @@ describe("Wave 5B Tafakari quick-action hotfix", () => {
     expect(host).toHaveTextContent("Fungua tafakari za kiroho zilizochapishwa.");
 
     expect(mocks.fetch).not.toHaveBeenCalled();
-    expect(mocks.fetchMemberContributionTotal).not.toHaveBeenCalled();
+    expect(mocks.fetchMemberContributionTotalForRange).not.toHaveBeenCalled();
     await act(async () => root.unmount());
   });
 });

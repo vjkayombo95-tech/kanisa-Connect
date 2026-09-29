@@ -1,20 +1,135 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const MEMBER_CONTRIBUTION_PAGE_SIZE = 20;
+export const MEMBER_CONTRIBUTION_TIME_ZONE = "Africa/Dar_es_Salaam";
+export const MEMBER_CONTRIBUTION_TOTAL_PAGE_SIZE = 500;
+
+export type MemberContributionRange = "today" | "this_week" | "this_month" | "all_time";
+
+type TanzaniaDateParts = {
+  year: number;
+  month: number;
+  day: number;
+};
+
+const tanzaniaDateFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: MEMBER_CONTRIBUTION_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function getTanzaniaDateParts(value: Date): TanzaniaDateParts {
+  const parts = tanzaniaDateFormatter.formatToParts(value);
+  const read = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value);
+
+  return {
+    year: read("year"),
+    month: read("month"),
+    day: read("day"),
+  };
+}
+
+function addLocalDays(parts: TanzaniaDateParts, days: number): TanzaniaDateParts {
+  const date = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + days, 12, 0, 0, 0));
+  return {
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+  };
+}
+
+function getLocalDayOfWeek(parts: TanzaniaDateParts) {
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day, 12, 0, 0, 0)).getUTCDay();
+}
+
+function toTanzaniaMidnightUtcIso(parts: TanzaniaDateParts) {
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day, -3, 0, 0, 0)).toISOString();
+}
+
+export function getMemberContributionRangeBounds(range: MemberContributionRange, now = new Date()) {
+  if (range === "all_time") return null;
+
+  const today = getTanzaniaDateParts(now);
+
+  if (range === "today") {
+    return {
+      startIso: toTanzaniaMidnightUtcIso(today),
+      endIso: toTanzaniaMidnightUtcIso(addLocalDays(today, 1)),
+    };
+  }
+
+  if (range === "this_week") {
+    const mondayOffset = (getLocalDayOfWeek(today) + 6) % 7;
+    const start = addLocalDays(today, -mondayOffset);
+    return {
+      startIso: toTanzaniaMidnightUtcIso(start),
+      endIso: toTanzaniaMidnightUtcIso(addLocalDays(start, 7)),
+    };
+  }
+
+  const start = { year: today.year, month: today.month, day: 1 };
+  const endDate = new Date(Date.UTC(today.year, today.month, 1, 12, 0, 0, 0));
+  const end = {
+    year: endDate.getUTCFullYear(),
+    month: endDate.getUTCMonth() + 1,
+    day: 1,
+  };
+
+  return {
+    startIso: toTanzaniaMidnightUtcIso(start),
+    endIso: toTanzaniaMidnightUtcIso(end),
+  };
+}
+
+export async function fetchMemberContributionTotalForRange(
+  churchId: string,
+  memberId: string,
+  range: MemberContributionRange,
+  now = new Date(),
+) {
+  const bounds = getMemberContributionRangeBounds(range, now);
+  let total = 0;
+  let page = 0;
+
+  while (page < 1000) {
+    const from = page * MEMBER_CONTRIBUTION_TOTAL_PAGE_SIZE;
+    const to = from + MEMBER_CONTRIBUTION_TOTAL_PAGE_SIZE - 1;
+    let query = supabase
+      .from("contributions")
+      .select("id, created_at, amount")
+      .eq("church_id", churchId)
+      .eq("member_id", memberId);
+
+    if (bounds) {
+      query = query.gte("created_at", bounds.startIso).lt("created_at", bounds.endIso);
+    }
+
+    const { data, error } = await query
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(from, to);
+
+    if (error) throw error;
+
+    const rows = data ?? [];
+    total += rows.reduce((sum, row) => {
+      const amount = Number(row.amount ?? 0);
+      return Number.isFinite(amount) ? sum + amount : sum;
+    }, 0);
+
+    if (rows.length < MEMBER_CONTRIBUTION_TOTAL_PAGE_SIZE) {
+      return total;
+    }
+
+    page += 1;
+  }
+
+  throw new Error("Contribution total pagination exceeded the safety limit.");
+}
 
 export async function fetchMemberContributionTotal(churchId: string, memberId: string) {
-  const { data, error } = await supabase
-    .from("contributions")
-    .select("amount")
-    .eq("church_id", churchId)
-    .eq("member_id", memberId);
-
-  if (error) throw error;
-
-  return (data ?? []).reduce((total, row) => {
-    const amount = Number(row.amount ?? 0);
-    return Number.isFinite(amount) ? total + amount : total;
-  }, 0);
+  return fetchMemberContributionTotalForRange(churchId, memberId, "all_time");
 }
 
 export type MemberContribution = {
