@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 
-import { BookOpen, CalendarDays, Church, HandCoins, Megaphone, Radio, Send, Sparkles, Star } from "lucide-react";
+import { BookOpen, CalendarDays, ChevronDown, ChevronUp, Church, HandCoins, Megaphone, Radio, Send, Sparkles, Star } from "lucide-react";
 
 import { AppLink } from "@/components/AppLink";
 
@@ -50,15 +50,15 @@ type ConversationMessage = {
 
 const quickQuestions = [
 
-  { id: "contributions", label: "Michango yangu", question: "Nionyeshe historia ya michango", icon: HandCoins, feature: "contributions" },
+  { id: "contributions", label: "Michango yangu", question: "Michango yangu", icon: HandCoins, feature: "contributions", primary: true },
 
-  { id: "mass", label: "Nia za Misa", question: "Nia za Misa", icon: Church, feature: "mass_intentions" },
+  { id: "mass", label: "Nia za Misa", question: "Nia za Misa", icon: Church, feature: "mass_intentions", primary: true },
 
-  { id: "announcements", label: "Matangazo", question: "Matangazo", icon: Megaphone, feature: "announcements" },
+  { id: "announcements", label: "Matangazo", question: "Matangazo", icon: Megaphone, feature: "announcements", primary: true },
 
   { id: "readings", label: "Masomo ya leo", question: "Masomo ya leo", icon: BookOpen, feature: "catholic_content" },
 
-  { id: "calendar", label: "Kalenda", question: "Kalenda ya parokia", icon: CalendarDays, feature: "events" },
+  { id: "calendar", label: "Ratiba ya Misa", question: "Misa ijayo", icon: CalendarDays, feature: "events", primary: true },
 
   { id: "prayers", label: "Sala", question: "Sala", icon: Sparkles },
 
@@ -279,6 +279,7 @@ export default function KanisaAssistantPage() {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
 
   const [isAnswering, setIsAnswering] = useState(false);
+  const [showMore, setShowMore] = useState(false);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -298,6 +299,9 @@ export default function KanisaAssistantPage() {
     () => quickQuestions.filter((item) => !("feature" in item) || getFeatureState(item.feature).visible),
     [getFeatureState],
   );
+
+  const primaryQuickQuestions = visibleQuickQuestions.filter((item) => "primary" in item && item.primary);
+  const secondaryQuickQuestions = visibleQuickQuestions.filter((item) => !("primary" in item) || !item.primary);
 
   const ask = async (question: string) => {
 
@@ -502,16 +506,34 @@ export default function KanisaAssistantPage() {
               <h2 id="uliza-quick-actions" className="text-lg font-bold">Maswali ya haraka</h2>
 
               <div className="mt-3 grid grid-cols-1 gap-3 min-[340px]:grid-cols-2">
-
-                {visibleQuickQuestions.map((item) => {
-
+                {primaryQuickQuestions.map((item) => {
                   const Icon = item.icon;
-
                   return <button key={item.id} type="button" onClick={() => void ask(item.question)} className="flex min-h-16 w-full items-center gap-3 rounded-2xl border border-border/70 bg-card px-3 py-2 text-left shadow-sm transition hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5" aria-hidden="true" /></span><span className="min-w-0 text-sm font-bold leading-5">{item.label}</span></button>;
-
                 })}
-
               </div>
+
+              {secondaryQuickQuestions.length ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setShowMore((value) => !value)}
+                    className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-bold text-primary"
+                    aria-expanded={showMore}
+                  >
+                    Zaidi
+                    {showMore ? <ChevronUp className="h-4 w-4" aria-hidden="true" /> : <ChevronDown className="h-4 w-4" aria-hidden="true" />}
+                  </button>
+
+                  {showMore ? (
+                    <div className="grid grid-cols-1 gap-3 min-[340px]:grid-cols-2">
+                      {secondaryQuickQuestions.map((item) => {
+                        const Icon = item.icon;
+                        return <button key={item.id} type="button" onClick={() => void ask(item.question)} className="flex min-h-16 w-full items-center gap-3 rounded-2xl border border-border/70 bg-card px-3 py-2 text-left shadow-sm transition hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Icon className="h-5 w-5" aria-hidden="true" /></span><span className="min-w-0 text-sm font-bold leading-5">{item.label}</span></button>;
+                      })}
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
 
             </section>
 
