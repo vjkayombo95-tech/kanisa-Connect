@@ -134,7 +134,6 @@ describe("production Wave 5B deterministic Uliza Kanisa", () => {
     "nataka kuona michango",
     "naomba kuona michango",
     "onyesha michango yangu",
-    "michango yangu",
     "nione michango yangu",
   ])("maps the natural member contribution phrase to owned history: %s", (input) => {
     expect(resolveMemberAssistantIntent(input)).toMatchObject({
@@ -144,6 +143,14 @@ describe("production Wave 5B deterministic Uliza Kanisa", () => {
     });
   });
 
+  it("maps bare Michango yangu to the owned all-time contribution summary flow", () => {
+    expect(resolveMemberAssistantIntent("Michango yangu")).toMatchObject({
+      intent: "own_contributions",
+      action: "read",
+      route: null,
+      contributionRange: "all_time",
+    });
+  });
   it("preserves specific contribution intent precedence", () => {
     expect(resolveMemberAssistantIntent("historia ya michango yangu")).toMatchObject({ intent: "contribution_history", matchClass: "keyword" });
     expect(resolveMemberAssistantIntent("nimechangia kiasi gani")).toMatchObject({ intent: "own_contributions", contributionRange: "all_time", matchClass: "exact" });

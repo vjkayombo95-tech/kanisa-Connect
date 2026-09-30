@@ -113,6 +113,7 @@ function resolveOwnContributionRange(text: string): MemberContributionRange | nu
 
   if (!asksOwnContributions) return null;
 
+  if (text === "michango yangu") return "all_time";
   if (text.includes("leo")) return "today";
   if (text.includes("wiki hii")) return "this_week";
   if (text.includes("mwezi huu")) return "this_month";
