@@ -52,6 +52,14 @@ describe("Wave 5B Tafakari quick-action hotfix", () => {
     expect(expected).toMatchObject({ intent: "reflections", action: "navigate", route: "/portal/reflections" });
 
     for (const label of ["Sala", "Tafakari", "Watakatifu"]) {
+      expect([...host.querySelectorAll("button")].some((button) => button.textContent?.trim() === label)).toBe(false);
+    }
+
+    const moreButton = [...host.querySelectorAll("button")].find((button) => button.textContent?.trim() === "Zaidi");
+    expect(moreButton).toBeDefined();
+    await act(async () => moreButton?.click());
+
+    for (const label of ["Sala", "Tafakari", "Watakatifu"]) {
       expect([...host.querySelectorAll("button")].some((button) => button.textContent?.trim() === label)).toBe(true);
     }
 
