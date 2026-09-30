@@ -27,7 +27,7 @@ export function getPortalAnnouncementsCache(churchId: string | null | undefined,
   return readOfflineCache(`offline-cache:portal-announcements-latest:${churchId}:${limit}`, [] as PortalAnnouncementRecord[]);
 }
 
-export async function fetchPortalAnnouncements(churchId: string | null | undefined, limit = 50) {
+export async function fetchPortalAnnouncements(churchId: string | null | undefined, limit = 50, options: { failClosedOnRpcError?: boolean } = {}) {
   if (!churchId) return [];
   const cacheKey = `offline-cache:portal-announcements-latest:${churchId}:${limit}`;
 
@@ -49,6 +49,10 @@ export async function fetchPortalAnnouncements(churchId: string | null | undefin
         rpc: "get_portal_announcements",
         church_id: churchId,
       });
+
+      if (options.failClosedOnRpcError) {
+        throw error;
+      }
 
       const now = new Date().toISOString();
       const { data: fallbackData, error: fallbackError } = await supabase

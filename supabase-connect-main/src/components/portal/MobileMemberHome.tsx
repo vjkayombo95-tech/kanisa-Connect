@@ -6,7 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SharedChurchLiveMedia } from "@/components/portal/SharedChurchLiveMedia";
 import { cn } from "@/lib/utils";
 
-import type { MemberHomeData, NextMassSummary } from "./dashboard";
+import type { MemberNextMass } from "@/lib/member-daily-life";
+import type { MemberHomeData } from "./dashboard";
 import { formatDate, formatMassTime } from "./dashboard/utils";
 
 type MobileMemberHomeProps = {
@@ -15,7 +16,9 @@ type MobileMemberHomeProps = {
   giveVisible: boolean;
   home: MemberHomeData;
   isLoading: boolean;
-  massSummary: NextMassSummary | undefined;
+  nextMass: MemberNextMass | null;
+  nextMassError: boolean;
+  nextMassLoading: boolean;
   massVisible: boolean;
 };
 
@@ -32,7 +35,9 @@ export function MobileMemberHome({
   giveVisible,
   home,
   isLoading,
-  massSummary,
+  nextMass,
+  nextMassError,
+  nextMassLoading,
   massVisible,
 }: MobileMemberHomeProps) {
   const firstName = home.memberName.trim().split(/\s+/)[0] || "Mshirika";
@@ -43,7 +48,7 @@ export function MobileMemberHome({
     if (action.id === "ask") return askVisible;
     return false;
   });
-  const nextMass = massSummary?.mass;
+
 
   if (isLoading) {
     return <div className="space-y-6 lg:hidden"><Skeleton className="h-24 rounded-3xl" /><Skeleton className="h-64 rounded-3xl" /><Skeleton className="h-36 rounded-3xl" /></div>;
@@ -89,13 +94,27 @@ export function MobileMemberHome({
 
       <section className="space-y-3" aria-label="Taarifa muhimu">
         <h2 className="text-lg font-semibold tracking-tight">Inayofuata</h2>
-        {nextMass ? (
+        {nextMassLoading ? (
+          <Skeleton data-testid="mobile-next-mass-loading" className="h-28 rounded-[1.4rem]" />
+        ) : nextMassError ? (
+          <div className="rounded-[1.4rem] border border-border/60 bg-card/85 p-4 text-sm text-muted-foreground">
+            Ratiba ya Misa haikupatikana kwa sasa.
+          </div>
+        ) : nextMass ? (
           <AppLink to="/portal/calendar" className="group flex min-h-28 items-center gap-4 rounded-[1.4rem] border border-white/[0.08] bg-card/85 p-4 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.045),0_14px_30px_-28px_hsl(var(--foreground)/0.45)] transition-[transform,border-color,background-color] duration-200 motion-reduce:transition-none hover:border-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.99] motion-reduce:active:scale-100">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary/10 bg-primary/10 text-primary"><Church className="h-6 w-6 stroke-[1.8]" /></span>
-            <span className="min-w-0 flex-1"><span className="block text-xs font-bold uppercase tracking-wider text-primary">Misa inayofuata</span><span className="mt-1 block font-bold">{nextMass.title}</span><span className="mt-1 block text-sm text-muted-foreground">{formatDate(nextMass.mass_date)} · {formatMassTime(nextMass.start_time)} · {home.churchName || "Parokia"}</span></span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-bold uppercase tracking-wider text-primary">Misa inayofuata</span>
+              <span className="mt-1 block font-bold">{nextMass.title}</span>
+              <span className="mt-1 block text-sm text-muted-foreground">{formatDate(nextMass.massDate)} · {formatMassTime(nextMass.startTime)} · {nextMass.description || home.churchName || "Parokia"}</span>
+            </span>
             <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 motion-reduce:transition-none group-hover:translate-x-0.5 motion-reduce:transform-none" />
           </AppLink>
-        ) : null}
+        ) : (
+          <div className="rounded-[1.4rem] border border-border/60 bg-card/85 p-4 text-sm text-muted-foreground">
+            Hakuna Misa ijayo iliyopangwa kwa sasa.
+          </div>
+        )}
 
         {announcementsVisible ? (
           <div className="rounded-[1.4rem] border border-border/60 bg-card/95 p-5 shadow-[0_12px_26px_-26px_hsl(var(--foreground)/0.4)]">
@@ -105,7 +124,7 @@ export function MobileMemberHome({
         ) : null}
       </section>
 
-      {!nextMass && !announcementsVisible ? <div className="flex items-center gap-3 rounded-[1.4rem] border border-border/50 bg-muted/60 p-5 text-sm leading-6 text-muted-foreground"><HandCoins className="h-5 w-5 shrink-0 stroke-[1.8]" />Huduma zako zote zinapatikana kupitia “Huduma zote”.</div> : null}
+      {!nextMass && !announcementsVisible ? <div className="flex items-center gap-3 rounded-[1.4rem] border border-border/50 bg-muted/60 p-5 text-sm leading-6 text-muted-foreground"><HandCoins className="h-5 w-5 shrink-0 stroke-[1.8]" />Huduma zako zote zinapatikana kupitia "Huduma zote".</div> : null}
     </div>
   );
 }

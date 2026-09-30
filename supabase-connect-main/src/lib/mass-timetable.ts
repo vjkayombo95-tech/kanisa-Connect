@@ -12,6 +12,19 @@ export const MASS_WEEKDAYS = [
   "Jumamosi",
 ] as const;
 
+export const TIMETABLE_ACTIVITY_TYPES = ["mass", "confession", "adoration", "prayer", "other"] as const;
+export type TimetableActivityType = (typeof TIMETABLE_ACTIVITY_TYPES)[number];
+export type TimetableActivityClassification = TimetableActivityType | null;
+
+export const TIMETABLE_ACTIVITY_LABEL_KEYS = {
+  mass: "mass_timetable_admin.activity_types.mass",
+  confession: "mass_timetable_admin.activity_types.confession",
+  adoration: "mass_timetable_admin.activity_types.adoration",
+  prayer: "mass_timetable_admin.activity_types.prayer",
+  other: "mass_timetable_admin.activity_types.other",
+  unclassified: "mass_timetable_admin.activity_types.unclassified",
+} as const;
+
 export type MassSchedule = {
   id: string;
   church_id: string;
@@ -30,6 +43,7 @@ export type MassSchedule = {
   effective_until: string | null;
   is_active: boolean;
   sort_order: number;
+  activity_type?: TimetableActivityClassification;
 };
 
 export type MassOccurrenceStatus = "scheduled" | "cancelled" | "completed" | "rescheduled";
@@ -55,6 +69,7 @@ export type MassOccurrence = {
   booked_count?: number;
   remaining_slots?: number | null;
   is_full?: boolean;
+  activity_type?: TimetableActivityClassification;
 };
 
 export function formatMassTime(value: string | null | undefined) {
