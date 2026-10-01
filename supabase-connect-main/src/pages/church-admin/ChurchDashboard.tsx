@@ -32,13 +32,26 @@ import {
   type NextMassSummary,
 } from "@/components/portal/dashboard";
 import { ChurchAdminActionRequiredCard } from "@/components/church-admin/ChurchAdminNotifications";
+import { ChurchDashboardExperience } from "@/components/church-admin/ChurchDashboardExperience";
+import { ChurchDashboardMobileExperience } from "@/components/church-admin/ChurchDashboardMobileExperience";
 import { useWorkspaceContext, WorkspaceResolver } from "@/components/workspace";
 import { useAuth } from "@/contexts/AuthContext";
+import { useChurchDashboardIntelligence } from "@/hooks/use-church-dashboard-intelligence";
 import { supabase } from "@/integrations/supabase/client";
 import { EMPTY_CHURCH_ADMIN_PENDING_COUNTS, useChurchAdminPendingCounts, type ChurchAdminPendingCounts } from "@/lib/church-admin-notifications";
 import { EMPTY_CHURCH_FINANCIAL_SUMMARY, useChurchFinancialSummary, type ChurchFinancialSummary } from "@/lib/church-financial-summary";
 import { formatTZS } from "@/lib/currency";
 import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
+import { getStaffMobileConfig } from "@/lib/staff-mobile-registry";
+import { resolveStaffMobileWorkspace } from "@/lib/staff-mobile-role";
+import {
+  combineTodaySchedule,
+  getTanzaniaDateKey,
+  getTanzaniaTimestampBounds,
+  type TodayEventRow,
+  type TodayMassOccurrenceRow,
+  type TodayScheduleItem,
+} from "@/lib/church-dashboard-today-schedule";
 
 type EventRow = {
   id: string;
@@ -68,6 +81,8 @@ type PledgeSummaryRow = {
 type ChurchDashboardCriticalData = {
   churchName: string | null;
   churchSlug: string | null;
+  bannerUrl: string | null;
+  bannerPositionY: number;
   churchCode: string | null;
   shortCode: string | null;
   totalMembers: number;
@@ -99,6 +114,8 @@ type ChurchDashboardDeferredData = {
     approved: number;
   };
   upcomingEvents: EventRow[];
+  todaySchedule: TodayScheduleItem[];
+  todayScheduleError: boolean;
 };
 
 type ChurchDashboardContext = {
@@ -181,7 +198,13 @@ function isBirthdayThisMonth(member: MemberRow) {
 }
 
 export default function ChurchDashboard() {
-  const { churchId, profile, user } = useAuth();
+  const { churchId, profile, user, userRole, userRoles, isSuperAdmin } = useAuth();
+  const intelligence = useChurchDashboardIntelligence();
+  const effectiveStaffWorkspace = resolveStaffMobileWorkspace(
+    userRoles?.length ? userRoles : userRole ? [userRole] : [],
+    isSuperAdmin,
+  );
+  const mobileConfig = getStaffMobileConfig(effectiveStaffWorkspace);
   const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Administrator";
   const dateKey = todayKey();
   const monthStart = monthStartKey();
@@ -197,6 +220,8 @@ export default function ChurchDashboard() {
         return {
           churchName: null,
           churchSlug: null,
+          bannerUrl: null,
+          bannerPositionY: 38,
           churchCode: null,
           shortCode: null,
           totalMembers: 0,
@@ -206,7 +231,7 @@ export default function ChurchDashboard() {
       }
 
       const [church, allMembers, activeMembers, announcements] = await Promise.all([
-        supabase.from("churches").select("name, slug, church_code, short_code, code").eq("id", churchId).maybeSingle(),
+        supabase.from("churches").select("name, slug, banner_url, banner_position_y, church_code, short_code, code").eq("id", churchId).maybeSingle(),
         supabase.from("members").select("id", { count: "exact", head: true }).eq("church_id", churchId),
         supabase.from("members").select("id", { count: "exact", head: true }).eq("church_id", churchId).eq("status", "active"),
         fetchPortalAnnouncements(churchId, 1),
@@ -217,6 +242,8 @@ export default function ChurchDashboard() {
       return {
         churchName: church.data?.name ?? null,
         churchSlug: church.data?.slug ?? null,
+        bannerUrl: church.data?.banner_url ?? null,
+        bannerPositionY: church.data?.banner_position_y ?? 38,
         churchCode: church.data?.church_code ?? church.data?.code ?? null,
         shortCode: church.data?.short_code ?? null,
         totalMembers: allMembers.count ?? 0,
@@ -244,6 +271,9 @@ export default function ChurchDashboard() {
     queryFn: async (): Promise<ChurchDashboardDeferredData> => {
       if (!churchId) return emptyDeferredData;
 
+      const todayKey = getTanzaniaDateKey();
+      const todayBounds = getTanzaniaTimestampBounds(todayKey);
+
       const [
         nextMassSummary,
         metrics,
@@ -256,6 +286,8 @@ export default function ChurchDashboard() {
         contributionCount,
         pendingCommunityHelp,
         approvedCommunityHelp,
+        todayMassOccurrences,
+        todayEvents,
       ] = await Promise.all([
         supabase.rpc("get_next_mass_summary" as never, { p_church_id: churchId } as never),
         supabase.rpc("get_church_dashboard_metrics" as never, { p_church_id: churchId } as never),
@@ -283,6 +315,21 @@ export default function ChurchDashboard() {
         supabase.from("contributions").select("id", { count: "exact", head: true }).eq("church_id", churchId),
         supabase.from("community_help_requests").select("id", { count: "exact", head: true }).eq("church_id", churchId).eq("status", "pending"),
         supabase.from("community_help_requests").select("id", { count: "exact", head: true }).eq("church_id", churchId).eq("status", "approved"),
+        supabase
+          .from("mass_occurrences")
+          .select("id, church_id, occurrence_date, start_time, end_time, name, location_name, status")
+          .eq("church_id", churchId)
+          .eq("occurrence_date", todayKey)
+          .in("status", ["scheduled", "rescheduled"])
+          .order("start_time", { ascending: true }),
+        supabase
+          .from("events")
+          .select("id, church_id, title, start_date, end_date, location, event_type, archived_at")
+          .eq("church_id", churchId)
+          .gte("start_date", todayBounds.start)
+          .lt("start_date", todayBounds.end)
+          .is("archived_at", null)
+          .order("start_date", { ascending: true }),
       ]);
 
       const dashboardMetrics = (metrics.data ?? {}) as {
@@ -291,6 +338,15 @@ export default function ChurchDashboard() {
       };
       const massSummary = (nextMassSummary.data ?? {}) as NextMassSummary;
       const birthdayMembers = ((birthdayCandidates.data ?? []) as MemberRow[]).filter(isBirthdayThisMonth);
+      const todayScheduleError = Boolean(todayMassOccurrences.error || todayEvents.error);
+      const todaySchedule = combineTodaySchedule({
+        occurrences: ((todayMassOccurrences.data ?? []) as TodayMassOccurrenceRow[]).filter(
+          (row) => row.church_id === churchId,
+        ),
+        events: ((todayEvents.data ?? []) as TodayEventRow[]).filter(
+          (row) => row.church_id === churchId && !row.archived_at,
+        ),
+      });
 
       return {
         attendance: {
@@ -316,6 +372,8 @@ export default function ChurchDashboard() {
           approved: approvedCommunityHelp.count ?? 0,
         },
         upcomingEvents: dashboardMetrics.upcoming_events ?? [],
+        todaySchedule,
+        todayScheduleError,
       };
     },
     enabled: !!churchId,
@@ -653,13 +711,67 @@ export default function ChurchDashboard() {
     },
   };
 
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
+  const recentActivity = deferred.recentRegistrations.slice(0, 4).map((member) => ({
+    id: `member-${member.id}`,
+    title: member.full_name || "Member",
+    detail: "Member registration",
+    date: member.created_at,
+  }));
+
   return (
-    <WorkspaceResolver
-      workspaceId="church_admin"
-      context={context}
-      widgets={widgets}
-      dashboardClassName="mx-auto max-w-7xl"
-    />
+    <div className="mx-auto max-w-7xl">
+      {criticalError ? (
+        <p className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          Unable to load some church dashboard records.
+        </p>
+      ) : null}
+
+      {mobileConfig ? (
+        <ChurchDashboardMobileExperience
+          config={mobileConfig}
+          intelligence={intelligence}
+          administratorName={displayName}
+          greeting={greeting}
+          churchName={critical?.churchName ?? null}
+          bannerUrl={critical?.bannerUrl ?? null}
+          bannerPositionY={critical?.bannerPositionY ?? 38}
+          activeMembers={critical?.activeMembers ?? 0}
+          totalMembers={critical?.totalMembers ?? 0}
+          announcementCount={critical?.latestAnnouncement ? 1 : 0}
+          upcomingEventCount={deferred.upcomingEvents.length}
+          attendance={deferred.attendance}
+          todaySchedule={deferred.todaySchedule}
+          todayScheduleError={deferred.todayScheduleError}
+          criticalLoading={criticalLoading}
+          criticalError={criticalError}
+          deferredLoading={deferredLoading}
+          deferredError={deferredError}
+        />
+      ) : null}
+
+      <ChurchDashboardExperience
+        userRole={userRole}
+        intelligence={intelligence}
+        administratorName={displayName}
+        greeting={greeting}
+        churchName={critical?.churchName ?? null}
+        bannerUrl={critical?.bannerUrl ?? null}
+        bannerPositionY={critical?.bannerPositionY ?? 38}
+        activeMembers={critical?.activeMembers ?? 0}
+        totalMembers={critical?.totalMembers ?? 0}
+        announcementCount={critical?.latestAnnouncement ? 1 : 0}
+        upcomingEventCount={deferred.upcomingEvents.length}
+        attendance={deferred.attendance}
+        todaySchedule={deferred.todaySchedule}
+        todayScheduleError={deferred.todayScheduleError}
+        recentActivity={recentActivity}
+        criticalLoading={criticalLoading}
+        deferredLoading={deferredLoading}
+      />
+    </div>
   );
 }
 
