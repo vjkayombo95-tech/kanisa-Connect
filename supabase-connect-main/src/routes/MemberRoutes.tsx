@@ -12,7 +12,7 @@ import { WorkspaceRouteLayout } from "./WorkspaceRouteLayout";
 const PortalEvents = lazy(() => import("@/pages/portal/PortalEvents"));
 const ParishCalendarPage = lazy(() => import("@/pages/portal/ParishCalendarPage"));
 const PortalHome = lazy(() => import("@/pages/portal/PortalHome"));
-const LiturgyHomePage = lazy(() => import("@/pages/portal/LiturgyHomePage"));
+const MemberTodayPage = lazy(() => import("@/pages/portal/MemberTodayPage"));
 const MyParishPage = lazy(() => import("@/pages/portal/MyParishPage"));
 const PortalSermons = lazy(() => import("@/pages/portal/PortalSermons"));
 const PortalAnnouncements = lazy(() => import("@/pages/portal/PortalAnnouncements"));
@@ -88,7 +88,7 @@ export default function MemberRoutes() {
           <Route path="services" element={<MemberServicesPage />} />
           <Route path="live/:streamId" element={<MemberLivestreamPage />} />
           <Route path="radio" element={<MemberRadioPage />} />
-          <Route path="today" element={<LiturgyHomePage />} />
+          <Route path="today" element={<MemberTodayPage />} />
           <Route path="my-parish" element={<MyParishPage />} />
           <Route path="bible-verses" element={<PortalHome />} />
           <Route path="dashboard" element={<PortalDashboardRoute />} />

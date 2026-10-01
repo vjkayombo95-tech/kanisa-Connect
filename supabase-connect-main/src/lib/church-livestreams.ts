@@ -130,3 +130,40 @@ export function getValidatedYouTubeWatchUrl(stream: ChurchLivestream) {
   if (stream.provider !== "youtube" || !isValidYouTubeVideoId(stream.providerExternalId)) return null;
   return extractYouTubeVideoId(stream.watchUrl) === stream.providerExternalId ? stream.watchUrl : null;
 }
+
+function formatMemberLivestreamSchedule(value: string | null) {
+  if (!value) return null;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toLocaleString("sw-TZ", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+export function memberLivestreamCopy(stream: ChurchLivestream, now = Date.now()) {
+  const state = getMemberLivestreamPresentation(stream, now);
+  const scheduled = formatMemberLivestreamSchedule(stream.scheduledStart);
+
+  if (state === "live") {
+    return {
+      state,
+      label: "LIVE SASA",
+      action: "Tazama Moja kwa Moja",
+      detail: null,
+    };
+  }
+
+  if (state === "upcoming") {
+    return {
+      state,
+      label: "INAKUJA KARIBUNI",
+      action: "Fungua Misa Ijayo",
+      detail: scheduled ? `Inaanza ${scheduled}` : "Misa hii inaanza hivi karibuni",
+    };
+  }
+
+  return null;
+}
