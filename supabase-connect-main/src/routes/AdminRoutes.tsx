@@ -6,7 +6,7 @@ import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { useChurchPermission } from "@/hooks/use-church-permission";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { startMemberPreview } from "@/lib/member-preview";
-import { WorkspaceRouteLayout } from "./WorkspaceRouteLayout";
+import { ChurchAdminLayout } from "@/components/church-admin/ChurchAdminLayout";
 
 const ChurchDashboard = lazy(() => import("@/pages/church-admin/ChurchDashboard"));
 const FinanceDashboard = lazy(() => import("@/pages/church-admin/FinanceDashboard"));
@@ -93,7 +93,7 @@ export default function AdminRoutes() {
   return (
     <Suspense fallback={<SectionFallback />}>
       <Routes>
-        <Route element={<WorkspaceRouteLayout workspaceId="church_admin" />}>
+        <Route element={<ChurchAdminLayout />}>
           <Route index element={<ChurchDashboard />} />
           <Route path="services" element={<RoleServicesPage />} />
           <Route path="finance" element={<FinanceDashboard />} />

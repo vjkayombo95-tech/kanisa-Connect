@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { churchLivestreamQueryKey, fetchMemberLivestream, fetchMemberLivestreamById } from "@/lib/church-livestreams";
 
+import { supabase } from "@/integrations/supabase/client";
 export function useChurchLivestream(includeRecording = false) {
   const { churchId } = useAuth();
   const { getFeatureState, isLoading: featureLoading } = useFeatureAccess();
@@ -41,4 +42,30 @@ export function useMemberLivestream(streamId: string | undefined) {
     featureLoading,
     churchId,
   };
+}
+
+export function useLivestreamPermission(
+  action: "view" | "create" | "edit" | "delete" | "manage",
+  enabled = true,
+) {
+  const { churchId, user } = useAuth();
+
+  return useQuery({
+    queryKey: ["production-livestream-permission", action, user?.id, churchId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc(
+        "has_livestream_permission" as never,
+        {
+          _user_id: user!.id,
+          _church_id: churchId!,
+          _action: action,
+        } as never,
+      );
+
+      if (error) throw error;
+      return data === true;
+    },
+    enabled: !!user && !!churchId && enabled,
+    staleTime: 30_000,
+  });
 }
