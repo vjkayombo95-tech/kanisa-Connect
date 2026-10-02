@@ -16,7 +16,6 @@ describe("RC-PARISH-01 My Parish", () => {
     expect(source).toContain("UpcomingEventsWidget");
     expect(source).toContain("VolunteerOpportunitiesWidget");
     expect(source).toContain("MassIntentionsWidget");
-    expect(source).toContain("LiveStreamWidget");
     expect(source).toContain("ContactParishWidget");
     expect(source).toContain("QuickGiveWidget");
     expect(source).toContain("EmergencyPrayerRequestsWidget");
@@ -41,13 +40,12 @@ describe("RC-PARISH-01 My Parish", () => {
     expect(source).toContain("/portal/prayer-requests");
   });
 
-  it("registers the member route and workspace navigation without replacing Liturgy Home", () => {
+  it("registers the production-parity member My Parish route and workspace navigation", () => {
     const routes = readFileSync(join(root, "src/routes/MemberRoutes.tsx"), "utf8");
     const registry = readFileSync(join(root, "src/components/workspace/registry.ts"), "utf8");
 
-    expect(routes).toContain("MyParishPage");
-    expect(routes).toContain('path="my-parish"');
-    expect(routes).toContain("return <LiturgyHomePage />");
+    expect(routes).toContain('import("@/pages/portal/MemberMyParishPage")');
+    expect(routes).toContain('path="my-parish" element={<MemberMyParishPage />}');
     expect(registry).toContain('id: "my-parish"');
     expect(registry).toContain('to: "/portal/my-parish"');
   });
