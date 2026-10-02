@@ -30,6 +30,80 @@ describe("church admin announcement composer", () => {
     expect(source).not.toContain('{ value: "super_admin", label: "Super Admin" }');
   });
 
+  it("guides the admin through one audience choice at a time", () => {
+    expect(source).toContain("Who is this for? *");
+    expect(source).toContain('label: "Everyone"');
+    expect(source).toContain('label: "A ministry"');
+    expect(source).toContain('label: "A community"');
+    expect(source).toContain('label: "Specific roles"');
+
+    expect(source).toContain('audienceMode === "ministry"');
+    expect(source).toContain('audienceMode === "community"');
+    expect(source).toContain('audienceMode === "roles"');
+
+    expect(source).toContain(
+      'targetMinistry: option.value === "ministry" ? current.targetMinistry : ""',
+    );
+    expect(source).toContain(
+      'targetCommunity: option.value === "community" ? current.targetCommunity : ""',
+    );
+  });
+
+  it("requires an explicit target for targeted announcements", () => {
+    expect(source).toContain(
+      'audienceMode === "roles" && form.audience.length === 0',
+    );
+    expect(source).toContain('errors.audience = "Select at least one role."');
+
+    expect(source).toContain(
+      'audienceMode === "ministry" && !form.targetMinistry.trim()',
+    );
+    expect(source).toContain('errors.audience = "Choose a ministry."');
+
+    expect(source).toContain(
+      'audienceMode === "community" && !form.targetCommunity.trim()',
+    );
+    expect(source).toContain('errors.audience = "Choose a community."');
+
+    expect(source).not.toContain(': ["members"]');
+  });
+
+  it("infers targeting when editing or duplicating announcements", () => {
+    expect(source).toContain("function resolveAudienceMode({");
+    expect(source).toContain('if (targetMinistry) return "ministry"');
+    expect(source).toContain('if (targetCommunity) return "community"');
+    expect(source).toContain('return "roles"');
+    expect(source).toContain("setAudienceMode(");
+  });
+
+  it("keeps advanced settings behind More options", () => {
+    expect(source).toContain("More options");
+    expect(source).toContain("setShowMoreOptions((current) => !current)");
+    expect(source).toContain("aria-expanded={showMoreOptions}");
+    expect(source).toContain("{showMoreOptions && (");
+  });
+
+  it("shows the real target in announcement summaries and preview", () => {
+    expect(source).toContain("function getAudienceSummary({");
+    expect(source).toContain('return `Ministry: ${targetMinistry.trim()}`');
+    expect(source).toContain('return `Community: ${targetCommunity.trim()}`');
+    expect(source).toContain('if (normalizedAudience.includes("everyone")) return "Everyone"');
+    expect(source).toContain("Audience: {audienceSummary}");
+    expect(source).toContain(
+      "getAudienceSummary({ audience: form.audience, targetMinistry: form.targetMinistry, targetCommunity: form.targetCommunity })",
+    );
+  });
+
+  it("places audience targeting before publish timing", () => {
+    const audienceIndex = source.indexOf("<Label>Who is this for? *</Label>");
+    const timingIndex = source.indexOf("<Label>Publish timing</Label>");
+    const moreOptionsIndex = source.indexOf("More options");
+
+    expect(audienceIndex).toBeGreaterThan(-1);
+    expect(timingIndex).toBeGreaterThan(audienceIndex);
+    expect(moreOptionsIndex).toBeGreaterThan(timingIndex);
+  });
+
   it("does not present the former mock AI generation workflow", () => {
     expect(source).not.toContain("Announcement Generator");
     expect(source).not.toContain("Generated variations");
