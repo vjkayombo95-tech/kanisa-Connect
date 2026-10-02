@@ -13,7 +13,7 @@ const PortalEvents = lazy(() => import("@/pages/portal/PortalEvents"));
 const ParishCalendarPage = lazy(() => import("@/pages/portal/ParishCalendarPage"));
 const PortalHome = lazy(() => import("@/pages/portal/PortalHome"));
 const MemberTodayPage = lazy(() => import("@/pages/portal/MemberTodayPage"));
-const MyParishPage = lazy(() => import("@/pages/portal/MyParishPage"));
+const MemberMyParishPage = lazy(() => import("@/pages/portal/MemberMyParishPage"));
 const PortalSermons = lazy(() => import("@/pages/portal/PortalSermons"));
 const PortalAnnouncements = lazy(() => import("@/pages/portal/PortalAnnouncements"));
 const PortalGive = lazy(() => import("@/pages/portal/PortalGive"));
@@ -89,7 +89,7 @@ export default function MemberRoutes() {
           <Route path="live/:streamId" element={<MemberLivestreamPage />} />
           <Route path="radio" element={<MemberRadioPage />} />
           <Route path="today" element={<MemberTodayPage />} />
-          <Route path="my-parish" element={<MyParishPage />} />
+          <Route path="my-parish" element={<MemberMyParishPage />} />
           <Route path="bible-verses" element={<PortalHome />} />
           <Route path="dashboard" element={<PortalDashboardRoute />} />
           <Route path="events" element={<PortalEvents />} />
