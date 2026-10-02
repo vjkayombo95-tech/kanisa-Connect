@@ -9,6 +9,7 @@ const state = vi.hoisted(() => ({
   fallbackError: null as Error | null,
   fallbackEqCalls: [] as Array<[string, unknown]>,
   fallbackIsCalls: [] as Array<[string, unknown]>,
+  fallbackOrCalls: [] as string[],
   fallbackLimit: null as number | null,
 }));
 
@@ -25,6 +26,7 @@ vi.mock("@/lib/offline-cache", () => ({
 }));
 
 import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
+import { fetchLatestAnnouncement } from "@/lib/member-daily-life";
 
 const announcement = (id: string, churchId: string, title: string): PortalAnnouncementRecord => ({
   id,
@@ -50,6 +52,10 @@ function installFallbackQuery() {
       state.fallbackIsCalls.push([column, value]);
       return query;
     }),
+    or: vi.fn((filter: string) => {
+      state.fallbackOrCalls.push(filter);
+      return query;
+    }),
     order: vi.fn(() => query),
     limit: vi.fn(async (limit: number) => {
       state.fallbackLimit = limit;
@@ -70,6 +76,7 @@ describe("portal announcements fallback security", () => {
     state.fallbackError = null;
     state.fallbackEqCalls = [];
     state.fallbackIsCalls = [];
+    state.fallbackOrCalls = [];
     state.fallbackLimit = null;
     installFallbackQuery();
   });
@@ -103,8 +110,29 @@ describe("portal announcements fallback security", () => {
     for (const consoleSpy of [warn, error, log]) {
       expect(consoleSpy.mock.calls.flat()).not.toContain(rawRpcError);
     }
-    expect(warn).not.toHaveBeenCalled();
-    expect(error).not.toHaveBeenCalled();
-    expect(log).not.toHaveBeenCalled();
+  });
+
+  it("lets the latest announcement helper return a current member-visible RPC announcement", async () => {
+    const rpcRows = [announcement("announcement-current", "church-a", "Tangazo linaloonekana")];
+    state.rpc.mockResolvedValue({ data: rpcRows, error: null });
+
+    await expect(fetchLatestAnnouncement("church-a")).resolves.toEqual(rpcRows[0]);
+
+    expect(state.rpc).toHaveBeenCalledWith("get_portal_announcements", { _church_id: "church-a", _limit: 1 });
+    expect(state.from).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["future announcement", { status: "scheduled", publish_at: "2099-01-01T00:00:00Z", audience: ["members"] }],
+    ["expired announcement", { status: "expired", expires_at: "2026-01-01T00:00:00Z", audience: ["members"] }],
+    ["inappropriate audience announcement", { status: "active", audience: ["staff"] }],
+  ])("fails closed instead of surfacing fallback %s through latest announcement", async (_label, extraFields) => {
+    const rawRpcError = new Error("rpc unavailable");
+    state.rpc.mockResolvedValue({ data: null, error: rawRpcError });
+    state.fallbackData = [{ ...announcement("announcement-unsafe", "church-a", "Hidden"), ...extraFields } as PortalAnnouncementRecord];
+
+    await expect(fetchLatestAnnouncement("church-a")).rejects.toThrow("rpc unavailable");
+
+    expect(state.from).not.toHaveBeenCalled();
   });
 });

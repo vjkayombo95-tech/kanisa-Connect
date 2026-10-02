@@ -267,7 +267,7 @@ export async function fetchNextTimetableMass(churchId: string): Promise<MemberNe
 }
 
 export async function fetchLatestAnnouncement(churchId: string) {
-  const rows = await fetchPortalAnnouncements(churchId, 1);
+  const rows = await fetchPortalAnnouncements(churchId, 1, { failClosedOnRpcError: true });
   return rows.find((row) => row.church_id === churchId) ?? null;
 }
 

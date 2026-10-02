@@ -1,3 +1,4 @@
+import { announcementHtmlToPlainText } from "@/lib/announcement-content";
 function appOrigin() {
   if (typeof window === "undefined" || !window.location.origin) return null;
   return window.location.origin.replace(/\/$/, "");
@@ -64,7 +65,7 @@ export function buildAnnouncementShareMessage({
   return [
     clean(churchName) ? `Tangazo kutoka ${clean(churchName)}` : "Tangazo la Kanisa",
     clean(title),
-    shorten(body),
+    shorten(announcementHtmlToPlainText(body)),
     clean(link) || appLink("/portal/announcements"),
   ].filter(Boolean).join("\n\n");
 }
