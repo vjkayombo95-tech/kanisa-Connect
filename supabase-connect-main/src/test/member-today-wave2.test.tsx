@@ -26,7 +26,7 @@ describe("Wave 2 member Today", () => {
     expect(helper).toContain('.eq("church_id", churchId)');
     expect(helper).toContain('events: (churchId?: string | null) => ["portal-events", churchId]');
     expect(helper).toContain('nextMass: (churchId?: string | null) => ["member-daily-life", "next-mass", churchId]');
-    expect(helper).toContain("fetchPortalAnnouncements(churchId, 1)");
+    expect(helper).toContain("fetchPortalAnnouncements(churchId, 1, { failClosedOnRpcError: true })");
   });
 
   it("identifies only events occurring today", () => {
