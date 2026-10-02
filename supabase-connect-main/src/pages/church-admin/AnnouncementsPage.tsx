@@ -72,6 +72,41 @@ type AnnouncementRecord = {
 type AnnouncementStatus = "draft" | "scheduled" | "active" | "featured" | "expired" | "archived";
 type AnnouncementNotificationStrategy = "none" | "immediate" | "on_publish" | "one_day_before_expiry";
 type PublishTiming = "now" | "schedule";
+type AudienceMode = "everyone" | "ministry" | "community" | "roles";
+
+function resolveAudienceMode({
+  audience,
+  targetMinistry,
+  targetCommunity,
+}: {
+  audience: string[];
+  targetMinistry: string;
+  targetCommunity: string;
+}): AudienceMode {
+  if (targetMinistry) return "ministry";
+  if (targetCommunity) return "community";
+  if (audience.some((item) => item !== "everyone")) return "roles";
+  return "everyone";
+}
+function getAudienceSummary({
+  audience,
+  targetMinistry,
+  targetCommunity,
+}: {
+  audience?: string[] | null;
+  targetMinistry?: string | null;
+  targetCommunity?: string | null;
+}) {
+  if (targetMinistry?.trim()) return `Ministry: ${targetMinistry.trim()}`;
+  if (targetCommunity?.trim()) return `Community: ${targetCommunity.trim()}`;
+
+  const normalizedAudience = audience?.length ? audience : ["everyone"];
+  if (normalizedAudience.includes("everyone")) return "Everyone";
+
+  return `Roles: ${normalizedAudience
+    .map((item) => item.replace(/_/g, " "))
+    .join(", ")}`;
+}
 type SaveIntent = "draft" | "publish";
 type ComposerErrors = Partial<Record<"title" | "content" | "audience" | "publishAt", string>>;
 type AnnouncementTargetOption = { id: string; name: string };
@@ -198,16 +233,7 @@ function SearchableTargetSelect({
           <CommandList>
             <CommandEmpty>{emptyMessage}</CommandEmpty>
             <CommandGroup>
-              <CommandItem
-                value="no target"
-                onSelect={() => {
-                  onChange("");
-                  setOpen(false);
-                }}
-              >
-                <Check className={`mr-2 h-4 w-4 ${value ? "opacity-0" : "opacity-100"}`} />
-                No specific target
-              </CommandItem>
+
               {options.map((option) => (
                 <CommandItem
                   key={option.id}
@@ -232,6 +258,8 @@ function SearchableTargetSelect({
 export default function AnnouncementsPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [publishTiming, setPublishTiming] = useState<PublishTiming>("now");
+  const [audienceMode, setAudienceMode] = useState<AudienceMode>("everyone");
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
   const [composerErrors, setComposerErrors] = useState<ComposerErrors>({});
   const [previewOpen, setPreviewOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<AnnouncementStatus | "all">("all");
@@ -319,6 +347,8 @@ export default function AnnouncementsPage() {
   const resetForm = () => {
     setForm(EMPTY_FORM);
     setPublishTiming("now");
+    setAudienceMode("everyone");
+    setShowMoreOptions(false);
     setComposerErrors({});
   };
 
@@ -350,6 +380,14 @@ export default function AnnouncementsPage() {
         ? "schedule"
         : "now",
     );
+    setAudienceMode(
+      resolveAudienceMode({
+        audience: announcement.audience?.length ? announcement.audience : ["everyone"],
+        targetMinistry: announcement.target_ministry ?? "",
+        targetCommunity: announcement.target_community ?? "",
+      }),
+    );
+    setShowMoreOptions(false);
     setComposerErrors({});
     window.requestAnimationFrame(() => composerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
@@ -501,7 +539,15 @@ export default function AnnouncementsPage() {
     const errors: ComposerErrors = {};
     if (!form.title.trim()) errors.title = "Title is required.";
     if (isRichTextEmpty(form.content)) errors.content = "Message is required.";
-    if (form.audience.length === 0) errors.audience = "Select at least one audience.";
+    if (audienceMode === "roles" && form.audience.length === 0) {
+      errors.audience = "Select at least one role.";
+    }
+    if (audienceMode === "ministry" && !form.targetMinistry.trim()) {
+      errors.audience = "Choose a ministry.";
+    }
+    if (audienceMode === "community" && !form.targetCommunity.trim()) {
+      errors.audience = "Choose a community.";
+    }
     if (intent === "publish" && publishTiming === "schedule") {
       const scheduledAt = form.publishAt ? new Date(form.publishAt) : null;
       if (!scheduledAt || Number.isNaN(scheduledAt.getTime()) || scheduledAt <= new Date()) {
@@ -694,6 +740,14 @@ export default function AnnouncementsPage() {
       featured: Boolean(announcement.featured),
     });
     setPublishTiming("now");
+    setAudienceMode(
+      resolveAudienceMode({
+        audience: announcement.audience?.length ? announcement.audience : ["everyone"],
+        targetMinistry: announcement.target_ministry ?? "",
+        targetCommunity: announcement.target_community ?? "",
+      }),
+    );
+    setShowMoreOptions(false);
     setComposerErrors({});
     window.requestAnimationFrame(() => composerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
@@ -704,7 +758,7 @@ export default function AnnouncementsPage() {
 
   const AnnouncementCard = ({ announcement }: { announcement: AnnouncementRecord }) => {
     const status = resolveAnnouncementStatus(announcement);
-    const audience = announcement.audience?.length ? announcement.audience : ["everyone"];
+    const audienceSummary = getAudienceSummary({ audience: announcement.audience, targetMinistry: announcement.target_ministry, targetCommunity: announcement.target_community });
 
     return (
       <Card key={announcement.id} className="glass-card">
@@ -735,7 +789,7 @@ export default function AnnouncementsPage() {
               <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground/75">
                 <span>Publish: {formatWindow(announcement.publish_at ?? announcement.published_at)}</span>
                 <span>Expires: {announcement.never_expires ? "Never" : formatWindow(announcement.expires_at)}</span>
-                <span>Audience: {audience.join(", ")}</span>
+                <span>Audience: {audienceSummary}</span>
                 <span>Category: {announcement.category ?? "general"}</span>
                 <span>Notify: {announcement.notification_strategy ?? "none"}</span>
               </div>
@@ -892,22 +946,158 @@ export default function AnnouncementsPage() {
                 </div>
               </div>
 
-              <div className="space-y-5 rounded-xl border border-border/60 bg-muted/15 p-4">
-                <div className="space-y-2">
-                  <Label>Category</Label>
-                  <Select value={form.category} onValueChange={(category) => setForm((current) => ({ ...current, category }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categoryOptions.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category.replace("_", " ")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+
+            <div className="space-y-4">
+              <div>
+                <Label>Who is this for? *</Label>
+                <p className="text-sm text-muted-foreground">
+                  Choose who should see this announcement.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  {
+                    value: "everyone" as AudienceMode,
+                    label: "Everyone",
+                    description: "All church members",
+                  },
+                  {
+                    value: "ministry" as AudienceMode,
+                    label: "A ministry",
+                    description: "Choose one ministry",
+                  },
+                  {
+                    value: "community" as AudienceMode,
+                    label: "A community",
+                    description: "Choose one community",
+                  },
+                  {
+                    value: "roles" as AudienceMode,
+                    label: "Specific roles",
+                    description: "Choose member roles",
+                  },
+                ].map((option) => {
+                  const selected = audienceMode === option.value;
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setAudienceMode(option.value);
+                        setComposerErrors((current) => ({ ...current, audience: undefined }));
+
+                        setForm((current) => ({
+                          ...current,
+                          audience:
+                            option.value === "roles"
+                              ? current.audience.filter((item) => item !== "everyone")
+                              : ["everyone"],
+                          targetMinistry: option.value === "ministry" ? current.targetMinistry : "",
+                          targetCommunity: option.value === "community" ? current.targetCommunity : "",
+                        }));
+                      }}
+                      className={`rounded-xl border p-4 text-left transition-colors ${
+                        selected
+                          ? "border-primary bg-primary/10"
+                          : "border-border/60 bg-card hover:border-primary/40"
+                      }`}
+                    >
+                      <span className="block font-medium">{option.label}</span>
+                      <span className="mt-1 block text-xs text-muted-foreground">
+                        {option.description}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {audienceMode === "ministry" && (
+                <div className="space-y-2 rounded-xl border border-border/60 bg-muted/10 p-4">
+                  <Label htmlFor="target-ministry">Which ministry?</Label>
+                  <SearchableTargetSelect
+                    id="target-ministry"
+                    value={form.targetMinistry}
+                    options={targetOptions.ministries}
+                    placeholder={targetOptionsLoading ? "Loading ministries..." : "Choose a ministry"}
+                    searchPlaceholder="Type a ministry name..."
+                    emptyMessage={targetOptionsError ? "Unable to load ministries." : "No matching ministry found."}
+                    disabled={targetOptionsLoading}
+                    onChange={(targetMinistry) =>
+                      setForm((current) => ({ ...current, targetMinistry }))
+                    }
+                  />
                 </div>
+              )}
+
+              {audienceMode === "community" && (
+                <div className="space-y-2 rounded-xl border border-border/60 bg-muted/10 p-4">
+                  <Label htmlFor="target-community">Which community?</Label>
+                  <SearchableTargetSelect
+                    id="target-community"
+                    value={form.targetCommunity}
+                    options={targetOptions.communities}
+                    placeholder={targetOptionsLoading ? "Loading communities..." : "Choose a community"}
+                    searchPlaceholder="Type a community name..."
+                    emptyMessage={targetOptionsError ? "Unable to load communities." : "No matching community found."}
+                    disabled={targetOptionsLoading}
+                    onChange={(targetCommunity) =>
+                      setForm((current) => ({ ...current, targetCommunity }))
+                    }
+                  />
+                </div>
+              )}
+
+              {audienceMode === "roles" && (
+                <div className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-4">
+                  <div>
+                    <Label>Which roles?</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Select one or more groups.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {audienceOptions
+                      .filter((option) => option.value !== "everyone")
+                      .map((option) => (
+                        <label
+                          key={option.value}
+                          className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm"
+                        >
+                          <Checkbox
+                            checked={form.audience.includes(option.value)}
+                            onCheckedChange={(checked) => {
+                              setForm((current) => {
+                                const withoutEveryone = current.audience.filter(
+                                  (item) => item !== "everyone",
+                                );
+                                const next = checked
+                                  ? Array.from(new Set([...withoutEveryone, option.value]))
+                                  : withoutEveryone.filter((item) => item !== option.value);
+
+                                return { ...current, audience: next };
+                              });
+                              setComposerErrors((current) => ({
+                                ...current,
+                                audience: undefined,
+                              }));
+                            }}
+                          />
+                          {option.label}
+                        </label>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {composerErrors.audience && (
+                <p className="text-sm text-destructive">{composerErrors.audience}</p>
+              )}
+            </div>
+
+              <div className="space-y-5 rounded-xl border border-border/60 bg-muted/15 p-4">
 
                 <div className="space-y-2">
                   <Label>Publish timing</Label>
@@ -945,135 +1135,152 @@ export default function AnnouncementsPage() {
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Timezone</Label>
-                  <Input
-                    id="timezone"
-                    value={form.timezone}
-                    onChange={(event) => setForm((current) => ({ ...current, timezone: event.target.value }))}
-                    placeholder="Africa/Nairobi"
-                  />
+              </div>
+            </div>
+            <div className="rounded-xl border border-border/60">
+              <button
+                type="button"
+                onClick={() => setShowMoreOptions((current) => !current)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                aria-expanded={showMoreOptions}
+              >
+                <div>
+                  <span className="block font-medium">More options</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Category, notifications, expiry and other settings
+                  </span>
                 </div>
-              </div>
-            </div>
+                <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </button>
 
-            <div className="space-y-3">
-              <div>
-                <Label>Audience *</Label>
-                <p className="text-sm text-muted-foreground">Choose the people who should see this announcement.</p>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                {audienceOptions.map((option) => (
-                  <label key={option.value} className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm">
-                    <Checkbox
-                      checked={form.audience.includes(option.value)}
-                      onCheckedChange={(checked) => {
-                        setForm((current) => {
-                          if (option.value === "everyone" && checked) return { ...current, audience: ["everyone"] };
-                          const withoutEveryone = current.audience.filter((item) => item !== "everyone");
-                          const next = checked
-                            ? Array.from(new Set([...withoutEveryone, option.value]))
-                            : withoutEveryone.filter((item) => item !== option.value);
-                          return { ...current, audience: next.length ? next : ["everyone"] };
-                        });
-                        setComposerErrors((current) => ({ ...current, audience: undefined }));
-                      }}
-                    />
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-              {composerErrors.audience && <p className="text-sm text-destructive">{composerErrors.audience}</p>}
-            </div>
+              {showMoreOptions && (
+                <div className="space-y-5 border-t border-border/60 p-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Category</Label>
+                      <Select
+                        value={form.category}
+                        onValueChange={(category) =>
+                          setForm((current) => ({ ...current, category }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categoryOptions.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category.replace("_", " ")}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="target-ministry">Target ministry</Label>
-                <SearchableTargetSelect
-                  id="target-ministry"
-                  value={form.targetMinistry}
-                  options={targetOptions.ministries}
-                  placeholder={targetOptionsLoading ? "Loading ministries..." : "Search ministries"}
-                  searchPlaceholder="Type a ministry name..."
-                  emptyMessage={targetOptionsError ? "Unable to load ministries." : "No matching ministry found."}
-                  disabled={targetOptionsLoading}
-                  onChange={(targetMinistry) => setForm((current) => ({ ...current, targetMinistry }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="target-community">Target community</Label>
-                <SearchableTargetSelect
-                  id="target-community"
-                  value={form.targetCommunity}
-                  options={targetOptions.communities}
-                  placeholder={targetOptionsLoading ? "Loading communities..." : "Search communities"}
-                  searchPlaceholder="Type a community name..."
-                  emptyMessage={targetOptionsError ? "Unable to load communities." : "No matching community found."}
-                  disabled={targetOptionsLoading}
-                  onChange={(targetCommunity) => setForm((current) => ({ ...current, targetCommunity }))}
-                />
-              </div>
-            </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="timezone">Timezone</Label>
+                      <Input
+                        id="timezone"
+                        value={form.timezone}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            timezone: event.target.value,
+                          }))
+                        }
+                        placeholder="Africa/Nairobi"
+                      />
+                    </div>
+                  </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="space-y-2">
-                <Label>In-app notification</Label>
-                <Select
-                  value={form.notificationStrategy}
-                  onValueChange={(value) =>
-                    setForm((current) => ({ ...current, notificationStrategy: value as AnnouncementNotificationStrategy }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Do not notify</SelectItem>
-                    <SelectItem value="immediate">Notify immediately</SelectItem>
-                    <SelectItem value="on_publish">Notify when published</SelectItem>
-                    <SelectItem value="one_day_before_expiry">One day before expiry</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="expires-at">Expiry date and time</Label>
-                <Input
-                  id="expires-at"
-                  type="datetime-local"
-                  value={form.expiresAt}
-                  disabled={form.neverExpires}
-                  onChange={(event) => setForm((current) => ({ ...current, expiresAt: event.target.value }))}
-                />
-              </div>
-              <div className="flex items-end">
-                <div className="flex w-full items-center gap-2 rounded-lg border border-border/60 px-3 py-2.5">
-                  <Switch
-                    id="never-expires"
-                    checked={form.neverExpires}
-                    onCheckedChange={(neverExpires) => setForm((current) => ({ ...current, neverExpires }))}
-                  />
-                  <Label htmlFor="never-expires">Never expires</Label>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>In-app notification</Label>
+                      <Select
+                        value={form.notificationStrategy}
+                        onValueChange={(value) =>
+                          setForm((current) => ({
+                            ...current,
+                            notificationStrategy:
+                              value as AnnouncementNotificationStrategy,
+                          }))
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Do not notify</SelectItem>
+                          <SelectItem value="immediate">Notify immediately</SelectItem>
+                          <SelectItem value="on_publish">Notify when published</SelectItem>
+                          <SelectItem value="one_day_before_expiry">
+                            One day before expiry
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="expires-at">Expiry date and time</Label>
+                      <Input
+                        id="expires-at"
+                        type="datetime-local"
+                        value={form.expiresAt}
+                        disabled={form.neverExpires}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            expiresAt: event.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <label className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2.5 text-sm">
+                      <Switch
+                        id="never-expires"
+                        checked={form.neverExpires}
+                        onCheckedChange={(neverExpires) =>
+                          setForm((current) => ({
+                            ...current,
+                            neverExpires,
+                          }))
+                        }
+                      />
+                      <span>Never expires</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2.5 text-sm">
+                      <Checkbox
+                        checked={form.featured}
+                        onCheckedChange={(checked) =>
+                          setForm((current) => ({
+                            ...current,
+                            featured: Boolean(checked),
+                          }))
+                        }
+                      />
+                      Feature announcement
+                    </label>
+
+                    <label className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2.5 text-sm">
+                      <Checkbox
+                        checked={form.showOnCalendar}
+                        onCheckedChange={(checked) =>
+                          setForm((current) => ({
+                            ...current,
+                            showOnCalendar: Boolean(checked),
+                          }))
+                        }
+                      />
+                      Show on parish calendar
+                    </label>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm">
-                <Checkbox
-                  checked={form.featured}
-                  onCheckedChange={(checked) => setForm((current) => ({ ...current, featured: Boolean(checked) }))}
-                />
-                Feature this announcement
-              </label>
-              <label className="flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm">
-                <Checkbox
-                  checked={form.showOnCalendar}
-                  onCheckedChange={(checked) => setForm((current) => ({ ...current, showOnCalendar: Boolean(checked) }))}
-                />
-                Show on parish calendar
-              </label>
-            </div>
-
             <div className="flex flex-col-reverse gap-3 border-t border-border/60 pt-5 sm:flex-row sm:justify-end">
               <Button type="button" variant="outline" onClick={() => setPreviewOpen(true)} disabled={!form.title.trim() && isRichTextEmpty(form.content)}>
                 <Eye className="mr-2 h-4 w-4" />
@@ -1100,7 +1307,7 @@ export default function AnnouncementsPage() {
           <div className="space-y-4 rounded-xl border border-border/60 bg-muted/15 p-5">
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline">{form.category.replace("_", " ")}</Badge>
-              <Badge variant="outline">{form.audience.includes("everyone") ? "Everyone" : form.audience.join(", ")}</Badge>
+              <Badge variant="outline">{getAudienceSummary({ audience: form.audience, targetMinistry: form.targetMinistry, targetCommunity: form.targetCommunity })}</Badge>
             </div>
             <div>
               <h2 className="font-serif text-2xl">{form.title.trim() || "Untitled announcement"}</h2>
