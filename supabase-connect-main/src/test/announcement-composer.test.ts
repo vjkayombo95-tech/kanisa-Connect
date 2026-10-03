@@ -47,6 +47,28 @@ describe("church admin announcement composer", () => {
     expect(source).toContain(
       'targetCommunity: option.value === "community" ? current.targetCommunity : ""',
     );
+    expect(source).toContain(
+      'option.value === "community" ? current.communityAudience : "all"',
+    );
+  });
+
+  it("supports targeting everyone or leaders within a selected community", () => {
+    expect(source).toContain('type CommunityAudience = "all" | "leaders"');
+    expect(source).toContain('communityAudience: "all" as CommunityAudience');
+    expect(source).toContain("Everyone in this community");
+    expect(source).toContain("Community leaders only");
+    expect(source).toContain('checked={form.communityAudience === "all"}');
+    expect(source).toContain('checked={form.communityAudience === "leaders"}');
+
+    expect(source).toContain(
+      'communityAudience: announcement.community_audience === "leaders" ? "leaders" : "all"',
+    );
+
+    expect(source).toContain("_community_audience: form.communityAudience");
+    expect(source).toContain("community_audience: form.communityAudience");
+    expect(source).toContain(
+      '_community_audience: announcement.community_audience === "leaders" ? "leaders" : "all"',
+    );
   });
 
   it("requires an explicit target for targeted announcements", () => {
@@ -86,12 +108,17 @@ describe("church admin announcement composer", () => {
   it("shows the real target in announcement summaries and preview", () => {
     expect(source).toContain("function getAudienceSummary({");
     expect(source).toContain('return `Ministry: ${targetMinistry.trim()}`');
-    expect(source).toContain('return `Community: ${targetCommunity.trim()}`');
+    expect(source).toContain('communityAudience?: CommunityAudience | null');
+    expect(source).toContain(
+      '`Community: ${targetCommunity.trim()} - Leaders only`',
+    );
+    expect(source).toContain(
+      '`Community: ${targetCommunity.trim()} - Everyone`',
+    );
     expect(source).toContain('if (normalizedAudience.includes("everyone")) return "Everyone"');
     expect(source).toContain("Audience: {audienceSummary}");
-    expect(source).toContain(
-      "getAudienceSummary({ audience: form.audience, targetMinistry: form.targetMinistry, targetCommunity: form.targetCommunity })",
-    );
+    expect(source).toContain("communityAudience: form.communityAudience");
+    expect(source).toContain("communityAudience: announcement.community_audience");
   });
 
   it("places audience targeting before publish timing", () => {
