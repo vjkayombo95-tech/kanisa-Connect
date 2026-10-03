@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +32,7 @@ import {
   ChevronsUpDown,
   Copy,
   Eye,
+  FileText,
   Loader2,
   MessageCircle,
   Megaphone,
@@ -41,6 +52,11 @@ import {
   sanitizeAnnouncementHtml,
 } from "@/lib/announcement-content";
 import { assertClientRateLimit } from "@/lib/client-rate-limit";
+import {
+  ANNOUNCEMENT_DOCX_MAX_BYTES,
+  AnnouncementDocxImportError,
+  importAnnouncementDocx,
+} from "@/lib/announcement-docx-import";
 import { logSupabaseError } from "@/lib/error-logger";
 import { buildAnnouncementShareMessage, openWhatsAppShare } from "@/lib/whatsapp-share";
 
@@ -118,6 +134,20 @@ function getAudienceSummary({
 type SaveIntent = "draft" | "publish";
 type ComposerErrors = Partial<Record<"title" | "content" | "audience" | "publishAt", string>>;
 type AnnouncementTargetOption = { id: string; name: string };
+type WordImportStatus = "idle" | "importing" | "success" | "error";
+
+const WORD_IMPORT_ACCEPT = ".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+function getWordImportErrorMessage(error: unknown) {
+  if (error instanceof AnnouncementDocxImportError) {
+    if (error.code === "unsupported_type") return "Please choose a Word .docx document.";
+    if (error.code === "too_large") return "This document is too large. Choose a Word document smaller than 10 MB.";
+    if (error.code === "empty_document") return "We couldn't find announcement content in this document.";
+    if (error.code === "unreadable") return "We couldn't read this Word document. Check the file and try again.";
+  }
+
+  return "Something went wrong while importing the document. Try again.";
+}
 
 const EMPTY_FORM = {
   id: null as string | null,
@@ -280,6 +310,11 @@ export default function AnnouncementsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const composerRef = useRef<HTMLDivElement>(null);
+  const wordImportInputRef = useRef<HTMLInputElement>(null);
+  const [wordImportStatus, setWordImportStatus] = useState<WordImportStatus>("idle");
+  const [wordImportMessage, setWordImportMessage] = useState("");
+  const [pendingWordImportFile, setPendingWordImportFile] = useState<File | null>(null);
+  const [replaceWordImportOpen, setReplaceWordImportOpen] = useState(false);
 
   const { data: church } = useQuery({
     queryKey: ["announcement-share-church", churchId],
@@ -359,6 +394,66 @@ export default function AnnouncementsPage() {
     setAudienceMode("everyone");
     setShowMoreOptions(false);
     setComposerErrors({});
+    setWordImportStatus("idle");
+    setWordImportMessage("");
+    setPendingWordImportFile(null);
+    setReplaceWordImportOpen(false);
+  };
+
+  const resetWordImportInput = () => {
+    if (wordImportInputRef.current) {
+      wordImportInputRef.current.value = "";
+    }
+  };
+
+  const applyWordImport = async (file: File) => {
+    setWordImportStatus("importing");
+    setWordImportMessage("Importing...");
+
+    try {
+      const result = await importAnnouncementDocx(file);
+      setForm((current) => ({ ...current, content: result.content }));
+      setComposerErrors((current) => ({ ...current, content: undefined }));
+      setWordImportStatus("success");
+      setWordImportMessage("Document imported. Review the announcement before publishing.");
+      toast({
+        title: "Document imported",
+        description: "Review the announcement before publishing.",
+      });
+    } catch (error) {
+      const message = getWordImportErrorMessage(error);
+      setWordImportStatus("error");
+      setWordImportMessage(message);
+      toast({
+        title: "Unable to import Word document",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setPendingWordImportFile(null);
+      setReplaceWordImportOpen(false);
+      resetWordImportInput();
+    }
+  };
+
+  const handleWordImportSelected = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    if (!file) {
+      resetWordImportInput();
+      return;
+    }
+
+    setWordImportMessage("");
+    setWordImportStatus("idle");
+
+    if (!isRichTextEmpty(form.content)) {
+      setPendingWordImportFile(file);
+      setReplaceWordImportOpen(true);
+      resetWordImportInput();
+      return;
+    }
+
+    void applyWordImport(file);
   };
 
   const openCreateDialog = () => {
@@ -950,7 +1045,37 @@ export default function AnnouncementsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="announcement-message">Message *</Label>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <Label htmlFor="announcement-message">Message *</Label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={wordImportInputRef}
+                        type="file"
+                        accept={WORD_IMPORT_ACCEPT}
+                        className="hidden"
+                        onChange={handleWordImportSelected}
+                        aria-label="Choose Word document to import"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={wordImportStatus === "importing"}
+                        aria-describedby="word-import-status word-import-limit"
+                        onClick={() => wordImportInputRef.current?.click()}
+                      >
+                        {wordImportStatus === "importing" ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <FileText className="mr-2 h-4 w-4" />
+                        )}
+                        {wordImportStatus === "importing" ? "Importing..." : "Import Word"}
+                      </Button>
+                    </div>
+                  </div>
+                  <p id="word-import-limit" className="sr-only">
+                    Choose a Word .docx document smaller than {ANNOUNCEMENT_DOCX_MAX_BYTES / 1024 / 1024} MB.
+                  </p>
                   <AnnouncementRichTextEditor
                     placeholder="Write the announcement members should receive..."
                     value={form.content}
@@ -961,6 +1086,17 @@ export default function AnnouncementsPage() {
                       setComposerErrors((current) => ({ ...current, content: undefined }));
                     }}
                   />
+                  {wordImportMessage && (
+                    <p
+                      id="word-import-status"
+                      role={wordImportStatus === "error" ? "alert" : "status"}
+                      className={`text-sm ${
+                        wordImportStatus === "error" ? "text-destructive" : "text-muted-foreground"
+                      }`}
+                    >
+                      {wordImportMessage}
+                    </p>
+                  )}
                   {composerErrors.content && <p id="announcement-message-error" role="alert" className="text-sm text-destructive">{composerErrors.content}</p>}
                 </div>
               </div>
@@ -1375,6 +1511,38 @@ export default function AnnouncementsPage() {
           </form>
         </CardContent>
       </Card>
+
+      <AlertDialog
+        open={replaceWordImportOpen}
+        onOpenChange={(open) => {
+          setReplaceWordImportOpen(open);
+          if (!open) {
+            setPendingWordImportFile(null);
+            resetWordImportInput();
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replace current message?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Importing this Word document will replace the message currently in the editor.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingWordImportFile) {
+                  void applyWordImport(pendingWordImportFile);
+                }
+              }}
+            >
+              Replace and import
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-2xl">
