@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,6 +33,7 @@ import {
   Copy,
   Eye,
   FileText,
+  Image,
   Loader2,
   MessageCircle,
   Megaphone,
@@ -42,6 +43,7 @@ import {
   Send,
   Star,
   Trash2,
+  X,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ensureBirthdayAnnouncements } from "@/lib/birthday-announcements";
@@ -57,6 +59,11 @@ import {
   AnnouncementDocxImportError,
   importAnnouncementDocx,
 } from "@/lib/announcement-docx-import";
+import {
+  ANNOUNCEMENT_IMAGE_MAX_BYTES,
+  getAnnouncementImageUrl,
+  validateAnnouncementImageFile,
+} from "@/lib/announcement-media";
 import { logSupabaseError } from "@/lib/error-logger";
 import { buildAnnouncementShareMessage, openWhatsAppShare } from "@/lib/whatsapp-share";
 
@@ -81,6 +88,7 @@ type AnnouncementRecord = {
   target_ministry?: string | null;
   target_community?: string | null;
   community_audience?: CommunityAudience | null;
+  image_key?: string | null;
   show_on_calendar?: boolean | null;
   notification_strategy?: AnnouncementNotificationStrategy | null;
   category?: string | null;
@@ -162,6 +170,7 @@ const EMPTY_FORM = {
   targetMinistry: "",
   targetCommunity: "",
   communityAudience: "all" as CommunityAudience,
+  imageKey: null as string | null,
   showOnCalendar: false,
   notificationStrategy: "none" as AnnouncementNotificationStrategy,
   category: "general",
@@ -315,6 +324,18 @@ export default function AnnouncementsPage() {
   const [wordImportMessage, setWordImportMessage] = useState("");
   const [pendingWordImportFile, setPendingWordImportFile] = useState<File | null>(null);
   const [replaceWordImportOpen, setReplaceWordImportOpen] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [selectedImagePreviewUrl, setSelectedImagePreviewUrl] = useState<string | null>(null);
+  const [imageMessage, setImageMessage] = useState("");
+
+  useEffect(() => {
+    return () => {
+      if (selectedImagePreviewUrl) URL.revokeObjectURL(selectedImagePreviewUrl);
+    };
+  }, [selectedImagePreviewUrl]);
+
+  const displayedImageUrl = selectedImagePreviewUrl ?? getAnnouncementImageUrl(form.imageKey);
 
   const { data: church } = useQuery({
     queryKey: ["announcement-share-church", churchId],
@@ -388,12 +409,23 @@ export default function AnnouncementsPage() {
     [filteredAnnouncements],
   );
 
+  const clearSelectedImageFile = () => {
+    if (selectedImagePreviewUrl) URL.revokeObjectURL(selectedImagePreviewUrl);
+    setSelectedImageFile(null);
+    setSelectedImagePreviewUrl(null);
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
+  };
+
   const resetForm = () => {
     setForm(EMPTY_FORM);
     setPublishTiming("now");
     setAudienceMode("everyone");
     setShowMoreOptions(false);
     setComposerErrors({});
+    clearSelectedImageFile();
+    setImageMessage("");
     setWordImportStatus("idle");
     setWordImportMessage("");
     setPendingWordImportFile(null);
@@ -456,6 +488,87 @@ export default function AnnouncementsPage() {
     void applyWordImport(file);
   };
 
+  const handleAnnouncementImageSelected = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+
+    if (!file) return;
+
+    const validationMessage = validateAnnouncementImageFile(file);
+    if (validationMessage) {
+      clearSelectedImageFile();
+      setImageMessage(validationMessage);
+      toast({
+        title: "Unable to use image",
+        description: validationMessage,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    clearSelectedImageFile();
+    setSelectedImageFile(file);
+    setSelectedImagePreviewUrl(URL.createObjectURL(file));
+    setImageMessage("Image selected. It will upload when you save the announcement.");
+  };
+
+  const removeAnnouncementImage = () => {
+    clearSelectedImageFile();
+    setForm((current) => ({ ...current, imageKey: null }));
+    setImageMessage("Image removed. Save the announcement to apply this change.");
+  };
+
+  const uploadSelectedAnnouncementImage = async () => {
+    if (!selectedImageFile) return form.imageKey;
+
+    const validationMessage = validateAnnouncementImageFile(selectedImageFile);
+    if (validationMessage) throw new Error(validationMessage);
+
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    if (sessionError) throw sessionError;
+    if (!session?.access_token) throw new Error("Sign in again before uploading an announcement image.");
+
+    const signResponse = await fetch("/api/announcement-image-upload", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        churchId,
+        contentType: selectedImageFile.type,
+        fileSize: selectedImageFile.size,
+      }),
+    });
+
+    const signResult = await signResponse.json().catch(() => null) as {
+      uploadUrl?: string;
+      imageKey?: string;
+      error?: string;
+    } | null;
+
+    if (!signResponse.ok || !signResult?.uploadUrl || !signResult.imageKey) {
+      throw new Error(signResult?.error || "Unable to prepare image upload.");
+    }
+
+    const uploadResponse = await fetch(signResult.uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": selectedImageFile.type,
+      },
+      body: selectedImageFile,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error("Unable to upload image. Check the file and try again.");
+    }
+
+    return signResult.imageKey;
+  };
+
   const openCreateDialog = () => {
     resetForm();
     window.requestAnimationFrame(() => composerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
@@ -475,6 +588,7 @@ export default function AnnouncementsPage() {
       targetMinistry: announcement.target_ministry ?? "",
       targetCommunity: announcement.target_community ?? "",
       communityAudience: announcement.community_audience === "leaders" ? "leaders" : "all",
+      imageKey: announcement.image_key ?? null,
       showOnCalendar: Boolean(announcement.show_on_calendar),
       notificationStrategy: announcement.notification_strategy ?? "none",
       category: announcement.category ?? "general",
@@ -494,6 +608,8 @@ export default function AnnouncementsPage() {
     );
     setShowMoreOptions(false);
     setComposerErrors({});
+    clearSelectedImageFile();
+    setImageMessage("");
     window.requestAnimationFrame(() => composerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
@@ -504,6 +620,7 @@ export default function AnnouncementsPage() {
       const isPublished = intent === "publish" && publishTiming === "now";
       const publishAt = intent === "publish" && publishTiming === "schedule" ? fromDateTimeLocal(form.publishAt) : null;
       const content = sanitizeAnnouncementHtml(normalizeAnnouncementContent(form.content));
+      const imageKey = await uploadSelectedAnnouncementImage();
       const { data, error } = await supabase.rpc("save_church_announcement" as never, {
         _announcement_id: form.id,
         _church_id: churchId,
@@ -522,6 +639,7 @@ export default function AnnouncementsPage() {
         _notification_strategy: form.notificationStrategy,
         _category: form.category,
         _featured: form.featured,
+        _image_key: imageKey,
       } as never);
 
       if (error) {
@@ -542,6 +660,7 @@ export default function AnnouncementsPage() {
           notification_strategy: form.notificationStrategy,
           category: form.category,
           featured: form.featured,
+          image_key: imageKey,
         };
 
         if (form.id) {
@@ -794,6 +913,7 @@ export default function AnnouncementsPage() {
         _notification_strategy: announcement.notification_strategy ?? "on_publish",
         _category: announcement.category ?? "general",
         _featured: Boolean(announcement.featured),
+        _image_key: announcement.image_key ?? null,
       } as never);
 
       if (error) {
@@ -805,6 +925,7 @@ export default function AnnouncementsPage() {
             is_published: true,
             published_at: now,
             publish_at: now,
+            image_key: announcement.image_key ?? null,
             archived_at: null,
             updated_at: now,
           } as never)
@@ -843,6 +964,7 @@ export default function AnnouncementsPage() {
       targetMinistry: announcement.target_ministry ?? "",
       targetCommunity: announcement.target_community ?? "",
       communityAudience: announcement.community_audience === "leaders" ? "leaders" : "all",
+      imageKey: announcement.image_key ?? null,
       showOnCalendar: Boolean(announcement.show_on_calendar),
       notificationStrategy: announcement.notification_strategy ?? "none",
       category: announcement.category ?? "general",
@@ -858,6 +980,8 @@ export default function AnnouncementsPage() {
     );
     setShowMoreOptions(false);
     setComposerErrors({});
+    clearSelectedImageFile();
+    setImageMessage("");
     window.requestAnimationFrame(() => composerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
@@ -1098,6 +1222,76 @@ export default function AnnouncementsPage() {
                     </p>
                   )}
                   {composerErrors.content && <p id="announcement-message-error" role="alert" className="text-sm text-destructive">{composerErrors.content}</p>}
+                </div>
+
+                <div className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <Label htmlFor="announcement-image">Photo</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Optional JPG, PNG or WebP image up to {ANNOUNCEMENT_IMAGE_MAX_BYTES / 1024 / 1024} MB.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        ref={imageInputRef}
+                        id="announcement-image"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={handleAnnouncementImageSelected}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={saveAnnouncement.isPending}
+                      >
+                        <Image className="mr-2 h-4 w-4" />
+                        {displayedImageUrl ? "Change photo" : "Add photo"}
+                      </Button>
+                      {(displayedImageUrl || form.imageKey || selectedImageFile) && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={removeAnnouncementImage}
+                          disabled={saveAnnouncement.isPending}
+                        >
+                          <X className="mr-2 h-4 w-4" />
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {displayedImageUrl && (
+                    <img
+                      src={displayedImageUrl}
+                      alt="Announcement photo preview"
+                      className="max-h-72 w-full rounded-lg border border-border/60 object-cover"
+                    />
+                  )}
+
+                  {form.imageKey && !displayedImageUrl && (
+                    <p className="text-sm text-muted-foreground">
+                      This announcement has a saved image. Configure the public media URL to preview it here.
+                    </p>
+                  )}
+
+                  {imageMessage && (
+                    <p
+                      role={imageMessage.startsWith("Choose") || imageMessage.startsWith("Image must") ? "alert" : "status"}
+                      className={`text-sm ${
+                        imageMessage.startsWith("Choose") || imageMessage.startsWith("Image must")
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {imageMessage}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1561,6 +1755,13 @@ export default function AnnouncementsPage() {
             </div>
             <div>
               <h2 className="font-serif text-2xl">{form.title.trim() || "Untitled announcement"}</h2>
+              {displayedImageUrl && (
+                <img
+                  src={displayedImageUrl}
+                  alt="Announcement photo preview"
+                  className="mt-4 max-h-80 w-full rounded-lg border border-border/60 object-cover"
+                />
+              )}
               {isRichTextEmpty(form.content) ? (
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">No message has been written yet.</p>
               ) : (
