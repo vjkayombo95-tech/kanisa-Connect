@@ -59,6 +59,10 @@ describe("announcement rich content", () => {
     expect(plainText).toContain("\u2022 Arrive early");
     expect(plainText).not.toContain("<h2>");
 
+    expect(announcementHtmlToPlainText("<p>This is a test</p>")).toBe("This is a test");
+    expect(announcementHtmlToPlainText("<p>First</p><p>Second</p>")).toBe("First\nSecond");
+    expect(announcementHtmlToPlainText("Plain announcement")).toBe("Plain announcement");
+
     const whatsapp = buildAnnouncementShareMessage({ title: "Notice", body: html });
     expect(whatsapp).toContain("Sunday Mass");
     expect(whatsapp).not.toContain("<ul>");

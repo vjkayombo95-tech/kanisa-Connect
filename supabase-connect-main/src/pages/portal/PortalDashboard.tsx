@@ -10,6 +10,7 @@ import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { MASS_INTENTION_SELECT, mapMassIntentionRecord } from "@/lib/member-linked-requests";
 import { useMemberPledges } from "@/lib/pledges";
 import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
+import { announcementHtmlToPlainText } from "@/lib/announcement-content";
 import {
   RECORD_PRESERVATION_AMOUNT,
   RECORD_PRESERVATION_PAGE_SIZE,
@@ -1373,7 +1374,7 @@ export default function PortalDashboard() {
                 {announcements.map((a: any) => (
                   <div key={a.id} className="pb-3 border-b border-border/50 last:border-0">
                     <p className="text-sm font-medium">{a.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{a.content}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{announcementHtmlToPlainText(a.content)}</p>
                     <p className="text-xs text-muted-foreground/60 mt-1">{new Date(a.created_at).toLocaleDateString()}</p>
                   </div>
                 ))}

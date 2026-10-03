@@ -12,6 +12,7 @@ import { CommentThread, type CommentReactionSummary } from "@/components/portal/
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { fetchPortalAnnouncements, getPortalAnnouncementsCache } from "@/lib/portal-announcements";
 import { getAnnouncementImageUrl } from "@/lib/announcement-media";
+import { AnnouncementContent } from "@/components/announcements/AnnouncementContent";
 
 const ANNOUNCEMENT_REACTION_EMOJIS = ["🎉", "❤️", "🙏", "🥳", "👏", "😊"] as const;
 const ANNOUNCEMENT_COMMENT_EMOJIS = ["🎉", "❤️", "🙏", "👏", "😊"] as const;
@@ -332,7 +333,7 @@ export default function PortalAnnouncements() {
                     </div>
                   </div>
 
-                  <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">{announcement.content}</p>
+                  <AnnouncementContent content={announcement.content} className="mt-2" />
                   <p className="text-xs text-muted-foreground/60 mt-4">
                     {new Date(announcement.created_at).toLocaleDateString("en-US", {
                       weekday: "long",

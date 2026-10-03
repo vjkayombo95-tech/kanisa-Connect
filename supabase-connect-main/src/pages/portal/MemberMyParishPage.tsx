@@ -12,6 +12,7 @@ import { useChurchRadioStations } from "@/hooks/use-church-radio";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { useLinkedMember } from "@/hooks/use-linked-member";
 import { getYouTubeEmbedUrl, presentation } from "@/lib/church-livestreams";
+import { announcementHtmlToPlainText } from "@/lib/announcement-content";
 import { dailyLifeKeys, fetchLatestAnnouncement, fetchNextTimetableMass, fetchParishEvents, fetchParishIdentity, getParishDirectionsHref, getParishEmailHref, getParishPhoneHref, isUpcomingEvent } from "@/lib/member-daily-life";
 import { fetchMemberMinistries, memberMinistriesQueryKey } from "@/lib/member-ministries";
 import type { PortalFeatureKey } from "@/lib/portal-features";
@@ -161,7 +162,7 @@ export default function MemberMyParishPage() {
 
     <section>
       <SectionTitle title="Tangazo la karibuni" action={announcementsVisible ? <AppLink to="/portal/announcements" className="text-sm font-bold text-primary">Matangazo yote</AppLink> : undefined} />
-      {announcement.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : announcement.isError ? <SectionFeedback title="Hatukuweza kupakia tangazo la karibuni kwa sasa." description="Matangazo mengine yanaweza kuendelea kupatikana kwenye ukurasa wake." tone="error" onRetry={() => void announcement.refetch()} isRetrying={announcement.isFetching} /> : announcement.data ? <LinkCard to={announcementsVisible ? "/portal/announcements" : undefined} title={announcement.data.title} detail={announcement.data.content || "Tangazo la karibuni"} icon={Megaphone} /> : <EmptyCard>Hakuna tangazo jipya kwa sasa.</EmptyCard>}
+      {announcement.isLoading ? <Skeleton className="h-28 rounded-[24px]" /> : announcement.isError ? <SectionFeedback title="Hatukuweza kupakia tangazo la karibuni kwa sasa." description="Matangazo mengine yanaweza kuendelea kupatikana kwenye ukurasa wake." tone="error" onRetry={() => void announcement.refetch()} isRetrying={announcement.isFetching} /> : announcement.data ? <LinkCard to={announcementsVisible ? "/portal/announcements" : undefined} title={announcement.data.title} detail={announcementHtmlToPlainText(announcement.data.content) || "Tangazo la karibuni"} icon={Megaphone} /> : <EmptyCard>Hakuna tangazo jipya kwa sasa.</EmptyCard>}
     </section>
 
     <section>

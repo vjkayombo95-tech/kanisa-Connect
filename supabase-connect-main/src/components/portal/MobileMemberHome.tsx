@@ -2,6 +2,7 @@ import { Bell, BookOpen, CalendarDays, ChevronRight, Church, HandCoins, HeartHan
 
 import { AppLink } from "@/components/AppLink";
 import { ProductionLiveMassCard } from "@/components/portal/ProductionLiveMassCard";
+import { announcementHtmlToPlainText } from "@/lib/announcement-content";
 import { cn } from "@/lib/utils";
 import type { MemberNextMass } from "@/lib/member-daily-life";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -142,7 +143,7 @@ export function MobileMemberHome({
           <AppLink to="/portal/announcements" className="rounded-[24px] border border-border/70 bg-card/85 p-5 shadow-sm">
             <span className="text-xs font-bold uppercase tracking-wider text-primary">Tangazo la karibuni</span>
             <span className="mt-2 block font-bold">{latestAnnouncement.title}</span>
-            {latestAnnouncement.content ? <span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">{latestAnnouncement.content}</span> : null}
+            {latestAnnouncement.content ? <span className="mt-1 line-clamp-2 block text-sm text-muted-foreground">{announcementHtmlToPlainText(latestAnnouncement.content)}</span> : null}
           </AppLink>
         ) : null}
       </section>

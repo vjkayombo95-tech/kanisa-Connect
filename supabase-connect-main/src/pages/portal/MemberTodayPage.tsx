@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { SAINT_SELECT, type LibrarySaint } from "@/lib/catholic-library";
+import { announcementHtmlToPlainText } from "@/lib/announcement-content";
 import {
   fetchPublishedDailyReading,
   getReadableReadingDate,
@@ -73,7 +74,7 @@ export default function MemberTodayPage() {
       {saints.isLoading ? <Skeleton className="h-36 rounded-[26px]" /> : saint ? <Summary title="Mtakatifu wa leo" to={`/portal/library/${saint.slug}`}><strong className="text-foreground">{saint.name}</strong>{saint.title ? <p>{saint.title}</p> : null}</Summary> : null}
       {mass.isLoading ? <Skeleton className="h-36 rounded-[26px]" /> : mass.data ? <Summary title="Misa ijayo" to="/portal/calendar"><strong className="text-foreground">{mass.data.title}</strong><p>{new Date(`${mass.data.massDate}T${mass.data.startTime}`).toLocaleString("sw-TZ", { dateStyle: "medium", timeStyle: "short" })}</p></Summary> : null}
       {events.isLoading ? <Skeleton className="h-36 rounded-[26px]" /> : todayEvent ? <Summary title="Tukio la leo" to="/portal/events"><strong className="text-foreground">{todayEvent.title}</strong>{todayEvent.location ? <p>{todayEvent.location}</p> : null}</Summary> : null}
-      {announcement.isLoading ? <Skeleton className="h-36 rounded-[26px]" /> : announcement.data ? <Summary title="Tangazo la karibuni" to="/portal/announcements"><strong className="text-foreground">{announcement.data.title}</strong><p className="line-clamp-2">{announcement.data.content}</p></Summary> : null}
+      {announcement.isLoading ? <Skeleton className="h-36 rounded-[26px]" /> : announcement.data ? <Summary title="Tangazo la karibuni" to="/portal/announcements"><strong className="text-foreground">{announcement.data.title}</strong><p className="line-clamp-2">{announcementHtmlToPlainText(announcement.data.content)}</p></Summary> : null}
     </div>
     {(mass.isError || events.isError || announcement.isError || saints.isError) ? <p className="rounded-2xl border border-border/70 bg-card p-4 text-sm text-muted-foreground">Baadhi ya taarifa hazikupatikana. Taarifa nyingine bado zinaweza kutumika.</p> : null}
     <section className="grid gap-3 sm:grid-cols-3" aria-label="Njia za haraka"><Summary title="Biblia" to="/portal/bible"><BookOpen className="mb-2 h-5 w-5 text-primary" />Soma Neno la Mungu</Summary><Summary title="Sala" to="/portal/prayers"><Sparkles className="mb-2 h-5 w-5 text-primary" />Sala zilizochapishwa</Summary><Summary title="Kalenda" to="/portal/liturgical-calendar"><CalendarDays className="mb-2 h-5 w-5 text-primary" />Kalenda ya Liturujia</Summary></section>

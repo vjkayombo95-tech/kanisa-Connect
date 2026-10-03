@@ -4,6 +4,11 @@ import { describe, expect, it } from "vitest";
 
 const portalSource = readFileSync(resolve(process.cwd(), "src/pages/portal/PortalAnnouncements.tsx"), "utf8");
 const dataSource = readFileSync(resolve(process.cwd(), "src/lib/portal-announcements.ts"), "utf8");
+const memberDashboardSource = readFileSync(resolve(process.cwd(), "src/components/portal/MemberDashboard.tsx"), "utf8");
+const mobileHomeSource = readFileSync(resolve(process.cwd(), "src/components/portal/MobileMemberHome.tsx"), "utf8");
+const memberTodaySource = readFileSync(resolve(process.cwd(), "src/pages/portal/MemberTodayPage.tsx"), "utf8");
+const memberMyParishSource = readFileSync(resolve(process.cwd(), "src/pages/portal/MemberMyParishPage.tsx"), "utf8");
+const legacyPortalDashboardSource = readFileSync(resolve(process.cwd(), "src/pages/portal/PortalDashboard.tsx"), "utf8");
 const migration = readFileSync(
   resolve(process.cwd(), "supabase/migrations/20261003190000_add_announcement_image_key.sql"),
   "utf8",
@@ -25,7 +30,25 @@ describe("portal announcement images", () => {
 
   it("keeps the normal no-image announcement layout intact", () => {
     expect(portalSource).toContain("<h3 className=\"font-semibold text-lg\">{announcement.title}</h3>");
-    expect(portalSource).toContain("announcement.content");
+    expect(portalSource).toContain("<AnnouncementContent content={announcement.content}");
     expect(portalSource).not.toContain("Image unavailable");
+  });
+
+  it("renders rich announcement bodies through the sanitized content component", () => {
+    expect(portalSource).toContain('import { AnnouncementContent } from "@/components/announcements/AnnouncementContent"');
+    expect(portalSource).toContain("<AnnouncementContent content={announcement.content}");
+    expect(portalSource).not.toContain('<p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">{announcement.content}</p>');
+  });
+
+  it("uses readable announcement snippets on member home surfaces", () => {
+    for (const source of [
+      memberDashboardSource,
+      mobileHomeSource,
+      memberTodaySource,
+      memberMyParishSource,
+      legacyPortalDashboardSource,
+    ]) {
+      expect(source).toContain("announcementHtmlToPlainText");
+    }
   });
 });
