@@ -99,6 +99,7 @@ export type Database = {
           audience: string[]
           category: string
           church_id: string | null
+          community_audience: string
           content: string
           created_at: string | null
           created_by: string | null
@@ -124,6 +125,7 @@ export type Database = {
           audience?: string[]
           category?: string
           church_id?: string | null
+          community_audience?: string
           content: string
           created_at?: string | null
           created_by?: string | null
@@ -149,6 +151,7 @@ export type Database = {
           audience?: string[]
           category?: string
           church_id?: string | null
+          community_audience?: string
           content?: string
           created_at?: string | null
           created_by?: string | null
@@ -9253,6 +9256,7 @@ export type Database = {
           _audience?: string[]
           _category?: string
           _church_id: string
+          _community_audience?: string
           _content: string
           _expires_at?: string
           _featured?: boolean

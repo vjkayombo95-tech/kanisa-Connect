@@ -64,6 +64,7 @@ type AnnouncementRecord = {
   audience?: string[] | null;
   target_ministry?: string | null;
   target_community?: string | null;
+  community_audience?: CommunityAudience | null;
   show_on_calendar?: boolean | null;
   notification_strategy?: AnnouncementNotificationStrategy | null;
   category?: string | null;
@@ -73,6 +74,7 @@ type AnnouncementStatus = "draft" | "scheduled" | "active" | "featured" | "expir
 type AnnouncementNotificationStrategy = "none" | "immediate" | "on_publish" | "one_day_before_expiry";
 type PublishTiming = "now" | "schedule";
 type AudienceMode = "everyone" | "ministry" | "community" | "roles";
+type CommunityAudience = "all" | "leaders";
 
 function resolveAudienceMode({
   audience,
@@ -92,13 +94,19 @@ function getAudienceSummary({
   audience,
   targetMinistry,
   targetCommunity,
+  communityAudience = "all",
 }: {
   audience?: string[] | null;
   targetMinistry?: string | null;
   targetCommunity?: string | null;
+  communityAudience?: CommunityAudience | null;
 }) {
   if (targetMinistry?.trim()) return `Ministry: ${targetMinistry.trim()}`;
-  if (targetCommunity?.trim()) return `Community: ${targetCommunity.trim()}`;
+  if (targetCommunity?.trim()) {
+    return communityAudience === "leaders"
+      ? `Community: ${targetCommunity.trim()} - Leaders only`
+      : `Community: ${targetCommunity.trim()} - Everyone`;
+  }
 
   const normalizedAudience = audience?.length ? audience : ["everyone"];
   if (normalizedAudience.includes("everyone")) return "Everyone";
@@ -123,6 +131,7 @@ const EMPTY_FORM = {
   audience: ["everyone"] as string[],
   targetMinistry: "",
   targetCommunity: "",
+  communityAudience: "all" as CommunityAudience,
   showOnCalendar: false,
   notificationStrategy: "none" as AnnouncementNotificationStrategy,
   category: "general",
@@ -370,6 +379,7 @@ export default function AnnouncementsPage() {
       audience: announcement.audience?.length ? announcement.audience : ["everyone"],
       targetMinistry: announcement.target_ministry ?? "",
       targetCommunity: announcement.target_community ?? "",
+      communityAudience: announcement.community_audience === "leaders" ? "leaders" : "all",
       showOnCalendar: Boolean(announcement.show_on_calendar),
       notificationStrategy: announcement.notification_strategy ?? "none",
       category: announcement.category ?? "general",
@@ -412,6 +422,7 @@ export default function AnnouncementsPage() {
         _audience: form.audience,
         _target_ministry: form.targetMinistry || null,
         _target_community: form.targetCommunity || null,
+        _community_audience: form.communityAudience,
         _show_on_calendar: form.showOnCalendar,
         _notification_strategy: form.notificationStrategy,
         _category: form.category,
@@ -431,6 +442,7 @@ export default function AnnouncementsPage() {
           audience: form.audience,
           target_ministry: form.targetMinistry || null,
           target_community: form.targetCommunity || null,
+          community_audience: form.communityAudience,
           show_on_calendar: form.showOnCalendar,
           notification_strategy: form.notificationStrategy,
           category: form.category,
@@ -682,6 +694,7 @@ export default function AnnouncementsPage() {
         _audience: announcement.audience?.length ? announcement.audience : ["everyone"],
         _target_ministry: announcement.target_ministry ?? null,
         _target_community: announcement.target_community ?? null,
+        _community_audience: announcement.community_audience === "leaders" ? "leaders" : "all",
         _show_on_calendar: Boolean(announcement.show_on_calendar),
         _notification_strategy: announcement.notification_strategy ?? "on_publish",
         _category: announcement.category ?? "general",
@@ -734,6 +747,7 @@ export default function AnnouncementsPage() {
       audience: announcement.audience?.length ? announcement.audience : ["everyone"],
       targetMinistry: announcement.target_ministry ?? "",
       targetCommunity: announcement.target_community ?? "",
+      communityAudience: announcement.community_audience === "leaders" ? "leaders" : "all",
       showOnCalendar: Boolean(announcement.show_on_calendar),
       notificationStrategy: announcement.notification_strategy ?? "none",
       category: announcement.category ?? "general",
@@ -758,7 +772,12 @@ export default function AnnouncementsPage() {
 
   const AnnouncementCard = ({ announcement }: { announcement: AnnouncementRecord }) => {
     const status = resolveAnnouncementStatus(announcement);
-    const audienceSummary = getAudienceSummary({ audience: announcement.audience, targetMinistry: announcement.target_ministry, targetCommunity: announcement.target_community });
+    const audienceSummary = getAudienceSummary({
+      audience: announcement.audience,
+      targetMinistry: announcement.target_ministry,
+      targetCommunity: announcement.target_community,
+      communityAudience: announcement.community_audience,
+    });
 
     return (
       <Card key={announcement.id} className="glass-card">
@@ -996,6 +1015,8 @@ export default function AnnouncementsPage() {
                               : ["everyone"],
                           targetMinistry: option.value === "ministry" ? current.targetMinistry : "",
                           targetCommunity: option.value === "community" ? current.targetCommunity : "",
+                          communityAudience:
+                            option.value === "community" ? current.communityAudience : "all",
                         }));
                       }}
                       className={`rounded-xl border p-4 text-left transition-colors ${
@@ -1046,6 +1067,62 @@ export default function AnnouncementsPage() {
                       setForm((current) => ({ ...current, targetCommunity }))
                     }
                   />
+
+                  {form.targetCommunity && (
+                    <div className="space-y-3 pt-2">
+                      <Label>Send to</Label>
+
+                      <div className="grid gap-2">
+                        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 p-3">
+                          <input
+                            type="radio"
+                            name="community-audience"
+                            value="all"
+                            checked={form.communityAudience === "all"}
+                            onChange={() =>
+                              setForm((current) => ({
+                                ...current,
+                                communityAudience: "all",
+                              }))
+                            }
+                            className="mt-1"
+                          />
+                          <div>
+                            <span className="block text-sm font-medium">
+                              Everyone in this community
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              Send to all members of the selected community.
+                            </span>
+                          </div>
+                        </label>
+
+                        <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/60 p-3">
+                          <input
+                            type="radio"
+                            name="community-audience"
+                            value="leaders"
+                            checked={form.communityAudience === "leaders"}
+                            onChange={() =>
+                              setForm((current) => ({
+                                ...current,
+                                communityAudience: "leaders",
+                              }))
+                            }
+                            className="mt-1"
+                          />
+                          <div>
+                            <span className="block text-sm font-medium">
+                              Community leaders only
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              Send only to the leaders of the selected community.
+                            </span>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1307,7 +1384,12 @@ export default function AnnouncementsPage() {
           <div className="space-y-4 rounded-xl border border-border/60 bg-muted/15 p-5">
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline">{form.category.replace("_", " ")}</Badge>
-              <Badge variant="outline">{getAudienceSummary({ audience: form.audience, targetMinistry: form.targetMinistry, targetCommunity: form.targetCommunity })}</Badge>
+              <Badge variant="outline">{getAudienceSummary({
+                      audience: form.audience,
+                      targetMinistry: form.targetMinistry,
+                      targetCommunity: form.targetCommunity,
+                      communityAudience: form.communityAudience,
+                    })}</Badge>
             </div>
             <div>
               <h2 className="font-serif text-2xl">{form.title.trim() || "Untitled announcement"}</h2>

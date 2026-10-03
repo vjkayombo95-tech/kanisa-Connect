@@ -135,7 +135,7 @@ describe("Wave 3A member reliability contracts", () => {
     expect((dashboard.match(/quickActions\.push/g) ?? [])).toHaveLength(3);
     expect(dashboard).toContain("submitMassResponse.mutate(response)");
     expect(dashboard).toContain('queryFn: () => fetchNextMassSummary(churchId!)');
-    expect(dashboard).toContain("fetchPortalAnnouncements(member.church_id, 1)");
+    expect(dashboard).toContain("fetchPortalAnnouncements(member.church_id, 1, { failClosedOnRpcError: true })");
     expect(dashboard).not.toContain('label="Historia Yangu"');
     expect(dashboard).not.toContain('label="Masomo ya Leo"');
     expect(dashboard).not.toContain('label="Watakatifu"');

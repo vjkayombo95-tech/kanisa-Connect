@@ -150,7 +150,7 @@ function useSimpleMemberHomeData() {
 
       const [churchResult, announcementRows] = await Promise.all([
         supabase.from("churches").select("name, banner_url, banner_position_y").eq("id", member.church_id).maybeSingle(),
-        fetchPortalAnnouncements(member.church_id, 1),
+        fetchPortalAnnouncements(member.church_id, 1, { failClosedOnRpcError: true }),
       ]);
       if (churchResult.error) logMemberDashboardError("church", churchResult.error);
       const latestAnnouncement = announcementRows[0] ?? null;
