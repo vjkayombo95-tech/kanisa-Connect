@@ -26,8 +26,41 @@ describe("church admin announcement composer", () => {
     expect(source).toContain('searchPlaceholder="Type a ministry name..."');
     expect(source).toContain('searchPlaceholder="Type a community name..."');
     expect(source).toContain('supabase.rpc("save_church_announcement"');
+    expect(source).toContain("sanitizeAnnouncementHtml(normalizeAnnouncementContent(form.content))");
     expect(source).toContain("disabled={saveAnnouncement.isPending}");
     expect(source).not.toContain('{ value: "super_admin", label: "Super Admin" }');
+  });
+
+  it("lets admins import Word documents without replacing the existing editor or publish flow", () => {
+    expect(source).toContain("Import Word");
+    expect(source).toContain("WORD_IMPORT_ACCEPT");
+    expect(source).toContain('type="file"');
+    expect(source).toContain('accept={WORD_IMPORT_ACCEPT}');
+    expect(source).toContain("importAnnouncementDocx(file)");
+    expect(source).toContain("setForm((current) => ({ ...current, content: result.content }))");
+    expect(source).toContain("Document imported. Review the announcement before publishing.");
+    expect(source).toContain('type="button"');
+    expect(source).toContain("submitAnnouncement(\"publish\")");
+  });
+
+  it("protects existing announcement text before replacing it with a Word import", () => {
+    expect(source).toContain("Replace current message?");
+    expect(source).toContain(
+      "Importing this Word document will replace the message currently in the editor.",
+    );
+    expect(source).toContain("Replace and import");
+    expect(source).toContain("if (!isRichTextEmpty(form.content))");
+    expect(source).toContain("setPendingWordImportFile(file)");
+    expect(source).toContain("setReplaceWordImportOpen(true)");
+  });
+
+  it("shows safe Word import validation and failure messages", () => {
+    expect(source).toContain("Please choose a Word .docx document.");
+    expect(source).toContain("This document is too large. Choose a Word document smaller than 10 MB.");
+    expect(source).toContain("We couldn't find announcement content in this document.");
+    expect(source).toContain("We couldn't read this Word document. Check the file and try again.");
+    expect(source).toContain("Something went wrong while importing the document. Try again.");
+    expect(source).toContain("resetWordImportInput()");
   });
 
   it("guides the admin through one audience choice at a time", () => {
