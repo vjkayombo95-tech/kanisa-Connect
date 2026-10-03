@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { CommentThread, type CommentReactionSummary } from "@/components/portal/CommentThread";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { fetchPortalAnnouncements, getPortalAnnouncementsCache } from "@/lib/portal-announcements";
+import { getAnnouncementImageUrl } from "@/lib/announcement-media";
+import { AnnouncementContent } from "@/components/announcements/AnnouncementContent";
 
 const ANNOUNCEMENT_REACTION_EMOJIS = ["🎉", "❤️", "🙏", "🥳", "👏", "😊"] as const;
 const ANNOUNCEMENT_COMMENT_EMOJIS = ["🎉", "❤️", "🙏", "👏", "😊"] as const;
@@ -312,6 +314,14 @@ export default function PortalAnnouncements() {
             {announcements.map((announcement: any) => (
               <Card key={announcement.id} className="rounded-[24px] border-border/70 bg-card/85 shadow-sm">
                 <CardContent className="p-5 sm:p-6">
+                  {getAnnouncementImageUrl(announcement.image_key) && (
+                    <img
+                      src={getAnnouncementImageUrl(announcement.image_key) ?? undefined}
+                      alt={`${announcement.title} announcement image`}
+                      loading="lazy"
+                      className="mb-4 max-h-96 w-full rounded-2xl object-cover"
+                    />
+                  )}
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="font-semibold text-lg">{announcement.title}</h3>
@@ -323,7 +333,7 @@ export default function PortalAnnouncements() {
                     </div>
                   </div>
 
-                  <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">{announcement.content}</p>
+                  <AnnouncementContent content={announcement.content} className="mt-2" />
                   <p className="text-xs text-muted-foreground/60 mt-4">
                     {new Date(announcement.created_at).toLocaleDateString("en-US", {
                       weekday: "long",

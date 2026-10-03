@@ -106,6 +106,7 @@ export type Database = {
           expires_at: string | null
           featured: boolean
           id: string
+          image_key: string | null
           is_published: boolean | null
           lifecycle_metadata: Json
           never_expires: boolean
@@ -132,6 +133,7 @@ export type Database = {
           expires_at?: string | null
           featured?: boolean
           id?: string
+          image_key?: string | null
           is_published?: boolean | null
           lifecycle_metadata?: Json
           never_expires?: boolean
@@ -158,6 +160,7 @@ export type Database = {
           expires_at?: string | null
           featured?: boolean
           id?: string
+          image_key?: string | null
           is_published?: boolean | null
           lifecycle_metadata?: Json
           never_expires?: boolean
@@ -8580,6 +8583,7 @@ export type Database = {
           expires_at: string
           featured: boolean
           id: string
+          image_key: string | null
           is_published: boolean
           publish_at: string
           published_at: string
@@ -9260,6 +9264,7 @@ export type Database = {
           _content: string
           _expires_at?: string
           _featured?: boolean
+          _image_key?: string
           _is_published?: boolean
           _never_expires?: boolean
           _notification_strategy?: string

@@ -19,6 +19,7 @@ export type PortalAnnouncementRecord = {
   expires_at?: string | null;
   audience?: string[] | null;
   category?: string | null;
+  image_key?: string | null;
   show_on_calendar?: boolean | null;
 };
 

@@ -63,6 +63,29 @@ describe("church admin announcement composer", () => {
     expect(source).toContain("resetWordImportInput()");
   });
 
+  it("supports optional announcement images without replacing the publish flow", () => {
+    expect(source).toContain('Label htmlFor="announcement-image"');
+    expect(source).toContain('accept="image/jpeg,image/png,image/webp"');
+    expect(source).toContain("validateAnnouncementImageFile(file)");
+    expect(source).toContain("Image selected. It will upload when you save the announcement.");
+    expect(source).toContain("uploadSelectedAnnouncementImage()");
+    expect(source).toContain('fetch("/api/announcement-image-upload"');
+    expect(source).toContain('method: "PUT"');
+    expect(source).toContain("_image_key: imageKey");
+    expect(source).toContain("image_key: imageKey");
+    expect(source).toContain('submitAnnouncement("publish")');
+  });
+
+  it("preserves, removes, and duplicates saved announcement image keys deliberately", () => {
+    expect(source).toContain("image_key?: string | null");
+    expect(source).toContain("imageKey: null as string | null");
+    expect(source).toContain("imageKey: announcement.image_key ?? null");
+    expect(source).toContain("removeAnnouncementImage");
+    expect(source).toContain("setForm((current) => ({ ...current, imageKey: null }))");
+    expect(source).toContain("_image_key: announcement.image_key ?? null");
+    expect(source).toContain("image_key: announcement.image_key ?? null");
+  });
+
   it("guides the admin through one audience choice at a time", () => {
     expect(source).toContain("Who is this for? *");
     expect(source).toContain('label: "Everyone"');

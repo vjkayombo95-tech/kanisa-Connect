@@ -21,6 +21,7 @@ import { formatTZS } from "@/lib/currency";
 import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
 import { cn } from "@/lib/utils";
 import { logWarning } from "@/lib/error-logger";
+import { announcementHtmlToPlainText } from "@/lib/announcement-content";
 import { ProductionLiveMassCard } from "@/components/portal/ProductionLiveMassCard";
 import { MobileMemberHome } from "@/components/portal/MobileMemberHome";
 import { fetchMemberContributionTotal } from "@/lib/member-contributions";
@@ -517,7 +518,7 @@ export default function MemberDashboard() {
                 <p className="text-lg font-bold text-foreground">{home.latestAnnouncement.title}</p>
                 {home.latestAnnouncement.content ? (
                   <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                    {home.latestAnnouncement.content}
+                    {announcementHtmlToPlainText(home.latestAnnouncement.content)}
                   </p>
                 ) : null}
                 <p className="mt-2 text-xs text-muted-foreground">{formatDate(home.latestAnnouncement.date)}</p>
