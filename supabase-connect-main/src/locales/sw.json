@@ -53,6 +53,23 @@
     "member_view": "Muonekano wa Mwanachama",
     "switch_view": "Badili muonekano"
   },
+  "church_switcher": {
+    "account_menu": "Fungua menyu ya akaunti",
+    "my_church": "Kanisa Langu",
+    "my_churches": "Makanisa Yangu",
+    "switch_church": "Badili Kanisa",
+    "current_church": "Unatumia sasa: {{church}}",
+    "current_badge": "Unatumia sasa",
+    "choose": "Chagua",
+    "member": "Mwanachama",
+    "switching": "Inabadilisha kanisa...",
+    "error": "Imeshindikana kubadili kanisa. Tafadhali jaribu tena.",
+    "close": "Funga",
+    "fallback_church": "Kanisa",
+    "member_portal": "Portal ya Mwanachama",
+    "current_church_aria": "{{church}} linatumika sasa",
+    "choose_church_aria": "Chagua {{church}}"
+  },
   "limited_member_access": "Upatikanaji mdogo - boresha ili kufungua vipengele vyote vya mwanachama",
   "upgrade_to_unlock": "Boresha ili kufungua",
   "language": "Lugha",
