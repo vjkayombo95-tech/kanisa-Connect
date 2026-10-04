@@ -120,7 +120,7 @@ describe("Wave 12 Slice 4B member Jumuiya page runtime", () => {
 
     expect(host.textContent).toContain("Hukutana kila Alhamisi.");
     expect(host.textContent).toContain("Jumuiya uliyopewa");
-    expect(state.rpcCalls).toEqual([{ name: "get_my_jumuiya_assignments", args: [] }]);
+    expect(state.rpcCalls).toEqual([{ name: "get_my_jumuiya_assignments", args: [{ _church_id: "church-a" }] }]);
     expectNoMutationControls(host);
   });
 
@@ -205,10 +205,11 @@ describe("Wave 12 Slice 4B route and navigation contract", () => {
   });
 
   it("uses only the canonical no-argument RPC and does not recreate membership resolution client-side", () => {
-    expect(helper).toContain('supabase.rpc("get_my_jumuiya_assignments" as never)');
+    expect(helper).toContain('supabase.rpc("get_my_jumuiya_assignments" as never, { _church_id: churchId } as never)');
     expect(helper).not.toContain(".from(");
     expect(helper).not.toContain("member_id");
     expect(page).toContain("memberJumuiyaAssignmentsQueryKey(user?.id, churchId)");
+    expect(page).toContain("queryFn: () => fetchMyJumuiyaAssignments(churchId!)");
     expect(page).not.toContain("useLinkedMember");
   });
 
