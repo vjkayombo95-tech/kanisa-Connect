@@ -97,7 +97,7 @@ type AnnouncementRecord = {
 type AnnouncementStatus = "draft" | "scheduled" | "active" | "featured" | "expired" | "archived";
 type AnnouncementNotificationStrategy = "none" | "immediate" | "on_publish" | "one_day_before_expiry";
 type PublishTiming = "now" | "schedule";
-type AudienceMode = "everyone" | "ministry" | "community" | "roles";
+type AudienceMode = "everyone" | "ministry" | "community" | "community_leaders" | "roles";
 type CommunityAudience = "all" | "leaders";
 
 function resolveAudienceMode({
@@ -111,6 +111,7 @@ function resolveAudienceMode({
 }): AudienceMode {
   if (targetMinistry) return "ministry";
   if (targetCommunity) return "community";
+  if (audience.includes("community_leaders")) return "community_leaders";
   if (audience.some((item) => item !== "everyone")) return "roles";
   return "everyone";
 }
@@ -134,6 +135,7 @@ function getAudienceSummary({
 
   const normalizedAudience = audience?.length ? audience : ["everyone"];
   if (normalizedAudience.includes("everyone")) return "Everyone";
+  if (normalizedAudience.includes("community_leaders")) return "Community leaders";
 
   return `Roles: ${normalizedAudience
     .map((item) => item.replace(/_/g, " "))
@@ -1304,7 +1306,7 @@ export default function AnnouncementsPage() {
                 </p>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {[
                   {
                     value: "everyone" as AudienceMode,
@@ -1320,6 +1322,11 @@ export default function AnnouncementsPage() {
                     value: "community" as AudienceMode,
                     label: "A community",
                     description: "Choose one community",
+                  },
+                  {
+                    value: "community_leaders" as AudienceMode,
+                    label: "Community leaders",
+                    description: "Leaders of all communities",
                   },
                   {
                     value: "roles" as AudienceMode,
@@ -1341,7 +1348,9 @@ export default function AnnouncementsPage() {
                           ...current,
                           audience:
                             option.value === "roles"
-                              ? current.audience.filter((item) => item !== "everyone")
+                              ? current.audience.filter((item) => item !== "everyone" && item !== "community_leaders")
+                              : option.value === "community_leaders"
+                                ? ["community_leaders"]
                               : ["everyone"],
                           targetMinistry: option.value === "ministry" ? current.targetMinistry : "",
                           targetCommunity: option.value === "community" ? current.targetCommunity : "",
@@ -1456,6 +1465,15 @@ export default function AnnouncementsPage() {
                 </div>
               )}
 
+              {audienceMode === "community_leaders" && (
+                <div className="space-y-1 rounded-xl border border-border/60 bg-muted/10 p-4">
+                  <p className="text-sm font-medium">Community leaders</p>
+                  <p className="text-sm text-muted-foreground">
+                    Send to leaders of all communities in this church.
+                  </p>
+                </div>
+              )}
+
               {audienceMode === "roles" && (
                 <div className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-4">
                   <div>
@@ -1477,12 +1495,12 @@ export default function AnnouncementsPage() {
                             checked={form.audience.includes(option.value)}
                             onCheckedChange={(checked) => {
                               setForm((current) => {
-                                const withoutEveryone = current.audience.filter(
-                                  (item) => item !== "everyone",
+                                const withoutSystemAudiences = current.audience.filter(
+                                  (item) => item !== "everyone" && item !== "community_leaders",
                                 );
                                 const next = checked
-                                  ? Array.from(new Set([...withoutEveryone, option.value]))
-                                  : withoutEveryone.filter((item) => item !== option.value);
+                                  ? Array.from(new Set([...withoutSystemAudiences, option.value]))
+                                  : withoutSystemAudiences.filter((item) => item !== option.value);
 
                                 return { ...current, audience: next };
                               });
