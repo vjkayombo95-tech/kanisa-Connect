@@ -11,9 +11,11 @@ describe("Wave 3 production integration boundaries", () => {
   const adminLayout = read("src/components/church-admin/ChurchAdminLayout.tsx");
   const sw = JSON.parse(read("src/locales/sw.json"));
 
-  it("reads only authenticated current-church role rows and clears presentation on logout", () => {
-    expect(auth).toContain('.from("user_roles")');
-    expect(auth).toContain('.eq("user_id",target.id).eq("church_id",contextData.church_id)');
+  it("resolves only authenticated active-church roles through the server context and clears presentation on logout", () => {
+    expect(auth).toContain('rpc("get_current_user_context_for_church"');
+    expect(auth).toContain("normalizeProductionRoles(roleSource)");
+    expect(auth).toContain("resolveStaffMobileWorkspace(authorization.roles, nextSuper)");
+    expect(auth).toContain("setUserRoles(authorization.roles)");
     expect(auth).toContain("setUserRoles([])");
     expect(auth).toContain("setStaffWorkspace(null)");
   });

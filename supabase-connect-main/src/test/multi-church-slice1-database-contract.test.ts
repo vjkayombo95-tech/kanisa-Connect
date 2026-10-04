@@ -63,14 +63,14 @@ describe("multi-church membership slice 1 database contract", () => {
     expect(normalizedMigration).toContain("user_roles.membership_id must reference the same user_id and church_id");
   });
 
-  it("does not change the existing auth context, UI, or RLS authorization model", () => {
+  it("does not change the existing auth context, UI, or RLS authorization model in the slice 1 migration", () => {
     expect(normalizedMigration).not.toContain("create or replace function public.get_current_user_context");
     expect(normalizedMigration).not.toContain("drop function if exists public.get_current_user_context");
     expect(normalizedMigration).not.toContain("create policy");
     expect(normalizedMigration).not.toContain("alter policy");
     expect(normalizedMigration).not.toContain("grant select on table public.church_memberships to authenticated");
 
-    expect(read("src/contexts/AuthContext.tsx")).toContain('rpc("get_current_user_context"');
+    expect(read("src/contexts/AuthContext.tsx")).toContain('rpc("get_current_user_context_for_church"');
     expect(read("src/components/portal/PortalLayout.tsx")).toContain("function ProfileMenu");
     expect(read("src/components/church-admin/ChurchAdminLayout.tsx")).toContain("export function ChurchAdminLayout()");
     expect(read("src/components/auth/ProtectedRoute.tsx")).toContain("requireAdmin && !isSuperAdmin && !isAdminRole");
