@@ -90,6 +90,7 @@ const translations: Record<string, string> = {
   "church_switcher.member_portal": "Portal ya Mwanachama",
   "church_switcher.current_church_aria": "{{church}} linatumika sasa",
   "church_switcher.choose_church_aria": "Chagua {{church}}",
+  view_as_community_leader: "View as a Community Leader",
 };
 
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => state.auth }));
@@ -102,7 +103,10 @@ vi.mock("@/hooks/use-billing-access", () => ({
   useBillingAccess: () => ({ memberPortalAccess: "full", isLoading: false }),
 }));
 vi.mock("@/hooks/use-community-leader", () => ({
-  useLedCommunities: () => ({ data: state.ledCommunities, refetch: state.refetchLedCommunities }),
+  useLedCommunities: () => ({
+    data: state.ledCommunities.filter((community) => community.church_id === (state.auth.activeChurchId ?? state.auth.churchId)),
+    refetch: state.refetchLedCommunities,
+  }),
 }));
 vi.mock("@/hooks/use-feature-access", () => ({
   useFeatureAccess: () => ({
@@ -279,11 +283,59 @@ describe("multi-church Slice 3 member church switcher", () => {
 
     openChurchSwitcher();
 
-    expect(getByRole("dialog", "Makanisa Yangu")).toBeInTheDocument();
+    const dialog = getByRole("dialog", "Makanisa Yangu");
+    expect(dialog).toBeInTheDocument();
+    expect(dialog.parentElement).toBe(document.body);
     expect(text()).toContain("Unatumia sasa: ST THERESIA");
     expect(getByRole("button", "ST THERESIA linatumika sasa")).toHaveAttribute("aria-current", "true");
     expect(getByRole("button", "Chagua KANISA CONNECT UAT PARISH")).toHaveTextContent("Chagua");
     expect(getByRole("button", "Chagua KANISA CONNECT UAT PARISH")).toHaveTextContent("Mwanachama");
+  });
+
+  it("renders both church rows when the secondary church is active and keeps the primary church selectable", () => {
+    resetAuth({
+      churchId: "church-b",
+      activeChurchId: "church-b",
+      availableChurches: [churchA, churchB],
+    });
+    renderPortal();
+
+    openChurchSwitcher();
+
+    expect(getByRole("dialog", "Makanisa Yangu").parentElement).toBe(document.body);
+    expect(getByTestId("church-switcher-row-church-a")).toBeInTheDocument();
+    expect(getByTestId("church-switcher-row-church-b")).toBeInTheDocument();
+
+    const currentChurch = getByRole("button", "KANISA CONNECT UAT PARISH linatumika sasa") as HTMLButtonElement;
+    const primaryChurch = getByRole("button", "Chagua ST THERESIA") as HTMLButtonElement;
+
+    expect(currentChurch).toBeInTheDocument();
+    expect(currentChurch).toHaveAttribute("aria-current", "true");
+    expect(currentChurch).toBeDisabled();
+    expect(primaryChurch).toBeInTheDocument();
+    expect(primaryChurch).not.toBeDisabled();
+    expect(primaryChurch).toHaveTextContent("Chagua");
+    expect(primaryChurch).toHaveTextContent("Mwanachama");
+  });
+
+  it("selects the primary church from a secondary active church", async () => {
+    resetAuth({
+      churchId: "church-b",
+      activeChurchId: "church-b",
+      availableChurches: [churchA, churchB],
+      switchChurch: vi.fn(async (churchId: string) => {
+        state.auth.activeChurchId = churchId;
+        state.auth.churchId = churchId;
+      }),
+    });
+    renderPortal();
+
+    openChurchSwitcher();
+    click(getByRole("button", "Chagua ST THERESIA"));
+
+    expect(state.auth.switchChurch).toHaveBeenCalledTimes(1);
+    expect(state.auth.switchChurch).toHaveBeenCalledWith("church-a");
+    await waitForAssert(() => expect(queryByRole("dialog", "Makanisa Yangu")).not.toBeInTheDocument());
   });
 
   it("calls switchChurch once, shows loading, and keeps normal portal routes in place after success", async () => {
@@ -386,6 +438,39 @@ describe("multi-church Slice 3 member church switcher", () => {
 
     openAccountMenu();
     expect(text()).not.toContain("Badili muonekano");
+  });
+
+  it("scopes community leader profile actions to the active church", () => {
+    state.ledCommunities = [
+      {
+        community_id: "community-b",
+        community_name: "Jumuiya B",
+        leadership_role: "Mwenyekiti",
+        church_id: "church-b",
+      },
+    ];
+    resetAuth({
+      churchId: "church-a",
+      activeChurchId: "church-a",
+      availableChurches: [churchA, churchB],
+    });
+    renderPortal();
+
+    openAccountMenu();
+    expect(text()).not.toContain("View as a Community Leader");
+
+    unmountPortal();
+    resetAuth({
+      churchId: "church-b",
+      activeChurchId: "church-b",
+      availableChurches: [churchA, churchB],
+    });
+    renderPortal();
+
+    openAccountMenu();
+    expect(text()).toContain("View as a Community Leader");
+    expect(document.body.querySelector('a[href="/community/community-b"]')).not.toBeNull();
+    expect(document.body.querySelector('a[href="/community/community-a"]')).toBeNull();
   });
 
   it("keeps the localized switcher contract in English and Kiswahili", () => {

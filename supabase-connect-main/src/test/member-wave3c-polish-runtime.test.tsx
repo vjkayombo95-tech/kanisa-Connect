@@ -7,10 +7,13 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({
-  auth: { churchId: "church-a", user: { id: "user-a", email: "member@example.test" } },
+  auth: { churchId: "church-a", activeChurchId: "church-a", user: { id: "user-a", email: "member@example.test" } },
   radio: {} as Record<string, unknown>, livestream: {} as Record<string, unknown>,
   radioPlayer: {} as Record<string, unknown>,
   tableErrors: new Set<string>(), rpcCalls: 0,
+  rpcLedCommunities: [
+    { community_id: "community-a", community_name: "Jumuiya A", leadership_role: "Mwenyekiti", church_id: "church-a" },
+  ],
 }));
 
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => state.auth }));
@@ -21,7 +24,7 @@ vi.mock("@/contexts/RadioPlayerContext", () => ({ useRadioPlayer: () => state.ra
 vi.mock("@/hooks/use-church-livestream", () => ({ useMemberLivestream: () => state.livestream }));
 vi.mock("@/contexts/PersistentLivestreamContext", () => ({ usePersistentLivestream: () => ({ activeStreamId: null, open: vi.fn() }) }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {
-  rpc: async () => { state.rpcCalls += 1; return { data: [{ community_id: "community-a", community_name: "Jumuiya A", leadership_role: "Mwenyekiti", church_id: "church-a" }], error: null }; },
+  rpc: async () => { state.rpcCalls += 1; return { data: state.rpcLedCommunities, error: null }; },
   from: (table: string) => { const result = () => ({ data: [], error: state.tableErrors.has(table) ? new Error(`${table} failed`) : null }); const chain: Record<string, unknown> = {}; for (const method of ["select", "eq", "is", "not", "ilike", "in", "limit"]) chain[method] = () => chain; chain.order = () => Promise.resolve(result()); chain.maybeSingle = () => Promise.resolve(result()); return chain; },
 } }));
 
@@ -37,7 +40,7 @@ const waitFor = async (predicate: () => boolean) => { for (let attempt = 0; atte
 describe("Wave 3C member polish runtime", () => {
   let host: HTMLDivElement; let root: Root; let client: QueryClient;
   const render = (node: ReactNode) => act(() => root.render(<QueryClientProvider client={client}><MemoryRouter>{node}</MemoryRouter></QueryClientProvider>));
-  beforeEach(() => { host = document.createElement("div"); document.body.append(host); root = createRoot(host); client = new QueryClient({ defaultOptions: { queries: { retry: false } } }); state.tableErrors.clear(); state.rpcCalls = 0; state.radio = { data: [], featureEnabled: true, featureLoading: false, isLoading: false, isError: false, refetch: vi.fn() }; state.radioPlayer = { station: null, state: "closed", volume: 0.8, play: vi.fn(), pause: vi.fn(), close: vi.fn(), retry: vi.fn(), setVolume: vi.fn() }; state.livestream = { data: null, featureEnabled: true, featureLoading: false, isLoading: false, isError: false, refetch: vi.fn() }; });
+  beforeEach(() => { host = document.createElement("div"); document.body.append(host); root = createRoot(host); client = new QueryClient({ defaultOptions: { queries: { retry: false } } }); state.auth.churchId = "church-a"; state.auth.activeChurchId = "church-a"; state.rpcLedCommunities = [{ community_id: "community-a", community_name: "Jumuiya A", leadership_role: "Mwenyekiti", church_id: "church-a" }]; state.tableErrors.clear(); state.rpcCalls = 0; state.radio = { data: [], featureEnabled: true, featureLoading: false, isLoading: false, isError: false, refetch: vi.fn() }; state.radioPlayer = { station: null, state: "closed", volume: 0.8, play: vi.fn(), pause: vi.fn(), close: vi.fn(), retry: vi.fn(), setVolume: vi.fn() }; state.livestream = { data: null, featureEnabled: true, featureLoading: false, isLoading: false, isError: false, refetch: vi.fn() }; });
   afterEach(() => { act(() => root.unmount()); host.remove(); client.clear(); });
 
   it("keeps Radio and Livestream request failures distinct from unavailable success states", () => { state.radio = { ...state.radio, isError: true }; render(<MemberRadioPage />); expect(host.querySelector('[data-testid="radio-error"]')).not.toBeNull(); expect(host.querySelector('[data-testid="radio-unavailable"]')).toBeNull(); state.livestream = { ...state.livestream, isError: true }; render(<MemberLivestreamPage />); expect(host.querySelector('[data-testid="livestream-error"]')).not.toBeNull(); expect(host.querySelector('[data-testid="livestream-unavailable"]')).toBeNull(); });
@@ -46,6 +49,28 @@ describe("Wave 3C member polish runtime", () => {
   it("shows playback retry when the selected production Radio stream fails", () => { state.radio = { ...state.radio, data: [{ id: "radio-a", name: "Radio Maria", streamUrl: "https://radio.example/live", websiteUrl: null, logoUrl: null, description: null, isActive: true, isApproved: true, selectionId: "selection-a", churchId: "church-a", enabled: true, isDefault: true, sortOrder: 0 }] }; state.radioPlayer = { ...state.radioPlayer, station: state.radio.data[0], state: "error" }; render(<MemberRadioPage />); expect(host.querySelector('[data-testid="radio-playback-error"]')).not.toBeNull(); host.querySelector<HTMLButtonElement>('[data-testid="radio-playback-error"] button')?.click(); expect(state.radioPlayer.retry).toHaveBeenCalledTimes(1); });
   it("keeps Events and Sermons request failures distinct from empty collections", async () => { state.tableErrors.add("events"); render(<PortalEvents />); await waitFor(() => host.textContent?.includes("Imeshindikana kupakia matukio.") === true); expect(host.textContent).not.toContain("No events at this time"); client.clear(); state.tableErrors.clear(); state.tableErrors.add("sermons"); render(<PortalSermons />); await waitFor(() => host.textContent?.includes("Imeshindikana kupakia mahubiri.") === true); expect(host.textContent).not.toContain("No sermons available"); });
   it("suppresses community-leader discovery until the profile menu needs it", async () => { function Probe({ enabled }: { enabled: boolean }) { const query = useLedCommunities(enabled); return <output>{query.fetchStatus}</output>; } render(<Probe enabled={false} />); expect(host.textContent).toBe("idle"); expect(state.rpcCalls).toBe(0); render(<Probe enabled />); await waitFor(() => state.rpcCalls === 1); });
+  it("scopes led communities to the active church for multi-church members", async () => {
+    state.rpcLedCommunities = [
+      { community_id: "community-b", community_name: "Jumuiya B", leadership_role: "Mwenyekiti", church_id: "church-b" },
+    ];
+
+    function Probe() {
+      const query = useLedCommunities();
+      return <output>{(query.data ?? []).map((community) => community.community_id).join(",")}</output>;
+    }
+
+    render(<Probe />);
+    await waitFor(() => state.rpcCalls === 1);
+    expect(host.textContent).toBe("");
+
+    client.clear();
+    state.auth.churchId = "church-b";
+    state.auth.activeChurchId = "church-b";
+    render(<Probe />);
+
+    await waitFor(() => host.textContent === "community-b");
+    expect(state.rpcCalls).toBe(2);
+  });
   it("uses canonical labels for the same member destinations", () => { const labels = new Map(memberServiceRegistry.map((service) => [service.id, service.label])); expect(labels.get("radio")).toBe("Radio"); expect(labels.get("livestream")).toBe("Misa Mubashara"); expect(labels.get("daily-readings")).toBe("Masomo ya Leo"); expect(labels.get("liturgical-calendar")).toBe("Kalenda ya Liturujia"); expect(labels.get("library")).toBe("Watakatifu"); expect(labels.get("dashboard")).toBe("Historia Yangu"); expect(getMemberBackTitle("/portal/live/stream-a")).toBe("Misa Mubashara"); });
   it("keeps Historia Yangu profile labels in Kiswahili", () => {
     const dashboard = readFileSync(join(process.cwd(), "src/pages/portal/PortalDashboard.tsx"), "utf8");

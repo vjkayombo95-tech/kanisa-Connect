@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, Church, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -55,7 +56,7 @@ export function MemberChurchSwitcherDialog({
     }
   };
 
-  return (
+  const dialog = (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         role="dialog"
@@ -83,6 +84,8 @@ export function MemberChurchSwitcherDialog({
               <button
                 key={church.membership_id}
                 type="button"
+                data-testid={`church-switcher-row-${church.church_id}`}
+                data-church-id={church.church_id}
                 aria-current={isActive ? "true" : undefined}
                 aria-label={
                   isActive
@@ -143,4 +146,6 @@ export function MemberChurchSwitcherDialog({
       </DialogContent>
     </Dialog>
   );
+
+  return typeof document === "undefined" ? dialog : createPortal(dialog, document.body);
 }
