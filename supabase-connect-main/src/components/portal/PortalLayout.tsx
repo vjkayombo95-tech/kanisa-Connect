@@ -392,6 +392,12 @@ function ProfileMenu({
   setProfileMenuOpen,
   profile,
   ledCommunities,
+  hasStaffAccess,
+  canUseMemberView,
+  staffWorkspaceLabel,
+  activeView,
+  handleSwitchToMember,
+  handleSwitchToStaff,
   handleSignOut,
   setMobileOpen,
   t,
@@ -400,6 +406,12 @@ function ProfileMenu({
   setProfileMenuOpen: (open: boolean) => void;
   profile: ReturnType<typeof useAuth>["profile"];
   ledCommunities: Awaited<ReturnType<typeof useLedCommunities>["data"]>;
+  hasStaffAccess: boolean;
+  canUseMemberView: boolean;
+  staffWorkspaceLabel: string;
+  activeView: ReturnType<typeof useAuth>["activeView"];
+  handleSwitchToMember: () => void;
+  handleSwitchToStaff: () => void;
   handleSignOut: () => Promise<void>;
   setMobileOpen: (open: boolean) => void;
   t: ReturnType<typeof useTranslation>["t"];
@@ -417,6 +429,20 @@ function ProfileMenu({
         <DropdownMenuItem disabled className="text-xs text-muted-foreground">
           {profile?.full_name || t("member")}
         </DropdownMenuItem>
+        {hasStaffAccess && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              {t("workspace_switcher.switch_view")}
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={activeView === "member" || !canUseMemberView} onClick={handleSwitchToMember}>
+              {t("workspace_switcher.member_view")}
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={activeView === "staff"} onClick={handleSwitchToStaff}>
+              {staffWorkspaceLabel}
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <AppLink to="/portal/dashboard" onClick={() => setMobileOpen(false)}>
@@ -461,8 +487,9 @@ export function PortalLayout() {
   const [mobileExpandedGroups, setMobileExpandedGroups] = useState<string[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, profile, user, userRole } = useAuth();
-  const isAdmin = isAdminRole(userRole as AppRole | null);
+  const { signOut, profile, user, userRole, member, staffWorkspace, activeView, setActiveView } = useAuth();
+  const hasStaffAccess = isAdminRole(userRole as AppRole | null);
+  const isAdmin = hasStaffAccess && activeView !== "member";
   const {
     data: ledCommunities = [],
     refetch: refetchLedCommunities,
@@ -476,6 +503,26 @@ export function PortalLayout() {
     await signOut();
     navigate("/login");
   };
+  const handleSwitchToMember = () => {
+    if (!member) return;
+    setActiveView("member");
+    setProfileMenuOpen(false);
+    setMobileOpen(false);
+    navigate("/portal");
+  };
+  const handleSwitchToStaff = () => {
+    setActiveView("staff");
+    setProfileMenuOpen(false);
+    setMobileOpen(false);
+    navigate("/church-admin");
+  };
+
+  const staffWorkspaceLabel =
+    staffWorkspace === "admin" ? t("church_admin_layout.workspaces.admin") :
+    staffWorkspace === "finance" ? t("church_admin_layout.workspaces.finance") :
+    staffWorkspace === "pastoral" ? t("church_admin_layout.workspaces.pastoral") :
+    staffWorkspace === "super_admin" ? t("church_admin_layout.workspaces.super_admin") :
+    t("church_admin_layout.workspaces.staff");
 
   const memberPortalLocked = memberPortalAccess === "none";
   const memberPortalLimited = memberPortalAccess === "limited";
@@ -602,10 +649,10 @@ export function PortalLayout() {
             userRole={userRole}
           />
 
-          {isAdmin && (
+          {hasStaffAccess && activeView === "member" && (
             <div className="flex items-center justify-between border-b border-primary/20 bg-primary/10 px-4 py-2">
               <span className="text-xs font-medium text-primary">{t("viewing_as_member")}</span>
-              <AppLink to="/church-admin" className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+              <AppLink to="/church-admin" onClick={() => setActiveView("staff")} className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
                 <ArrowLeft className="h-3 w-3" /> {t("back_to_admin")}
               </AppLink>
             </div>
@@ -656,6 +703,12 @@ export function PortalLayout() {
                   setProfileMenuOpen={setProfileMenuOpen}
                   profile={profile}
                   ledCommunities={ledCommunities}
+                  hasStaffAccess={hasStaffAccess}
+                  canUseMemberView={!!member}
+                  staffWorkspaceLabel={staffWorkspaceLabel}
+                  activeView={activeView}
+                  handleSwitchToMember={handleSwitchToMember}
+                  handleSwitchToStaff={handleSwitchToStaff}
                   handleSignOut={handleSignOut}
                   setMobileOpen={setMobileOpen}
                   t={t}

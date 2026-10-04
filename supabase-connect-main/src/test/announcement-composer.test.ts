@@ -91,10 +91,12 @@ describe("church admin announcement composer", () => {
     expect(source).toContain('label: "Everyone"');
     expect(source).toContain('label: "A ministry"');
     expect(source).toContain('label: "A community"');
+    expect(source).toContain('label: "Community leaders"');
     expect(source).toContain('label: "Specific roles"');
 
     expect(source).toContain('audienceMode === "ministry"');
     expect(source).toContain('audienceMode === "community"');
+    expect(source).toContain('audienceMode === "community_leaders"');
     expect(source).toContain('audienceMode === "roles"');
 
     expect(source).toContain(
@@ -106,6 +108,9 @@ describe("church admin announcement composer", () => {
     expect(source).toContain(
       'option.value === "community" ? current.communityAudience : "all"',
     );
+    expect(source).toContain('option.value === "community_leaders"');
+    expect(source).toContain('["community_leaders"]');
+    expect(source).toContain("Send to leaders of all communities in this church.");
   });
 
   it("supports targeting everyone or leaders within a selected community", () => {
@@ -150,8 +155,19 @@ describe("church admin announcement composer", () => {
     expect(source).toContain("function resolveAudienceMode({");
     expect(source).toContain('if (targetMinistry) return "ministry"');
     expect(source).toContain('if (targetCommunity) return "community"');
+    expect(source).toContain('if (audience.includes("community_leaders")) return "community_leaders"');
     expect(source).toContain('return "roles"');
     expect(source).toContain("setAudienceMode(");
+  });
+
+  it("preserves church-wide community leader targeting across save, edit, duplicate, and publish now", () => {
+    expect(source).toContain('_audience: form.audience');
+    expect(source).toContain('audience: form.audience');
+    expect(source).toContain('audience: announcement.audience?.length ? announcement.audience : ["everyone"]');
+    expect(source).toContain('_audience: announcement.audience?.length ? announcement.audience : ["everyone"]');
+    expect(source).toContain('targetMinistry: option.value === "ministry" ? current.targetMinistry : ""');
+    expect(source).toContain('targetCommunity: option.value === "community" ? current.targetCommunity : ""');
+    expect(source).toContain('item !== "everyone" && item !== "community_leaders"');
   });
 
   it("keeps advanced settings behind More options", () => {
@@ -171,6 +187,7 @@ describe("church admin announcement composer", () => {
     expect(source).toContain(
       '`Community: ${targetCommunity.trim()} - Everyone`',
     );
+    expect(source).toContain('if (normalizedAudience.includes("community_leaders")) return "Community leaders"');
     expect(source).toContain('if (normalizedAudience.includes("everyone")) return "Everyone"');
     expect(source).toContain("Audience: {audienceSummary}");
     expect(source).toContain("communityAudience: form.communityAudience");

@@ -49,6 +49,10 @@
   "sign_out": "Sign Out",
   "back_to_admin": "Back to Admin",
   "viewing_as_member": "You are viewing as a member",
+  "workspace_switcher": {
+    "member_view": "Member View",
+    "switch_view": "Switch view"
+  },
   "limited_member_access": "Limited access - upgrade to unlock full member features",
   "upgrade_to_unlock": "Upgrade to unlock",
   "language": "Language",
