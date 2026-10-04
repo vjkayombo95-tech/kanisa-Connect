@@ -8,8 +8,8 @@ export type MemberJumuiyaAssignment = {
 export const memberJumuiyaAssignmentsQueryKey = (userId?: string | null, churchId?: string | null) =>
   ["member-jumuiya-assignments", userId ?? null, churchId ?? null] as const;
 
-export async function fetchMyJumuiyaAssignments(): Promise<MemberJumuiyaAssignment[]> {
-  const { data, error } = await supabase.rpc("get_my_jumuiya_assignments" as never);
+export async function fetchMyJumuiyaAssignments(churchId: string): Promise<MemberJumuiyaAssignment[]> {
+  const { data, error } = await supabase.rpc("get_my_jumuiya_assignments" as never, { _church_id: churchId } as never);
   if (error) throw error;
 
   return ((data ?? []) as MemberJumuiyaAssignment[])

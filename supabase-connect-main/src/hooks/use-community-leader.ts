@@ -96,19 +96,22 @@ export function getCommunityContributionDate(contribution: ContributionDateSourc
 }
 
 export function useLedCommunities(enabled = true) {
-  const { user, churchId } = useAuth();
+  const { user, churchId, activeChurchId } = useAuth();
+  const scopedChurchId = activeChurchId ?? churchId;
+
   return useQuery({
-    queryKey: ["led-communities", user?.id, user?.email, churchId],
+    queryKey: ["led-communities", user?.id, user?.email, scopedChurchId],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user || !scopedChurchId) return [];
 
       const { data: rpcData, error: rpcError } = await supabase.rpc("get_user_led_communities" as never, {
         _user_id: user.id,
       } as never);
 
       const ledCommunities = Array.isArray(rpcData) ? rpcData : [];
-      if (!rpcError && ledCommunities.length > 0) {
-        return ledCommunities.map((community: any) => ({
+      const scopedLedCommunities = ledCommunities.filter((community: any) => community?.church_id === scopedChurchId);
+      if (!rpcError && scopedLedCommunities.length > 0) {
+        return scopedLedCommunities.map((community: any) => ({
           community_id: community.community_id,
           community_name: community.community_name,
           leadership_role: community.leadership_role,
@@ -122,6 +125,7 @@ export function useLedCommunities(enabled = true) {
         .from("members")
         .select("id, church_id, email")
         .eq("user_id", user.id)
+        .eq("church_id", scopedChurchId)
         .not("church_id", "is", null);
 
       if (linkedMemberError) throw linkedMemberError;
@@ -135,9 +139,7 @@ export function useLedCommunities(enabled = true) {
           .ilike("email", normalizedEmail)
           .not("church_id", "is", null);
 
-        if (churchId) {
-          emailQuery = emailQuery.eq("church_id", churchId);
-        }
+        emailQuery = emailQuery.eq("church_id", scopedChurchId);
 
         const { data: emailMatches, error: emailMatchError } = await emailQuery;
         if (emailMatchError) throw emailMatchError;
@@ -161,7 +163,7 @@ export function useLedCommunities(enabled = true) {
 
       const { data, error } = await supabase
         .from("communities")
-        .select("id, name, church_id, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id")
+        .select("id, name, church_id, mwenyekiti_id, makamu_mwenyekiti_id, mweka_hazina_id, katibu_id, chairperson_id, vice_chairperson_id, treasurer_id, secretary_id")
         .in("church_id", churchIds);
 
       if (error) throw error;
@@ -173,9 +175,13 @@ export function useLedCommunities(enabled = true) {
           if (community.mwenyekiti_id && memberIds.has(community.mwenyekiti_id)) {
             leadershipRole = "Mwenyekiti";
           }
+          else if (community.chairperson_id && memberIds.has(community.chairperson_id)) leadershipRole = "Mwenyekiti";
           else if (community.makamu_mwenyekiti_id && memberIds.has(community.makamu_mwenyekiti_id)) leadershipRole = "Makamu Mwenyekiti";
+          else if (community.vice_chairperson_id && memberIds.has(community.vice_chairperson_id)) leadershipRole = "Makamu Mwenyekiti";
           else if (community.mweka_hazina_id && memberIds.has(community.mweka_hazina_id)) leadershipRole = "Mweka Hazina";
+          else if (community.treasurer_id && memberIds.has(community.treasurer_id)) leadershipRole = "Mweka Hazina";
           else if (community.katibu_id && memberIds.has(community.katibu_id)) leadershipRole = "Katibu";
+          else if (community.secretary_id && memberIds.has(community.secretary_id)) leadershipRole = "Katibu";
 
           if (!leadershipRole) return null;
 
@@ -188,7 +194,7 @@ export function useLedCommunities(enabled = true) {
         })
         .filter(Boolean) as LedCommunity[];
     },
-    enabled: !!user && enabled,
+    enabled: !!user && !!scopedChurchId && enabled,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000,

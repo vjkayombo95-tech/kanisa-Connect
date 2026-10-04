@@ -15,15 +15,15 @@ describe("dual-role workspace view switching", () => {
     expect(auth).toContain('type ActiveWorkspaceView = "member" | "staff"');
     expect(auth).toContain("workspaceViewStorageKey(userId: string, churchId: string | null)");
     expect(auth).toContain('`workspace-view:${userId}:${churchId ?? "no-church"}`');
-    expect(auth).toContain("readStoredWorkspaceView(target.id,nextChurch)");
-    expect(auth).toContain("writeStoredWorkspaceView(user.id,churchId,nextView)");
+    expect(auth).toContain("readStoredWorkspaceView(target.id, nextChurch)");
+    expect(auth).toContain("writeStoredWorkspaceView(user.id, churchId, nextView)");
   });
 
   it("offers Member View only from an existing member identity and does not change route guards", () => {
     expect(auth).toContain("member: any | null");
-    expect(auth).toContain("nextMember=contextData.member??null");
-    expect(auth).toContain('storedView==="member"&&nextMember?"member":"staff"');
-    expect(auth).toContain("view===\"member\"&&canUseMemberView");
+    expect(auth).toContain("nextMember = contextData.member ?? null");
+    expect(auth).toContain('storedView === "member" && nextMember ? "member" : "staff"');
+    expect(auth).toContain('view === "member" && canUseMemberView');
     expect(app).toContain('<ProtectedRoute requireChurch>');
     expect(app).toContain('<ProtectedRoute requireChurch requireAdmin>');
     expect(protectedRoute).toContain("requireAdmin && !isSuperAdmin && !isAdminRole");

@@ -34,6 +34,7 @@ import { useBillingAccess } from "@/hooks/use-billing-access";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { Card, CardContent } from "@/components/ui/card";
 import { BibleVersePopup } from "@/components/portal/BibleVersePopup";
+import { MemberChurchSwitcherDialog } from "@/components/portal/MemberChurchSwitcherDialog";
 import { MemberMobileBackHeader } from "@/components/portal/MemberMobileBackHeader";
 import { formatTZS } from "@/lib/currency";
 import { cn } from "@/lib/utils";
@@ -211,6 +212,12 @@ function isActive(pathname: string, url: string) {
 function normalizeMemberPortalPath(pathname: string) {
   const normalized = pathname.replace(/\/$/, "") || "/";
   return normalized.replace(/^\/member(?=\/|$)/, "/portal");
+}
+
+function getSafeRouteAfterChurchSwitch(pathname: string) {
+  const normalizedPathname = normalizeMemberPortalPath(pathname);
+  if (/^\/portal\/ministries\/[^/]+$/.test(normalizedPathname)) return "/portal/ministries";
+  return null;
 }
 
 function isMobileBottomActive(pathname: string, url: string) {
@@ -392,10 +399,13 @@ function ProfileMenu({
   setProfileMenuOpen,
   profile,
   ledCommunities,
+  activeChurchName,
+  canSwitchChurch,
   hasStaffAccess,
   canUseMemberView,
   staffWorkspaceLabel,
   activeView,
+  openChurchSwitcher,
   handleSwitchToMember,
   handleSwitchToStaff,
   handleSignOut,
@@ -406,10 +416,13 @@ function ProfileMenu({
   setProfileMenuOpen: (open: boolean) => void;
   profile: ReturnType<typeof useAuth>["profile"];
   ledCommunities: Awaited<ReturnType<typeof useLedCommunities>["data"]>;
+  activeChurchName: string | null;
+  canSwitchChurch: boolean;
   hasStaffAccess: boolean;
   canUseMemberView: boolean;
   staffWorkspaceLabel: string;
   activeView: ReturnType<typeof useAuth>["activeView"];
+  openChurchSwitcher: () => void;
   handleSwitchToMember: () => void;
   handleSwitchToStaff: () => void;
   handleSignOut: () => Promise<void>;
@@ -419,16 +432,38 @@ function ProfileMenu({
   return (
     <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
+        <Button variant="ghost" size="icon" className="rounded-full" aria-label={t("church_switcher.account_menu")}>
           <div className="flex h-8 w-8 items-center justify-center rounded-full gradient-gold">
             <User className="h-4 w-4 text-primary-foreground" />
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64 max-w-[calc(100vw-2rem)]">
+      <DropdownMenuContent align="end" className="w-72 max-w-[calc(100vw-2rem)]">
         <DropdownMenuItem disabled className="text-xs text-muted-foreground">
           {profile?.full_name || t("member")}
         </DropdownMenuItem>
+        {activeChurchName ? (
+          <DropdownMenuItem disabled className="whitespace-normal text-xs text-muted-foreground">
+            <span className="min-w-0">
+              <span className="block font-semibold uppercase tracking-[0.16em]">{t("church_switcher.my_church")}</span>
+              <span className="block break-words text-foreground">{activeChurchName}</span>
+            </span>
+          </DropdownMenuItem>
+        ) : null}
+        {canSwitchChurch ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={(event) => {
+                event.preventDefault();
+                setProfileMenuOpen(false);
+                openChurchSwitcher();
+              }}
+            >
+              {t("church_switcher.switch_church")}
+            </DropdownMenuItem>
+          </>
+        ) : null}
         {hasStaffAccess && (
           <>
             <DropdownMenuSeparator />
@@ -481,13 +516,27 @@ function ProfileMenu({
 export function PortalLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [churchSwitcherOpen, setChurchSwitcherOpen] = useState(false);
   const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
   const [desktopExpandedGroups, setDesktopExpandedGroups] = useState<string[]>([]);
   const [lastDesktopActiveGroup, setLastDesktopActiveGroup] = useState<string | null>(null);
   const [mobileExpandedGroups, setMobileExpandedGroups] = useState<string[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, profile, user, userRole, member, staffWorkspace, activeView, setActiveView } = useAuth();
+  const {
+    signOut,
+    profile,
+    user,
+    userRole,
+    member,
+    churchId,
+    activeChurchId,
+    availableChurches = [],
+    switchChurch = async () => {},
+    staffWorkspace,
+    activeView,
+    setActiveView,
+  } = useAuth();
   const hasStaffAccess = isAdminRole(userRole as AppRole | null);
   const isAdmin = hasStaffAccess && activeView !== "member";
   const {
@@ -516,6 +565,11 @@ export function PortalLayout() {
     setMobileOpen(false);
     navigate("/church-admin");
   };
+  const handleChurchSwitchSuccess = () => {
+    setMobileOpen(false);
+    const safeRoute = getSafeRouteAfterChurchSwitch(location.pathname);
+    if (safeRoute) navigate(safeRoute, { replace: true });
+  };
 
   const staffWorkspaceLabel =
     staffWorkspace === "admin" ? t("church_admin_layout.workspaces.admin") :
@@ -530,6 +584,16 @@ export function PortalLayout() {
   const notificationFeatureState = getFeatureState("notifications");
   const notificationsVisible = !featuresLoading && notificationFeatureState.exists && notificationFeatureState.visible;
   const memberNotifications = useMemberNotifications(useSimpleMemberNav && notificationsVisible);
+  const activeChurch = useMemo(
+    () =>
+      availableChurches.find((church) => church.church_id === (activeChurchId ?? churchId)) ??
+      availableChurches.find((church) => church.is_primary) ??
+      availableChurches[0] ??
+      null,
+    [activeChurchId, availableChurches, churchId],
+  );
+  const activeChurchName = activeChurch?.church_name ?? profile?.church_name ?? null;
+  const canSwitchChurch = availableChurches.length > 1;
   const mainItems = useMemo(
     () => (useSimpleMemberNav ? SIMPLE_MEMBER_MAIN_ITEMS : memberPortalLimited ? LIMITED_MAIN_ITEMS : FULL_MAIN_ITEMS),
     [memberPortalLimited, useSimpleMemberNav],
@@ -690,7 +754,9 @@ export function PortalLayout() {
                 <p className="truncate text-sm font-semibold text-foreground">
                   {profile?.full_name || t("member")}
                 </p>
-                <p className="truncate text-xs text-muted-foreground">Member Portal</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {activeChurchName ?? t("church_switcher.member_portal")}
+                </p>
               </div>
 
               <div className="flex items-center gap-2">
@@ -703,15 +769,27 @@ export function PortalLayout() {
                   setProfileMenuOpen={setProfileMenuOpen}
                   profile={profile}
                   ledCommunities={ledCommunities}
+                  activeChurchName={activeChurchName}
+                  canSwitchChurch={canSwitchChurch}
                   hasStaffAccess={hasStaffAccess}
                   canUseMemberView={!!member}
                   staffWorkspaceLabel={staffWorkspaceLabel}
                   activeView={activeView}
+                  openChurchSwitcher={() => setChurchSwitcherOpen(true)}
                   handleSwitchToMember={handleSwitchToMember}
                   handleSwitchToStaff={handleSwitchToStaff}
                   handleSignOut={handleSignOut}
                   setMobileOpen={setMobileOpen}
                   t={t}
+                />
+
+                <MemberChurchSwitcherDialog
+                  open={churchSwitcherOpen}
+                  onOpenChange={setChurchSwitcherOpen}
+                  churches={availableChurches}
+                  activeChurchId={activeChurchId ?? churchId}
+                  switchChurch={switchChurch}
+                  onSwitchSuccess={handleChurchSwitchSuccess}
                 />
 
                 <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen((current) => !current)}>

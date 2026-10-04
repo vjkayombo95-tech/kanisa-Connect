@@ -53,6 +53,23 @@
     "member_view": "Member View",
     "switch_view": "Switch view"
   },
+  "church_switcher": {
+    "account_menu": "Open account menu",
+    "my_church": "My Church",
+    "my_churches": "My Churches",
+    "switch_church": "Switch Church",
+    "current_church": "Current church: {{church}}",
+    "current_badge": "Current",
+    "choose": "Choose",
+    "member": "Member",
+    "switching": "Switching church...",
+    "error": "Could not switch church. Please try again.",
+    "close": "Close",
+    "fallback_church": "Church",
+    "member_portal": "Member Portal",
+    "current_church_aria": "{{church}} is currently selected",
+    "choose_church_aria": "Choose {{church}}"
+  },
   "limited_member_access": "Limited access - upgrade to unlock full member features",
   "upgrade_to_unlock": "Upgrade to unlock",
   "language": "Language",

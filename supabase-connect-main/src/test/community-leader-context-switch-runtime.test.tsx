@@ -5,6 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({
   signOut: vi.fn(),
+  auth: {
+    churchId: "church-a",
+    activeChurchId: "church-a",
+  },
   ledCommunities: [] as Array<{
     community_id: string;
     community_name: string;
@@ -18,14 +22,15 @@ vi.mock("@/contexts/AuthContext", () => ({
     signOut: state.signOut,
     profile: { full_name: "Tino Haule" },
     user: { id: "user-a", email: "tino@example.test", user_metadata: {} },
-    churchId: "church-a",
+    churchId: state.auth.churchId,
+    activeChurchId: state.auth.activeChurchId,
     userRole: "member",
   }),
 }));
 
 vi.mock("@/hooks/use-community-leader", () => ({
   useLedCommunities: () => ({
-    data: state.ledCommunities,
+    data: state.ledCommunities.filter((community) => community.church_id === (state.auth.activeChurchId ?? state.auth.churchId)),
     isLoading: false,
   }),
 }));
@@ -83,6 +88,8 @@ describe("community leader context switching", () => {
   beforeEach(() => {
     mounted = null;
     state.signOut.mockClear();
+    state.auth.churchId = "church-a";
+    state.auth.activeChurchId = "church-a";
     state.ledCommunities = [
       {
         community_id: "community-a",
@@ -140,5 +147,31 @@ describe("community leader context switching", () => {
     expect(mounted.host).toHaveTextContent("Access Denied");
     expect(mounted.host).toHaveTextContent("You are not a leader of this community.");
     expect(state.signOut).not.toHaveBeenCalled();
+  });
+
+  it("does not allow direct community workspace access from another active church", () => {
+    state.ledCommunities = [
+      {
+        community_id: "community-b",
+        community_name: "Mtakatifu Petro",
+        leadership_role: "Mwenyekiti",
+        church_id: "church-b",
+      },
+    ];
+    mounted = render(<CommunityLeaderApplication initialPath="/community/community-b/dashboard" />);
+
+    expect(mounted.host).toHaveTextContent("Access Denied");
+    expect(mounted.host).toHaveTextContent("You are not a leader of this community.");
+
+    act(() => mounted?.root.unmount());
+    mounted.host.remove();
+    mounted = null;
+
+    state.auth.churchId = "church-b";
+    state.auth.activeChurchId = "church-b";
+    mounted = render(<CommunityLeaderApplication initialPath="/community/community-b/dashboard" />);
+
+    expect(mounted.host).not.toHaveTextContent("Access Denied");
+    expect(mounted.host).toHaveTextContent("Community dashboard");
   });
 });

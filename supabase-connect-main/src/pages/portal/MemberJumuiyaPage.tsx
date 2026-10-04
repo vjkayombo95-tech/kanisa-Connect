@@ -57,7 +57,7 @@ export default function MemberJumuiyaPage() {
   const { churchId, user } = useAuth();
   const assignments = useQuery({
     queryKey: memberJumuiyaAssignmentsQueryKey(user?.id, churchId),
-    queryFn: fetchMyJumuiyaAssignments,
+    queryFn: () => fetchMyJumuiyaAssignments(churchId!),
     enabled: !!user?.id && !!churchId,
     retry: false,
     staleTime: 60_000,
