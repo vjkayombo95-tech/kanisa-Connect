@@ -49,6 +49,10 @@
   "sign_out": "Toka",
   "back_to_admin": "Rudi kwa Admin",
   "viewing_as_member": "Unaangalia kama mwanachama",
+  "workspace_switcher": {
+    "member_view": "Muonekano wa Mwanachama",
+    "switch_view": "Badili muonekano"
+  },
   "limited_member_access": "Upatikanaji mdogo - boresha ili kufungua vipengele vyote vya mwanachama",
   "upgrade_to_unlock": "Boresha ili kufungua",
   "language": "Lugha",

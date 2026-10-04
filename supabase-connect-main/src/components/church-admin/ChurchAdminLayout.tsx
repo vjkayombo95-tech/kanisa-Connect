@@ -27,7 +27,7 @@ const FloatingAIAssistant = lazy(() =>
 );
 
 export function ChurchAdminLayout() {
-  const { signOut, profile, isSuperAdmin, churchId, staffWorkspace } = useAuth();
+  const { signOut, profile, member, isSuperAdmin, churchId, staffWorkspace, setActiveView } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
@@ -58,6 +58,11 @@ export function ChurchAdminLayout() {
   const handleSignOut = async () => {
     await signOut();
     navigate("/login");
+  };
+  const handleSwitchToMember = () => {
+    if (!member) return;
+    setActiveView("member");
+    navigate("/portal");
   };
 
   return (
@@ -106,6 +111,14 @@ export function ChurchAdminLayout() {
                   <DropdownMenuContent align="end" className="z-[70] w-48">
                     <DropdownMenuItem disabled className="text-xs text-muted-foreground">{profile?.full_name || "Admin"}</DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    {member ? (
+                      <>
+                        <DropdownMenuItem disabled className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t("workspace_switcher.switch_view")}</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleSwitchToMember}>{t("workspace_switcher.member_view")}</DropdownMenuItem>
+                        <DropdownMenuItem disabled>{workspaceLabel}</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    ) : null}
                     {canOpenSettings ? (
                       <>
                         <DropdownMenuItem onClick={() => navigate("/church-admin/settings")}>{t("church_admin_layout.settings")}</DropdownMenuItem>
@@ -135,6 +148,14 @@ export function ChurchAdminLayout() {
                     <DropdownMenuContent align="end" className="z-[70] w-64 max-w-[calc(100vw-2rem)]">
                       <DropdownMenuItem disabled className="text-xs text-muted-foreground">{profile?.full_name || "Admin"}</DropdownMenuItem>
                       <DropdownMenuSeparator />
+                      {member ? (
+                        <>
+                          <DropdownMenuItem disabled className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{t("workspace_switcher.switch_view")}</DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleSwitchToMember}>{t("workspace_switcher.member_view")}</DropdownMenuItem>
+                          <DropdownMenuItem disabled>{workspaceLabel}</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                        </>
+                      ) : null}
                       {canOpenSettings ? (
                         <>
                           <DropdownMenuItem onClick={() => navigate("/church-admin/settings")}>{t("church_admin_layout.settings")}</DropdownMenuItem>
