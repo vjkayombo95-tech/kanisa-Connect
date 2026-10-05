@@ -11,6 +11,7 @@ const serviceRegistry = read("src/lib/member-service-registry.ts");
 const portalLayout = read("src/components/portal/PortalLayout.tsx");
 const memberMyParish = read("src/pages/portal/MemberMyParishPage.tsx");
 const mobileHome = read("src/components/portal/MobileMemberHome.tsx");
+const sw = JSON.parse(read("src/locales/sw.json")) as { member_services: { calendar: { label: string; back_title: string } }; member_my_parish: { actions: { schedule: string } } };
 
 describe("member parish schedule visual copy contract", () => {
   it("uses Ratiba ya Parokia for the member schedule surface", () => {
@@ -55,9 +56,15 @@ describe("member parish schedule visual copy contract", () => {
   });
 
   it("uses Ratiba for member navigation copy while preserving the route", () => {
-    expect(portalLayout).toContain('{ titleKey: "Ratiba", url: "/portal/calendar", icon: EventsIcon, featureKey: "events" }');
+    expect(portalLayout).toContain('serviceNavItem("calendar", "/portal/calendar", EventsIcon, "events")');
+    expect(serviceRegistry).toContain('labelKey: "member_services.calendar.label"');
+    expect(serviceRegistry).toContain('backTitleKey: "member_services.calendar.back_title"');
+    expect(sw.member_services.calendar.label).toBe("Ratiba ya Parokia");
+    expect(sw.member_services.calendar.back_title).toBe("Ratiba");
+    expect(sw.member_my_parish.actions.schedule).toBe("Ratiba");
     expect(memberMyParish).toContain('to="/portal/calendar"');
-    expect(memberMyParish).toContain('title="Ratiba"');
+    expect(memberMyParish).toContain('t("member_my_parish.actions.schedule")');
+    expect(memberMyParish).toContain('t("member_services.calendar.label")');
     expect(mobileHome).toContain('to="/portal/calendar"');
     expect(mobileHome).toContain(">Ratiba</AppLink>");
   });

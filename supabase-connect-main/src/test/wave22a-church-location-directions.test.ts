@@ -6,6 +6,9 @@ import { getParishDirectionsHref, getParishMapHref } from "@/lib/member-daily-li
 
 const readSrc = (path: string) => readFileSync(join(process.cwd(), "src", path), "utf8");
 const readRoot = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
+const sw = JSON.parse(readSrc("locales/sw.json")) as {
+  member_my_parish: { actions: { directions: string }; location: { empty: string } };
+};
 
 describe("Wave 22A church location directions", () => {
   it("adds nullable church coordinate columns with bounded range checks", () => {
@@ -48,8 +51,10 @@ describe("Wave 22A church location directions", () => {
     const page = readSrc("pages/portal/MemberMyParishPage.tsx");
 
     expect(page).toContain("getParishDirectionsHref(parish.data)");
-    expect(page).toContain("Pata Maelekezo");
-    expect(page).toContain("Mahali pa parokia bado hapajawekwa.");
+    expect(page).toContain('t("member_my_parish.actions.directions")');
+    expect(page).toContain('t("member_my_parish.location.empty")');
+    expect(sw.member_my_parish.actions.directions).toBe("Pata Maelekezo");
+    expect(sw.member_my_parish.location.empty).toBe("Mahali pa parokia bado hapajawekwa.");
     expect(page).toContain("overflow-x-hidden");
     expect(page).not.toMatch(/<iframe|maps\/embed|google\.maps/i);
   });
@@ -124,7 +129,8 @@ describe("Wave 22A church location directions", () => {
     const helper = readSrc("lib/member-daily-life.ts");
 
     expect(parishPage).toContain("getParishDirectionsHref(parish.data)");
-    expect(parishPage).toContain("Pata Maelekezo");
+    expect(parishPage).toContain('t("member_my_parish.actions.directions")');
+    expect(sw.member_my_parish.actions.directions).toBe("Pata Maelekezo");
     expect(parishPage).not.toContain("ChurchLocationMapPicker");
     expect(helper).toContain('.select("id,name,logo_url,phone,email,address,latitude,longitude")');
     expect(helper).toContain("return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`");

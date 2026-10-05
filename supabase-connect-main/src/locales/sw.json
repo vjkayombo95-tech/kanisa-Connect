@@ -743,6 +743,92 @@
   "member_mobile": {
     "back_from": "Rudi kutoka {{title}}"
   },
+  "member_portal_shell": {
+    "collapse_sidebar": "Funga menyu ya mwanachama",
+    "desktop_navigation": "Urambazaji wa mwanachama kwenye kompyuta",
+    "expand_sidebar": "Fungua menyu ya mwanachama",
+    "explore": "Gundua",
+    "main": "Kuu",
+    "menu": "Menyu",
+    "groups": {
+      "community": "Jumuiya",
+      "finance": "Fedha",
+      "media": "Media",
+      "primary": "Kuu",
+      "services": "Huduma",
+      "spiritual": "Kiroho"
+    }
+  },
+  "member_my_parish": {
+    "actions": {
+      "all_announcements": "Matangazo yote",
+      "all_events": "Matukio yote",
+      "all_ministries": "Huduma zote",
+      "copy_address": "Nakili anwani",
+      "directions": "Pata Maelekezo",
+      "my_requests": "Maombi yangu",
+      "retry": "Jaribu tena",
+      "retry_aria": "Jaribu tena: {{title}}",
+      "retrying": "Inapakia...",
+      "schedule": "Ratiba",
+      "view_services": "Angalia huduma"
+    },
+    "contact": {
+      "call": "Piga simu",
+      "email": "Tuma barua pepe",
+      "empty": "Mawasiliano ya parokia bado hayajachapishwa."
+    },
+    "empty": {
+      "announcement": "Hakuna tangazo jipya kwa sasa.",
+      "events": "Hakuna tukio lijalo lililochapishwa kwa sasa.",
+      "ministries": "Bado hujajiunga na huduma ya parokia.",
+      "next_mass": "Hakuna Misa ijayo iliyopangwa kwa sasa.",
+      "parish_description": "Utaziona hapa mara tu zitakapowekwa kwa waumini.",
+      "parish_title": "Taarifa za parokia bado hazijachapishwa."
+    },
+    "errors": {
+      "announcement_description": "Matangazo mengine yanaweza kuendelea kupatikana kwenye ukurasa wake.",
+      "announcement_title": "Hatukuweza kupakia tangazo la karibuni kwa sasa.",
+      "events_description": "Tafadhali jaribu tena ili kuona matukio mapya ya parokia.",
+      "events_title": "Hatukuweza kupakia matukio yajayo kwa sasa.",
+      "mass_description": "Ratiba ya Misa haijapotea. Tafadhali jaribu tena baada ya muda mfupi.",
+      "mass_title": "Hatukuweza kupakia Misa ijayo kwa sasa.",
+      "member_description": "Tafadhali jaribu tena ili tuangalie huduma zako za parokia.",
+      "member_title": "Hatukuweza kuthibitisha taarifa zako za mshiriki kwa sasa.",
+      "ministries_description": "Tafadhali jaribu tena ili kuona huduma ulizojiunga nazo.",
+      "ministries_title": "Hatukuweza kupakia huduma zako kwa sasa.",
+      "parish_description": "Taarifa nyingine bado zinaweza kupatikana. Tafadhali jaribu tena.",
+      "parish_title": "Hatukuweza kupakia taarifa za parokia kwa sasa.",
+      "partial": "Baadhi ya taarifa za parokia hazikupatikana. Njia nyingine bado zinaweza kutumika."
+    },
+    "fallbacks": {
+      "announcement": "Tangazo la karibuni",
+      "ministry_joined": "Umejiunga"
+    },
+    "hero": {
+      "eyebrow": "Parokia Yangu",
+      "linked_as": "Umeunganishwa kama {{name}}",
+      "logo_alt": "Nembo ya {{church}}"
+    },
+    "location": {
+      "address_copied": "Anwani imenakiliwa.",
+      "address_copy_failed": "Anwani haikuweza kunakiliwa.",
+      "directions_aria": "Pata Maelekezo: {{target}}",
+      "empty": "Mahali pa parokia bado hapajawekwa.",
+      "map_saved": "Mahali halisi kimehifadhiwa kwa ramani."
+    },
+    "sections": {
+      "contact": "Mawasiliano",
+      "contact_location": "Mawasiliano na mahali pa parokia",
+      "latest_announcement": "Tangazo la karibuni",
+      "location": "Mahali pa parokia",
+      "my_ministries": "Huduma zangu",
+      "next_mass": "Misa ijayo",
+      "office_services": "Huduma za Ofisi",
+      "quick_links": "Njia za haraka",
+      "upcoming_events": "Matukio yajayo"
+    }
+  },
   "member_services": {
     "announcements": { "label": "Matangazo", "description": "Taarifa mpya za parokia", "back_title": "Matangazo" },
     "bible": { "label": "Biblia", "description": "Soma Biblia", "back_title": "Biblia", "chapter_title": "Sura ya Biblia" },

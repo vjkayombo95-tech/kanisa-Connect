@@ -14,6 +14,42 @@ const state = vi.hoisted(() => ({
   refetchLedCommunities: vi.fn(),
 }));
 
+const translations = vi.hoisted(() => ({
+  member: "Mwanachama",
+  "church_switcher.account_menu": "Fungua menyu ya akaunti",
+  "church_switcher.my_church": "Kanisa Langu",
+  "church_switcher.member_portal": "Portal ya Mwanachama",
+  "member_portal_shell.collapse_sidebar": "Funga menyu ya mwanachama",
+  "member_portal_shell.desktop_navigation": "Urambazaji wa mwanachama kwenye kompyuta",
+  "member_portal_shell.expand_sidebar": "Fungua menyu ya mwanachama",
+  "member_portal_shell.explore": "Gundua",
+  "member_portal_shell.main": "Kuu",
+  "member_portal_shell.menu": "Menyu",
+  "member_portal_shell.groups.primary": "Kuu",
+  "member_portal_shell.groups.services": "Huduma",
+  "member_portal_shell.groups.spiritual": "Kiroho",
+  "member_portal_shell.groups.media": "Media",
+  "member_services.announcements.label": "Matangazo",
+  "member_services.bible.label": "Biblia",
+  "member_services.calendar.label": "Ratiba ya Parokia",
+  "member_services.daily_readings.label": "Masomo ya Leo",
+  "member_services.dashboard.label": "Historia Yangu",
+  "member_services.give.label": "Toa Mchango",
+  "member_services.home.label": "Nyumbani",
+  "member_services.jumuiya.label": "Jumuiya Yangu",
+  "member_services.library.label": "Watakatifu",
+  "member_services.liturgical_calendar.label": "Kalenda ya Liturujia",
+  "member_services.mass_intentions.label": "Nia za Misa",
+  "member_services.ministries.label": "Huduma za Parokia",
+  "member_services.my_parish.label": "Parokia Yangu",
+  "member_services.prayers.label": "Sala",
+  "member_services.radio.label": "Radio",
+  "member_services.sermons.label": "Mahubiri",
+  "member_services.services.label": "Zaidi",
+  "member_services.today.label": "Leo",
+  view_as_community_leader: "Fungua kama Kiongozi wa Jumuiya",
+}));
+
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({
     churchId: "church-a",
@@ -62,9 +98,7 @@ vi.mock("@/hooks/use-feature-access", () => ({
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string) => (
-      key === "view_as_community_leader" ? "Fungua kama Kiongozi wa Jumuiya" : key
-    ),
+    t: (key: string) => translations[key as keyof typeof translations] ?? key,
     i18n: { language: "sw" },
   }),
 }));
@@ -209,7 +243,7 @@ describe("Wave 14 member navigation hierarchy runtime", () => {
     mounted = render(<PortalApplication />);
     const sidebar = mounted.host.querySelector('[data-testid="member-desktop-sidebar"]');
     expect(sidebar).not.toBeNull();
-    const primary = sidebar?.querySelector('section[aria-label="Primary"]');
+    const primary = sidebar?.querySelector('section[aria-label="Kuu"]');
     const huduma = sidebar?.querySelector('section[aria-label="Huduma"]');
     const kiroho = sidebar?.querySelector('section[aria-label="Kiroho"]');
     const media = sidebar?.querySelector('section[aria-label="Media"]');
@@ -221,7 +255,7 @@ describe("Wave 14 member navigation hierarchy runtime", () => {
 
     act(() => (huduma?.querySelector("button") as HTMLButtonElement).click());
     expect(huduma).toHaveTextContent("Jumuiya Yangu");
-    expect(huduma).toHaveTextContent("Michango");
+    expect(huduma).toHaveTextContent("Toa Mchango");
     expect(huduma).toHaveTextContent("Nia za Misa");
     expect(huduma).toHaveTextContent("Matangazo");
     expect(kiroho).toHaveTextContent("Kiroho");

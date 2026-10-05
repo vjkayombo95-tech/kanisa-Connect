@@ -10,6 +10,8 @@ const memberRoutes = read("src/routes/MemberRoutes.tsx");
 const portalFeatures = read("src/lib/portal-features.ts");
 const serviceRegistry = read("src/lib/member-service-registry.ts");
 const portalLayout = read("src/components/portal/PortalLayout.tsx");
+const sw = JSON.parse(read("src/locales/sw.json")) as { member_services: { calendar: { label: string; back_title: string } } };
+const en = JSON.parse(read("src/locales/en.json")) as { member_services: { calendar: { label: string; back_title: string } } };
 const memberServices = read("src/pages/portal/MemberServicesPage.tsx");
 const memberMyParish = read("src/pages/portal/MemberMyParishPage.tsx");
 const memberToday = read("src/pages/portal/MemberTodayPage.tsx");
@@ -101,8 +103,14 @@ describe("member Parish schedule behavior contract", () => {
   });
 
   it("keeps member navigation entry points pointing to the existing route", () => {
-    expect(portalLayout).toContain('{ titleKey: "Ratiba", url: "/portal/calendar", icon: EventsIcon, featureKey: "events" }');
+    expect(portalLayout).toContain('serviceNavItem("calendar", "/portal/calendar", EventsIcon, "events")');
     expect(serviceRegistry).toContain('label: "Ratiba ya Parokia"');
+    expect(serviceRegistry).toContain('labelKey: "member_services.calendar.label"');
+    expect(serviceRegistry).toContain('featureKey: "events"');
+    expect(sw.member_services.calendar.label).toBe("Ratiba ya Parokia");
+    expect(sw.member_services.calendar.back_title).toBe("Ratiba");
+    expect(en.member_services.calendar.label).toBeTruthy();
+    expect(en.member_services.calendar.back_title).toBeTruthy();
     expect(memberServices).toContain('calendar: "parish-services"');
     expect(memberMyParish).toContain('to="/portal/calendar"');
     expect(memberToday).toContain('to="/portal/calendar"');

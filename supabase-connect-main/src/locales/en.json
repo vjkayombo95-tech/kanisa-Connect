@@ -743,6 +743,92 @@
   "member_mobile": {
     "back_from": "Back from {{title}}"
   },
+  "member_portal_shell": {
+    "collapse_sidebar": "Collapse member sidebar",
+    "desktop_navigation": "Member desktop navigation",
+    "expand_sidebar": "Expand member sidebar",
+    "explore": "Explore",
+    "main": "Main",
+    "menu": "Menu",
+    "groups": {
+      "community": "Community",
+      "finance": "Finance",
+      "media": "Media",
+      "primary": "Primary",
+      "services": "Services",
+      "spiritual": "Spiritual"
+    }
+  },
+  "member_my_parish": {
+    "actions": {
+      "all_announcements": "All announcements",
+      "all_events": "All events",
+      "all_ministries": "All ministries",
+      "copy_address": "Copy address",
+      "directions": "Get Directions",
+      "my_requests": "My requests",
+      "retry": "Try again",
+      "retry_aria": "Try again: {{title}}",
+      "retrying": "Loading...",
+      "schedule": "Schedule",
+      "view_services": "View ministries"
+    },
+    "contact": {
+      "call": "Call",
+      "email": "Email",
+      "empty": "Parish contact details have not been published yet."
+    },
+    "empty": {
+      "announcement": "There is no new announcement right now.",
+      "events": "There are no upcoming events published right now.",
+      "ministries": "You have not joined a parish ministry yet.",
+      "next_mass": "There is no upcoming Mass scheduled right now.",
+      "parish_description": "You will see them here once they are shared with members.",
+      "parish_title": "Parish details have not been published yet."
+    },
+    "errors": {
+      "announcement_description": "Other announcements may still be available on their page.",
+      "announcement_title": "We could not load the latest announcement right now.",
+      "events_description": "Please try again to see new parish events.",
+      "events_title": "We could not load upcoming events right now.",
+      "mass_description": "The Mass schedule has not been lost. Please try again shortly.",
+      "mass_title": "We could not load the next Mass right now.",
+      "member_description": "Please try again so we can check your parish ministries.",
+      "member_title": "We could not verify your member details right now.",
+      "ministries_description": "Please try again to see the ministries you have joined.",
+      "ministries_title": "We could not load your ministries right now.",
+      "parish_description": "Other information may still be available. Please try again.",
+      "parish_title": "We could not load parish details right now.",
+      "partial": "Some parish details could not be loaded. Other paths may still be available."
+    },
+    "fallbacks": {
+      "announcement": "Latest announcement",
+      "ministry_joined": "Joined"
+    },
+    "hero": {
+      "eyebrow": "My Parish",
+      "linked_as": "Connected as {{name}}",
+      "logo_alt": "{{church}} logo"
+    },
+    "location": {
+      "address_copied": "Address copied.",
+      "address_copy_failed": "Address could not be copied.",
+      "directions_aria": "Get directions: {{target}}",
+      "empty": "Parish location has not been added yet.",
+      "map_saved": "The exact location is saved for maps."
+    },
+    "sections": {
+      "contact": "Contact",
+      "contact_location": "Parish contact and location",
+      "latest_announcement": "Latest announcement",
+      "location": "Parish location",
+      "my_ministries": "My ministries",
+      "next_mass": "Next Mass",
+      "office_services": "Parish Office Services",
+      "quick_links": "Quick links",
+      "upcoming_events": "Upcoming events"
+    }
+  },
   "member_services": {
     "announcements": { "label": "Announcements", "description": "New parish notices", "back_title": "Announcements" },
     "bible": { "label": "Bible", "description": "Read the Bible", "back_title": "Bible", "chapter_title": "Bible Chapter" },

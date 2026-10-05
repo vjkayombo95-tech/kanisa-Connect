@@ -5,11 +5,31 @@ import { describe, expect, it } from "vitest";
 const layout = readFileSync(join(process.cwd(), "src/components/portal/PortalLayout.tsx"), "utf8");
 const routes = readFileSync(join(process.cwd(), "src/routes/MemberRoutes.tsx"), "utf8");
 const styles = readFileSync(join(process.cwd(), "src/index.css"), "utf8");
+const en = JSON.parse(readFileSync(join(process.cwd(), "src/locales/en.json"), "utf8")) as {
+  member_portal_shell: {
+    collapse_sidebar: string;
+    desktop_navigation: string;
+    expand_sidebar: string;
+    groups: Record<string, string>;
+  };
+  member_services: Record<string, { label: string }>;
+};
+const sw = JSON.parse(readFileSync(join(process.cwd(), "src/locales/sw.json"), "utf8")) as {
+  member_portal_shell: {
+    collapse_sidebar: string;
+    desktop_navigation: string;
+    expand_sidebar: string;
+    groups: Record<string, string>;
+  };
+  member_services: Record<string, { label: string }>;
+};
 
 describe("member desktop sidebar Wave 1", () => {
   it("renders one desktop sidebar and removes the crowded desktop horizontal nav", () => {
     expect(layout).toContain('data-testid="member-desktop-sidebar"');
-    expect(layout).toContain('aria-label="Member desktop navigation"');
+    expect(layout).toContain('aria-label={t("member_portal_shell.desktop_navigation")}');
+    expect(en.member_portal_shell.desktop_navigation).toBe("Member desktop navigation");
+    expect(sw.member_portal_shell.desktop_navigation).toBe("Urambazaji wa mwanachama kwenye kompyuta");
     expect(layout).toContain("lg:flex lg:flex-col");
     expect(layout).not.toContain('<nav className="hidden items-center gap-2 lg:flex">');
     expect(layout).not.toContain("<DesktopNavLink");
@@ -17,27 +37,39 @@ describe("member desktop sidebar Wave 1", () => {
   });
 
   it("keeps the approved desktop groups and existing member routes", () => {
-    for (const label of ["Primary", "Huduma", "Kiroho", "Media"]) {
-      expect(layout).toContain(`label: "${label}"`);
+    const expectedGroups = [
+      ["primary", "Primary", "Kuu"],
+      ["services", "Services", "Huduma"],
+      ["spiritual", "Spiritual", "Kiroho"],
+      ["media", "Media", "Media"],
+    ] as const;
+
+    for (const [id, fallback, swLabel] of expectedGroups) {
+      expect(layout).toContain(`navGroup("${id}", "${fallback}", [`);
+      expect(layout).toContain(`labelKey: \`member_portal_shell.groups.\${id}\``);
+      expect(en.member_portal_shell.groups[id]).toBe(fallback);
+      expect(sw.member_portal_shell.groups[id]).toBe(swLabel);
     }
 
-    for (const route of [
-      "/portal",
-      "/portal/today",
-      "/portal/my-parish",
-      "/portal/services",
-      "/portal/give",
-      "/portal/mass-intentions",
-      "/portal/calendar",
-      "/portal/announcements",
-      "/portal/ministries",
-      "/portal/bible",
-      "/portal/daily-readings",
-      "/portal/prayers",
-      "/portal/sermons",
-      "/portal/radio",
-    ]) {
-      expect(layout).toContain(`url: "${route}"`);
+    const expectedServices = [
+      ["home", "/portal"],
+      ["today", "/portal/today"],
+      ["my-parish", "/portal/my-parish"],
+      ["services", "/portal/services"],
+      ["give", "/portal/give"],
+      ["mass-intentions", "/portal/mass-intentions"],
+      ["calendar", "/portal/calendar"],
+      ["announcements", "/portal/announcements"],
+      ["ministries", "/portal/ministries"],
+      ["bible", "/portal/bible"],
+      ["daily-readings", "/portal/daily-readings"],
+      ["prayers", "/portal/prayers"],
+      ["sermons", "/portal/sermons"],
+      ["radio", "/portal/radio"],
+    ] as const;
+
+    for (const [serviceId, route] of expectedServices) {
+      expect(layout).toContain(`serviceNavItem("${serviceId}", "${route}"`);
     }
 
     expect(routes).toContain('path="radio"');
@@ -52,10 +84,13 @@ describe("member desktop sidebar Wave 1", () => {
     const moreItemDefinition = layout.slice(layout.indexOf("const DESKTOP_SIDEBAR_MORE_ITEM"));
 
     expect(moreItemDefinition).toContain("const DESKTOP_SIDEBAR_MORE_ITEM: NavItem");
-    expect(moreItemDefinition).toContain('titleKey: "Zaidi"');
+    expect(moreItemDefinition).toContain('titleKey: "member_services.services.label"');
+    expect(moreItemDefinition).toContain('titleFallback: "Services"');
+    expect(en.member_services.services.label).toBe("Services");
+    expect(sw.member_services.services.label).toBe("Huduma");
     expect(moreItemDefinition).toContain('url: "/portal/services"');
     expect(moreItemDefinition).toContain("icon: PortalIcon");
-    expect(groupDefinition).not.toContain('url: "/portal/services"');
+    expect(groupDefinition).not.toContain('serviceNavItem("services", "/portal/services"');
     expect(layout).toContain("border-t border-border/45 pt-2");
     expect(layout).toContain("item={DESKTOP_SIDEBAR_MORE_ITEM}");
   });
@@ -65,31 +100,47 @@ describe("member desktop sidebar Wave 1", () => {
       layout.indexOf("const DESKTOP_SIDEBAR_GROUPS"),
       layout.indexOf("const DESKTOP_SIDEBAR_MORE_ITEM"),
     );
-    const primaryGroup = sidebarDefinition.slice(sidebarDefinition.indexOf('id: "primary"'), sidebarDefinition.indexOf('id: "services"'));
-    const hudumaGroup = sidebarDefinition.slice(sidebarDefinition.indexOf('id: "services"'), sidebarDefinition.indexOf('id: "spiritual"'));
+    const primaryGroup = sidebarDefinition.slice(
+      sidebarDefinition.indexOf('navGroup("primary", "Primary", ['),
+      sidebarDefinition.indexOf('navGroup("services", "Services", ['),
+    );
+    const hudumaGroup = sidebarDefinition.slice(
+      sidebarDefinition.indexOf('navGroup("services", "Services", ['),
+      sidebarDefinition.indexOf('navGroup("spiritual", "Spiritual", ['),
+    );
 
-    for (const route of ["/portal", "/portal/today", "/portal/my-parish"]) {
-      expect(primaryGroup).toContain(`url: "${route}"`);
+    for (const [serviceId, route] of [
+      ["home", "/portal"],
+      ["today", "/portal/today"],
+      ["my-parish", "/portal/my-parish"],
+    ] as const) {
+      expect(primaryGroup).toContain(`serviceNavItem("${serviceId}", "${route}"`);
     }
 
-    for (const route of ["/portal/jumuiya", "/portal/give", "/portal/mass-intentions", "/portal/announcements"]) {
-      expect(primaryGroup).not.toContain(`url: "${route}"`);
-      expect(hudumaGroup).toContain(`url: "${route}"`);
+    for (const [serviceId, route] of [
+      ["jumuiya", "/portal/jumuiya"],
+      ["give", "/portal/give"],
+      ["mass-intentions", "/portal/mass-intentions"],
+      ["announcements", "/portal/announcements"],
+    ] as const) {
+      expect(primaryGroup).not.toContain(`serviceNavItem("${serviceId}", "${route}"`);
+      expect(hudumaGroup).toContain(`serviceNavItem("${serviceId}", "${route}"`);
     }
 
-    expect(hudumaGroup).toContain('titleKey: "Jumuiya Yangu"');
+    expect(hudumaGroup).toContain('serviceNavItem("jumuiya", "/portal/jumuiya", CommunitiesIcon)');
+    expect(sw.member_services.jumuiya.label).toBe("Jumuiya Yangu");
   });
 
   it("preserves feature gating and omits a dead generic livestream link", () => {
     expect(layout).toContain("visibleDesktopSidebarGroups");
     expect(layout).toContain("!item.featureKey || getFeatureState(item.featureKey).visible");
-    expect(layout).toContain('featureKey: "give"');
-    expect(layout).toContain('featureKey: "mass_intentions"');
-    expect(layout).toContain('featureKey: "events"');
-    expect(layout).toContain('featureKey: "announcements"');
-    expect(layout).toContain('featureKey: "ministries"');
-    expect(layout).toContain('featureKey: "sermons"');
-    expect(layout).toContain('featureKey: "radio"');
+    expect(layout).toContain('serviceNavItem("give", "/portal/give", ContributionsIcon, "give")');
+    expect(layout).toContain('serviceNavItem("mass-intentions", "/portal/mass-intentions", MassIntentionsIcon, "mass_intentions")');
+    expect(layout).toContain('serviceNavItem("calendar", "/portal/calendar", EventsIcon, "events")');
+    expect(layout).toContain('serviceNavItem("announcements", "/portal/announcements", AnnouncementsIcon, "announcements")');
+    expect(layout).toContain('serviceNavItem("ministries", "/portal/ministries", CommunitiesIcon, "ministries")');
+    expect(layout).toContain('serviceNavItem("sermons", "/portal/sermons", SermonsIcon, "sermons")');
+    expect(layout).toContain('serviceNavItem("radio", "/portal/radio", RadioIcon, "radio")');
     expect(layout).not.toContain('url: "/portal/live"');
   });
 
@@ -98,7 +149,11 @@ describe("member desktop sidebar Wave 1", () => {
     expect(layout).toContain("desktopExpandedGroups");
     expect(layout).toContain('data-collapsed={collapsed ? "true" : "false"}');
     expect(layout).toContain('collapsed ? "w-[5.25rem]" : "w-60"');
-    expect(layout).toContain('aria-label={collapsed ? "Expand member sidebar" : "Collapse member sidebar"}');
+    expect(layout).toContain('aria-label={collapsed ? t("member_portal_shell.expand_sidebar") : t("member_portal_shell.collapse_sidebar")}');
+    expect(en.member_portal_shell.expand_sidebar).toBe("Expand member sidebar");
+    expect(en.member_portal_shell.collapse_sidebar).toBe("Collapse member sidebar");
+    expect(sw.member_portal_shell.expand_sidebar).toBe("Fungua menyu ya mwanachama");
+    expect(sw.member_portal_shell.collapse_sidebar).toBe("Funga menyu ya mwanachama");
     expect(layout).toContain("aria-label={collapsed ? label : undefined}");
     expect(layout).toContain("title={collapsed ? label : undefined}");
     expect(layout).toContain('data-active={active ? "true" : "false"}');
@@ -114,8 +169,8 @@ describe("member desktop sidebar Wave 1", () => {
     expect(layout).toContain("text-[10px]");
     expect(layout).not.toContain("{!collapsed ? <span>Collapse</span> : null}");
 
-    const toggleIndex = layout.indexOf('aria-label={collapsed ? "Expand member sidebar" : "Collapse member sidebar"}');
-    const navIndex = layout.indexOf('aria-label="Member desktop navigation"');
+    const toggleIndex = layout.indexOf('aria-label={collapsed ? t("member_portal_shell.expand_sidebar") : t("member_portal_shell.collapse_sidebar")}');
+    const navIndex = layout.indexOf('aria-label={t("member_portal_shell.desktop_navigation")}');
     expect(toggleIndex).toBeGreaterThan(0);
     expect(toggleIndex).toBeLessThan(navIndex);
   });
@@ -176,19 +231,23 @@ describe("member desktop sidebar Wave 1", () => {
     expect(layout).toContain("{!collapsed && !primaryGroup ?");
     expect(layout).toContain("collapsed || primaryGroup");
     expect(layout).toContain("group.items.some((item) => isActive(pathname, item.url))");
-    expect(layout).toContain('label: "Huduma"');
-    expect(layout).toContain('url: "/portal/give"');
-    expect(layout).toContain('label: "Kiroho"');
-    expect(layout).toContain('url: "/portal/bible"');
-    expect(layout).toContain('label: "Media"');
-    expect(layout).toContain('url: "/portal/radio"');
+    expect(layout).toContain('navGroup("services", "Services", [');
+    expect(layout).toContain('serviceNavItem("give", "/portal/give", ContributionsIcon, "give")');
+    expect(layout).toContain('navGroup("spiritual", "Spiritual", [');
+    expect(layout).toContain('serviceNavItem("bible", "/portal/bible", BibleIcon)');
+    expect(layout).toContain('navGroup("media", "Media", [');
+    expect(layout).toContain('serviceNavItem("radio", "/portal/radio", RadioIcon, "radio")');
+    expect(sw.member_portal_shell.groups.services).toBe("Huduma");
+    expect(sw.member_portal_shell.groups.spiritual).toBe("Kiroho");
+    expect(sw.member_portal_shell.groups.media).toBe("Media");
   });
 
   it("keeps the intended four-item mobile bottom navigation contract", () => {
     expect(layout).toContain('const MOBILE_BOTTOM_PRIMARY_URLS = ["/portal", "/portal/today", "/portal/my-parish", "/portal/services"];');
     expect(layout).toContain('style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}');
     expect(layout).not.toContain('["/portal", "/portal/give", "/portal/mass-intentions", "/portal/announcements", "/portal/services"]');
-    expect(layout).toContain('{ titleKey: "Zaidi", url: "/portal/services", icon: PortalIcon, featureKey: null }');
+    expect(layout).toContain('serviceNavItem("services", "/portal/services", PortalIcon)');
+    expect(layout).toContain('titleKey: "member_services.services.label"');
     expect(layout).not.toContain('{ titleKey: "Huduma", url: "/portal/services", icon: PortalIcon, featureKey: null }');
     expect(layout).toContain("lg:hidden");
   });

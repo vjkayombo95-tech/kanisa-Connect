@@ -15,10 +15,12 @@ describe("Wave 2 daily-life discovery", () => {
   it("registers protected nested routes and exposes them consistently", () => {
     expect(routes).toContain('path="today"');
     expect(routes).toContain('path="my-parish"');
-    for (const route of ["/portal/today", "/portal/my-parish"]) {
+    for (const [serviceId, route] of [["today", "/portal/today"], ["my-parish", "/portal/my-parish"]] as const) {
       expect(home).toContain(`to="${route}"`);
+      expect(registry).toContain(`id: "${serviceId}"`);
       expect(registry).toContain(`path: "${route}"`);
-      expect(layout).toContain(`url: "${route}"`);
+      expect(registry).toContain(`labelKey: "member_services.${serviceId.replace(/-/g, "_")}.label"`);
+      expect(layout).toContain(`serviceNavItem("${serviceId}", "${route}"`);
       expect(layout).toContain("isOrdinaryMemberPathAllowed");
     }
   });
