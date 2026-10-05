@@ -33,9 +33,9 @@ describe("PortalMassIntentions member behavior contract", () => {
   it("keeps required input validation for message, Mass occurrence, offering and online state", () => {
     expect(portalMassIntentions).toContain("const netAmount = parseFloat(offeringAmount) || DEFAULT_OFFERING");
     expect(portalMassIntentions).toContain("if (!message.trim()) throw new Error");
-    expect(portalMassIntentions).toContain('if (!massOccurrenceId) throw new Error("Please select an available Mass.")');
+    expect(portalMassIntentions).toContain('if (!massOccurrenceId) throw new Error(t("mass_intentions_form.error_mass_required"))');
     expect(portalMassIntentions).toContain("if (netAmount < 1000) throw new Error");
-    expect(portalMassIntentions).toContain('if (!isOnline) throw new Error("Unganisha intaneti ili kuthibitisha nafasi ya Misa.")');
+    expect(portalMassIntentions).toContain('if (!isOnline) throw new Error(t("mass_intentions_form.error_mass_requires_connection"))');
     expect(portalMassIntentions).toContain("assertClientRateLimit(`mass-intention:${churchId}:${member.id}`, 5, 60 * 60 * 1000");
     expect(portalMassIntentions).toContain("disabled={submit.isPending || !message.trim() || !massOccurrenceId || !member?.id || !isOnline}");
   });
@@ -113,7 +113,7 @@ describe("PortalMassIntentions member behavior contract", () => {
     expect(portalMassIntentions).toContain("logSupabaseError(err");
     expect(portalMassIntentions).toContain('component: "PortalMassIntentions"');
     expect(portalMassIntentions).toContain('table: "mass_intentions"');
-    expect(portalMassIntentions).toContain('toast({ title: "Error", description: err.message, variant: "destructive" })');
+    expect(portalMassIntentions).toContain('toast({ title: t("common.error"), description: err.message, variant: "destructive" })');
     expect(memberLinkedRequests).toContain("if (error) throw error");
   });
 
