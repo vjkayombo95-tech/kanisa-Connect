@@ -3,6 +3,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { changeAppLanguage } from "@/i18n";
+import { formatAppDate } from "@/lib/localization";
 import type { PortalFeatureKey } from "@/lib/portal-features";
 
 const state = vi.hoisted(() => ({
@@ -144,7 +146,10 @@ describe("My Parish feature-aware quick links", () => {
   let host: HTMLDivElement;
   let root: Root;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await act(async () => {
+      await changeAppLanguage("sw");
+    });
     state.features = new Map();
     state.errors = new Set();
     state.loading = new Set();
@@ -179,10 +184,127 @@ describe("My Parish feature-aware quick links", () => {
   });
 
   const renderPage = () => act(() => root.render(<MemoryRouter><MemberMyParishPage /></MemoryRouter>));
-  const quickActionsText = () => host.querySelector('section[aria-label="Njia za haraka"]')?.textContent ?? "";
+  const quickActionsText = () => host.querySelector('section[aria-label="Njia za haraka"], section[aria-label="Quick links"]')?.textContent ?? "";
 
   it("keeps My Parish accessible to ordinary members", () => {
     expect(isOrdinaryMemberPathAllowed("/portal/my-parish")).toBe(true);
+  });
+
+  it("renders My Parish shell copy in English", async () => {
+    await act(async () => {
+      await changeAppLanguage("en");
+    });
+    state.parish = {
+      id: "church-a",
+      name: "St. Theresa Parish",
+      logoUrl: null,
+      phone: "+255 712 345 678",
+      email: "office@example.org",
+      address: "Church Road, Dar es Salaam",
+      latitude: null,
+      longitude: null,
+    };
+    state.linkedMember = {
+      ...state.linkedMember,
+      data: { id: "member-a", full_name: "Amina Member", church_id: "church-a" },
+    };
+    state.mass = {
+      id: "occurrence-a",
+      title: "Sunday Mass",
+      description: "Main parish Mass",
+      massDate: "2026-10-05",
+      startTime: "07:00",
+      endTime: null,
+      responseDeadline: null,
+      askForRsvp: false,
+      memberId: null,
+      memberResponse: null,
+    };
+    state.events = [
+      { id: "event-a", churchId: "church-a", title: "Family seminar", description: null, startDate: "2026-10-05T04:00:00Z", location: null },
+    ];
+
+    renderPage();
+
+    expect(host.textContent).toContain("My Parish");
+    expect(host.textContent).toContain("Connected as Amina Member");
+    expect(host.textContent).toContain("Contact");
+    expect(host.textContent).toContain("Parish Office Services");
+    expect(host.textContent).toContain("Next Mass");
+    expect(host.textContent).toContain("Latest announcement");
+    expect(host.textContent).toContain("Upcoming events");
+    expect(host.textContent).toContain("Quick links");
+    expect(host.textContent).toContain(formatAppDate(new Date("2026-10-05T07:00:00"), "en", { dateStyle: "medium", timeStyle: "short" }));
+    expect(host.textContent).not.toContain("Parokia Yangu");
+    expect(host.textContent).not.toContain("Misa ijayo");
+  });
+
+  it("renders My Parish shell copy in Kiswahili", async () => {
+    await act(async () => {
+      await changeAppLanguage("sw");
+    });
+    state.mass = {
+      id: "occurrence-a",
+      title: "Misa ya Jumapili",
+      description: "Misa kuu ya parokia",
+      massDate: "2026-10-05",
+      startTime: "07:00",
+      endTime: null,
+      responseDeadline: null,
+      askForRsvp: false,
+      memberId: null,
+      memberResponse: null,
+    };
+    state.events = [
+      { id: "event-a", churchId: "church-a", title: "Semina ya familia", description: null, startDate: "2026-10-05T04:00:00Z", location: null },
+    ];
+
+    renderPage();
+
+    expect(host.textContent).toContain("Parokia Yangu");
+    expect(host.textContent).toContain("Umeunganishwa kama Member Test");
+    expect(host.textContent).toContain("Mawasiliano");
+    expect(host.textContent).toContain("Huduma za Ofisi");
+    expect(host.textContent).toContain("Misa ijayo");
+    expect(host.textContent).toContain("Tangazo la karibuni");
+    expect(host.textContent).toContain("Matukio yajayo");
+    expect(host.textContent).toContain("Njia za haraka");
+    expect(host.textContent).toContain(formatAppDate(new Date("2026-10-05T07:00:00"), "sw", { dateStyle: "medium", timeStyle: "short" }));
+    expect(host.textContent).not.toContain("Connected as");
+    expect(host.textContent).not.toContain("Next Mass");
+  });
+
+  it("formats My Parish dates by selected language while preserving Tanzania time", async () => {
+    state.mass = {
+      id: "occurrence-a",
+      title: "Boundary Mass",
+      description: null,
+      massDate: "2026-10-05",
+      startTime: "00:30",
+      endTime: null,
+      responseDeadline: null,
+      askForRsvp: false,
+      memberId: null,
+      memberResponse: null,
+    };
+    state.events = [
+      { id: "event-a", churchId: "church-a", title: "Night vigil", description: null, startDate: "2026-10-04T21:30:00Z", location: null },
+    ];
+
+    await act(async () => {
+      await changeAppLanguage("en");
+    });
+    renderPage();
+    expect(host.textContent).toContain(formatAppDate("2026-10-04T21:30:00Z", "en", { dateStyle: "medium", timeStyle: "short" }));
+
+    act(() => root.unmount());
+    host.innerHTML = "";
+    root = createRoot(host);
+    await act(async () => {
+      await changeAppLanguage("sw");
+    });
+    renderPage();
+    expect(host.textContent).toContain(formatAppDate("2026-10-04T21:30:00Z", "sw", { dateStyle: "medium", timeStyle: "short" }));
   });
 
   it("renders parish identity success without fabricated contact data", () => {
@@ -528,7 +650,7 @@ describe("My Parish feature-aware quick links", () => {
     expect(host.textContent).toContain("Semina ya familia");
     expect(host.querySelector('a[href="/portal/calendar"]')).toBeNull();
     expect(host.querySelector('a[href="/portal/events"]')).toBeNull();
-    expect(quickActionsText()).not.toContain("Kalenda");
+    expect(quickActionsText()).not.toContain("Ratiba ya Parokia");
   });
 
   it("keeps announcement information while hiding announcement route actions when unavailable", () => {
@@ -688,7 +810,7 @@ describe("My Parish feature-aware quick links", () => {
     }
     renderPage();
     const actions = quickActionsText();
-    for (const label of ["Michango", "Nia za Misa", "Maombi", "Mahubiri", "Kalenda"]) {
+    for (const label of ["Toa Mchango", "Nia za Misa", "Ombi la Maombi", "Mahubiri", "Ratiba ya Parokia"]) {
       expect(actions).not.toContain(label);
     }
   });
@@ -698,7 +820,7 @@ describe("My Parish feature-aware quick links", () => {
       state.features.set(key, false);
     }
     renderPage();
-    expect(quickActionsText()).toContain("Maktaba");
+    expect(quickActionsText()).toContain("Watakatifu");
     expect(host.querySelector('a[href="/portal/library"]')).not.toBeNull();
   });
 

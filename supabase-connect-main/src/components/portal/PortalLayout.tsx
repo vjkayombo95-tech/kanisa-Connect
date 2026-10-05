@@ -39,7 +39,8 @@ import { MemberMobileBackHeader } from "@/components/portal/MemberMobileBackHead
 import { formatTZS } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { getPortalFeatureForPath, type PortalFeatureKey } from "@/lib/portal-features";
-import { getMemberServiceForPath, isOrdinaryMemberPathAllowed } from "@/lib/member-service-registry";
+import { translateMemberServiceLabel, translateSystemLabel } from "@/lib/localization";
+import { getMemberServiceForPath, isOrdinaryMemberPathAllowed, memberServiceRegistry } from "@/lib/member-service-registry";
 import { AppLink } from "@/components/AppLink";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { MemberNotificationBell } from "@/components/portal/MemberNotificationBell";
@@ -69,6 +70,7 @@ const ParishIcon: PortalIconComponent = ({ className }) => <Church className={cl
 
 type NavItem = {
   titleKey: string;
+  titleFallback: string;
   url: string;
   icon: PortalIconComponent;
   featureKey: PortalFeatureKey | null;
@@ -77,126 +79,125 @@ type NavItem = {
 type NavGroup = {
   id: string;
   label: string;
+  labelKey: string;
   items: NavItem[];
 };
 
+function serviceNavItem(
+  serviceId: string,
+  url: string,
+  icon: PortalIconComponent,
+  featureKey: PortalFeatureKey | null = null,
+): NavItem {
+  const service = memberServiceRegistry.find((entry) => entry.id === serviceId);
+  return {
+    titleKey: service?.labelKey ?? `member_services.${serviceId.replace(/-/g, "_")}.label`,
+    titleFallback: service?.label ?? serviceId,
+    url,
+    icon,
+    featureKey,
+  };
+}
+
+function navGroup(id: string, label: string, items: NavItem[]): NavGroup {
+  return { id, label, labelKey: `member_portal_shell.groups.${id}`, items };
+}
+
+function navLabel(t: ReturnType<typeof useTranslation>["t"], item: NavItem) {
+  const service = memberServiceRegistry.find((entry) => entry.labelKey === item.titleKey);
+  return service ? translateMemberServiceLabel(t, service) : translateSystemLabel(t, item.titleKey, item.titleFallback);
+}
+
+function groupLabel(t: ReturnType<typeof useTranslation>["t"], group: NavGroup) {
+  return translateSystemLabel(t, group.labelKey, group.label);
+}
+
 const FULL_MAIN_ITEMS: NavItem[] = [
-  { titleKey: "home", url: "/portal", icon: DashboardIcon, featureKey: null },
-  { titleKey: "Watakatifu", url: "/member/library", icon: BibleIcon, featureKey: null },
-  { titleKey: "Kalenda ya Liturujia", url: "/portal/liturgical-calendar", icon: LiturgicalCalendarIcon, featureKey: null },
-  { titleKey: "Masomo ya Leo", url: "/portal/daily-readings", icon: BibleIcon, featureKey: null },
-  { titleKey: "Bible", url: "/portal/bible", icon: BibleIcon, featureKey: null },
-  { titleKey: "events", url: "/portal/events", icon: EventsIcon, featureKey: "events" },
-  { titleKey: "announcements", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
-  { titleKey: "give", url: "/portal/give", icon: ContributionsIcon, featureKey: "give" },
+  serviceNavItem("home", "/portal", DashboardIcon),
+  serviceNavItem("library", "/member/library", BibleIcon),
+  serviceNavItem("liturgical-calendar", "/portal/liturgical-calendar", LiturgicalCalendarIcon),
+  serviceNavItem("daily-readings", "/portal/daily-readings", BibleIcon),
+  serviceNavItem("bible", "/portal/bible", BibleIcon),
+  serviceNavItem("events", "/portal/events", EventsIcon, "events"),
+  serviceNavItem("announcements", "/portal/announcements", AnnouncementsIcon, "announcements"),
+  serviceNavItem("give", "/portal/give", ContributionsIcon, "give"),
 ];
 
 const FULL_GROUPS: NavGroup[] = [
-  {
-    id: "spiritual",
-    label: "Spiritual",
-    items: [
-      { titleKey: "sermons", url: "/portal/sermons", icon: SermonsIcon, featureKey: "sermons" },
-      { titleKey: "Radio", url: "/portal/radio", icon: RadioIcon, featureKey: "radio" },
-      { titleKey: "bible_verses", url: "/portal/bible-verses", icon: BibleIcon, featureKey: "bible_verses" },
-      { titleKey: "prayer_requests", url: "/portal/prayer-requests", icon: PrayerIcon, featureKey: "prayer_requests" },
-      { titleKey: "mass_intentions", url: "/portal/mass-intentions", icon: MassIntentionsIcon, featureKey: "mass_intentions" },
-    ],
-  },
-  {
-    id: "community",
-    label: "Community",
-    items: [
-      { titleKey: "Jumuiya Yangu", url: "/portal/jumuiya", icon: CommunitiesIcon, featureKey: null },
-      { titleKey: "channels", url: "/portal/channels", icon: ChannelsIcon, featureKey: "channels" },
-      { titleKey: "community_help", url: "/portal/community-help", icon: CommunityHelpIcon, featureKey: "community_help" },
-    ],
-  },
-  {
-    id: "finance",
-    label: "Finance",
-    items: [
-      { titleKey: "pledges", url: "/portal/pledges", icon: PledgesIcon, featureKey: "pledges" },
-      // Contribution history already lives on the member dashboard experience.
-      { titleKey: "my_dashboard", url: "/portal/dashboard", icon: ContributionsIcon, featureKey: null },
-    ],
-  },
+  navGroup("spiritual", "Spiritual", [
+    serviceNavItem("sermons", "/portal/sermons", SermonsIcon, "sermons"),
+    serviceNavItem("radio", "/portal/radio", RadioIcon, "radio"),
+    { titleKey: "bible_verses", titleFallback: "Bible Verses", url: "/portal/bible-verses", icon: BibleIcon, featureKey: "bible_verses" },
+    serviceNavItem("prayer-requests", "/portal/prayer-requests", PrayerIcon, "prayer_requests"),
+    serviceNavItem("mass-intentions", "/portal/mass-intentions", MassIntentionsIcon, "mass_intentions"),
+  ]),
+  navGroup("community", "Community", [
+    serviceNavItem("jumuiya", "/portal/jumuiya", CommunitiesIcon),
+    serviceNavItem("channels", "/portal/channels", ChannelsIcon, "channels"),
+    { titleKey: "community_help", titleFallback: "Community Help", url: "/portal/community-help", icon: CommunityHelpIcon, featureKey: "community_help" },
+  ]),
+  navGroup("finance", "Finance", [
+    serviceNavItem("pledges", "/portal/pledges", PledgesIcon, "pledges"),
+    // Contribution history already lives on the member dashboard experience.
+    serviceNavItem("dashboard", "/portal/dashboard", ContributionsIcon),
+  ]),
 ];
 
 const SIMPLE_MEMBER_MAIN_ITEMS: NavItem[] = [
-  { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
-  { titleKey: "Leo", url: "/portal/today", icon: BibleIcon, featureKey: null },
-  { titleKey: "Parokia Yangu", url: "/portal/my-parish", icon: ParishIcon, featureKey: null },
-  { titleKey: "Jumuiya Yangu", url: "/portal/jumuiya", icon: CommunitiesIcon, featureKey: null },
-  { titleKey: "Zaidi", url: "/portal/services", icon: PortalIcon, featureKey: null },
-  { titleKey: "Watakatifu", url: "/member/library", icon: BibleIcon, featureKey: null },
-  { titleKey: "Kalenda ya Liturujia", url: "/portal/liturgical-calendar", icon: LiturgicalCalendarIcon, featureKey: null },
-  { titleKey: "Masomo ya Leo", url: "/portal/daily-readings", icon: BibleIcon, featureKey: null },
-  { titleKey: "Biblia", url: "/portal/bible", icon: BibleIcon, featureKey: null },
-  { titleKey: "Lipa", url: "/portal/give", icon: ContributionsIcon, featureKey: "give" },
-  { titleKey: "Nia za Misa", url: "/portal/mass-intentions", icon: MassIntentionsIcon, featureKey: "mass_intentions" },
-  { titleKey: "Matangazo", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
-  { titleKey: "Historia Yangu", url: "/portal/dashboard", icon: PortalIcon, featureKey: null },
+  serviceNavItem("home", "/portal", DashboardIcon),
+  serviceNavItem("today", "/portal/today", BibleIcon),
+  serviceNavItem("my-parish", "/portal/my-parish", ParishIcon),
+  serviceNavItem("jumuiya", "/portal/jumuiya", CommunitiesIcon),
+  serviceNavItem("services", "/portal/services", PortalIcon),
+  serviceNavItem("library", "/member/library", BibleIcon),
+  serviceNavItem("liturgical-calendar", "/portal/liturgical-calendar", LiturgicalCalendarIcon),
+  serviceNavItem("daily-readings", "/portal/daily-readings", BibleIcon),
+  serviceNavItem("bible", "/portal/bible", BibleIcon),
+  serviceNavItem("give", "/portal/give", ContributionsIcon, "give"),
+  serviceNavItem("mass-intentions", "/portal/mass-intentions", MassIntentionsIcon, "mass_intentions"),
+  serviceNavItem("announcements", "/portal/announcements", AnnouncementsIcon, "announcements"),
+  serviceNavItem("dashboard", "/portal/dashboard", PortalIcon),
 ];
 
 const LIMITED_MAIN_ITEMS: NavItem[] = [
-  { titleKey: "home", url: "/portal", icon: DashboardIcon, featureKey: null },
-  { titleKey: "Bible", url: "/portal/bible", icon: BibleIcon, featureKey: null },
-  { titleKey: "events", url: "/portal/events", icon: EventsIcon, featureKey: "events" },
-  { titleKey: "announcements", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
+  serviceNavItem("home", "/portal", DashboardIcon),
+  serviceNavItem("bible", "/portal/bible", BibleIcon),
+  serviceNavItem("events", "/portal/events", EventsIcon, "events"),
+  serviceNavItem("announcements", "/portal/announcements", AnnouncementsIcon, "announcements"),
 ];
 
 const LIMITED_GROUPS: NavGroup[] = [
-  {
-    id: "spiritual",
-    label: "Spiritual",
-    items: [{ titleKey: "sermons", url: "/portal/sermons", icon: SermonsIcon, featureKey: "sermons" }],
-  },
+  navGroup("spiritual", "Spiritual", [serviceNavItem("sermons", "/portal/sermons", SermonsIcon, "sermons")]),
 ];
 
 const DESKTOP_SIDEBAR_GROUPS: NavGroup[] = [
-  {
-    id: "primary",
-    label: "Primary",
-    items: [
-      { titleKey: "Nyumbani", url: "/portal", icon: DashboardIcon, featureKey: null },
-      { titleKey: "Leo", url: "/portal/today", icon: BibleIcon, featureKey: null },
-      { titleKey: "Parokia Yangu", url: "/portal/my-parish", icon: ParishIcon, featureKey: null },
-    ],
-  },
-  {
-    id: "services",
-    label: "Huduma",
-    items: [
-      { titleKey: "Michango", url: "/portal/give", icon: ContributionsIcon, featureKey: "give" },
-      { titleKey: "Nia za Misa", url: "/portal/mass-intentions", icon: MassIntentionsIcon, featureKey: "mass_intentions" },
-      { titleKey: "Ratiba", url: "/portal/calendar", icon: EventsIcon, featureKey: "events" },
-      { titleKey: "Matangazo", url: "/portal/announcements", icon: AnnouncementsIcon, featureKey: "announcements" },
-      { titleKey: "Jumuiya Yangu", url: "/portal/jumuiya", icon: CommunitiesIcon, featureKey: null },
-      { titleKey: "Huduma", url: "/portal/ministries", icon: CommunitiesIcon, featureKey: "ministries" },
-    ],
-  },
-  {
-    id: "spiritual",
-    label: "Kiroho",
-    items: [
-      { titleKey: "Biblia", url: "/portal/bible", icon: BibleIcon, featureKey: null },
-      { titleKey: "Masomo ya Leo", url: "/portal/daily-readings", icon: BibleIcon, featureKey: null },
-      { titleKey: "Sala", url: "/portal/prayers", icon: PrayerIcon, featureKey: null },
-      { titleKey: "Mahubiri", url: "/portal/sermons", icon: SermonsIcon, featureKey: "sermons" },
-    ],
-  },
-  {
-    id: "media",
-    label: "Media",
-    items: [
-      { titleKey: "Radio", url: "/portal/radio", icon: RadioIcon, featureKey: "radio" },
-    ],
-  },
+  navGroup("primary", "Primary", [
+    serviceNavItem("home", "/portal", DashboardIcon),
+    serviceNavItem("today", "/portal/today", BibleIcon),
+    serviceNavItem("my-parish", "/portal/my-parish", ParishIcon),
+  ]),
+  navGroup("services", "Services", [
+    serviceNavItem("give", "/portal/give", ContributionsIcon, "give"),
+    serviceNavItem("mass-intentions", "/portal/mass-intentions", MassIntentionsIcon, "mass_intentions"),
+    serviceNavItem("calendar", "/portal/calendar", EventsIcon, "events"),
+    serviceNavItem("announcements", "/portal/announcements", AnnouncementsIcon, "announcements"),
+    serviceNavItem("jumuiya", "/portal/jumuiya", CommunitiesIcon),
+    serviceNavItem("ministries", "/portal/ministries", CommunitiesIcon, "ministries"),
+  ]),
+  navGroup("spiritual", "Spiritual", [
+    serviceNavItem("bible", "/portal/bible", BibleIcon),
+    serviceNavItem("daily-readings", "/portal/daily-readings", BibleIcon),
+    serviceNavItem("prayers", "/portal/prayers", PrayerIcon),
+    serviceNavItem("sermons", "/portal/sermons", SermonsIcon, "sermons"),
+  ]),
+  navGroup("media", "Media", [
+    serviceNavItem("radio", "/portal/radio", RadioIcon, "radio"),
+  ]),
 ];
 
 const DESKTOP_SIDEBAR_MORE_ITEM: NavItem = {
-  titleKey: "Zaidi",
+  titleKey: "member_services.services.label",
+  titleFallback: "Services",
   url: "/portal/services",
   icon: PortalIcon,
   featureKey: null,
@@ -252,7 +253,7 @@ function DesktopSidebarLink({
 }) {
   const active = isActive(pathname, item.url);
   const Icon = item.icon;
-  const label = t(item.titleKey);
+  const label = navLabel(t, item);
 
   return (
     <AppLink
@@ -315,7 +316,7 @@ function MemberDesktopSidebar({
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-bold font-serif text-foreground">Kanisa Connect</p>
-            <p className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/70">Member</p>
+            <p className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/70">{t("member")}</p>
           </div>
         </div>
         {collapsed ? (
@@ -325,7 +326,7 @@ function MemberDesktopSidebar({
         ) : null}
         <button
           type="button"
-          aria-label={collapsed ? "Expand member sidebar" : "Collapse member sidebar"}
+          aria-label={collapsed ? t("member_portal_shell.expand_sidebar") : t("member_portal_shell.collapse_sidebar")}
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
             "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/55 bg-background/30 text-muted-foreground transition-colors hover:border-primary/25 hover:bg-primary/8 hover:text-primary",
@@ -337,19 +338,20 @@ function MemberDesktopSidebar({
       </div>
 
       <nav
-        aria-label="Member desktop navigation"
+        aria-label={t("member_portal_shell.desktop_navigation")}
         className="min-h-0 flex-1 space-y-2 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         {groups.map((group) => {
           const activeWithin = group.items.some((item) => isActive(pathname, item.url));
           const primaryGroup = group.id === "primary";
           const groupOpen = collapsed || primaryGroup || expandedGroups.includes(group.id);
+          const label = groupLabel(t, group);
 
           return (
-            <section key={group.id} aria-label={group.label} className="space-y-1">
+            <section key={group.id} aria-label={label} className="space-y-1">
               {!collapsed && primaryGroup ? (
                 <p className="px-3 pt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/45">
-                  {group.label}
+                  {label}
                 </p>
               ) : null}
               {!collapsed && !primaryGroup ? (
@@ -362,7 +364,7 @@ function MemberDesktopSidebar({
                     activeWithin && "text-primary/75",
                   )}
                 >
-                  <span className="min-w-0 truncate">{group.label}</span>
+                  <span className="min-w-0 truncate">{label}</span>
                   {groupOpen ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
                 </button>
               ) : null}
@@ -481,7 +483,7 @@ function ProfileMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <AppLink to="/portal/dashboard" onClick={() => setMobileOpen(false)}>
-            Historia Yangu
+            {translateSystemLabel(t, "member_services.dashboard.label", "Historia Yangu")}
           </AppLink>
         </DropdownMenuItem>
         {ledCommunities.length > 0 && (
@@ -810,7 +812,7 @@ export function PortalLayout() {
                   <nav className="container mx-auto space-y-3 px-4 py-4">
                     <div className="space-y-1.5">
                       <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.26em] text-muted-foreground/60">
-                        {useSimpleMemberNav ? "Menyu" : "Main"}
+                        {useSimpleMemberNav ? t("member_portal_shell.menu") : t("member_portal_shell.main")}
                       </p>
                       {visibleMainItems.map((item) => {
                         const state = item.featureKey ? getFeatureState(item.featureKey) : null;
@@ -841,7 +843,7 @@ export function PortalLayout() {
                               <Icon active={active} className="h-4.5 w-4.5" />
                             </span>
                             <span className="flex min-w-0 flex-1 items-center justify-between gap-3">
-                              <span className="truncate font-medium">{t(item.titleKey)}</span>
+                              <span className="truncate font-medium">{navLabel(t, item)}</span>
                               {itemLocked ? <Lock className="h-3.5 w-3.5 shrink-0" /> : null}
                             </span>
                           </AppLink>
@@ -852,11 +854,12 @@ export function PortalLayout() {
                     {visibleGroups.length > 0 && (
                     <div className="space-y-2">
                       <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.26em] text-muted-foreground/60">
-                        Explore
+                        {t("member_portal_shell.explore")}
                       </p>
                       {visibleGroups.map((group) => {
                         const groupOpen = mobileExpandedGroups.includes(group.id);
                         const activeWithin = group.items.some((item) => isActive(location.pathname, item.url));
+                        const label = groupLabel(t, group);
 
                         return (
                           <div key={group.id} className="rounded-[22px] border border-white/8 bg-white/[0.03] p-1.5">
@@ -868,7 +871,7 @@ export function PortalLayout() {
                                 activeWithin ? "bg-primary/10 text-primary" : "text-foreground hover:bg-white/[0.04]",
                               )}
                             >
-                              <span className="font-medium">{group.label}</span>
+                              <span className="font-medium">{label}</span>
                               <motion.span
                                 animate={{ rotate: groupOpen ? 180 : 0 }}
                                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
@@ -917,7 +920,7 @@ export function PortalLayout() {
                                             <Icon active={active} className="h-4 w-4" />
                                           </span>
                                           <span className="flex min-w-0 flex-1 items-center justify-between gap-3">
-                                            <span className="truncate">{t(item.titleKey)}</span>
+                                            <span className="truncate">{navLabel(t, item)}</span>
                                             {itemLocked ? <Lock className="h-3.5 w-3.5 shrink-0" /> : null}
                                           </span>
                                         </AppLink>
@@ -1014,7 +1017,7 @@ export function PortalLayout() {
                       )}
                     >
                       <Icon active={active} className="h-5 w-5" />
-                      <span className="max-w-full truncate">{t(item.titleKey)}</span>
+                      <span className="max-w-full truncate">{navLabel(t, item)}</span>
                     </AppLink>
                   );
                 })}
