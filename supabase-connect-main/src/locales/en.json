@@ -1153,6 +1153,96 @@
       "fallback": "Please try again."
     }
   },
+  "member_pledges": {
+    "title": "Pledges",
+    "subtitle": "Track your pledges and contribution progress.",
+    "fallback_member": "Member",
+    "fallback_pledge": "Parish pledge",
+    "actions": {
+      "create": "Create Pledge",
+      "pay": "Submit Payment"
+    },
+    "summary": {
+      "total_pledged": "Total pledged",
+      "total_paid": "Paid",
+      "remaining": "Remaining",
+      "progress": "Progress"
+    },
+    "progress": {
+      "title": "Pledge Progress",
+      "percent_complete": "{{percent}}% complete",
+      "remaining": "Remaining {{amount}}"
+    },
+    "list": {
+      "title": "Active Pledges"
+    },
+    "metrics": {
+      "pledged": "Pledged",
+      "paid": "Paid",
+      "balance": "Balance"
+    },
+    "status": {
+      "pending": "Pending",
+      "partial": "In progress",
+      "completed": "Completed"
+    },
+    "states": {
+      "loading": "Loading your pledges...",
+      "loading_aria": "Loading your pledges",
+      "empty_title": "You have not created a pledge yet.",
+      "empty_description": "You can create a new pledge and track its progress here.",
+      "checking_community": "Checking your Jumuiya information...",
+      "searching_community": "Searching...",
+      "no_community_short": "Not linked to a Jumuiya",
+      "no_community_create": "You need to be linked to a Jumuiya before creating a pledge.",
+      "no_community_page": "You need to be linked to a Jumuiya before creating a pledge that is included in Jumuiya statistics."
+    },
+    "create": {
+      "title": "Create Pledge",
+      "community_label": "Jumuiya",
+      "amount_label": "Pledge amount (TZS)",
+      "amount_placeholder": "Enter amount",
+      "helper": "Enter the amount you pledge to contribute. Payments are recorded separately after they are submitted and approved.",
+      "submitting": "Creating pledge...",
+      "success_title": "Pledge created",
+      "success_description": "{{amount}} has been added to {{community}}.",
+      "error_title": "Pledge was not created",
+      "error_description": "A problem occurred while creating the pledge."
+    },
+    "payment": {
+      "title": "Submit Pledge Payment",
+      "title_with_pledge": "Submit payment for {{pledge}}",
+      "fallback_title_subject": "pledge",
+      "success_title": "Payment submitted for approval",
+      "success_description": "The pledge balance will update after a church admin or pastor approves the payment."
+    }
+  },
+  "pledge_payment_dialog": {
+    "description": "Remaining balance: {{balance}}. Enter the amount the church should receive and the {{feePercentage}}% platform fee will be added on top.",
+    "amount_label": "Amount for church (TZS)",
+    "amount_placeholder": "Enter amount church should receive",
+    "transaction_id_label": "Transaction ID",
+    "transaction_id_placeholder": "e.g. mobile-money reference",
+    "proof_label": "Proof image path (if no transaction ID)",
+    "proof_placeholder": "Uploaded receipt path or URL",
+    "approval_helper": "A church admin or pastor must approve this payment before the pledge balance changes.",
+    "payment_method_label": "Payment method",
+    "payment_method_placeholder": "Choose payment method",
+    "payment_methods": {
+      "cash": "Cash",
+      "mobile_money": "Mobile Money",
+      "bank_transfer": "Bank Transfer",
+      "card": "Card",
+      "other": "Other"
+    },
+    "breakdown": {
+      "church_receives": "Church receives",
+      "platform_fee": "Platform fee ({{feePercentage}}%)",
+      "you_pay": "Total to submit"
+    },
+    "submit": "Submit for Approval",
+    "submitting": "Submitting..."
+  },
   "member_give": {
     "title": "Give",
     "subtitle": "Record your contribution to the parish.",

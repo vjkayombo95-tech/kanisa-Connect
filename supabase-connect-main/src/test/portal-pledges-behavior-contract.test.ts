@@ -55,7 +55,7 @@ describe("PortalPledges member behavior contract", () => {
     expect(portalPledges).toContain("katibu_id.eq.${member.id}");
     expect(portalPledges).toContain("const cannotCreatePledge = !member?.id || !churchId || !memberCommunity?.id");
     expect(portalPledges).toContain("const canOpenCreateDialog = !cannotCreatePledge");
-    expect(portalPledges).toContain("Unahitaji kuunganishwa na Jumuiya kabla ya kuweka ahadi ya mchango.");
+    expect(portalPledges).toContain('t("member_pledges.states.no_community_create")');
   });
 
   it("protects create pledge RPC name and exact payload shape", () => {
@@ -102,9 +102,9 @@ describe("PortalPledges member behavior contract", () => {
     expect(portalPledges).toContain("paid: acc.paid + pledge.amount_paid");
     expect(portalPledges).toContain("balance: acc.balance + pledge.balance");
     expect(portalPledges).toContain("const overallProgress = totals.pledged ? Math.min(100, (totals.paid / totals.pledged) * 100) : 0");
-    expect(portalPledges).toContain('label="Jumla ya Ahadi"');
-    expect(portalPledges).toContain('label="Niliyolipa"');
-    expect(portalPledges).toContain('label="Salio"');
+    expect(portalPledges).toContain('label={t("member_pledges.summary.total_pledged")}');
+    expect(portalPledges).toContain('label={t("member_pledges.summary.total_paid")}');
+    expect(portalPledges).toContain('label={t("member_pledges.summary.remaining")}');
     expect(productionBaseline).toContain("greatest(p.amount_pledged - p.amount_paid, 0) as balance");
     expect(pledgeHelpers).toContain("Math.max(0, Math.min(100");
   });
@@ -133,10 +133,10 @@ describe("PortalPledges member behavior contract", () => {
     expect(pledgeHelpers).toContain("_payment_method: paymentMethod");
     expect(pledgeHelpers).toContain("_transaction_id: transactionId || null");
     expect(pledgeHelpers).toContain("_proof_url: proofUrl || null");
-    expect(portalPledges).toContain('title: "Malipo yametumwa kwa uthibitisho"');
-    expect(portalPledges).toContain("Salio la ahadi litasasishwa baada ya msimamizi wa kanisa au padre kuthibitisha malipo.");
+    expect(portalPledges).toContain('title: t("member_pledges.payment.success_title")');
+    expect(portalPledges).toContain('description: t("member_pledges.payment.success_description")');
     expect(pledgePaymentDialog).toContain("missingEvidence");
-    expect(pledgePaymentDialog).toContain("Submit for Approval");
+    expect(pledgePaymentDialog).toContain('t("pledge_payment_dialog.submit")');
   });
 
   it("removes broad same-church pledge payment reads while preserving authorized payment access", () => {
@@ -161,7 +161,7 @@ describe("PortalPledges member behavior contract", () => {
     expect(portalPledges).toContain('queryClient.invalidateQueries({ queryKey: ["member-pledges", member.id] })');
     expect(portalPledges).toContain('queryClient.invalidateQueries({ queryKey: ["church-pledges-summary", churchId] })');
     expect(portalPledges).toContain('queryClient.invalidateQueries({ queryKey: ["community-pledges", memberCommunity.id] })');
-    expect(portalPledges).toContain('title: "Ahadi imewekwa"');
+    expect(portalPledges).toContain('title: t("member_pledges.create.success_title")');
     expect(portalPledges).toContain("handleCreateDialogChange(false)");
     expect(portalPledges).toContain('setAmountPledged("")');
   });

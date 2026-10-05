@@ -1153,6 +1153,96 @@
       "fallback": "Jaribu tena."
     }
   },
+  "member_pledges": {
+    "title": "Ahadi za Michango",
+    "subtitle": "Fuatilia ahadi zako na maendeleo ya michango yako.",
+    "fallback_member": "Mwanachama",
+    "fallback_pledge": "Ahadi ya Parokia",
+    "actions": {
+      "create": "Weka Ahadi",
+      "pay": "Wasilisha Malipo"
+    },
+    "summary": {
+      "total_pledged": "Jumla ya Ahadi",
+      "total_paid": "Niliyolipa",
+      "remaining": "Salio",
+      "progress": "Maendeleo"
+    },
+    "progress": {
+      "title": "Maendeleo ya Ahadi",
+      "percent_complete": "{{percent}}% imetimia",
+      "remaining": "Salio {{amount}}"
+    },
+    "list": {
+      "title": "Ahadi Zinazoendelea"
+    },
+    "metrics": {
+      "pledged": "Ahadi",
+      "paid": "Imelipwa",
+      "balance": "Salio"
+    },
+    "status": {
+      "pending": "Inasubiri",
+      "partial": "Inaendelea",
+      "completed": "Imekamilika"
+    },
+    "states": {
+      "loading": "Inapakia ahadi zako...",
+      "loading_aria": "Inapakia ahadi zako",
+      "empty_title": "Bado hujaweka ahadi ya mchango.",
+      "empty_description": "Unaweza kuweka ahadi mpya na kufuatilia maendeleo yake hapa.",
+      "checking_community": "Tunakagua taarifa ya Jumuiya yako...",
+      "searching_community": "Inatafutwa...",
+      "no_community_short": "Hujaunganishwa na Jumuiya",
+      "no_community_create": "Unahitaji kuunganishwa na Jumuiya kabla ya kuweka ahadi ya mchango.",
+      "no_community_page": "Unahitaji kuunganishwa na Jumuiya kabla ya kuweka ahadi inayojumuishwa kwenye takwimu za Jumuiya."
+    },
+    "create": {
+      "title": "Weka Ahadi",
+      "community_label": "Jumuiya",
+      "amount_label": "Kiasi cha Ahadi (TZS)",
+      "amount_placeholder": "Weka kiasi",
+      "helper": "Weka kiasi unachoahidi kuchangia. Malipo yatarekodiwa kando baada ya kuwasilishwa na kuthibitishwa.",
+      "submitting": "Inaweka ahadi...",
+      "success_title": "Ahadi imewekwa",
+      "success_description": "{{amount}} imeongezwa kwenye {{community}}.",
+      "error_title": "Ahadi haikuwekwa",
+      "error_description": "Tatizo limetokea wakati wa kuweka ahadi."
+    },
+    "payment": {
+      "title": "Wasilisha Malipo ya Ahadi",
+      "title_with_pledge": "Wasilisha malipo ya {{pledge}}",
+      "fallback_title_subject": "ahadi",
+      "success_title": "Malipo yametumwa kwa uthibitisho",
+      "success_description": "Salio la ahadi litasasishwa baada ya msimamizi wa kanisa au padre kuthibitisha malipo."
+    }
+  },
+  "pledge_payment_dialog": {
+    "description": "Salio lililobaki: {{balance}}. Weka kiasi ambacho kanisa linapaswa kupokea na ada ya mfumo ya {{feePercentage}}% itaongezwa juu.",
+    "amount_label": "Kiasi cha kanisa (TZS)",
+    "amount_placeholder": "Weka kiasi kanisa litakachopokea",
+    "transaction_id_label": "Namba ya muamala",
+    "transaction_id_placeholder": "mf. kumbukumbu ya malipo ya simu",
+    "proof_label": "Njia ya picha ya uthibitisho (kama hakuna namba ya muamala)",
+    "proof_placeholder": "Njia au URL ya risiti iliyopakiwa",
+    "approval_helper": "Msimamizi wa kanisa au padre lazima athibitishe malipo haya kabla salio la ahadi halijabadilika.",
+    "payment_method_label": "Njia ya malipo",
+    "payment_method_placeholder": "Chagua njia ya malipo",
+    "payment_methods": {
+      "cash": "Taslimu",
+      "mobile_money": "Malipo ya simu",
+      "bank_transfer": "Uhamisho wa benki",
+      "card": "Kadi",
+      "other": "Nyingine"
+    },
+    "breakdown": {
+      "church_receives": "Kanisa linapokea",
+      "platform_fee": "Ada ya mfumo ({{feePercentage}}%)",
+      "you_pay": "Jumla ya kuwasilisha"
+    },
+    "submit": "Wasilisha kwa Uthibitisho",
+    "submitting": "Inawasilisha..."
+  },
   "member_give": {
     "title": "Michango",
     "subtitle": "Rekodi mchango wako kwa parokia.",
