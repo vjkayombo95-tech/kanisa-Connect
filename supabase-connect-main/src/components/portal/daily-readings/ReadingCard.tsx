@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BookOpen, ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import { Badge } from "@/components/ui/badge";
@@ -14,12 +15,12 @@ type ReadingCardProps = {
   defaultOpen?: boolean;
 };
 
-const READING_TITLES: Record<DailyReadingSection["id"], string> = {
-  first: "Somo la Kwanza",
-  psalm: "Zaburi ya Kujibu",
-  second: "Somo la Pili",
-  gospel_acclamation: "Shangilio la Injili",
-  gospel: "Injili",
+const READING_TITLE_KEYS: Record<DailyReadingSection["id"], string> = {
+  first: "member_daily_readings.reading_labels.first",
+  psalm: "member_daily_readings.reading_labels.psalm",
+  second: "member_daily_readings.reading_labels.second",
+  gospel_acclamation: "member_daily_readings.reading_labels.gospel_acclamation",
+  gospel: "member_daily_readings.reading_labels.gospel",
 };
 
 function buildReadInBiblePath(reference: DailyReadingBibleReference) {
@@ -35,10 +36,11 @@ function buildReadInBiblePath(reference: DailyReadingBibleReference) {
 }
 
 export function ReadingCard({ reading, reflection, defaultOpen = false }: ReadingCardProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
   const readInBiblePath = reading.bibleReference ? buildReadInBiblePath(reading.bibleReference) : null;
   const readingText = reading.text?.trim();
-  const title = READING_TITLES[reading.id] ?? reading.title;
+  const title = t(READING_TITLE_KEYS[reading.id], { defaultValue: reading.title });
   const contentId = `daily-reading-${reading.id}-content`;
 
   return (
@@ -71,7 +73,7 @@ export function ReadingCard({ reading, reflection, defaultOpen = false }: Readin
           ) : null}
           {readInBiblePath ? (
             <Button asChild variant="outline" className="h-10 w-full justify-center rounded-2xl sm:w-fit">
-              <Link to={readInBiblePath}>Soma kwenye Biblia</Link>
+              <Link to={readInBiblePath}>{t("member_daily_readings.actions.read_in_bible")}</Link>
             </Button>
           ) : null}
           {readingText ? (
@@ -81,7 +83,7 @@ export function ReadingCard({ reading, reflection, defaultOpen = false }: Readin
           ) : null}
           {reflection ? (
             <div className="rounded-2xl bg-primary/5 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Tafakari</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">{t("member_daily_readings.sections.reflection")}</p>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">{reflection}</p>
             </div>
           ) : null}

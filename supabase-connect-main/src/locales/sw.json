@@ -925,6 +925,71 @@
       "upcoming_events": "Matukio yajayo"
     }
   },
+  "member_today": {
+    "readings": {
+      "title": "Masomo ya leo",
+      "read_all": "Soma yote",
+      "unavailable_title": "Masomo ya leo hayajapatikana",
+      "unavailable_description": "Masomo yaliyochapishwa hayapatikani kwa sasa."
+    },
+    "sections": {
+      "saint": "Mtakatifu wa leo",
+      "next_mass": "Misa ijayo",
+      "event": "Tukio la leo",
+      "announcement": "Tangazo la karibuni"
+    },
+    "errors": {
+      "partial": "Baadhi ya taarifa hazikupatikana. Taarifa nyingine bado zinaweza kutumika."
+    },
+    "quick_actions": {
+      "aria": "Njia za haraka"
+    }
+  },
+  "member_daily_readings": {
+    "hero": {
+      "eyebrow": "Masomo ya Leo",
+      "title": "Masomo ya Leo",
+      "subtitle": "Neno la Mungu kwa siku ya leo."
+    },
+    "saint": {
+      "title": "Mtakatifu wa Leo",
+      "empty": "Hakuna mtakatifu aliyeunganishwa na sikukuu ya leo bado.",
+      "action": "Soma Mtakatifu"
+    },
+    "search": {
+      "title": "Tafuta Masomo",
+      "helper": "Tafuta kwa tarehe, rejea ya Biblia, kitabu, au neno.",
+      "label": "Tafuta masomo yaliyotangulia",
+      "placeholder": "Tarehe, kitabu, rejea, neno...",
+      "no_results": "Hakuna masomo yanayolingana na utafutaji wako."
+    },
+    "sections": {
+      "reflection": "Tafakari",
+      "prayer": "Sala",
+      "readings": "Masomo",
+      "source": "Chanzo:",
+      "liturgical_detail": "Taarifa ya liturujia"
+    },
+    "reading_labels": {
+      "first": "Somo la Kwanza",
+      "psalm": "Zaburi ya Kujibu",
+      "second": "Somo la Pili",
+      "gospel_acclamation": "Shangilio la Injili",
+      "gospel": "Injili"
+    },
+    "states": {
+      "empty_title": "Masomo ya siku hiyo bado hayajachapishwa.",
+      "empty_description": "Tutayaonyesha hapa mara tu yatakapokuwa tayari kwa waumini.",
+      "error_title": "Hatukuweza kupakia masomo kwa sasa.",
+      "error_description": "Tafadhali jaribu tena.",
+      "retry": "Jaribu tena",
+      "retry_aria": "Jaribu kupakia masomo tena",
+      "loading_label": "Inapakia masomo ya leo"
+    },
+    "actions": {
+      "read_in_bible": "Soma kwenye Biblia"
+    }
+  },
   "member_services": {
     "announcements": { "label": "Matangazo", "description": "Taarifa mpya za parokia", "back_title": "Matangazo" },
     "bible": { "label": "Biblia", "description": "Soma Biblia", "back_title": "Biblia", "chapter_title": "Sura ya Biblia" },

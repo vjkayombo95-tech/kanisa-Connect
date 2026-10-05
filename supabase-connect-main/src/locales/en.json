@@ -925,6 +925,71 @@
       "upcoming_events": "Upcoming events"
     }
   },
+  "member_today": {
+    "readings": {
+      "title": "Today's readings",
+      "read_all": "Read all",
+      "unavailable_title": "Today's readings are not available",
+      "unavailable_description": "Published readings are not available right now."
+    },
+    "sections": {
+      "saint": "Saint of the Day",
+      "next_mass": "Next Mass",
+      "event": "Today's Event",
+      "announcement": "Latest announcement"
+    },
+    "errors": {
+      "partial": "Some information could not be loaded. Other details may still be available."
+    },
+    "quick_actions": {
+      "aria": "Quick actions"
+    }
+  },
+  "member_daily_readings": {
+    "hero": {
+      "eyebrow": "Daily Readings",
+      "title": "Daily Readings",
+      "subtitle": "God's Word for today."
+    },
+    "saint": {
+      "title": "Saint of the Day",
+      "empty": "No saint has been linked to today's feast yet.",
+      "action": "Read saint"
+    },
+    "search": {
+      "title": "Search Readings",
+      "helper": "Search by date, Bible reference, book, or word.",
+      "label": "Search previous readings",
+      "placeholder": "Date, book, reference, word...",
+      "no_results": "No readings match your search."
+    },
+    "sections": {
+      "reflection": "Reflection",
+      "prayer": "Prayer",
+      "readings": "Readings",
+      "source": "Source:",
+      "liturgical_detail": "Liturgical detail"
+    },
+    "reading_labels": {
+      "first": "First Reading",
+      "psalm": "Responsorial Psalm",
+      "second": "Second Reading",
+      "gospel_acclamation": "Gospel Acclamation",
+      "gospel": "Gospel"
+    },
+    "states": {
+      "empty_title": "Readings for this day have not been published yet.",
+      "empty_description": "We will show them here once they are ready for members.",
+      "error_title": "We could not load readings right now.",
+      "error_description": "Please try again.",
+      "retry": "Try again",
+      "retry_aria": "Try loading readings again",
+      "loading_label": "Loading today's readings"
+    },
+    "actions": {
+      "read_in_bible": "Read in Bible"
+    }
+  },
   "member_services": {
     "announcements": { "label": "Announcements", "description": "New parish notices", "back_title": "Announcements" },
     "bible": { "label": "Bible", "description": "Read the Bible", "back_title": "Bible", "chapter_title": "Bible Chapter" },
