@@ -740,6 +740,37 @@
     "community": "Jumuiya na Huduma",
     "media": "Media"
   },
+  "member_services_page": {
+    "title": "Zaidi",
+    "subtitle": "Pata huduma na maeneo mengine ya Kanisa Connect.",
+    "search_label": "Tafuta huduma",
+    "search_placeholder": "Tafuta huduma...",
+    "search_results": "Matokeo",
+    "no_results": "Hakuna huduma iliyopatikana.",
+    "open_service": "Fungua {{label}}",
+    "groups": {
+      "account_other": {
+        "label": "Akaunti / Nyingine",
+        "description": "Historia, arifa, na zana nyingine salama."
+      },
+      "media": {
+        "label": "Media",
+        "description": "Sikiliza au tazama huduma zinazopatikana sasa."
+      },
+      "parish_services": {
+        "label": "Huduma za Parokia",
+        "description": "Huduma za kushiriki na kufuatilia maisha ya parokia."
+      },
+      "spiritual": {
+        "label": "Kiroho",
+        "description": "Maeneo ya sala, Neno la Mungu, na malezi ya imani."
+      }
+    },
+    "livestream": {
+      "live_description": "Tazama Misa moja kwa moja",
+      "upcoming_description": "Misa inaanza hivi karibuni"
+    }
+  },
   "member_mobile": {
     "back_from": "Rudi kutoka {{title}}"
   },

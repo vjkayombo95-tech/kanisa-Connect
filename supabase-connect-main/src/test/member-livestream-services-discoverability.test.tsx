@@ -2,6 +2,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import i18n from "@/i18n";
 
 const state = vi.hoisted(() => ({
   churchId: "church-a",
@@ -67,6 +68,9 @@ describe("member Livestream Services discoverability", () => {
   const livestreamLink = () => host.querySelector<HTMLAnchorElement>('a[href="/portal/live/stream-a"]');
 
   beforeEach(() => {
+    act(() => {
+      void i18n.changeLanguage("sw");
+    });
     state.churchId = "church-a";
     state.featureEnabled = true;
     state.featureLoading = false;

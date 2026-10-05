@@ -29,6 +29,7 @@ const translations = vi.hoisted(() => ({
   "member_portal_shell.groups.services": "Huduma",
   "member_portal_shell.groups.spiritual": "Kiroho",
   "member_portal_shell.groups.media": "Media",
+  "member_services_page.title": "Zaidi",
   "member_services.announcements.label": "Matangazo",
   "member_services.bible.label": "Biblia",
   "member_services.calendar.label": "Ratiba ya Parokia",

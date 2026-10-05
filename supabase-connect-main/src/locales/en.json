@@ -740,6 +740,37 @@
     "community": "Community and Ministry",
     "media": "Media"
   },
+  "member_services_page": {
+    "title": "More",
+    "subtitle": "Find more Kanisa Connect services and spaces.",
+    "search_label": "Search services",
+    "search_placeholder": "Search services...",
+    "search_results": "Results",
+    "no_results": "No services found.",
+    "open_service": "Open {{label}}",
+    "groups": {
+      "account_other": {
+        "label": "Account / Other",
+        "description": "History, notifications, and other secure tools."
+      },
+      "media": {
+        "label": "Media",
+        "description": "Listen to or watch services available now."
+      },
+      "parish_services": {
+        "label": "Parish Services",
+        "description": "Services for participating in and following parish life."
+      },
+      "spiritual": {
+        "label": "Spiritual",
+        "description": "Prayer, Scripture, and faith formation spaces."
+      }
+    },
+    "livestream": {
+      "live_description": "Watch Mass live",
+      "upcoming_description": "Mass starts soon"
+    }
+  },
   "member_mobile": {
     "back_from": "Back from {{title}}"
   },
