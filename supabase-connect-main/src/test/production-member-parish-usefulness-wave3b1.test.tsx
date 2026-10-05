@@ -11,6 +11,14 @@ import {
 } from "@/lib/member-daily-life";
 
 const read = (path: string) => readFileSync(join(process.cwd(), "src", path), "utf8");
+const sw = JSON.parse(read("locales/sw.json")) as {
+  member_my_parish: {
+    actions: { directions: string };
+    sections: Record<"contact_location" | "next_mass" | "latest_announcement" | "upcoming_events" | "my_ministries" | "quick_links", string>;
+    hero: { eyebrow: string };
+  };
+  member_services: Record<"livestream" | "radio", { label: string }>;
+};
 
 describe("Wave 3B1 parish usefulness", () => {
   const parishPage = read("pages/portal/MemberMyParishPage.tsx");
@@ -51,7 +59,8 @@ describe("Wave 3B1 parish usefulness", () => {
   it("keeps contact rendering nullable, compact, and clipboard-safe", () => {
     expect(parishPage).toContain("(phoneHref || emailHref) ?");
     expect(parishPage).toContain("directionsHref ?");
-    expect(parishPage).toContain("Pata Maelekezo");
+    expect(parishPage).toContain('t("member_my_parish.actions.directions")');
+    expect(sw.member_my_parish.actions.directions).toBe("Pata Maelekezo");
     expect(parishPage).toContain("navigator.clipboard?.writeText");
     expect(parishPage).toContain('target="_blank" rel="noopener noreferrer"');
     expect(parishPage).toContain("overflow-x-hidden");
@@ -59,13 +68,13 @@ describe("Wave 3B1 parish usefulness", () => {
   });
 
   it("orders parish priorities and uses compact eligible media shortcuts", () => {
-    const identity = parishPage.indexOf("Parokia Yangu");
-    const mass = parishPage.indexOf('title="Misa ijayo"');
-    const announcement = parishPage.indexOf('title="Tangazo la karibuni"');
-    const events = parishPage.indexOf("Matukio yajayo");
-    const ministries = parishPage.indexOf("Huduma zangu");
-    const shortcuts = parishPage.indexOf("Njia za haraka");
-    const contact = parishPage.indexOf('aria-label="Mawasiliano na mahali pa parokia"');
+    const identity = parishPage.indexOf('t("member_my_parish.hero.eyebrow")');
+    const contact = parishPage.indexOf('aria-label={t("member_my_parish.sections.contact_location")}');
+    const mass = parishPage.indexOf('title={t("member_my_parish.sections.next_mass")}');
+    const announcement = parishPage.indexOf('title={t("member_my_parish.sections.latest_announcement")}');
+    const events = parishPage.indexOf('title={t("member_my_parish.sections.upcoming_events")}');
+    const ministries = parishPage.indexOf('title={t("member_my_parish.sections.my_ministries")}');
+    const shortcuts = parishPage.indexOf('aria-label={t("member_my_parish.sections.quick_links")}');
     expect(identity).toBeGreaterThan(-1);
     expect(contact).toBeGreaterThan(identity);
     expect(mass).toBeGreaterThan(contact);
@@ -73,8 +82,17 @@ describe("Wave 3B1 parish usefulness", () => {
     expect(events).toBeGreaterThan(announcement);
     expect(ministries).toBeGreaterThan(events);
     expect(shortcuts).toBeGreaterThan(ministries);
-    expect(parishPage).toContain('title="Radio"');
-    expect(parishPage).toContain('title="Misa Mubashara"');
+    expect(sw.member_my_parish.hero.eyebrow).toBe("Parokia Yangu");
+    expect(sw.member_my_parish.sections.contact_location).toBe("Mawasiliano na mahali pa parokia");
+    expect(sw.member_my_parish.sections.next_mass).toBe("Misa ijayo");
+    expect(sw.member_my_parish.sections.latest_announcement).toBe("Tangazo la karibuni");
+    expect(sw.member_my_parish.sections.upcoming_events).toBe("Matukio yajayo");
+    expect(sw.member_my_parish.sections.my_ministries).toBe("Huduma zangu");
+    expect(sw.member_my_parish.sections.quick_links).toBe("Njia za haraka");
+    expect(parishPage).toContain('title={t("member_services.radio.label")}');
+    expect(parishPage).toContain('title={t("member_services.livestream.label")}');
+    expect(sw.member_services.radio.label).toBe("Radio");
+    expect(sw.member_services.livestream.label).toBe("Misa Mubashara");
   });
 
   it("uses explicit ministry hierarchy, empty states, and named leave confirmation", () => {

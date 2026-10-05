@@ -199,8 +199,9 @@ describe("Wave 12 Slice 4B route and navigation contract", () => {
     expect(registry).toContain('id: "jumuiya"');
     expect(registry).toContain('path: "/portal/jumuiya"');
     expect(registry).toContain('label: "Jumuiya Yangu"');
+    expect(registry).toContain('labelKey: "member_services.jumuiya.label"');
     expect(registry).toContain("ordinaryMemberAllowed: true");
-    expect(layout).toContain('url: "/portal/jumuiya"');
+    expect(layout).toContain('serviceNavItem("jumuiya", "/portal/jumuiya", CommunitiesIcon)');
     expect(backHeader).toContain('"/portal/jumuiya": "Jumuiya Yangu"');
   });
 

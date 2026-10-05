@@ -179,9 +179,9 @@ describe("member Sala behavior contract", () => {
     expect(registry).toContain('id: "prayers"');
     expect(registry).toContain('path: "/portal/prayers"');
     expect(registry).toContain('label: "Sala"');
+    expect(registry).toContain('labelKey: "member_services.prayers.label"');
     expect(registry).toContain("featureKey: null");
-    expect(layout).toContain('url: "/portal/prayers"');
-    expect(layout).toContain('titleKey: "Sala"');
+    expect(layout).toContain('serviceNavItem("prayers", "/portal/prayers", PrayerIcon)');
   });
 
   it("keeps Sala separate from Prayer Requests and parish-specific submissions", () => {
