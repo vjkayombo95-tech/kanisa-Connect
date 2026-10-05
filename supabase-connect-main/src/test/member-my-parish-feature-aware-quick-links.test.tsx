@@ -291,20 +291,39 @@ describe("My Parish feature-aware quick links", () => {
       { id: "event-a", churchId: "church-a", title: "Night vigil", description: null, startDate: "2026-10-04T21:30:00Z", location: null },
     ];
 
-    await act(async () => {
-      await changeAppLanguage("en");
-    });
-    renderPage();
-    expect(host.textContent).toContain(formatAppDate("2026-10-04T21:30:00Z", "en", { dateStyle: "medium", timeStyle: "short" }));
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-04T21:00:00Z"));
+    try {
+      await act(async () => {
+        await changeAppLanguage("en");
+      });
+      renderPage();
+      const expectTanzaniaBoundaryDate = (text: string, monthPattern: RegExp) => {
+        expect(text).toContain("2026");
+        expect(text).toContain("5");
+        expect(text).toContain("00:30");
+        expect(text).toMatch(monthPattern);
+        expect(text).not.toContain("21:30");
+      };
 
-    act(() => root.unmount());
-    host.innerHTML = "";
-    root = createRoot(host);
-    await act(async () => {
-      await changeAppLanguage("sw");
-    });
-    renderPage();
-    expect(host.textContent).toContain(formatAppDate("2026-10-04T21:30:00Z", "sw", { dateStyle: "medium", timeStyle: "short" }));
+      const englishPageText = host.textContent ?? "";
+      expect(englishPageText).toContain("Night vigil");
+      expectTanzaniaBoundaryDate(englishPageText, /\bOct(?:ober)?\b/);
+
+      act(() => root.unmount());
+      host.innerHTML = "";
+      root = createRoot(host);
+      await act(async () => {
+        await changeAppLanguage("sw");
+      });
+      renderPage();
+      const swahiliPageText = host.textContent ?? "";
+      expect(swahiliPageText).toContain("Night vigil");
+      expectTanzaniaBoundaryDate(swahiliPageText, /\bOkt(?:oba)?\b/);
+      expect(swahiliPageText).not.toBe(englishPageText);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("renders parish identity success without fabricated contact data", () => {
