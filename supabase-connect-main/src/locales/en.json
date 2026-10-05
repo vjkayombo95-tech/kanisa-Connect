@@ -692,45 +692,124 @@
     "system": "System"
   },
   "staff_services": {
-    "activity": { "label": "User Activity" },
-    "analytics": { "label": "Analytics" },
-    "announcements": { "label": "Announcements" },
-    "audit_logs": { "label": "Audit Logs" },
-    "bible_verses": { "label": "Bible Verses" },
-    "billing": { "label": "Church Billing" },
-    "billing_verification": { "label": "Billing Verification" },
-    "calendar": { "label": "Parish Calendar" },
-    "channels": { "label": "Communication" },
-    "churches": { "label": "Churches" },
-    "communities": { "label": "Communities" },
-    "community_help": { "label": "Community Help" },
-    "contributions": { "label": "Contributions" },
-    "event_requests": { "label": "Parish Office Services" },
-    "events": { "label": "Events" },
-    "families": { "label": "Families" },
-    "features": { "label": "Features" },
-    "invite_members": { "label": "Invite Members" },
-    "leadership": { "label": "Leadership" },
-    "livestreams": { "label": "Livestreams" },
-    "mass_intentions": { "label": "Mass Intentions", "short_label": "Intentions" },
-    "mass_timetable": { "label": "Mass Timetable" },
-    "members": { "label": "Members" },
-    "ministries": { "label": "Ministries" },
-    "notifications": { "label": "Notifications" },
-    "pledges": { "label": "Pledges" },
-    "prayer_requests": { "label": "Prayer Requests" },
-    "qr_payments": { "label": "QR Payments" },
-    "radio": { "label": "Radio" },
-    "record_preservation": { "label": "Record Preservation" },
-    "reports": { "label": "Reports" },
-    "revenue": { "label": "Revenue" },
-    "roles": { "label": "Invitations and Roles" },
-    "sermons": { "label": "Sermons" },
-    "settings": { "label": "Settings" },
-    "subscriptions": { "label": "Subscriptions" },
-    "system_health": { "label": "System Health" },
-    "system_jobs": { "label": "System Jobs" },
-    "system_logs": { "label": "System Logs" }
+    "activity": {
+      "label": "User Activity"
+    },
+    "analytics": {
+      "label": "Analytics"
+    },
+    "announcements": {
+      "label": "Announcements"
+    },
+    "audit_logs": {
+      "label": "Audit Logs"
+    },
+    "bible_verses": {
+      "label": "Bible Verses"
+    },
+    "billing": {
+      "label": "Church Billing"
+    },
+    "billing_verification": {
+      "label": "Billing Verification"
+    },
+    "calendar": {
+      "label": "Parish Calendar"
+    },
+    "channels": {
+      "label": "Communication"
+    },
+    "churches": {
+      "label": "Churches"
+    },
+    "communities": {
+      "label": "Communities"
+    },
+    "community_help": {
+      "label": "Community Help"
+    },
+    "contributions": {
+      "label": "Contributions"
+    },
+    "event_requests": {
+      "label": "Parish Office Services"
+    },
+    "events": {
+      "label": "Events"
+    },
+    "families": {
+      "label": "Families"
+    },
+    "features": {
+      "label": "Features"
+    },
+    "invite_members": {
+      "label": "Invite Members"
+    },
+    "leadership": {
+      "label": "Leadership"
+    },
+    "livestreams": {
+      "label": "Livestreams"
+    },
+    "mass_intentions": {
+      "label": "Mass Intentions",
+      "short_label": "Intentions"
+    },
+    "mass_timetable": {
+      "label": "Mass Timetable"
+    },
+    "members": {
+      "label": "Members"
+    },
+    "ministries": {
+      "label": "Ministries"
+    },
+    "notifications": {
+      "label": "Notifications"
+    },
+    "pledges": {
+      "label": "Pledges"
+    },
+    "prayer_requests": {
+      "label": "Prayer Requests"
+    },
+    "qr_payments": {
+      "label": "QR Payments"
+    },
+    "radio": {
+      "label": "Radio"
+    },
+    "record_preservation": {
+      "label": "Record Preservation"
+    },
+    "reports": {
+      "label": "Reports"
+    },
+    "revenue": {
+      "label": "Revenue"
+    },
+    "roles": {
+      "label": "Invitations and Roles"
+    },
+    "sermons": {
+      "label": "Sermons"
+    },
+    "settings": {
+      "label": "Settings"
+    },
+    "subscriptions": {
+      "label": "Subscriptions"
+    },
+    "system_health": {
+      "label": "System Health"
+    },
+    "system_jobs": {
+      "label": "System Jobs"
+    },
+    "system_logs": {
+      "label": "System Logs"
+    }
   },
   "member_service_groups": {
     "today": "Today",
@@ -990,35 +1069,231 @@
       "read_in_bible": "Read in Bible"
     }
   },
+  "member_prayers": {
+    "title": "Prayers",
+    "subtitle": "Published prayers for spiritual growth.",
+    "loading": "Loading prayers",
+    "loading_detail": "Loading prayer",
+    "error": "Prayers could not be loaded. Please try again.",
+    "empty": "No prayers have been published right now.",
+    "list_aria": "Published prayers",
+    "featured": "Featured",
+    "actions": {
+      "read": "Read prayer",
+      "back": "Back",
+      "back_to_prayers": "Back to prayers"
+    },
+    "not_found": {
+      "title": "Prayer not found.",
+      "description": "This prayer may not be published or available anymore."
+    }
+  },
+  "member_reflections": {
+    "title": "Reflections",
+    "subtitle": "Published reflections with the daily readings.",
+    "loading": "Loading reflections",
+    "loading_detail": "Loading reflection",
+    "error": "Reflections could not be loaded. Please try again.",
+    "empty": "No reflections have been published right now.",
+    "list_aria": "Published reflections",
+    "card_title": "Reflection for {{date}}",
+    "actions": {
+      "read": "Read reflection",
+      "back": "Back",
+      "back_to_reflections": "Back to reflections"
+    },
+    "sections": {
+      "gospel": "Gospel",
+      "reflection": "Reflection"
+    },
+    "not_found": {
+      "title": "Reflection not found.",
+      "description": "This reflection may not be published or available anymore."
+    }
+  },
+  "member_liturgical_calendar": {
+    "hero": {
+      "eyebrow": "Saints",
+      "title": "Liturgical Calendar",
+      "subtitle": "Follow Church celebrations and saints throughout the year."
+    },
+    "today": {
+      "label": "Today's Feast",
+      "empty_title": "No universal feast is set for today.",
+      "empty_description": "View this month's celebrations below and continue growing through the lives of the saints.",
+      "other_aria": "Other feasts today",
+      "read_more": "Read more"
+    },
+    "month": {
+      "selector_aria": "Choose month",
+      "previous": "Previous month",
+      "next": "Next month"
+    },
+    "search": {
+      "label": "Search feasts",
+      "placeholder": "Search name, month, patronage, country, or tag...",
+      "results": "{{count}} results",
+      "clear": "Clear"
+    },
+    "agenda": {
+      "empty": "No saints match your search.",
+      "aria": "Feast list",
+      "open": "Open"
+    },
+    "calendar": {
+      "aria": "{{month}} calendar",
+      "title": "{{month}} calendar",
+      "helper": "Days with published saints are linked below.",
+      "count": "{{count}} feasts",
+      "open_saint": "Open {{name}}",
+      "more": "+{{count}} more"
+    },
+    "error": {
+      "message": "The Liturgical Calendar could not be loaded: {{message}}",
+      "fallback": "Please try again."
+    }
+  },
   "member_services": {
-    "announcements": { "label": "Announcements", "description": "New parish notices", "back_title": "Announcements" },
-    "bible": { "label": "Bible", "description": "Read the Bible", "back_title": "Bible", "chapter_title": "Bible Chapter" },
-    "calendar": { "label": "Parish Calendar", "description": "Upcoming Masses and parish events", "back_title": "Schedule" },
-    "channels": { "label": "Communication", "description": "Read and reply to your group messages", "back_title": "Communication Channels" },
-    "contribution_history": { "label": "Contribution History", "description": "View contributions and receipts", "back_title": "Contribution History", "receipt_title": "Contribution Receipt" },
-    "daily_readings": { "label": "Daily Readings", "description": "Today's full readings", "back_title": "Daily Readings" },
-    "dashboard": { "label": "My History", "description": "History and profile", "back_title": "My History" },
-    "event_requests": { "label": "Parish Office Services", "description": "Request services and track your requests", "back_title": "Parish Office Services" },
-    "events": { "label": "Events", "description": "Upcoming parish events", "back_title": "Events" },
-    "give": { "label": "Give", "description": "Contribute to your parish", "back_title": "Contributions" },
-    "home": { "label": "Home", "description": "Home" },
-    "jumuiya": { "label": "My Small Christian Community", "description": "View your assigned parish community", "back_title": "My Small Christian Community" },
-    "kanisa_ai": { "label": "Ask Kanisa", "description": "Ask about your church services" },
-    "library": { "label": "Saints", "description": "Faith library", "back_title": "Saints", "detail_title": "Saint" },
-    "liturgical_calendar": { "label": "Liturgical Calendar", "description": "Church feasts and seasons", "back_title": "Liturgical Calendar" },
-    "livestream": { "label": "Live Mass", "description": "Watch live Mass", "back_title": "Live Mass" },
-    "mass_intentions": { "label": "Mass Intentions", "description": "Submit or track intentions", "back_title": "Mass Intentions" },
-    "ministries": { "label": "Parish Ministries", "description": "Request to join a parish ministry", "back_title": "Parish Ministries" },
-    "my_parish": { "label": "My Parish", "description": "Masses, events and parish services", "back_title": "My Parish" },
-    "notifications": { "label": "Notifications", "description": "Your alerts and reminders", "back_title": "Notifications" },
-    "pledges": { "label": "Pledges", "description": "View your pledges", "back_title": "Pledges" },
-    "prayer_requests": { "label": "Prayer Request", "description": "Send and track a request", "back_title": "Prayers" },
-    "prayers": { "label": "Prayers", "description": "Read published prayers", "back_title": "Prayers" },
-    "radio": { "label": "Radio", "description": "Listen to parish radio", "back_title": "Radio" },
-    "reflections": { "label": "Reflections", "description": "Daily reading reflections", "back_title": "Reflections" },
-    "sermons": { "label": "Sermons", "description": "Read parish sermons", "back_title": "Sermons" },
-    "services": { "label": "Services", "description": "All services" },
-    "today": { "label": "Today", "description": "Readings, saints and today's parish life", "back_title": "Today" }
+    "announcements": {
+      "label": "Announcements",
+      "description": "New parish notices",
+      "back_title": "Announcements"
+    },
+    "bible": {
+      "label": "Bible",
+      "description": "Read the Bible",
+      "back_title": "Bible",
+      "chapter_title": "Bible Chapter"
+    },
+    "calendar": {
+      "label": "Parish Calendar",
+      "description": "Upcoming Masses and parish events",
+      "back_title": "Schedule"
+    },
+    "channels": {
+      "label": "Communication",
+      "description": "Read and reply to your group messages",
+      "back_title": "Communication Channels"
+    },
+    "contribution_history": {
+      "label": "Contribution History",
+      "description": "View contributions and receipts",
+      "back_title": "Contribution History",
+      "receipt_title": "Contribution Receipt"
+    },
+    "daily_readings": {
+      "label": "Daily Readings",
+      "description": "Today's full readings",
+      "back_title": "Daily Readings"
+    },
+    "dashboard": {
+      "label": "My History",
+      "description": "History and profile",
+      "back_title": "My History"
+    },
+    "event_requests": {
+      "label": "Parish Office Services",
+      "description": "Request services and track your requests",
+      "back_title": "Parish Office Services"
+    },
+    "events": {
+      "label": "Events",
+      "description": "Upcoming parish events",
+      "back_title": "Events"
+    },
+    "give": {
+      "label": "Give",
+      "description": "Contribute to your parish",
+      "back_title": "Contributions"
+    },
+    "home": {
+      "label": "Home",
+      "description": "Home"
+    },
+    "jumuiya": {
+      "label": "My Small Christian Community",
+      "description": "View your assigned parish community",
+      "back_title": "My Small Christian Community"
+    },
+    "kanisa_ai": {
+      "label": "Ask Kanisa",
+      "description": "Ask about your church services"
+    },
+    "library": {
+      "label": "Saints",
+      "description": "Faith library",
+      "back_title": "Saints",
+      "detail_title": "Saint"
+    },
+    "liturgical_calendar": {
+      "label": "Liturgical Calendar",
+      "description": "Church feasts and seasons",
+      "back_title": "Liturgical Calendar"
+    },
+    "livestream": {
+      "label": "Live Mass",
+      "description": "Watch live Mass",
+      "back_title": "Live Mass"
+    },
+    "mass_intentions": {
+      "label": "Mass Intentions",
+      "description": "Submit or track intentions",
+      "back_title": "Mass Intentions"
+    },
+    "ministries": {
+      "label": "Parish Ministries",
+      "description": "Request to join a parish ministry",
+      "back_title": "Parish Ministries"
+    },
+    "my_parish": {
+      "label": "My Parish",
+      "description": "Masses, events and parish services",
+      "back_title": "My Parish"
+    },
+    "notifications": {
+      "label": "Notifications",
+      "description": "Your alerts and reminders",
+      "back_title": "Notifications"
+    },
+    "pledges": {
+      "label": "Pledges",
+      "description": "View your pledges",
+      "back_title": "Pledges"
+    },
+    "prayer_requests": {
+      "label": "Prayer Request",
+      "description": "Send and track a request",
+      "back_title": "Prayers"
+    },
+    "prayers": {
+      "label": "Prayers",
+      "description": "Read published prayers",
+      "back_title": "Prayers"
+    },
+    "radio": {
+      "label": "Radio",
+      "description": "Listen to parish radio",
+      "back_title": "Radio"
+    },
+    "reflections": {
+      "label": "Reflections",
+      "description": "Daily reading reflections",
+      "back_title": "Reflections"
+    },
+    "sermons": {
+      "label": "Sermons",
+      "description": "Read parish sermons",
+      "back_title": "Sermons"
+    },
+    "services": {
+      "label": "Services",
+      "description": "All services"
+    },
+    "today": {
+      "label": "Today",
+      "description": "Readings, saints and today's parish life",
+      "back_title": "Today"
+    }
   },
   "church_admin_layout": {
     "workspaces": {
