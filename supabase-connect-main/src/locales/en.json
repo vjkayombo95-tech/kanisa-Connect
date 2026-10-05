@@ -759,6 +759,71 @@
       "spiritual": "Spiritual"
     }
   },
+  "member_home": {
+    "announcements": {
+      "open": "Open announcements"
+    },
+    "errors": {
+      "profile": "We could not load your details right now. Please try again shortly."
+    },
+    "financial": {
+      "error": "Payment details could not be loaded.",
+      "history_after_payment": "History will appear after your first contribution",
+      "last_payment": "Last Payment",
+      "payment_on_date": "Payment - {{date}}",
+      "pending_amount": "Pending Amount",
+      "recorded_contributions": "Recorded contributions",
+      "retry_later": "Try again after a little while",
+      "summary_aria": "Contribution summary",
+      "total_paid": "Total Given",
+      "unfinished_pledges": "Unfinished pledges",
+      "unavailable": "Unavailable"
+    },
+    "greeting": {
+      "member_fallback": "Member",
+      "parish_fallback": "Your parish",
+      "subtitle_fallback": "Your church services are here for easy access.",
+      "welcome": "Welcome"
+    },
+    "livestream": {
+      "live": {
+        "action": "Watch live",
+        "label": "LIVE NOW"
+      },
+      "starts_at": "Starts {{date}}",
+      "starts_soon": "This Mass starts soon",
+      "upcoming": {
+        "action": "Open upcoming Mass",
+        "label": "COMING UP SOON"
+      }
+    },
+    "mass": {
+      "empty_description": "A new schedule will appear here once it is published."
+    },
+    "mobile": {
+      "hello": "Hello, {{name}}",
+      "open_announcements": "Open announcements",
+      "prompt": "What would you like to do?"
+    },
+    "quick_actions": {
+      "description": "A few useful services for today.",
+      "title": "Quick actions"
+    },
+    "rsvp": {
+      "deadline": "RSVP deadline: {{date}}",
+      "deadline_passed": "RSVP deadline has passed.",
+      "expected": "Expected: {{count}}",
+      "maybe_count": "Maybe: {{count}}",
+      "question": "Will you attend?",
+      "response_rate": "Response rate: {{rate}}%",
+      "responses": {
+        "maybe": "Maybe",
+        "no": "No",
+        "yes": "Yes"
+      },
+      "saving": "Saving..."
+    }
+  },
   "member_my_parish": {
     "actions": {
       "all_announcements": "All announcements",

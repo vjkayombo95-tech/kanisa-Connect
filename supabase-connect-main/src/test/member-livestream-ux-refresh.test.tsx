@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import i18n from "@/i18n";
 import type { ChurchLivestream } from "@/lib/church-livestreams";
 
 const componentState = vi.hoisted(() => ({
@@ -62,6 +63,7 @@ describe("member livestream truthful presentation", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-09T09:00:00.000Z"));
+    void i18n.changeLanguage("sw");
     componentState.hookResult = {
       data: stream(),
       featureEnabled: true,
@@ -94,7 +96,7 @@ describe("member livestream truthful presentation", () => {
   it("presents a genuinely live stream as live with a live CTA", () => {
     renderCard();
     expect(host.textContent).toContain("LIVE SASA");
-    expect(host.textContent).toContain("Tazama Moja kwa Moja");
+    expect(host.textContent).toContain("Tazama moja kwa moja");
   });
 
   it("presents a scheduled stream as upcoming with its scheduled time, not live", () => {

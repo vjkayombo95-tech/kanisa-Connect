@@ -9,6 +9,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { AppLink } from "@/components/AppLink";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,8 @@ import { MobileMemberHome } from "@/components/portal/MobileMemberHome";
 import { fetchMemberContributionTotal } from "@/lib/member-contributions";
 import { dailyLifeKeys, fetchNextMassSummary, fetchNextTimetableMass } from "@/lib/member-daily-life";
 import { useIsDesktop } from "@/hooks/use-mobile";
+import { formatAppDate, translateMemberServiceDescription, translateMemberServiceLabel } from "@/lib/localization";
+import { memberServiceRegistry } from "@/lib/member-service-registry";
 
 type MemberHomeData = {
   memberId: string | null;
@@ -77,25 +80,14 @@ const emptyMemberHome = (name: string): MemberHomeData => ({
   latestAnnouncement: null,
 });
 
-function formatDate(value: string | null) {
-  if (!value) return "Hakuna bado";
-
-  return new Date(value).toLocaleDateString("sw-TZ", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+function formatDate(value: string | null, language: string, fallback: string) {
+  if (!value) return fallback;
+  return formatAppDate(value, language, { dateStyle: "medium" });
 }
 
-function formatMassTime(value: string | null) {
-  if (!value) return "";
-  const [hours = "0", minutes = "0"] = value.split(":");
-  const date = new Date();
-  date.setHours(Number(hours), Number(minutes), 0, 0);
-  return date.toLocaleTimeString("en-TZ", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+function formatMassDateTime(date: string | null, time: string | null, language: string) {
+  if (!date || !time) return "";
+  return formatAppDate(`${date}T${time}+03:00`, language, { dateStyle: "medium", timeStyle: "short" });
 }
 
 function isDeadlinePassed(value: string | null) {
@@ -109,13 +101,19 @@ function logMemberDashboardError(label: string, error: unknown) {
   });
 }
 
-function useSimpleMemberHomeData() {
+function getMemberService(serviceId: string) {
+  const service = memberServiceRegistry.find((item) => item.id === serviceId);
+  if (!service) throw new Error(`Missing member service registry entry: ${serviceId}`);
+  return service;
+}
+
+function useSimpleMemberHomeData(fallbackMemberName: string) {
   const { user, churchId } = useAuth();
 
   return useQuery({
-    queryKey: ["simple-member-home", user?.id, user?.email, churchId],
+    queryKey: ["simple-member-home", user?.id, user?.email, churchId, fallbackMemberName],
     queryFn: async (): Promise<MemberHomeData> => {
-      const fallbackName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Mshirika";
+      const fallbackName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || fallbackMemberName;
       const emptyState = emptyMemberHome(fallbackName);
 
       if (!user || !churchId) return emptyState;
@@ -167,7 +165,7 @@ function useSimpleMemberHomeData() {
         lastPayment: null,
         latestAnnouncement: latestAnnouncement
           ? {
-              title: latestAnnouncement.title || "Tangazo",
+              title: latestAnnouncement.title || "",
               content: latestAnnouncement.content ?? null,
               date: latestAnnouncement.created_at ?? null,
             }
@@ -265,30 +263,32 @@ function FinancialSummarySurface({
   financials: ReturnType<typeof useMemberFinancialData>;
   home: MemberHomeData;
 }) {
+  const { t, i18n } = useTranslation();
+
   return (
     <Card className="rounded-[28px] border-border/60 bg-card/80 shadow-sm">
       <CardContent className="p-4">
         <div className="grid gap-4 xl:grid-cols-3 xl:divide-x xl:divide-border/60">
           <FinancialMetric
             icon={Wallet}
-            label="Jumla Uliyolipa"
-            value={financials.isLoading ? "Inapakiwa" : financials.isError || home.totalPaid === null ? "Haipatikani" : formatTZS(home.totalPaid)}
-            hint={financials.isError ? "Jaribu tena baada ya muda" : "Michango iliyorekodiwa"}
+            label={t("member_home.financial.total_paid")}
+            value={financials.isLoading ? t("common.loading") : financials.isError || home.totalPaid === null ? t("member_home.financial.unavailable") : formatTZS(home.totalPaid)}
+            hint={financials.isError ? t("member_home.financial.retry_later") : t("member_home.financial.recorded_contributions")}
           />
           <div className="xl:pl-4">
             <FinancialMetric
               icon={BellRing}
-              label="Kiasi Kinachosubiri"
-              value={financials.isLoading ? "Inapakiwa" : financials.isError || home.pendingAmount === null ? "Haipatikani" : formatTZS(home.pendingAmount)}
-              hint={financials.isError ? "Jaribu tena baada ya muda" : "Ahadi ambazo hazijakamilika"}
+              label={t("member_home.financial.pending_amount")}
+              value={financials.isLoading ? t("common.loading") : financials.isError || home.pendingAmount === null ? t("member_home.financial.unavailable") : formatTZS(home.pendingAmount)}
+              hint={financials.isError ? t("member_home.financial.retry_later") : t("member_home.financial.unfinished_pledges")}
             />
           </div>
           <div className="xl:pl-4">
             <FinancialMetric
               icon={CalendarDays}
-              label="Malipo ya Mwisho"
-              value={financials.isLoading ? "Inapakiwa" : financials.isError ? "Haipatikani" : home.lastPayment ? formatTZS(home.lastPayment.amount) : "Hakuna bado"}
-              hint={financials.isError ? "Jaribu tena baada ya muda" : home.lastPayment ? `${home.lastPayment.label} - ${formatDate(home.lastPayment.date)}` : "Historia itaonekana ukilipa"}
+              label={t("member_home.financial.last_payment")}
+              value={financials.isLoading ? t("common.loading") : financials.isError ? t("member_home.financial.unavailable") : home.lastPayment ? formatTZS(home.lastPayment.amount) : t("common.none_yet")}
+              hint={financials.isError ? t("member_home.financial.retry_later") : home.lastPayment ? t("member_home.financial.payment_on_date", { date: formatDate(home.lastPayment.date, i18n.language, t("common.none_yet")) }) : t("member_home.financial.history_after_payment")}
             />
           </div>
         </div>
@@ -339,13 +339,15 @@ function BigAction({
 }
 
 export default function MemberDashboard() {
+  const { t, i18n } = useTranslation();
   const isDesktop = useIsDesktop();
-  const { data, isLoading, isError } = useSimpleMemberHomeData();
+  const fallbackMemberName = t("member_home.greeting.member_fallback");
+  const { data, isLoading, isError } = useSimpleMemberHomeData(fallbackMemberName);
   const { getFeatureState } = useFeatureAccess();
   const { churchId } = useAuth();
   const queryClient = useQueryClient();
   const financials = useMemberFinancialData(churchId, data?.memberId ?? null, isDesktop);
-  const home = { ...(data ?? emptyMemberHome("Mshirika")), ...(financials.data ?? {}) };
+  const home = { ...(data ?? emptyMemberHome(fallbackMemberName)), ...(financials.data ?? {}) };
 
   const { data: massSummary } = useQuery({
     queryKey: dailyLifeKeys.nextMass(churchId),
@@ -393,9 +395,18 @@ export default function MemberDashboard() {
   const deadlinePassed = isDeadlinePassed(rsvpMass?.responseDeadline ?? null);
   const rsvpDisabled = !rsvpMass?.askForRsvp || deadlinePassed || !home.memberId || submitMassResponse.isPending;
   const quickActions: HomeQuickAction[] = [];
-  if (giveVisible) quickActions.push({ icon: HandCoins, label: "Lipa Sasa", hint: "Toa mchango au sadaka", to: "/portal/give", primary: true });
-  if (massVisible) quickActions.push({ icon: HeartHandshake, label: "Nia ya Misa", hint: "Wasilisha nia ya Misa", to: "/portal/mass-intentions" });
-  if (announcementsVisible) quickActions.push({ icon: Megaphone, label: "Matangazo", hint: "Soma taarifa mpya", to: "/portal/announcements" });
+  if (giveVisible) {
+    const service = getMemberService("give");
+    quickActions.push({ icon: HandCoins, label: translateMemberServiceLabel(t, service), hint: translateMemberServiceDescription(t, service), to: "/portal/give", primary: true });
+  }
+  if (massVisible) {
+    const service = getMemberService("mass-intentions");
+    quickActions.push({ icon: HeartHandshake, label: translateMemberServiceLabel(t, service), hint: translateMemberServiceDescription(t, service), to: "/portal/mass-intentions" });
+  }
+  if (announcementsVisible) {
+    const service = getMemberService("announcements");
+    quickActions.push({ icon: Megaphone, label: translateMemberServiceLabel(t, service), hint: translateMemberServiceDescription(t, service), to: "/portal/announcements" });
+  }
 
   return (
     <div className="min-h-full bg-[linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.35))] px-4 py-5 pb-28 lg:px-8 lg:pb-8">
@@ -419,10 +430,10 @@ export default function MemberDashboard() {
               <Church className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-muted-foreground">Karibu</p>
+              <p className="text-sm font-medium text-muted-foreground">{t("member_home.greeting.welcome")}</p>
               <h1 className="mt-0.5 text-3xl font-bold tracking-tight text-foreground">{home.memberName}</h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {home.churchName ? home.churchName : "Huduma yako ya kanisa iko hapa kwa urahisi."}
+                {home.churchName ? home.churchName : t("member_home.greeting.subtitle_fallback")}
               </p>
             </div>
           </div>
@@ -431,20 +442,20 @@ export default function MemberDashboard() {
         {isError ? (
           <Card className="rounded-3xl border-destructive/25 bg-destructive/5">
             <CardContent className="p-4 text-sm text-destructive">
-              Hatukuweza kupakia taarifa zako kwa sasa. Jaribu tena baada ya muda mfupi.
+              {t("member_home.errors.profile")}
             </CardContent>
           </Card>
         ) : null}
 
-        <section aria-label="Muhtasari wa michango">
+        <section aria-label={t("member_home.financial.summary_aria")}>
           <FinancialSummarySurface financials={financials} home={home} />
         </section>
 
         {financials.isError ? (
           <Card className="rounded-3xl border-destructive/25 bg-destructive/5">
             <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4" role="alert">
-              <p className="text-sm text-destructive">Taarifa za malipo hazikuweza kupakiwa.</p>
-              <Button type="button" variant="outline" onClick={() => void financials.refetch()}>Jaribu tena</Button>
+              <p className="text-sm text-destructive">{t("member_home.financial.error")}</p>
+              <Button type="button" variant="outline" onClick={() => void financials.refetch()}>{t("member_my_parish.actions.retry")}</Button>
             </CardContent>
           </Card>
         ) : null}
@@ -453,50 +464,50 @@ export default function MemberDashboard() {
           <CardContent className="p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-primary">Misa ijayo</p>
+                <p className="text-sm font-semibold text-primary">{t("member_my_parish.sections.next_mass")}</p>
                 {displayNextMass ? (
                   <>
                     <h2 className="mt-1 text-xl font-bold text-foreground">{displayNextMass.title}</h2>
                     <p className="mt-1 text-base font-semibold text-foreground">
-                      {formatDate(displayNextMass.massDate)} - {formatMassTime(displayNextMass.startTime)}
+                      {formatMassDateTime(displayNextMass.massDate, displayNextMass.startTime, i18n.language)}
                     </p>
                     {displayNextMass.description ? <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{displayNextMass.description}</p> : null}
                   </>
                 ) : (
                   <div className="mt-2 space-y-1">
-                    <p className="text-sm font-medium text-foreground">Hakuna misa iliyopangwa kwa sasa.</p>
-                    <p className="text-sm text-muted-foreground">Ratiba mpya itaonekana hapa itakapochapishwa.</p>
+                    <p className="text-sm font-medium text-foreground">{t("member_my_parish.empty.next_mass")}</p>
+                    <p className="text-sm text-muted-foreground">{t("member_home.mass.empty_description")}</p>
                   </div>
                 )}
               </div>
 
               {rsvpMass ? (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-foreground">Will you attend?</p>
+                  <p className="text-sm font-medium text-foreground">{t("member_home.rsvp.question")}</p>
                   <div className="flex flex-wrap gap-2">
                     {(["yes", "maybe", "no"] as const).map((response) => (
                       <Button
                         key={response}
                         variant={rsvpMass.memberResponse === response ? "default" : "outline"}
-                        className="min-w-24 capitalize"
+                        className="min-w-24"
                         disabled={rsvpDisabled}
                         onClick={() => submitMassResponse.mutate(response)}
                       >
-                        {submitMassResponse.isPending && submitMassResponse.variables === response ? "Saving..." : response}
+                        {submitMassResponse.isPending && submitMassResponse.variables === response ? t("member_home.rsvp.saving") : t(`member_home.rsvp.responses.${response}`)}
                       </Button>
                     ))}
                   </div>
                   <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    <span>Expected: {massSummary?.responseCounts.yes ?? 0}</span>
-                    <span>Maybe: {massSummary?.responseCounts.maybe ?? 0}</span>
-                    <span>Response rate: {Number(massSummary?.responseRate ?? 0).toFixed(0)}%</span>
+                    <span>{t("member_home.rsvp.expected", { count: massSummary?.responseCounts.yes ?? 0 })}</span>
+                    <span>{t("member_home.rsvp.maybe_count", { count: massSummary?.responseCounts.maybe ?? 0 })}</span>
+                    <span>{t("member_home.rsvp.response_rate", { rate: Number(massSummary?.responseRate ?? 0).toFixed(0) })}</span>
                   </div>
                   {rsvpMass.responseDeadline ? (
                     <p className="text-xs text-muted-foreground">
-                      RSVP deadline: {new Date(rsvpMass.responseDeadline).toLocaleString("en-TZ")}
+                      {t("member_home.rsvp.deadline", { date: formatAppDate(rsvpMass.responseDeadline, i18n.language, { dateStyle: "medium", timeStyle: "short" }) })}
                     </p>
                   ) : null}
-                  {deadlinePassed ? <p className="text-xs text-muted-foreground">RSVP deadline has passed.</p> : null}
+                  {deadlinePassed ? <p className="text-xs text-muted-foreground">{t("member_home.rsvp.deadline_passed")}</p> : null}
                 </div>
               ) : null}
             </div>
@@ -509,36 +520,36 @@ export default function MemberDashboard() {
               <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Megaphone className="h-4 w-4" />
               </span>
-              Tangazo la Karibuni
+              {t("member_my_parish.sections.latest_announcement")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 pb-4">
             {home.latestAnnouncement ? (
               <div>
-                <p className="text-lg font-bold text-foreground">{home.latestAnnouncement.title}</p>
+                <p className="text-lg font-bold text-foreground">{home.latestAnnouncement.title || t("member_my_parish.fallbacks.announcement")}</p>
                 {home.latestAnnouncement.content ? (
                   <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
                     {announcementHtmlToPlainText(home.latestAnnouncement.content)}
                   </p>
                 ) : null}
-                <p className="mt-2 text-xs text-muted-foreground">{formatDate(home.latestAnnouncement.date)}</p>
+                <p className="mt-2 text-xs text-muted-foreground">{formatDate(home.latestAnnouncement.date, i18n.language, t("common.none_yet"))}</p>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Hakuna tangazo jipya kwa sasa.</p>
+              <p className="text-sm text-muted-foreground">{t("member_my_parish.empty.announcement")}</p>
             )}
             {announcementsVisible ? (
               <Button asChild variant="outline" className="h-10 rounded-xl px-4">
-                <AppLink to="/portal/announcements">Fungua Matangazo</AppLink>
+                <AppLink to="/portal/announcements">{t("member_home.announcements.open")}</AppLink>
               </Button>
             ) : null}
           </CardContent>
         </Card>
 
         {quickActions.length > 0 ? (
-          <section aria-label="Hatua za haraka" className="space-y-3">
+          <section aria-label={t("member_home.quick_actions.title")} className="space-y-3">
             <div>
-              <h2 className="text-lg font-bold tracking-tight text-foreground">Hatua za haraka</h2>
-              <p className="text-sm text-muted-foreground">Huduma chache muhimu kwa leo.</p>
+              <h2 className="text-lg font-bold tracking-tight text-foreground">{t("member_home.quick_actions.title")}</h2>
+              <p className="text-sm text-muted-foreground">{t("member_home.quick_actions.description")}</p>
             </div>
             <div className="grid gap-3 xl:grid-cols-3">
               {quickActions.map((action) => (

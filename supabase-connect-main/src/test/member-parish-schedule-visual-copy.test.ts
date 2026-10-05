@@ -66,6 +66,6 @@ describe("member parish schedule visual copy contract", () => {
     expect(memberMyParish).toContain('t("member_my_parish.actions.schedule")');
     expect(memberMyParish).toContain('t("member_services.calendar.label")');
     expect(mobileHome).toContain('to="/portal/calendar"');
-    expect(mobileHome).toContain(">Ratiba</AppLink>");
+    expect(mobileHome).toContain('t("member_my_parish.actions.schedule")');
   });
 });

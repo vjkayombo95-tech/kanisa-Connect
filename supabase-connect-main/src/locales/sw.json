@@ -759,6 +759,71 @@
       "spiritual": "Kiroho"
     }
   },
+  "member_home": {
+    "announcements": {
+      "open": "Fungua matangazo"
+    },
+    "errors": {
+      "profile": "Hatukuweza kupakia taarifa zako kwa sasa. Jaribu tena baada ya muda mfupi."
+    },
+    "financial": {
+      "error": "Taarifa za malipo hazikuweza kupakiwa.",
+      "history_after_payment": "Historia itaonekana ukilipa",
+      "last_payment": "Malipo ya Mwisho",
+      "payment_on_date": "Malipo - {{date}}",
+      "pending_amount": "Kiasi Kinachosubiri",
+      "recorded_contributions": "Michango iliyorekodiwa",
+      "retry_later": "Jaribu tena baada ya muda",
+      "summary_aria": "Muhtasari wa michango",
+      "total_paid": "Jumla Uliyolipa",
+      "unfinished_pledges": "Ahadi ambazo hazijakamilika",
+      "unavailable": "Haipatikani"
+    },
+    "greeting": {
+      "member_fallback": "Mshirika",
+      "parish_fallback": "Parokia yako",
+      "subtitle_fallback": "Huduma yako ya kanisa iko hapa kwa urahisi.",
+      "welcome": "Karibu"
+    },
+    "livestream": {
+      "live": {
+        "action": "Tazama moja kwa moja",
+        "label": "LIVE SASA"
+      },
+      "starts_at": "Inaanza {{date}}",
+      "starts_soon": "Misa hii inaanza hivi karibuni",
+      "upcoming": {
+        "action": "Fungua Misa ijayo",
+        "label": "INAKUJA KARIBUNI"
+      }
+    },
+    "mass": {
+      "empty_description": "Ratiba mpya itaonekana hapa itakapochapishwa."
+    },
+    "mobile": {
+      "hello": "Habari, {{name}}",
+      "open_announcements": "Fungua matangazo",
+      "prompt": "Ungependa kufanya nini?"
+    },
+    "quick_actions": {
+      "description": "Huduma chache muhimu kwa leo.",
+      "title": "Hatua za haraka"
+    },
+    "rsvp": {
+      "deadline": "Mwisho wa RSVP: {{date}}",
+      "deadline_passed": "Muda wa RSVP umepita.",
+      "expected": "Wanaotarajiwa: {{count}}",
+      "maybe_count": "Labda: {{count}}",
+      "question": "Utahudhuria?",
+      "response_rate": "Kiwango cha majibu: {{rate}}%",
+      "responses": {
+        "maybe": "Labda",
+        "no": "Hapana",
+        "yes": "Ndiyo"
+      },
+      "saving": "Inahifadhi..."
+    }
+  },
   "member_my_parish": {
     "actions": {
       "all_announcements": "Matangazo yote",
