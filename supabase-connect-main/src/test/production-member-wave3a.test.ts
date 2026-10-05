@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { vi } from "vitest";
 import { act, createElement, type ComponentPropsWithoutRef } from "react";
 import { createRoot } from "react-dom/client";
+import "@/i18n";
 import { dailyLifeKeys, normalizeNextMassSummary } from "@/lib/member-daily-life";
 import { getMemberServiceForPath, isOrdinaryMemberPathAllowed, memberServiceRegistry } from "@/lib/member-service-registry";
 import { getDarEsSalaamDateKey, publishedDailyReadingKey } from "@/lib/daily-readings";
@@ -68,8 +69,10 @@ describe("Wave 3A member reliability contracts", () => {
     const home = read("components/portal/MobileMemberHome.tsx");
     expect((home.match(/id: "(?:give|mass|announcements|history)"/g) ?? [])).toHaveLength(4);
     expect(home).toContain('data-testid="mobile-next-mass"');
-    expect(home).toContain("Hakuna Misa ijayo iliyopangwa");
-    expect(home).toContain("Ratiba ya Misa haikupatikana kwa sasa");
+    expect(home).toContain('t("member_my_parish.empty.next_mass")');
+    expect(home).toContain('t("member_my_parish.errors.mass_title")');
+    expect(home).toContain('translateMemberServiceLabel(t, service)');
+    expect(home).toContain('translateMemberServiceDescription(t, service)');
   });
 
   it.each([[390, 844], [430, 932]])("renders a bounded mobile Mass card at %sx%s", (width, height) => {
@@ -86,8 +89,10 @@ describe("Wave 3A member reliability contracts", () => {
     })));
     expect(container.querySelector('[data-testid="mobile-next-mass"]')).not.toBeNull();
     const links = [...container.querySelectorAll("a")];
-    expect(links.filter((link) => ["Michango", "Nia za Misa", "Matangazo", "Historia Yangu"].some((label) => link.textContent?.includes(label)))).toHaveLength(4);
-    expect(links.filter((link) => link.textContent === "Ratiba")).toHaveLength(1);
+    for (const href of ["/portal/give", "/portal/mass-intentions", "/portal/announcements", "/portal/dashboard"]) {
+      expect(links.some((link) => link.getAttribute("href") === href), href).toBe(true);
+    }
+    expect(links.filter((link) => link.getAttribute("href") === "/portal/calendar")).toHaveLength(1);
     act(() => root.unmount());
     container.remove();
   });
@@ -112,7 +117,7 @@ describe("Wave 3A member reliability contracts", () => {
 
   it("does not execute proven desktop-only Home requests on mobile", () => {
     const dashboard = read("components/portal/MemberDashboard.tsx");
-    expect(dashboard).toContain('["simple-member-home", user?.id, user?.email, churchId]');
+    expect(dashboard).toContain('["simple-member-home", user?.id, user?.email, churchId, fallbackMemberName]');
     expect(dashboard).toContain('["member-home-financials", churchId, memberId]');
     expect(dashboard).toContain("enabled: enabled && !!churchId && !!memberId");
     expect(dashboard).toContain("useMemberFinancialData(churchId, data?.memberId ?? null, isDesktop)");
@@ -121,17 +126,17 @@ describe("Wave 3A member reliability contracts", () => {
 
   it("keeps desktop Home focused on parish identity, finance, Mass, one announcement, and up to three actions", () => {
     const dashboard = read("components/portal/MemberDashboard.tsx");
-    expect(dashboard).toContain("Karibu");
-    expect(dashboard).toContain("Muhtasari wa michango");
+    expect(dashboard).toContain('t("member_home.greeting.welcome")');
+    expect(dashboard).toContain('t("member_home.financial.summary_aria")');
     expect(dashboard).toContain("FinancialSummarySurface");
     expect(dashboard).toContain("xl:divide-x xl:divide-border/60");
-    expect(dashboard).toContain("Misa ijayo");
-    expect(dashboard).toContain("Hakuna misa iliyopangwa kwa sasa.");
-    expect(dashboard).toContain("Ratiba mpya itaonekana hapa itakapochapishwa.");
-    expect(dashboard).toContain("Tangazo la Karibuni");
-    expect(dashboard).toContain("Hatua za haraka");
+    expect(dashboard).toContain('t("member_my_parish.sections.next_mass")');
+    expect(dashboard).toContain('t("member_my_parish.empty.next_mass")');
+    expect(dashboard).toContain('t("member_home.mass.empty_description")');
+    expect(dashboard).toContain('t("member_my_parish.sections.latest_announcement")');
+    expect(dashboard).toContain('t("member_home.quick_actions.title")');
     expect(dashboard).toContain("<ProductionLiveMassCard />");
-    expect((dashboard.match(/label: "(?:Lipa Sasa|Nia ya Misa|Matangazo)"/g) ?? [])).toHaveLength(3);
+    expect((dashboard.match(/translateMemberServiceLabel\(t, service\)/g) ?? [])).toHaveLength(3);
     expect((dashboard.match(/quickActions\.push/g) ?? [])).toHaveLength(3);
     expect(dashboard).toContain("submitMassResponse.mutate(response)");
     expect(dashboard).toContain('queryFn: () => fetchNextMassSummary(churchId!)');
@@ -153,8 +158,14 @@ describe("Wave 3A member reliability contracts", () => {
     expect(dashboard).toContain('const giveVisible = getFeatureState("give").visible;');
     expect(dashboard).toContain('const massVisible = getFeatureState("mass_intentions").visible;');
     expect(dashboard).toContain('const announcementsVisible = getFeatureState("announcements").visible;');
-    expect(dashboard).toContain("if (giveVisible) quickActions.push({ icon: HandCoins");
-    expect(dashboard).toContain("if (massVisible) quickActions.push({ icon: HeartHandshake");
-    expect(dashboard).toContain("if (announcementsVisible) quickActions.push({ icon: Megaphone");
+    expect(dashboard).toContain('if (giveVisible) {');
+    expect(dashboard).toContain('getMemberService("give")');
+    expect(dashboard).toContain('quickActions.push({ icon: HandCoins');
+    expect(dashboard).toContain('if (massVisible) {');
+    expect(dashboard).toContain('getMemberService("mass-intentions")');
+    expect(dashboard).toContain('quickActions.push({ icon: HeartHandshake');
+    expect(dashboard).toContain('if (announcementsVisible) {');
+    expect(dashboard).toContain('getMemberService("announcements")');
+    expect(dashboard).toContain('quickActions.push({ icon: Megaphone');
   });
 });
