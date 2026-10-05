@@ -7,24 +7,30 @@ const read = (relative: string) => fs.readFileSync(path.join(root, relative), "u
 
 describe("PortalGive visual copy contract", () => {
   const portalGive = read("src/pages/portal/PortalGive.tsx");
+  const en = read("src/locales/en.json");
+  const sw = read("src/locales/sw.json");
 
-  it("uses Kiswahili-first recording language without payment gateway claims", () => {
-    expect(portalGive).toContain(">Michango</h1>");
-    expect(portalGive).toContain("Rekodi mchango wako kwa parokia.");
-    expect(portalGive).toContain("Rekodi Mchango");
-    expect(portalGive).toContain("Rekodi ${formatTZS(Number(amount))}");
+  it("uses localized recording language without payment gateway claims", () => {
+    expect(portalGive).toContain('t("member_give.title")');
+    expect(portalGive).toContain('t("member_give.subtitle")');
+    expect(portalGive).toContain('t("member_give.submit")');
+    expect(portalGive).toContain('t("member_give.submit_with_amount", { amount: formatTZS(Number(amount)) })');
     expect(portalGive).not.toMatch(/Pay Now|Proceed to Payment|Complete Payment|Payment successful|Processing payment/i);
     expect(portalGive).not.toMatch(/stripe|paypal|checkout|payment_intent|paymentIntent|gateway/i);
+    expect(en).toContain('"title": "Give"');
+    expect(sw).toContain('"title": "Michango"');
   });
 
   it("presents optional contribution details accurately", () => {
-    expect(portalGive).toContain("Aina ya mchango");
-    expect(portalGive).toContain("Chagua aina ya mchango");
-    expect(portalGive).toContain("Si lazima");
-    expect(portalGive).toContain("Namba ya simu");
-    expect(portalGive).toContain("Kumbukumbu ya malipo");
-    expect(portalGive).toContain("Kama tayari umelipa kupitia M-Pesa, benki au njia nyingine");
-    expect(portalGive).toContain("Hii si uthibitisho wa malipo ya kielektroniki.");
+    expect(portalGive).toContain('t("member_give.category_label")');
+    expect(portalGive).toContain('placeholderKey="member_give.category_placeholder"');
+    expect(portalGive).toContain('t("member_give.optional")');
+    expect(portalGive).toContain('t("member_give.phone_label")');
+    expect(portalGive).toContain('t("member_give.payment_reference_label")');
+    expect(portalGive).toContain('t("member_give.payment_reference_helper")');
+    expect(portalGive).toContain('t("member_give.after_submit_description")');
+    expect(en).toContain("If you already paid through M-Pesa, bank, or another channel");
+    expect(sw).toContain("Kama tayari umelipa kupitia M-Pesa, benki au njia nyingine");
   });
 
   it("keeps the member page spacious and mobile conscious", () => {

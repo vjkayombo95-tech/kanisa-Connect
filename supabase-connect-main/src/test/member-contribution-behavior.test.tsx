@@ -4,6 +4,8 @@ import { createRoot, Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { changeAppLanguage } from "@/i18n";
+
 const CHURCH_A = "church-a";
 const CHURCH_B = "church-b";
 const MEMBER_A = "member-a";
@@ -170,7 +172,10 @@ function expectReceiptFilters(id: string) {
   ]));
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  await act(async () => {
+    await changeAppLanguage("sw");
+  });
   testState.filters.length = 0;
   testState.historyError = false;
   testState.receiptErrorIds.clear();
@@ -186,9 +191,49 @@ afterEach(() => {
 });
 
 describe("Wave 4B behavioral ownership boundaries", () => {
+  it("localizes history and receipt while preserving contribution data and routes", async () => {
+    await act(async () => {
+      await changeAppLanguage("en");
+    });
+    const historyHost = renderHistory();
+    await waitForText(historyHost, "Contribution History");
+    expect(historyHost.textContent).toContain("View recorded contributions and open their receipts.");
+    expect(historyHost.textContent).toContain("41,001");
+    expect(historyHost.textContent).toContain("Sadaka");
+    expect(historyHost.textContent).toContain("Ref: OWN-REF-41001");
+    expect(historyHost.textContent).toContain("2026");
+    expect(historyHost.querySelector(`a[href="/portal/contribution-receipt/${OWN_ID}"]`)).not.toBeNull();
+
+    const receiptHost = renderReceipt(OWN_ID);
+    await waitForText(receiptHost, "Contribution Receipt");
+    expect(receiptHost.textContent).toContain("Member A");
+    expect(receiptHost.textContent).toContain("41,001");
+    expect(receiptHost.textContent).toContain("Sadaka");
+    expect(receiptHost.textContent).toContain("OWN-REF-41001");
+    expect(receiptHost.textContent).toContain("Authorized note");
+    expect(receiptHost.textContent).toContain("Print / Save PDF");
+    expect(receiptHost.textContent).toContain("Back to history");
+    expect(receiptHost.textContent).toContain("2026");
+
+    await act(async () => {
+      await changeAppLanguage("sw");
+    });
+    expect(historyHost.textContent).toContain("Historia ya Michango");
+    expect(historyHost.textContent).toContain("41,001");
+    expect(historyHost.textContent).toContain("Sadaka");
+    expect(historyHost.textContent).toContain("OWN-REF-41001");
+    expect(receiptHost.textContent).toContain("Risiti ya Mchango");
+    expect(receiptHost.textContent).toContain("Member A");
+    expect(receiptHost.textContent).toContain("41,001");
+    expect(receiptHost.textContent).toContain("Sadaka");
+    expect(receiptHost.textContent).toContain("OWN-REF-41001");
+    expect(receiptHost.textContent).toContain("Authorized note");
+    expect(receiptHost.textContent).toContain("Chapisha / Hifadhi PDF");
+  });
+
   it("renders only the authenticated member's contribution history and exact fields", async () => {
     const host = renderHistory();
-    expect(host.querySelector('[aria-label="Inapakia historia"]')).not.toBeNull();
+    expect(host.querySelector('[aria-label="Inapakia historia ya michango"]')).not.toBeNull();
     await waitForText(host, /41,001/);
     expect(host.textContent).toContain("Sadaka");
     expect(host.textContent).toContain("Ref: OWN-REF-41001");

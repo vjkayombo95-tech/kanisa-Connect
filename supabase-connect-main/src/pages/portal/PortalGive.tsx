@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,6 +52,7 @@ function useMemberRecord() {
 }
 
 export default function PortalGive() {
+  const { t } = useTranslation();
   const [amount, setAmount] = useState("");
   const [phone, setPhone] = useState("");
   const [paymentRef, setPaymentRef] = useState("");
@@ -90,10 +92,10 @@ export default function PortalGive() {
 
   const give = useMutation({
     mutationFn: async () => {
-      if (!churchId) throw new Error("No church context");
+      if (!churchId) throw new Error(t("member_give.errors.no_church_context"));
       const parsedAmount = Number(amount);
       if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-        throw new Error("Enter a valid amount");
+        throw new Error(t("member_give.errors.invalid_amount"));
       }
 
       const { data, error } = await supabase.rpc("record_contribution_with_key" as never, {
@@ -111,7 +113,7 @@ export default function PortalGive() {
       if (error) throw error;
       const result = data as { success?: boolean; error?: string } | null;
       if (!result?.success) {
-        throw new Error(result?.error || "Contribution was not recorded.");
+        throw new Error(result?.error || t("member_give.errors.not_recorded"));
       }
     },
     onSuccess: () => {
@@ -121,9 +123,16 @@ export default function PortalGive() {
       queryClient.invalidateQueries({ queryKey: ["my-member-record"] });
       queryClient.invalidateQueries({ queryKey: ["portal-dashboard-church"] });
       setSubmitted(true);
-      toast({ title: "Mchango umerekodiwa", description: `Tumerekodi mchango wako wa ${formatTZS(parseFloat(amount))}.` });
+      toast({
+        title: t("member_give.success.toast_title"),
+        description: t("member_give.success.toast_description", { amount: formatTZS(parseFloat(amount)) }),
+      });
     },
-    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    onError: (err: unknown) => toast({
+      title: t("member_give.errors.toast_title"),
+      description: err instanceof Error ? err.message : String(err),
+      variant: "destructive",
+    }),
   });
 
   if (submitted) {
@@ -134,14 +143,14 @@ export default function PortalGive() {
             <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-success/10">
               <CheckCircle2 className="h-9 w-9 text-success" />
             </div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-primary">Michango</p>
-            <h2 className="mt-2 text-2xl font-bold font-serif text-foreground sm:text-3xl">Mchango umerekodiwa</h2>
+            <p className="text-sm font-semibold uppercase tracking-wide text-primary">{t("member_give.title")}</p>
+            <h2 className="mt-2 text-2xl font-bold font-serif text-foreground sm:text-3xl">{t("member_give.success.title")}</h2>
             <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">
-              Tumerekodi mchango wako wa {formatTZS(parseFloat(amount || "0"))}. Taarifa hii itaonekana kwenye historia yako baada ya kusawazishwa.
+              {t("member_give.success.description", { amount: formatTZS(parseFloat(amount || "0")) })}
             </p>
             <Button className="mt-7 min-h-12 px-6" onClick={() => { setSubmitted(false); setAmount(""); setPhone(member?.phone || ""); setPaymentRef(""); setCategoryId(""); setIdempotencyKey(createSubmissionKey()); }}>
-              Rekodi Mchango Mwingine
-          </Button>
+              {t("member_give.success.record_another")}
+            </Button>
           </div>
         </div>
       </div>
@@ -157,11 +166,11 @@ export default function PortalGive() {
               <Heart className="h-6 w-6" />
             </div>
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">Kanisa Connect</p>
-            <h1 className="mt-1 text-3xl font-bold font-serif tracking-normal text-foreground sm:text-4xl">Michango</h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">Rekodi mchango wako kwa parokia.</p>
+            <h1 className="mt-1 text-3xl font-bold font-serif tracking-normal text-foreground sm:text-4xl">{t("member_give.title")}</h1>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">{t("member_give.subtitle")}</p>
           </div>
           <Button asChild variant="ghost" className="min-h-10 w-fit max-w-full rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/15 hover:text-primary">
-            <Link to="/portal/contribution-history">Historia ya Michango</Link>
+            <Link to="/portal/contribution-history">{t("member_give.history_link")}</Link>
           </Button>
         </div>
 
@@ -170,10 +179,10 @@ export default function PortalGive() {
             <CardContent className="min-w-0 space-y-7 p-5 sm:p-7">
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
-                  <Label className="text-sm font-semibold">Kiasi cha mchango</Label>
+                  <Label className="text-sm font-semibold">{t("member_give.amount_label")}</Label>
                   <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">TZS</span>
                 </div>
-                <Input type="number" placeholder="Weka kiasi" value={amount} onChange={(e) => setAmount(e.target.value)} className="h-16 w-full min-w-0 text-2xl font-bold sm:text-3xl" />
+                <Input type="number" placeholder={t("member_give.amount_placeholder")} value={amount} onChange={(e) => setAmount(e.target.value)} className="h-16 w-full min-w-0 text-2xl font-bold sm:text-3xl" />
                 <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-5">
                   {presetAmounts.map((a) => (
                     <Button key={a} variant={amount === String(a) ? "default" : "outline"} size="sm" className="min-h-11 min-w-0 whitespace-normal px-2 text-xs leading-tight sm:text-sm" onClick={() => setAmount(String(a))}>
@@ -185,28 +194,32 @@ export default function PortalGive() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
-                  <Label>Aina ya mchango</Label>
-                  <span className="text-xs font-medium text-muted-foreground">Si lazima</span>
+                  <Label>{t("member_give.category_label")}</Label>
+                  <span className="text-xs font-medium text-muted-foreground">{t("member_give.optional")}</span>
                 </div>
-                <ContributionCategorySelector categories={categories} value={categoryId} onValueChange={setCategoryId} placeholderKey="Chagua aina ya mchango" />
+                <ContributionCategorySelector categories={categories} value={categoryId} onValueChange={setCategoryId} placeholderKey="member_give.category_placeholder" translateLabels={false} />
               </div>
 
               <div className="grid min-w-0 gap-4 sm:grid-cols-2">
                 <div className="min-w-0 space-y-2">
-                  <Label>Namba ya simu</Label>
-                  <Input className="min-h-12 w-full min-w-0" placeholder="+255..." value={phone} onChange={(e) => setPhone(e.target.value)} />
-                  <p className="text-xs leading-5 text-muted-foreground">Unaweza kutumia namba iliyohifadhiwa kwenye akaunti yako.</p>
+                  <Label>{t("member_give.phone_label")}</Label>
+                  <Input className="min-h-12 w-full min-w-0" placeholder={t("member_give.phone_placeholder")} value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <p className="text-xs leading-5 text-muted-foreground">{t("member_give.phone_helper")}</p>
                 </div>
                 <div className="min-w-0 space-y-2">
-                  <Label>Kumbukumbu ya malipo</Label>
-                  <Input className="min-h-12 w-full min-w-0" placeholder="Mfano: M-Pesa au benki" value={paymentRef} onChange={(e) => setPaymentRef(e.target.value)} />
-                  <p className="text-xs leading-5 text-muted-foreground">Kama tayari umelipa kupitia M-Pesa, benki au njia nyingine, weka namba ya kumbukumbu hapa.</p>
+                  <Label>{t("member_give.payment_reference_label")}</Label>
+                  <Input className="min-h-12 w-full min-w-0" placeholder={t("member_give.payment_reference_placeholder")} value={paymentRef} onChange={(e) => setPaymentRef(e.target.value)} />
+                  <p className="text-xs leading-5 text-muted-foreground">{t("member_give.payment_reference_helper")}</p>
                 </div>
               </div>
 
               <Button className="min-h-12 w-full text-base font-semibold" size="lg" disabled={give.isPending || !amount} onClick={() => give.mutate()}>
                 {give.isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <HandCoins className="mr-2 h-5 w-5" />}
-                {give.isPending ? "Inarekodi..." : amount ? `Rekodi ${formatTZS(Number(amount))}` : "Rekodi Mchango"}
+                {give.isPending
+                  ? t("member_give.submitting")
+                  : amount
+                    ? t("member_give.submit_with_amount", { amount: formatTZS(Number(amount)) })
+                    : t("member_give.submit")}
               </Button>
             </CardContent>
           </Card>
@@ -220,16 +233,16 @@ export default function PortalGive() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{member.full_name}</p>
-                    <p className="text-xs text-muted-foreground">Unarekodi kama mwanachama aliyesajiliwa</p>
+                    <p className="text-xs text-muted-foreground">{t("member_give.member_attribution")}</p>
                   </div>
                 </div>
               </div>
             )}
 
             <div className="rounded-2xl bg-muted/50 p-5">
-              <h2 className="text-sm font-semibold text-foreground">Baada ya kutuma</h2>
+              <h2 className="text-sm font-semibold text-foreground">{t("member_give.after_submit_title")}</h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Kanisa Connect itahifadhi taarifa ya mchango wako kwa ajili ya kumbukumbu za parokia. Hii si uthibitisho wa malipo ya kielektroniki.
+                {t("member_give.after_submit_description")}
               </p>
             </div>
           </aside>

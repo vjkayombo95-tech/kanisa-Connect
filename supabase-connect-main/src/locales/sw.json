@@ -1153,6 +1153,88 @@
       "fallback": "Jaribu tena."
     }
   },
+  "member_give": {
+    "title": "Michango",
+    "subtitle": "Rekodi mchango wako kwa parokia.",
+    "history_link": "Historia ya Michango",
+    "amount_label": "Kiasi cha mchango",
+    "amount_placeholder": "Weka kiasi",
+    "category_label": "Aina ya mchango",
+    "category_placeholder": "Chagua aina ya mchango",
+    "optional": "Si lazima",
+    "phone_label": "Namba ya simu",
+    "phone_placeholder": "+255...",
+    "phone_helper": "Unaweza kutumia namba iliyohifadhiwa kwenye akaunti yako.",
+    "payment_reference_label": "Kumbukumbu ya malipo",
+    "payment_reference_placeholder": "Mfano: M-Pesa au benki",
+    "payment_reference_helper": "Kama tayari umelipa kupitia M-Pesa, benki au njia nyingine, weka namba ya kumbukumbu hapa.",
+    "submit": "Rekodi Mchango",
+    "submit_with_amount": "Rekodi {{amount}}",
+    "submitting": "Inarekodi...",
+    "member_attribution": "Unarekodi kama mwanachama aliyesajiliwa",
+    "after_submit_title": "Baada ya kutuma",
+    "after_submit_description": "Kanisa Connect itahifadhi taarifa ya mchango wako kwa ajili ya kumbukumbu za parokia. Hii si uthibitisho wa malipo ya kielektroniki.",
+    "success": {
+      "title": "Mchango umerekodiwa",
+      "description": "Tumerekodi mchango wako wa {{amount}}. Taarifa hii itaonekana kwenye historia yako baada ya kusawazishwa.",
+      "record_another": "Rekodi Mchango Mwingine",
+      "toast_title": "Mchango umerekodiwa",
+      "toast_description": "Tumerekodi mchango wako wa {{amount}}."
+    },
+    "errors": {
+      "toast_title": "Hitilafu",
+      "no_church_context": "Hakuna muktadha wa kanisa",
+      "invalid_amount": "Weka kiasi halali",
+      "not_recorded": "Mchango haukurekodiwa."
+    }
+  },
+  "member_contribution_history": {
+    "eyebrow": "Michango yangu",
+    "title": "Historia ya Michango",
+    "subtitle": "Angalia michango iliyorekodiwa na ufungue risiti yake.",
+    "loading_aria": "Inapakia historia ya michango",
+    "error": "Historia haikuweza kupakiwa. Jaribu tena.",
+    "member_not_linked": "Akaunti yako haijaunganishwa na rekodi ya mwanachama.",
+    "empty": "Hakuna michango iliyorekodiwa bado.",
+    "fallback_category": "Mchango",
+    "reference_prefix": "Ref: {{reference}}",
+    "no_reference": "-",
+    "table": {
+      "date": "Tarehe",
+      "category": "Aina",
+      "reference": "Rejea",
+      "amount": "Kiasi"
+    },
+    "pagination": {
+      "previous": "Nyuma",
+      "next": "Mbele",
+      "page": "Ukurasa {{page}}"
+    }
+  },
+  "member_contribution_receipt": {
+    "title": "Risiti ya Mchango",
+    "fallback_member": "Mwanachama",
+    "fallback_category": "Mchango",
+    "no_payment_reference": "-",
+    "labels": {
+      "member": "Mwanachama",
+      "amount": "Kiasi",
+      "category": "Aina ya mchango",
+      "date": "Tarehe",
+      "receipt_reference": "Rejea ya risiti",
+      "payment_reference": "Rejea ya malipo",
+      "notes": "Maelezo"
+    },
+    "actions": {
+      "print": "Chapisha / Hifadhi PDF",
+      "back": "Rudi kwenye historia"
+    },
+    "unavailable": {
+      "title": "Risiti haipatikani",
+      "description": "Rekodi hii haipo au huna ruhusa ya kuiona.",
+      "history_link": "Historia ya Michango"
+    }
+  },
   "member_services": {
     "announcements": {
       "label": "Matangazo",

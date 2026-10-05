@@ -1153,6 +1153,88 @@
       "fallback": "Please try again."
     }
   },
+  "member_give": {
+    "title": "Give",
+    "subtitle": "Record your contribution to the parish.",
+    "history_link": "Contribution History",
+    "amount_label": "Contribution amount",
+    "amount_placeholder": "Enter amount",
+    "category_label": "Contribution type",
+    "category_placeholder": "Choose contribution type",
+    "optional": "Optional",
+    "phone_label": "Phone number",
+    "phone_placeholder": "+255...",
+    "phone_helper": "You can use the number saved on your account.",
+    "payment_reference_label": "Payment reference",
+    "payment_reference_placeholder": "Example: M-Pesa or bank",
+    "payment_reference_helper": "If you already paid through M-Pesa, bank, or another channel, enter the reference number here.",
+    "submit": "Record Contribution",
+    "submit_with_amount": "Record {{amount}}",
+    "submitting": "Recording...",
+    "member_attribution": "Recording as a registered member",
+    "after_submit_title": "After submitting",
+    "after_submit_description": "Kanisa Connect will save your contribution details for parish records. This is not electronic payment confirmation.",
+    "success": {
+      "title": "Contribution recorded",
+      "description": "We recorded your contribution of {{amount}}. This information will appear in your history after syncing.",
+      "record_another": "Record Another Contribution",
+      "toast_title": "Contribution recorded",
+      "toast_description": "We recorded your contribution of {{amount}}."
+    },
+    "errors": {
+      "toast_title": "Error",
+      "no_church_context": "No church context",
+      "invalid_amount": "Enter a valid amount",
+      "not_recorded": "Contribution was not recorded."
+    }
+  },
+  "member_contribution_history": {
+    "eyebrow": "My contributions",
+    "title": "Contribution History",
+    "subtitle": "View recorded contributions and open their receipts.",
+    "loading_aria": "Loading contribution history",
+    "error": "Contribution history could not be loaded. Please try again.",
+    "member_not_linked": "Your account is not linked to a member record.",
+    "empty": "No contributions have been recorded yet.",
+    "fallback_category": "Contribution",
+    "reference_prefix": "Ref: {{reference}}",
+    "no_reference": "-",
+    "table": {
+      "date": "Date",
+      "category": "Type",
+      "reference": "Reference",
+      "amount": "Amount"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {{page}}"
+    }
+  },
+  "member_contribution_receipt": {
+    "title": "Contribution Receipt",
+    "fallback_member": "Member",
+    "fallback_category": "Contribution",
+    "no_payment_reference": "-",
+    "labels": {
+      "member": "Member",
+      "amount": "Amount",
+      "category": "Contribution type",
+      "date": "Date",
+      "receipt_reference": "Receipt reference",
+      "payment_reference": "Payment reference",
+      "notes": "Notes"
+    },
+    "actions": {
+      "print": "Print / Save PDF",
+      "back": "Back to history"
+    },
+    "unavailable": {
+      "title": "Receipt unavailable",
+      "description": "This record does not exist or you do not have permission to view it.",
+      "history_link": "Contribution History"
+    }
+  },
   "member_services": {
     "announcements": {
       "label": "Announcements",
