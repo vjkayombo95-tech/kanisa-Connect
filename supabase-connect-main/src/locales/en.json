@@ -2609,5 +2609,21 @@
       "joined": "My ministries",
       "other": "Other ministries"
     }
+  },
+  "member_notifications": {
+    "bell": {
+      "label": "Notifications",
+      "unread": "Notifications, {{displayCount}} unread",
+      "more_than_nine": "more than 9"
+    },
+    "new": "New",
+    "loading": "Loading notifications",
+    "load_error": "Unable to load notifications.",
+    "retry": "Try again.",
+    "empty": "You have no notifications right now.",
+    "list_label": "Notification list",
+    "mark_read": "Mark notification {{title}} as read",
+    "updating": "Updating",
+    "update_error": "Notification could not be updated"
   }
 }

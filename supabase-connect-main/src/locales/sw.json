@@ -2609,5 +2609,21 @@
       "joined": "Huduma zangu",
       "other": "Huduma nyingine"
     }
+  },
+  "member_notifications": {
+    "bell": {
+      "label": "Arifa",
+      "unread": "Arifa, {{displayCount}} hazijasomwa",
+      "more_than_nine": "zaidi ya 9"
+    },
+    "new": "Mpya",
+    "loading": "Arifa zinapakiwa",
+    "load_error": "Imeshindikana kupakia arifa.",
+    "retry": "Jaribu tena.",
+    "empty": "Huna arifa kwa sasa.",
+    "list_label": "Orodha ya arifa",
+    "mark_read": "Weka arifa {{title}} kuwa imesomwa",
+    "updating": "Inasasisha",
+    "update_error": "Arifa haikuweza kusasishwa"
   }
 }

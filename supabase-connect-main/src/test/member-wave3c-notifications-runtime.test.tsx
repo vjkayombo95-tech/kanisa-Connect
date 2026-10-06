@@ -3,6 +3,7 @@ import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import i18n from "@/i18n";
 
 const state = vi.hoisted(() => ({ auth: { user: { id: "user-a" } as { id: string } | null, churchId: "church-a" as string | null }, mark: vi.fn(), toast: vi.fn() }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => state.auth }));
@@ -20,10 +21,30 @@ function BellHarness() { const notifications = useMemberNotifications(); return 
 describe("Wave 3C notification runtime hardening", () => {
   let host: HTMLDivElement; let root: Root; let client: QueryClient;
   const render = (node: ReactNode) => act(() => root.render(<QueryClientProvider client={client}><MemoryRouter>{node}</MemoryRouter></QueryClientProvider>));
-  beforeEach(() => { host = document.createElement("div"); document.body.append(host); root = createRoot(host); client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } }); state.auth = { user: { id: "user-a" }, churchId: "church-a" }; state.mark.mockReset(); state.toast.mockReset(); });
+  beforeEach(async () => { await i18n.changeLanguage("sw"); host = document.createElement("div"); document.body.append(host); root = createRoot(host); client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } }); state.auth = { user: { id: "user-a" }, churchId: "church-a" }; state.mark.mockReset(); state.toast.mockReset(); });
   afterEach(() => { act(() => root.unmount()); host.remove(); client.clear(); });
 
   it("clears a cached badge after logout and tenant switch", async () => { render(<BellHarness />); await waitFor(() => host.querySelector('[data-testid="member-notification-badge"]')?.textContent === "1"); state.auth = { user: null, churchId: null }; render(<BellHarness />); await waitFor(() => host.querySelector('[data-testid="member-notification-badge"]') === null); state.auth = { user: { id: "user-a" }, churchId: "church-b" }; render(<BellHarness />); await waitFor(() => host.querySelector('[data-testid="member-notification-badge"]') === null); });
   it("deduplicates mark-read clicks while the mutation is pending", async () => { let resolve!: (value: string) => void; state.mark.mockImplementation(() => new Promise<string>((done) => { resolve = done; })); render(<MemberNotificationsPage />); await waitFor(() => host.querySelector<HTMLButtonElement>('button[aria-label^="Weka arifa"]') !== null); const button = host.querySelector<HTMLButtonElement>('button[aria-label^="Weka arifa"]')!; act(() => button.click()); await waitFor(() => state.mark.mock.calls.length === 1); act(() => button.click()); expect(state.mark).toHaveBeenCalledTimes(1); await act(async () => { resolve("notification-a"); await Promise.resolve(); }); await waitFor(() => host.querySelector('button[aria-label^="Weka arifa"]') === null); });
   it("keeps unread state and announces a recoverable mutation failure", async () => { state.mark.mockRejectedValue(new Error("network")); render(<MemberNotificationsPage />); await waitFor(() => host.querySelector<HTMLButtonElement>('button[aria-label^="Weka arifa"]') !== null); act(() => host.querySelector<HTMLButtonElement>('button[aria-label^="Weka arifa"]')!.click()); await waitFor(() => state.toast.mock.calls.length === 1); expect(state.toast).toHaveBeenCalledWith(expect.objectContaining({ title: "Arifa haikuweza kusasishwa" })); expect(host.textContent).toContain("Mpya"); });
+
+  it("localizes notification chrome in English while preserving dynamic notification content", async () => {
+    await i18n.changeLanguage("en");
+    render(<MemberNotificationsPage />);
+
+    await waitFor(() => host.textContent?.includes("UAT Arifa") === true);
+
+    expect(host.textContent).toContain("Notifications");
+    expect(host.textContent).toContain("Your alerts and reminders");
+    expect(host.textContent).toContain("New");
+
+    // Backend/user notification content must remain unchanged.
+    expect(host.textContent).toContain("UAT Arifa");
+    expect(host.textContent).toContain("Ujumbe wa UAT");
+
+    const button = host.querySelector<HTMLButtonElement>(
+      'button[aria-label="Mark notification UAT Arifa as read"]',
+    );
+    expect(button).not.toBeNull();
+  });
 });
