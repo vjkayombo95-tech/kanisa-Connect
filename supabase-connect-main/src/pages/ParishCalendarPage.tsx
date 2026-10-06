@@ -1,13 +1,15 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { useTranslation } from "react-i18next";
 import { CalendarDays, Church, Clock, Loader2, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { formatMassDate, formatMassTime, type MassOccurrence, type TimetableActivityClassification } from "@/lib/mass-timetable";
+import { formatMassTime, TIMETABLE_ACTIVITY_LABEL_KEYS, type MassOccurrence, type TimetableActivityClassification } from "@/lib/mass-timetable";
+import { formatAppDate, translateStatusLabel, translateSystemLabel } from "@/lib/localization";
 import { cn } from "@/lib/utils";
 
 const db = supabase as unknown as SupabaseClient;
@@ -44,13 +46,6 @@ const eventTimeFormatter = new Intl.DateTimeFormat("sw-TZ", {
   timeZone: TANZANIA_TIME_ZONE,
 });
 
-const dateLabelFormatter = new Intl.DateTimeFormat("sw-TZ", {
-  day: "numeric",
-  month: "long",
-  timeZone: TANZANIA_TIME_ZONE,
-  weekday: "long",
-});
-
 function getTanzaniaDateKey(value: Date) {
   const parts = dateKeyFormatter.formatToParts(value);
   const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
@@ -72,8 +67,8 @@ function getUpcomingSundayKey(todayKey: string) {
   return addDaysToDateKey(todayKey, (7 - day) % 7);
 }
 
-function formatDateKey(dateKey: string) {
-  return dateLabelFormatter.format(dateKeyToUtcDate(dateKey));
+function formatDateKey(dateKey: string, language: string | undefined) {
+  return formatAppDate(dateKey, language, { day: "numeric", month: "long", weekday: "long" });
 }
 
 function getEventDate(value: string) {
@@ -92,21 +87,9 @@ function getMassTimeKey(startTime: string | null) {
   return startTime?.slice(0, 5) || "99:99";
 }
 
-function getActivityKind(activityType: TimetableActivityClassification) {
-  switch (activityType) {
-    case "mass":
-      return "Misa";
-    case "confession":
-      return "Maungamo";
-    case "adoration":
-      return "Kuabudu Ekaristi";
-    case "prayer":
-      return "Sala / Ibada";
-    case "other":
-      return "Nyingine";
-    default:
-      return "Haijaainishwa";
-  }
+function getActivityKind(t: (key: string, options?: Record<string, unknown>) => string, activityType: TimetableActivityClassification) {
+  const key = activityType ? TIMETABLE_ACTIVITY_LABEL_KEYS[activityType] : TIMETABLE_ACTIVITY_LABEL_KEYS.unclassified;
+  return translateSystemLabel(t, key, activityType ?? "unclassified");
 }
 
 function compareScheduleItems(a: ScheduleItem, b: ScheduleItem) {
@@ -118,12 +101,17 @@ function compareScheduleItems(a: ScheduleItem, b: ScheduleItem) {
   );
 }
 
-function getGroupedSchedule(items: ScheduleItem[], todayKey: string): ScheduleGroup[] {
+function getGroupedSchedule(
+  items: ScheduleItem[],
+  todayKey: string,
+  t: (key: string, options?: Record<string, unknown>) => string,
+  language: string | undefined,
+): ScheduleGroup[] {
   const sundayKey = getUpcomingSundayKey(todayKey);
   const groups: ScheduleGroup[] = [
-    { key: "today", title: "Leo", dateLabel: formatDateKey(todayKey), items: [] },
-    { key: "week", title: "Wiki Hii", dateLabel: `Hadi ${formatDateKey(sundayKey)}`, items: [] },
-    { key: "later", title: "Baadaye", dateLabel: "Ratiba nyingine zijazo", items: [] },
+    { key: "today", title: t("member_calendar.groups.today"), dateLabel: formatDateKey(todayKey, language), items: [] },
+    { key: "week", title: t("member_calendar.groups.week"), dateLabel: t("member_calendar.groups.until", { date: formatDateKey(sundayKey, language) }), items: [] },
+    { key: "later", title: t("member_calendar.groups.later"), dateLabel: t("member_calendar.groups.later_label"), items: [] },
   ];
 
   for (const item of items) {
@@ -135,11 +123,11 @@ function getGroupedSchedule(items: ScheduleItem[], todayKey: string): ScheduleGr
   return groups.filter((group) => group.items.length > 0);
 }
 
-function LoadingState({ member }: { member: boolean }) {
+function LoadingState({ member, label }: { member: boolean; label: string }) {
   if (!member) return <Loader2 className="mx-auto h-6 w-6 animate-spin" />;
 
   return (
-    <div className="space-y-3" aria-label="Ratiba inapakia">
+    <div className="space-y-3" aria-label={label}>
       <Skeleton className="h-24 rounded-[26px]" />
       <Skeleton className="h-28 rounded-[26px]" />
       <Skeleton className="h-28 rounded-[26px]" />
@@ -148,19 +136,21 @@ function LoadingState({ member }: { member: boolean }) {
 }
 
 function AdminCalendar({ items, isError, isLoading }: { items: ScheduleItem[]; isError: boolean; isLoading: boolean }) {
+  const { t } = useTranslation();
+
   return (
     <div className="mx-auto max-w-5xl space-y-6" data-testid="admin-parish-calendar">
       <div>
         <p className="text-sm font-bold text-primary">Kanisa Connect</p>
-        <h1 className="font-serif text-2xl font-bold">Kalenda ya Parokia</h1>
-        <p className="text-sm text-muted-foreground">Matukio na Misa zijazo katika parokia yako.</p>
+        <h1 className="font-serif text-2xl font-bold">{t("member_calendar.admin.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("member_calendar.admin.subtitle")}</p>
       </div>
       {isLoading ? (
-        <LoadingState member={false} />
+        <LoadingState member={false} label={t("member_calendar.loading")} />
       ) : isError ? (
-        <Card><CardContent className="p-6 text-destructive">Kalenda haikupatikana. Jaribu tena.</CardContent></Card>
+        <Card><CardContent className="p-6 text-destructive">{t("member_calendar.admin.error")}</CardContent></Card>
       ) : items.length === 0 ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground"><CalendarDays className="mx-auto mb-3 h-10 w-10" />Hakuna tukio lijalo.</CardContent></Card>
+        <Card><CardContent className="py-12 text-center text-muted-foreground"><CalendarDays className="mx-auto mb-3 h-10 w-10" />{t("member_calendar.admin.empty")}</CardContent></Card>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {items.map((item) => (
@@ -218,6 +208,8 @@ function MemberScheduleItem({ item }: { item: ScheduleItem }) {
 }
 
 function MemberSchedule({ groups, isError, isLoading }: { groups: ScheduleGroup[]; isError: boolean; isLoading: boolean }) {
+  const { t } = useTranslation();
+
   return (
     <main
       data-testid="member-parish-calendar"
@@ -226,25 +218,25 @@ function MemberSchedule({ groups, isError, isLoading }: { groups: ScheduleGroup[
       <div className="mx-auto w-full max-w-3xl space-y-6">
         <header className="min-w-0 rounded-[30px] border border-primary/15 bg-[linear-gradient(135deg,hsl(var(--primary)/0.14),hsl(var(--card))_65%)] p-5 shadow-sm sm:p-7">
           <p className="text-sm font-bold text-primary">Kanisa Connect</p>
-          <h1 className="mt-1 break-words font-serif text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Ratiba ya Parokia</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Misa na matukio yajayo katika parokia yako.</p>
+          <h1 className="mt-1 break-words font-serif text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t("member_calendar.title")}</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">{t("member_calendar.subtitle")}</p>
         </header>
 
         {isLoading ? (
-          <LoadingState member />
+          <LoadingState member label={t("member_calendar.loading")} />
         ) : isError ? (
           <Card className="rounded-[26px] border-destructive/20 bg-card/85">
             <CardContent className="p-5">
-              <p className="font-semibold text-foreground">Ratiba haikupatikana.</p>
-              <p className="mt-1 text-sm text-muted-foreground">Jaribu tena baada ya muda mfupi.</p>
+              <p className="font-semibold text-foreground">{t("member_calendar.error.title")}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{t("member_calendar.error.description")}</p>
             </CardContent>
           </Card>
         ) : groups.length === 0 ? (
           <Card className="rounded-[26px] border-border/70 bg-card/85">
             <CardContent className="py-12 text-center text-muted-foreground">
               <CalendarDays className="mx-auto mb-3 h-10 w-10 text-primary" />
-              <p className="font-semibold text-foreground">Hakuna ratiba ijayo kwa sasa.</p>
-              <p className="mt-1 text-sm">Misa na matukio yajayo yataonekana hapa yakichapishwa.</p>
+              <p className="font-semibold text-foreground">{t("member_calendar.empty.title")}</p>
+              <p className="mt-1 text-sm">{t("member_calendar.empty.description")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -269,6 +261,7 @@ function MemberSchedule({ groups, isError, isLoading }: { groups: ScheduleGroup[
 
 export default function ParishCalendarPage({ workspace }: Props) {
   const { churchId, user } = useAuth();
+  const { t, i18n } = useTranslation();
   const calendar = useQuery({ queryKey: ["wave4a-parish-calendar", workspace, churchId], enabled: !!churchId, queryFn: async () => {
     const now = new Date().toISOString(); const today = now.slice(0, 10);
     const eventsQuery = db.from("events").select("id,church_id,title,description,start_date,end_date,location,event_type,registration_type,archived_at").eq("church_id", churchId).gte("start_date", now).is("archived_at", null).order("start_date").limit(100);
@@ -285,7 +278,7 @@ export default function ParishCalendarPage({ workspace }: Props) {
       if (member.data) {
         const registrations = await db.from("event_attendances").select("event_id,registration_status,payment_status").eq("church_id", churchId).eq("member_id", member.data.id).in("event_id", eventRows.map(row => row.id));
         if (registrations.error) throw registrations.error;
-        for (const row of registrations.data ?? []) registrationByEvent.set(row.event_id, row.payment_status === "paid" ? "Umesajiliwa - imelipwa" : `Umesajiliwa - ${row.registration_status}`);
+        for (const row of registrations.data ?? []) registrationByEvent.set(row.event_id, row.payment_status === "paid" ? "paid" : row.registration_status);
       }
     }
     return { events: eventRows, masses: masses.data as CalendarMass[], registrationByEvent };
@@ -295,11 +288,38 @@ export default function ParishCalendarPage({ workspace }: Props) {
     ...(calendar.data?.events ?? []).map((event) => {
       const eventDate = getEventDate(event.start_date);
       const dateKey = eventDate ? getTanzaniaDateKey(eventDate) : event.start_date.slice(0, 10);
-      return { id: `event-${event.id}`, source: "event" as const, dateKey, timeKey: getEventTimeKey(eventDate), title: event.title, kind: event.event_type || "Tukio", detail: event.location, status: calendar.data?.registrationByEvent.get(event.id) ?? (event.registration_type === "paid" ? "Usajili wa malipo" : "Tukio la parokia"), displayDate: eventDate ? dateLabelFormatter.format(eventDate) : formatDateKey(dateKey), displayTime: eventDate ? eventTimeFormatter.format(eventDate) : "Muda haujawekwa" };
+      const registrationStatus = calendar.data?.registrationByEvent.get(event.id);
+      return {
+        id: `event-${event.id}`,
+        source: "event" as const,
+        dateKey,
+        timeKey: getEventTimeKey(eventDate),
+        title: event.title,
+        kind: event.event_type || t("member_calendar.activity.event"),
+        detail: event.location,
+        status: registrationStatus
+          ? t("member_calendar.registration.registered", { status: translateStatusLabel(t, registrationStatus) })
+          : event.registration_type === "paid"
+            ? t("member_calendar.registration.paid")
+            : t("member_calendar.registration.parish_event"),
+        displayDate: eventDate ? formatAppDate(eventDate, i18n.language, { day: "numeric", month: "long", weekday: "long" }) : formatDateKey(dateKey, i18n.language),
+        displayTime: eventDate ? formatAppDate(eventDate, i18n.language, { hour: "2-digit", minute: "2-digit" }) : t("member_calendar.time_missing"),
+      };
     }),
-    ...(calendar.data?.masses ?? []).map((mass) => ({ id: `mass-${mass.id}`, source: "mass" as const, dateKey: mass.occurrence_date, timeKey: getMassTimeKey(mass.start_time), title: mass.name, kind: getActivityKind(mass.activity_type ?? null), detail: mass.location_name, status: mass.status, displayDate: formatMassDate(mass.occurrence_date), displayTime: formatMassTime(mass.start_time) })),
+    ...(calendar.data?.masses ?? []).map((mass) => ({
+      id: `mass-${mass.id}`,
+      source: "mass" as const,
+      dateKey: mass.occurrence_date,
+      timeKey: getMassTimeKey(mass.start_time),
+      title: mass.name,
+      kind: getActivityKind(t, mass.activity_type ?? null),
+      detail: mass.location_name,
+      status: translateStatusLabel(t, mass.status),
+      displayDate: formatAppDate(mass.occurrence_date, i18n.language, { weekday: "short", day: "numeric", month: "short", year: "numeric" }),
+      displayTime: formatMassTime(mass.start_time),
+    })),
   ].sort(compareScheduleItems);
-  const groups = getGroupedSchedule(items, todayKey);
+  const groups = getGroupedSchedule(items, todayKey, t, i18n.language);
 
   if (workspace === "admin") {
     return <AdminCalendar items={items} isError={calendar.isError} isLoading={calendar.isLoading} />;

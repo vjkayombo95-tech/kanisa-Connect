@@ -75,11 +75,11 @@ describe("member Parish schedule behavior contract", () => {
   it("keeps the rendered Mass and Event fields within the current display contract", () => {
     for (const fragment of [
       "title: mass.name",
-      "kind: getActivityKind(mass.activity_type ?? null)",
+      "kind: getActivityKind(t, mass.activity_type ?? null)",
       "detail: mass.location_name",
-      "status: mass.status",
+      "status: translateStatusLabel(t, mass.status)",
       "title: event.title",
-      'kind: event.event_type || "Tukio"',
+      'kind: event.event_type || t("member_calendar.activity.event")',
       "detail: event.location",
       "event.registration_type === \"paid\"",
     ]) {

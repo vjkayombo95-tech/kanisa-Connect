@@ -2264,6 +2264,79 @@
       "save_comment_reaction": "Unable to save comment reaction"
     }
   },
+  "member_events": {
+    "title": "Events",
+    "subtitle": "See upcoming parish events.",
+    "loading": "Events are loading...",
+    "fallback_description": "Join us for this event.",
+    "error": {
+      "title": "Could not load events.",
+      "description": "Try again to see the latest parish events."
+    },
+    "empty": {
+      "title": "No upcoming events right now.",
+      "description": "New events will appear here when they are published."
+    },
+    "rsvp": {
+      "prompt": "Will you attend {{title}}?",
+      "helper": "Choose yes to register for this event.",
+      "yes": "Yes",
+      "no": "No",
+      "current_response": "Your response:",
+      "attending": "You are attending",
+      "not_attending": "You are not attending"
+    },
+    "membership": {
+      "loading": "Loading your membership...",
+      "required": "Your member profile is required to RSVP."
+    },
+    "toast": {
+      "confirmed_title": "Attendance confirmed",
+      "updated_title": "Attendance updated",
+      "confirmed_description": "You have been registered for this event.",
+      "updated_description": "Your response has been saved."
+    },
+    "errors": {
+      "no_church_context": "No church context",
+      "no_member_profile": "No member profile found",
+      "save_response": "Unable to save response"
+    }
+  },
+  "member_calendar": {
+    "title": "Parish Schedule",
+    "subtitle": "Upcoming Masses and events in your parish.",
+    "loading": "Schedule is loading",
+    "time_missing": "Time not set",
+    "error": {
+      "title": "Schedule could not be loaded.",
+      "description": "Try again after a short while."
+    },
+    "empty": {
+      "title": "No upcoming schedule right now.",
+      "description": "Upcoming Masses and events will appear here when they are published."
+    },
+    "groups": {
+      "today": "Today",
+      "week": "This Week",
+      "later": "Later",
+      "until": "Until {{date}}",
+      "later_label": "Other upcoming schedule"
+    },
+    "activity": {
+      "event": "Event"
+    },
+    "registration": {
+      "registered": "Registered - {{status}}",
+      "paid": "Paid registration",
+      "parish_event": "Parish event"
+    },
+    "admin": {
+      "title": "Parish Calendar",
+      "subtitle": "Upcoming events and Masses in your parish.",
+      "error": "Calendar could not be loaded. Try again.",
+      "empty": "No upcoming event."
+    }
+  },
   "member_prayer_requests": {
     "title": "Prayer Requests",
     "subtitle": "Share a prayer request or join other members in prayer.",

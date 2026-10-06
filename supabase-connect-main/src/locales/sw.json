@@ -2264,6 +2264,79 @@
       "save_comment_reaction": "Imeshindikana kuhifadhi hisia ya maoni"
     }
   },
+  "member_events": {
+    "title": "Matukio",
+    "subtitle": "Angalia matukio yajayo ya parokia.",
+    "loading": "Matukio yanapakiwa...",
+    "fallback_description": "Jiunge nasi katika tukio hili.",
+    "error": {
+      "title": "Imeshindikana kupakia matukio.",
+      "description": "Jaribu tena kuona matukio mapya ya parokia."
+    },
+    "empty": {
+      "title": "Hakuna matukio yajayo kwa sasa.",
+      "description": "Matukio mapya yataonekana hapa yatakapochapishwa."
+    },
+    "rsvp": {
+      "prompt": "Utahudhuria {{title}}?",
+      "helper": "Chagua ndiyo ili kusajiliwa kwa tukio hili.",
+      "yes": "Ndiyo",
+      "no": "Hapana",
+      "current_response": "Jibu lako:",
+      "attending": "Utahudhuria",
+      "not_attending": "Hutahudhuria"
+    },
+    "membership": {
+      "loading": "Uanachama wako unapakiwa...",
+      "required": "Wasifu wako wa mwanachama unahitajika ili kujibu."
+    },
+    "toast": {
+      "confirmed_title": "Mahudhurio yamethibitishwa",
+      "updated_title": "Mahudhurio yamesasishwa",
+      "confirmed_description": "Umesajiliwa kwa tukio hili.",
+      "updated_description": "Jibu lako limehifadhiwa."
+    },
+    "errors": {
+      "no_church_context": "Hakuna muktadha wa kanisa",
+      "no_member_profile": "Wasifu wa mwanachama haujapatikana",
+      "save_response": "Imeshindikana kuhifadhi jibu"
+    }
+  },
+  "member_calendar": {
+    "title": "Ratiba ya Parokia",
+    "subtitle": "Misa na matukio yajayo katika parokia yako.",
+    "loading": "Ratiba inapakia",
+    "time_missing": "Muda haujawekwa",
+    "error": {
+      "title": "Ratiba haikupatikana.",
+      "description": "Jaribu tena baada ya muda mfupi."
+    },
+    "empty": {
+      "title": "Hakuna ratiba ijayo kwa sasa.",
+      "description": "Misa na matukio yajayo yataonekana hapa yakichapishwa."
+    },
+    "groups": {
+      "today": "Leo",
+      "week": "Wiki Hii",
+      "later": "Baadaye",
+      "until": "Hadi {{date}}",
+      "later_label": "Ratiba nyingine zijazo"
+    },
+    "activity": {
+      "event": "Tukio"
+    },
+    "registration": {
+      "registered": "Umesajiliwa - {{status}}",
+      "paid": "Usajili wa malipo",
+      "parish_event": "Tukio la parokia"
+    },
+    "admin": {
+      "title": "Kalenda ya Parokia",
+      "subtitle": "Matukio na Misa zijazo katika parokia yako.",
+      "error": "Kalenda haikupatikana. Jaribu tena.",
+      "empty": "Hakuna tukio lijalo."
+    }
+  },
   "member_prayer_requests": {
     "title": "Maombi",
     "subtitle": "Shiriki ombi lako la maombi au ungana na waumini wengine katika kuwaombea.",

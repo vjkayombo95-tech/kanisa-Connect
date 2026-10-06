@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,12 +9,14 @@ import { AlertCircle, Calendar, CheckCircle2, Clock, Loader2, MapPin, XCircle } 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useLinkedMember } from "@/hooks/use-linked-member";
+import { formatAppDate, translateStatusLabel } from "@/lib/localization";
 
 type AttendanceResponse = "yes" | "no";
 
 export default function PortalEvents() {
   const { churchId } = useAuth();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const { data: member, isLoading: isMemberLoading } = useLinkedMember();
 
@@ -61,8 +64,8 @@ export default function PortalEvents() {
 
   const respondToEvent = useMutation({
     mutationFn: async ({ eventId, response }: { eventId: string; response: AttendanceResponse }) => {
-      if (!churchId) throw new Error("No church context");
-      if (!member?.id) throw new Error("No member profile found");
+      if (!churchId) throw new Error(t("member_events.errors.no_church_context"));
+      if (!member?.id) throw new Error(t("member_events.errors.no_member_profile"));
 
       const { error } = await supabase.from("event_attendances").upsert(
         {
@@ -83,15 +86,15 @@ export default function PortalEvents() {
       queryClient.invalidateQueries({ queryKey: ["portal-event-attendances"] });
       queryClient.invalidateQueries({ queryKey: ["event-attendance-summary"] });
       toast({
-        title: variables.response === "yes" ? "Attendance confirmed" : "Attendance updated",
+        title: variables.response === "yes" ? t("member_events.toast.confirmed_title") : t("member_events.toast.updated_title"),
         description:
           variables.response === "yes"
-            ? "You have been registered for this event."
-            : "Your response has been saved.",
+            ? t("member_events.toast.confirmed_description")
+            : t("member_events.toast.updated_description"),
       });
     },
     onError: (error: Error) => {
-      toast({ title: "Unable to save response", description: error.message, variant: "destructive" });
+      toast({ title: t("member_events.errors.save_response"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -120,25 +123,25 @@ export default function PortalEvents() {
       <div className="mx-auto max-w-5xl space-y-5">
         <header className="space-y-1">
           <p className="text-sm font-bold text-primary">Kanisa Connect</p>
-          <h1 className="break-words font-serif text-2xl font-bold md:text-3xl">Matukio</h1>
-          <p className="max-w-2xl text-sm text-muted-foreground">Angalia matukio yajayo ya parokia.</p>
+          <h1 className="break-words font-serif text-2xl font-bold md:text-3xl">{t("member_events.title")}</h1>
+          <p className="max-w-2xl text-sm text-muted-foreground">{t("member_events.subtitle")}</p>
         </header>
 
         {isLoading ? (
           <div role="status" aria-live="polite" className="space-y-3">
             <Skeleton className="h-32 rounded-[24px]" />
             <Skeleton className="h-32 rounded-[24px]" />
-            <span className="sr-only">Matukio yanapakiwa...</span>
+            <span className="sr-only">{t("member_events.loading")}</span>
           </div>
         ) : isError ? (
           <Card className="rounded-[24px] border-destructive/30 bg-card/85">
             <CardContent className="flex flex-col items-center gap-3 px-5 py-8 text-center" role="alert">
               <AlertCircle className="h-9 w-9 text-destructive" />
               <div>
-                <p className="font-semibold text-destructive">Imeshindikana kupakia matukio.</p>
-                <p className="mt-1 text-sm text-muted-foreground">Jaribu tena kuona matukio mapya ya parokia.</p>
+                <p className="font-semibold text-destructive">{t("member_events.error.title")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("member_events.error.description")}</p>
               </div>
-              <Button type="button" variant="outline" onClick={() => void refetch()}>Jaribu tena</Button>
+              <Button type="button" variant="outline" onClick={() => void refetch()}>{t("shared.actions.retry")}</Button>
             </CardContent>
           </Card>
         ) : events.length === 0 ? (
@@ -148,8 +151,8 @@ export default function PortalEvents() {
                 <Calendar className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-semibold text-foreground">Hakuna matukio yajayo kwa sasa.</p>
-                <p className="mt-1 text-sm">Matukio mapya yataonekana hapa yatakapochapishwa.</p>
+                <p className="font-semibold text-foreground">{t("member_events.empty.title")}</p>
+                <p className="mt-1 text-sm">{t("member_events.empty.description")}</p>
               </div>
             </CardContent>
           </Card>
@@ -167,17 +170,17 @@ export default function PortalEvents() {
                       <div className="flex min-w-0 gap-4">
                         <div className="h-14 w-14 rounded-lg bg-primary/10 flex flex-col items-center justify-center shrink-0 border border-primary/20">
                           <span className="text-xs text-primary font-medium">
-                            {new Date(event.start_date).toLocaleDateString("en-US", { month: "short" })}
+                            {formatAppDate(event.start_date, i18n.language, { month: "short" })}
                           </span>
-                          <span className="text-lg font-bold text-primary leading-none">{new Date(event.start_date).getDate()}</span>
+                          <span className="text-lg font-bold text-primary leading-none">{formatAppDate(event.start_date, i18n.language, { day: "numeric" })}</span>
                         </div>
                         <div className="min-w-0">
                           <h3 className="break-words font-semibold">{event.title}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">{event.description || "Join us for this event."}</p>
+                          <p className="text-sm text-muted-foreground mt-1">{event.description || t("member_events.fallback_description")}</p>
                           <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground flex-wrap">
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {new Date(event.start_date).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                              {formatAppDate(event.start_date, i18n.language, { hour: "2-digit", minute: "2-digit" })}
                             </span>
                             {event.location && (
                               <span className="flex items-center gap-1">
@@ -189,7 +192,7 @@ export default function PortalEvents() {
                         </div>
                       </div>
                       <Badge variant="outline" className={statusColor(event.status)}>
-                        {event.status}
+                        {translateStatusLabel(t, event.status)}
                       </Badge>
                     </div>
 
@@ -197,9 +200,9 @@ export default function PortalEvents() {
                       <div className="mt-5 rounded-xl border border-border/60 bg-muted/20 p-4">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div>
-                            <p className="text-sm font-medium">Utahudhuria {event.title}?</p>
+                            <p className="text-sm font-medium">{t("member_events.rsvp.prompt", { title: event.title })}</p>
                             <p className="text-xs text-muted-foreground">
-                              Bonyeza ndiyo ili kusajiliwa kwa tukio hili.
+                              {t("member_events.rsvp.helper")}
                             </p>
                           </div>
                           {member ? (
@@ -215,7 +218,7 @@ export default function PortalEvents() {
                                 ) : (
                                   <CheckCircle2 className="mr-2 h-4 w-4" />
                                 )}
-                                Ndiyo
+                                {t("member_events.rsvp.yes")}
                               </Button>
                               <Button
                                 size="sm"
@@ -228,18 +231,21 @@ export default function PortalEvents() {
                                 ) : (
                                   <XCircle className="mr-2 h-4 w-4" />
                                 )}
-                                Hapana
+                                {t("member_events.rsvp.no")}
                               </Button>
                             </div>
                           ) : (
                             <p className="text-xs text-muted-foreground">
-                              {isMemberLoading ? "Loading your membership..." : "Your member profile is required to RSVP."}
+                              {isMemberLoading ? t("member_events.membership.loading") : t("member_events.membership.required")}
                             </p>
                           )}
                         </div>
                         {response && (
                           <p className="mt-3 text-xs text-muted-foreground">
-                            Jibu lako: <span className="font-medium text-foreground">{response === "yes" ? "Utahudhuria" : "Hutahudhuria"}</span>
+                            {t("member_events.rsvp.current_response")}{" "}
+                            <span className="font-medium text-foreground">
+                              {response === "yes" ? t("member_events.rsvp.attending") : t("member_events.rsvp.not_attending")}
+                            </span>
                           </p>
                         )}
                       </div>

@@ -15,7 +15,8 @@ describe("member journey Wave 4B content pages", () => {
   it("uses member-facing Swahili page titles instead of legacy English titles", () => {
     expect(announcements).toContain('t("member_announcements.title")');
     expect(sw.member_announcements.title).toBe("Matangazo");
-    expect(events).toContain(">Matukio<");
+    expect(events).toContain('t("member_events.title")');
+    expect(sw.member_events.title).toBe("Matukio");
     expect(sermons).toContain(">Mahubiri<");
     expect(announcements).not.toContain(">Announcements<");
     expect(events).not.toContain(">Events<");
@@ -37,9 +38,10 @@ describe("member journey Wave 4B content pages", () => {
     expect(sw.member_announcements.loading).toBe("Matangazo yanapakiwa...");
     expect(sw.member_announcements.empty.title).toBe("Hakuna matangazo kwa sasa.");
     expect(sw.member_announcements.error.title).toBe("Imeshindikana kupakia matangazo.");
-    expect(events).toContain("Matukio yanapakiwa");
-    expect(events).toContain("Hakuna matukio yajayo kwa sasa.");
-    expect(events).toContain("Imeshindikana kupakia matukio.");
+    expect(events).toContain('t("member_events.loading")');
+    expect(sw.member_events.loading).toBe("Matukio yanapakiwa...");
+    expect(sw.member_events.empty.title).toBe("Hakuna matukio yajayo kwa sasa.");
+    expect(sw.member_events.error.title).toBe("Imeshindikana kupakia matukio.");
     expect(sermons).toContain("Mahubiri yanapakiwa");
     expect(sermons).toContain("Hakuna mahubiri kwa sasa.");
     expect(sermons).toContain("Imeshindikana kupakia mahubiri.");
