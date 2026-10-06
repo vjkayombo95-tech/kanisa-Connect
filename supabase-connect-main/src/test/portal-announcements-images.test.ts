@@ -25,7 +25,7 @@ describe("portal announcement images", () => {
     expect(portalSource).toContain("getAnnouncementImageUrl(announcement.image_key)");
     expect(portalSource).toContain("<img");
     expect(portalSource).toContain('loading="lazy"');
-    expect(portalSource).toContain('alt={`${announcement.title} announcement image`}');
+    expect(portalSource).toContain('alt={`${announcement.title} ${t("member_announcements.image_alt_suffix")}`}');
   });
 
   it("keeps the normal no-image announcement layout intact", () => {

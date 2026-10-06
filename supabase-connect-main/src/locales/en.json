@@ -2230,6 +2230,40 @@
       "delete_family_for": "Delete family {{name}}"
     }
   },
+  "member_announcements": {
+    "title": "Announcements",
+    "subtitle": "Get parish updates and news.",
+    "loading": "Announcements are loading...",
+    "fallback_member": "Member",
+    "image_alt_suffix": "announcement image",
+    "badges": {
+      "celebration": "Celebration"
+    },
+    "error": {
+      "title": "Could not load announcements.",
+      "description": "Try again to get the latest parish updates."
+    },
+    "empty": {
+      "title": "No announcements right now.",
+      "description": "New announcements will appear here when they are published."
+    },
+    "comments": {
+      "heading": "Comments",
+      "placeholder": "Write a kind message...",
+      "empty": "No comments yet. Be the first to celebrate."
+    },
+    "footer": {
+      "celebration_note": "Comments and emoji reactions appear on birthday and wedding anniversary announcements."
+    },
+    "errors": {
+      "sign_in_to_react": "You need to sign in to react.",
+      "sign_in_to_comment": "You need to sign in to comment.",
+      "comment_required": "Write a comment first.",
+      "save_reaction": "Unable to save reaction",
+      "add_comment": "Unable to add comment",
+      "save_comment_reaction": "Unable to save comment reaction"
+    }
+  },
   "member_prayer_requests": {
     "title": "Prayer Requests",
     "subtitle": "Share a prayer request or join other members in prayer.",

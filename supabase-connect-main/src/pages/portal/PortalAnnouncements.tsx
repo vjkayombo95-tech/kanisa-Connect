@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { fetchPortalAnnouncements, getPortalAnnouncementsCache } from "@/lib/portal-announcements";
 import { getAnnouncementImageUrl } from "@/lib/announcement-media";
 import { AnnouncementContent } from "@/components/announcements/AnnouncementContent";
+import { formatAppDate } from "@/lib/localization";
 
 const ANNOUNCEMENT_REACTION_EMOJIS = ["🎉", "❤️", "🙏", "🥳", "👏", "😊"] as const;
 const ANNOUNCEMENT_COMMENT_EMOJIS = ["🎉", "❤️", "🙏", "👏", "😊"] as const;
@@ -32,6 +34,7 @@ export default function PortalAnnouncements() {
   const { user, churchId } = useAuth();
   const { isFeatureEnabled } = useFeatureAccess();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
 
@@ -93,7 +96,7 @@ export default function PortalAnnouncements() {
 
       if (commentReactionsError) throw commentReactionsError;
 
-      const profileMap = new Map((profiles ?? []).map((profile: any) => [profile.id, profile.full_name || "Member"]));
+      const profileMap = new Map((profiles ?? []).map((profile: any) => [profile.id, profile.full_name || ""]));
       const reactionMap = new Map<string, Array<{ emoji: string; count: number; reacted: boolean }>>();
       const groupedReactions = new Map<string, Map<string, Set<string>>>();
       const groupedCommentReactions = new Map<string, Map<string, Set<string>>>();
@@ -140,7 +143,7 @@ export default function PortalAnnouncements() {
         const list = commentsMap.get(comment.announcement_id) ?? [];
         list.push({
           ...comment,
-          author_name: profileMap.get(comment.user_id) || "Member",
+          author_name: profileMap.get(comment.user_id) || "",
           reactions: Array.from(groupedCommentReactions.get(comment.id)?.entries() ?? []).map(
             ([emoji, userIds]): CommentReactionSummary => ({
               emoji,
@@ -172,7 +175,7 @@ export default function PortalAnnouncements() {
 
   const toggleReaction = useMutation({
     mutationFn: async ({ announcementId, emoji, reacted }: { announcementId: string; emoji: string; reacted: boolean }) => {
-      if (!user) throw new Error("You need to sign in to react.");
+      if (!user) throw new Error(t("member_announcements.errors.sign_in_to_react"));
 
       if (reacted) {
         const { error } = await supabase
@@ -197,16 +200,16 @@ export default function PortalAnnouncements() {
       queryClient.invalidateQueries({ queryKey: ["portal-announcements-all"] });
     },
     onError: (error: any) => {
-      toast({ title: "Unable to save reaction", description: error.message, variant: "destructive" });
+      toast({ title: t("member_announcements.errors.save_reaction"), description: error.message, variant: "destructive" });
     },
   });
 
   const addComment = useMutation({
     mutationFn: async (announcementId: string) => {
-      if (!user) throw new Error("You need to sign in to comment.");
+      if (!user) throw new Error(t("member_announcements.errors.sign_in_to_comment"));
 
       const body = (commentDrafts[announcementId] || "").trim();
-      if (!body) throw new Error("Write a comment first.");
+      if (!body) throw new Error(t("member_announcements.errors.comment_required"));
 
       const { error } = await supabase
         .from("announcement_comments" as never)
@@ -219,7 +222,7 @@ export default function PortalAnnouncements() {
       queryClient.invalidateQueries({ queryKey: ["portal-announcements-all"] });
     },
     onError: (error: any) => {
-      toast({ title: "Unable to add comment", description: error.message, variant: "destructive" });
+      toast({ title: t("member_announcements.errors.add_comment"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -233,7 +236,7 @@ export default function PortalAnnouncements() {
       emoji: string;
       reacted: boolean;
     }) => {
-      if (!user) throw new Error("You need to sign in to react.");
+      if (!user) throw new Error(t("member_announcements.errors.sign_in_to_react"));
 
       if (reacted) {
         const { error } = await supabase
@@ -258,7 +261,7 @@ export default function PortalAnnouncements() {
       queryClient.invalidateQueries({ queryKey: ["portal-announcements-all"] });
     },
     onError: (error: any) => {
-      toast({ title: "Unable to save comment reaction", description: error.message, variant: "destructive" });
+      toast({ title: t("member_announcements.errors.save_comment_reaction"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -272,9 +275,9 @@ export default function PortalAnnouncements() {
       <div className="mx-auto max-w-5xl space-y-5">
         <header className="space-y-1">
           <p className="text-sm font-bold text-primary">Kanisa Connect</p>
-          <h1 className="break-words font-serif text-2xl font-bold md:text-3xl">Matangazo</h1>
+          <h1 className="break-words font-serif text-2xl font-bold md:text-3xl">{t("member_announcements.title")}</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Pata taarifa na habari mpya kutoka parokiani.
+            {t("member_announcements.subtitle")}
           </p>
         </header>
 
@@ -282,18 +285,18 @@ export default function PortalAnnouncements() {
           <div role="status" aria-live="polite" className="space-y-3">
             <Skeleton className="h-28 rounded-[24px]" />
             <Skeleton className="h-28 rounded-[24px]" />
-            <span className="sr-only">Matangazo yanapakiwa...</span>
+            <span className="sr-only">{t("member_announcements.loading")}</span>
           </div>
         ) : isError ? (
           <Card className="rounded-[24px] border-destructive/30 bg-card/85">
             <CardContent className="flex flex-col items-center gap-3 px-5 py-8 text-center" role="alert">
               <AlertCircle className="h-9 w-9 text-destructive" />
               <div>
-                <p className="font-semibold text-destructive">Imeshindikana kupakia matangazo.</p>
-                <p className="mt-1 text-sm text-muted-foreground">Jaribu tena kupata taarifa mpya za parokia.</p>
+                <p className="font-semibold text-destructive">{t("member_announcements.error.title")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("member_announcements.error.description")}</p>
               </div>
               <Button type="button" variant="outline" onClick={() => void refetch()}>
-                Jaribu tena
+                {t("shared.actions.retry")}
               </Button>
             </CardContent>
           </Card>
@@ -304,8 +307,8 @@ export default function PortalAnnouncements() {
                 <Megaphone className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-semibold text-foreground">Hakuna matangazo kwa sasa.</p>
-                <p className="mt-1 text-sm">Matangazo mapya yataonekana hapa yatakapochapishwa.</p>
+                <p className="font-semibold text-foreground">{t("member_announcements.empty.title")}</p>
+                <p className="mt-1 text-sm">{t("member_announcements.empty.description")}</p>
               </div>
             </CardContent>
           </Card>
@@ -317,7 +320,7 @@ export default function PortalAnnouncements() {
                   {getAnnouncementImageUrl(announcement.image_key) && (
                     <img
                       src={getAnnouncementImageUrl(announcement.image_key) ?? undefined}
-                      alt={`${announcement.title} announcement image`}
+                      alt={`${announcement.title} ${t("member_announcements.image_alt_suffix")}`}
                       loading="lazy"
                       className="mb-4 max-h-96 w-full rounded-2xl object-cover"
                     />
@@ -327,7 +330,7 @@ export default function PortalAnnouncements() {
                       <h3 className="font-semibold text-lg">{announcement.title}</h3>
                       {announcement.isCelebration && (
                         <Badge variant="outline" className="mt-2 border-primary/30 bg-primary/10 text-primary">
-                          Sherehe
+                          {t("member_announcements.badges.celebration")}
                         </Badge>
                       )}
                     </div>
@@ -335,12 +338,7 @@ export default function PortalAnnouncements() {
 
                   <AnnouncementContent content={announcement.content} className="mt-2" />
                   <p className="text-xs text-muted-foreground/60 mt-4">
-                    {new Date(announcement.created_at).toLocaleDateString("en-US", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
+                    {formatAppDate(announcement.created_at, i18n.language, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                   </p>
 
                   {announcement.isCelebration && (
@@ -395,7 +393,10 @@ export default function PortalAnnouncements() {
                       </div>
 
                       <CommentThread
-                        comments={announcement.comments}
+                        comments={announcement.comments.map((comment: any) => ({
+                          ...comment,
+                          author_name: comment.author_name || t("member_announcements.fallback_member"),
+                        }))}
                         draft={commentDrafts[announcement.id] || ""}
                         onDraftChange={(value) =>
                           setCommentDrafts((current) => ({ ...current, [announcement.id]: value }))
@@ -406,8 +407,9 @@ export default function PortalAnnouncements() {
                         reactionPending={toggleCommentReaction.isPending}
                         quickEmojis={ANNOUNCEMENT_COMMENT_EMOJIS}
                         reactionEmojis={ANNOUNCEMENT_COMMENT_EMOJIS}
-                        draftPlaceholder="Andika ujumbe mwema..."
-                        emptyState="Hakuna maoni bado. Kuwa wa kwanza kusherehekea."
+                        headingLabel={t("member_announcements.comments.heading")}
+                        draftPlaceholder={t("member_announcements.comments.placeholder")}
+                        emptyState={t("member_announcements.comments.empty")}
                         className="mt-0 border-white/10 bg-white/[0.03]"
                         onToggleReaction={(commentId, emoji, reacted) =>
                           toggleCommentReaction.mutate({ commentId, emoji, reacted })
@@ -423,7 +425,7 @@ export default function PortalAnnouncements() {
 
         {!isLoading && celebrationAnnouncements.length === 0 && announcements.length > 0 && (
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Maoni na hisia za emoji huonekana kwenye matangazo ya siku za kuzaliwa na maadhimisho ya ndoa.
+            {t("member_announcements.footer.celebration_note")}
           </p>
         )}
       </div>

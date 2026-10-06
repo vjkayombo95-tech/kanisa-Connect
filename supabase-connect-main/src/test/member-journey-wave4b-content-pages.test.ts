@@ -10,9 +10,11 @@ describe("member journey Wave 4B content pages", () => {
   const sermons = read("pages/portal/PortalSermons.tsx");
   const portalFeatures = read("lib/portal-features.ts");
   const memberRoutes = read("routes/MemberRoutes.tsx");
+  const sw = JSON.parse(read("locales/sw.json"));
 
   it("uses member-facing Swahili page titles instead of legacy English titles", () => {
-    expect(announcements).toContain(">Matangazo<");
+    expect(announcements).toContain('t("member_announcements.title")');
+    expect(sw.member_announcements.title).toBe("Matangazo");
     expect(events).toContain(">Matukio<");
     expect(sermons).toContain(">Mahubiri<");
     expect(announcements).not.toContain(">Announcements<");
@@ -31,9 +33,10 @@ describe("member journey Wave 4B content pages", () => {
   });
 
   it("keeps loading, empty, and retry states member-friendly", () => {
-    expect(announcements).toContain("Matangazo yanapakiwa");
-    expect(announcements).toContain("Hakuna matangazo kwa sasa.");
-    expect(announcements).toContain("Imeshindikana kupakia matangazo.");
+    expect(announcements).toContain('t("member_announcements.loading")');
+    expect(sw.member_announcements.loading).toBe("Matangazo yanapakiwa...");
+    expect(sw.member_announcements.empty.title).toBe("Hakuna matangazo kwa sasa.");
+    expect(sw.member_announcements.error.title).toBe("Imeshindikana kupakia matangazo.");
     expect(events).toContain("Matukio yanapakiwa");
     expect(events).toContain("Hakuna matukio yajayo kwa sasa.");
     expect(events).toContain("Imeshindikana kupakia matukio.");

@@ -2230,6 +2230,40 @@
       "delete_family_for": "Futa familia {{name}}"
     }
   },
+  "member_announcements": {
+    "title": "Matangazo",
+    "subtitle": "Pata taarifa na habari mpya kutoka parokiani.",
+    "loading": "Matangazo yanapakiwa...",
+    "fallback_member": "Mwanachama",
+    "image_alt_suffix": "picha ya tangazo",
+    "badges": {
+      "celebration": "Sherehe"
+    },
+    "error": {
+      "title": "Imeshindikana kupakia matangazo.",
+      "description": "Jaribu tena kupata taarifa mpya za parokia."
+    },
+    "empty": {
+      "title": "Hakuna matangazo kwa sasa.",
+      "description": "Matangazo mapya yataonekana hapa yatakapochapishwa."
+    },
+    "comments": {
+      "heading": "Maoni",
+      "placeholder": "Andika ujumbe mwema...",
+      "empty": "Hakuna maoni bado. Kuwa wa kwanza kusherehekea."
+    },
+    "footer": {
+      "celebration_note": "Maoni na hisia za emoji huonekana kwenye matangazo ya siku za kuzaliwa na maadhimisho ya ndoa."
+    },
+    "errors": {
+      "sign_in_to_react": "Unahitaji kuingia ili kujibu.",
+      "sign_in_to_comment": "Unahitaji kuingia ili kutoa maoni.",
+      "comment_required": "Andika maoni kwanza.",
+      "save_reaction": "Imeshindikana kuhifadhi hisia",
+      "add_comment": "Imeshindikana kuongeza maoni",
+      "save_comment_reaction": "Imeshindikana kuhifadhi hisia ya maoni"
+    }
+  },
   "member_prayer_requests": {
     "title": "Maombi",
     "subtitle": "Shiriki ombi lako la maombi au ungana na waumini wengine katika kuwaombea.",
