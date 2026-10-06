@@ -73,13 +73,13 @@ describe("Wave 3C member polish runtime", () => {
     expect(state.rpcCalls).toBe(2);
   });
   it("uses canonical labels for the same member destinations", () => { const labels = new Map(memberServiceRegistry.map((service) => [service.id, service.label])); expect(labels.get("radio")).toBe("Radio"); expect(labels.get("livestream")).toBe("Misa Mubashara"); expect(labels.get("daily-readings")).toBe("Masomo ya Leo"); expect(labels.get("liturgical-calendar")).toBe("Kalenda ya Liturujia"); expect(labels.get("library")).toBe("Watakatifu"); expect(labels.get("dashboard")).toBe("Historia Yangu"); expect(getMemberBackTitle("/portal/live/stream-a")).toBe("Misa Mubashara"); });
-  it("keeps Historia Yangu profile labels in Kiswahili", () => {
+  it("keeps Historia Yangu profile labels routed through dashboard localization", () => {
     const dashboard = readFileSync(join(process.cwd(), "src/pages/portal/PortalDashboard.tsx"), "utf8");
-    for (const label of ["Wasifu Binafsi", "Jina Kamili", "Jinsia", "Namba ya Mwanachama", "Ushiriki Wangu"]) {
-      expect(dashboard).toContain(label);
+    for (const key of ["member_dashboard.profile.personal_title", "member_dashboard.profile.full_name", "member_dashboard.profile.gender", "member_dashboard.profile.member_number", "member_dashboard.participation.title"]) {
+      expect(dashboard).toContain(key);
     }
-    for (const label of ["Personal Profile", "Full Name", "Gender", "Member ID", "My Participation"]) {
-      expect(dashboard).not.toContain(label);
+    for (const label of ["Wasifu Binafsi", "Jina Kamili", "Jinsia", "Namba ya Mwanachama", "Ushiriki Wangu", "Personal Profile", "Full Name", "Gender", "Member ID", "My Participation"]) {
+      expect(dashboard).not.toMatch(new RegExp(`[>={]"${label}"|>${label}<`));
     }
   });
 });

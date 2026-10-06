@@ -650,6 +650,222 @@
     "treasurer": "Treasurer",
     "community": "Community Leadership"
   },
+  "member_dashboard": {
+    "common": {
+      "not_set": "Not set"
+    },
+    "actions": {
+      "retry": "Retry",
+      "view_all": "View all"
+    },
+    "limited": {
+      "title": "Limited portal access",
+      "description": "Your profile is available, but full history and member services need an active member record.",
+      "badge": "Limited"
+    },
+    "locked": {
+      "contributions_title": "Contributions are locked",
+      "contributions_description": "Your contribution records are preserved and will show when your member profile is active.",
+      "prayers_title": "Prayer services are locked",
+      "prayers_description": "Prayer requests and Mass intentions need an active member profile.",
+      "communication_title": "Parish updates are locked",
+      "communication_description": "Announcements, events, and other member updates will unlock with your active profile."
+    },
+    "welcome": {
+      "eyebrow": "Member portal",
+      "subtitle": "Your profile, history, and services for {{church}}.",
+      "parish_fallback": "your parish",
+      "community": "Jumuiya: {{value}}",
+      "ministry": "Ministry: {{value}}"
+    },
+    "profile": {
+      "section_title": "My Profile",
+      "section_description": "Your parish member details and participation records.",
+      "personal_title": "Personal Profile",
+      "full_name": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "gender": "Gender",
+      "since": "Since",
+      "joined_date": "Joined Date",
+      "member_number": "Member ID"
+    },
+    "parish": {
+      "title": "Parish",
+      "parish": "Parish",
+      "role": "Role"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    },
+    "roles": {
+      "jumuiya_leader": "Jumuiya Leader",
+      "community_leader": "Community Leader",
+      "ministry_leader": "Ministry Leader"
+    },
+    "family_roles": {
+      "head": "Head",
+      "spouse": "Spouse",
+      "child": "Child",
+      "dependent": "Dependent",
+      "guardian": "Guardian"
+    },
+    "record_preservation": {
+      "title": "Record Preservation",
+      "status": {
+        "active": "Active",
+        "pending": "Pending",
+        "inactive": "Inactive"
+      },
+      "active_until": "Active until {{date}}",
+      "pending_description": "Your preservation request is being reviewed.",
+      "inactive_description": "Save older member records by activating preservation.",
+      "limited_history_notice": "This month's activity is shown here. Your records are preserved safely. Upgrade to view all older history.",
+      "extend_action": "Extend preservation",
+      "save_action": "Save my records",
+      "monthly_price": "Monthly preservation: {{amount}}",
+      "yearly_price": "Yearly preservation: {{amount}}",
+      "payment_help": "Pay using the parish payment instructions, then submit your transaction reference.",
+      "plan_label": "Plan",
+      "plan_placeholder": "Choose a plan",
+      "monthly_option": "Monthly - {{amount}}",
+      "yearly_option": "Yearly - {{amount}}",
+      "transaction_label": "Transaction ID",
+      "transaction_placeholder": "Enter transaction ID",
+      "proof_label": "Proof of payment",
+      "submit_action": "Submit request"
+    },
+    "summary": {
+      "total_contributions": "Total Contributions",
+      "this_month": "This Month",
+      "this_year": "This Year",
+      "member_since": "Member Since",
+      "today": "Today",
+      "records": "Records",
+      "last_contribution": "Last Contribution",
+      "status": "Status"
+    },
+    "contributions": {
+      "analytics_title": "Contribution Analytics",
+      "analytics_empty_title": "No contributions yet",
+      "analytics_empty_description": "Your contribution analytics will appear here once you start giving.",
+      "history_title": "Contribution History",
+      "search_label": "Search contributions",
+      "search_placeholder": "Search...",
+      "category_filter_label": "Filter by category",
+      "category_placeholder": "Category",
+      "all_categories": "All categories",
+      "empty_title": "No records found",
+      "empty_description": "Your contribution history will appear here.",
+      "date": "Date",
+      "category": "Category",
+      "amount": "Amount",
+      "note": "Note"
+    },
+    "pagination": {
+      "page_of": "Page {{page}} of {{total}}",
+      "previous": "Previous page",
+      "next": "Next page"
+    },
+    "prayers": {
+      "title": "My Prayers",
+      "empty_title": "No prayers yet",
+      "empty_description": "Submit a prayer request and it will appear here."
+    },
+    "mass_intentions": {
+      "title": "My Mass Intentions",
+      "empty_title": "No Mass intentions yet",
+      "empty_description": "Submit a Mass intention and it will appear here."
+    },
+    "announcements": {
+      "title": "Latest Announcements",
+      "empty_title": "No announcements",
+      "empty_description": "Check back later for parish updates."
+    },
+    "events": {
+      "title": "Upcoming Events",
+      "empty_title": "No upcoming events",
+      "empty_description": "New events will appear here."
+    },
+    "community_leadership": {
+      "title": "Jumuiya Leadership Dashboards",
+      "description": "Open members, contributions, reports, and leadership insights.",
+      "open_dashboard": "Open dashboard"
+    },
+    "quick_actions": {
+      "title": "Quick Actions",
+      "give": "Give Now",
+      "pledges": "Pledges",
+      "prayer_request": "Prayer Request",
+      "mass_intention": "Mass Intention",
+      "events": "View Events",
+      "sermons": "View Sermons",
+      "announcements": "Announcements",
+      "leader_dashboard": "Leader Dashboard",
+      "home": "Home"
+    },
+    "pledges": {
+      "title": "My Pledges",
+      "open": "Open Pledges",
+      "empty_title": "No pledges yet",
+      "empty_description": "Your pledges will appear here once recorded.",
+      "pledged": "Pledged",
+      "paid": "Paid",
+      "balance": "Balance",
+      "progress": "{{percent}}% completed",
+      "count": "{{count}} pledge",
+      "count_plural": "{{count}} pledges"
+    },
+    "verse": {
+      "title": "Verse of the Day"
+    },
+    "participation": {
+      "title": "My Participation",
+      "description": "Your Jumuiya, ministries, family, and role in the parish.",
+      "jumuiya": "Jumuiya",
+      "community_loading": "Loading your Jumuiya...",
+      "community_error": "Your Jumuiya could not be loaded.",
+      "community_empty": "No Jumuiya assigned yet.",
+      "ministry": "Ministry",
+      "ministry_empty": "No ministry assigned yet.",
+      "family": "Family",
+      "family_role": "Family Role",
+      "family_empty": "No family assigned yet.",
+      "personal_role": "Personal Role",
+      "role_empty": "No role assigned yet."
+    },
+    "leadership": {
+      "title": "Leadership",
+      "description": "Administrative and Jumuiya leadership areas available to you.",
+      "summary": {
+        "community": "You lead {{name}}.",
+        "admin": "You help manage {{name}}."
+      },
+      "this_church": "this church",
+      "church_leadership": "Church Leadership",
+      "leader": "Leader",
+      "managing": "Managing",
+      "church_members_operations": "Church members and operations",
+      "member_count": "Member Count",
+      "view_members": "View members",
+      "add_member": "Add member",
+      "manage_attendance_contributions": "Manage attendance and contributions"
+    },
+    "toasts": {
+      "photo_updated": "Profile photo updated",
+      "preservation_submitted_title": "Request submitted",
+      "preservation_submitted_description": "Your record preservation request has been sent for review.",
+      "preservation_submit_failed": "Request was not submitted"
+    },
+    "validation": {
+      "member_profile_missing": "Member profile is missing",
+      "transaction_required": "Transaction ID is required",
+      "transaction_invalid": "Enter a valid transaction ID",
+      "proof_size": "Proof file must be 5 MB or smaller"
+    }
+  },
   "staff_mobile": {
     "all_services": "All services",
     "back_as_member": "Back as Member",

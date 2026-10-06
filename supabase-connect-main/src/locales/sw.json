@@ -650,6 +650,222 @@
     "treasurer": "Mhazini",
     "community": "Uongozi wa Jumuiya"
   },
+  "member_dashboard": {
+    "common": {
+      "not_set": "Haijawekwa"
+    },
+    "actions": {
+      "retry": "Jaribu tena",
+      "view_all": "Tazama yote"
+    },
+    "limited": {
+      "title": "Ufikiaji mdogo wa portal",
+      "description": "Wasifu wako unapatikana, lakini historia yote na huduma za wanachama zinahitaji rekodi hai ya mwanachama.",
+      "badge": "Mdogo"
+    },
+    "locked": {
+      "contributions_title": "Michango imefungwa",
+      "contributions_description": "Rekodi zako za michango zimehifadhiwa na zitaonekana wasifu wako wa mwanachama ukiwa hai.",
+      "prayers_title": "Huduma za maombi zimefungwa",
+      "prayers_description": "Maombi na nia za Misa zinahitaji wasifu hai wa mwanachama.",
+      "communication_title": "Taarifa za parokia zimefungwa",
+      "communication_description": "Matangazo, matukio, na taarifa nyingine za wanachama zitafunguka wasifu wako ukiwa hai."
+    },
+    "welcome": {
+      "eyebrow": "Portal ya mwanachama",
+      "subtitle": "Wasifu, historia, na huduma zako kwa {{church}}.",
+      "parish_fallback": "parokia yako",
+      "community": "Jumuiya: {{value}}",
+      "ministry": "Huduma: {{value}}"
+    },
+    "profile": {
+      "section_title": "Wasifu Wangu",
+      "section_description": "Taarifa zako za mwanachama na rekodi za ushiriki parokiani.",
+      "personal_title": "Wasifu Binafsi",
+      "full_name": "Jina Kamili",
+      "email": "Barua Pepe",
+      "phone": "Simu",
+      "gender": "Jinsia",
+      "since": "Tangu",
+      "joined_date": "Tarehe ya Kujiunga",
+      "member_number": "Namba ya Mwanachama"
+    },
+    "parish": {
+      "title": "Parokia",
+      "parish": "Parokia",
+      "role": "Jukumu"
+    },
+    "gender": {
+      "male": "Mwanaume",
+      "female": "Mwanamke",
+      "other": "Nyingine"
+    },
+    "roles": {
+      "jumuiya_leader": "Kiongozi wa Jumuiya",
+      "community_leader": "Kiongozi wa Jumuiya",
+      "ministry_leader": "Kiongozi wa Huduma"
+    },
+    "family_roles": {
+      "head": "Mkuu",
+      "spouse": "Mwenzi",
+      "child": "Mtoto",
+      "dependent": "Mtegemezi",
+      "guardian": "Mlezi"
+    },
+    "record_preservation": {
+      "title": "Uhifadhi wa Rekodi",
+      "status": {
+        "active": "Hai",
+        "pending": "Inasubiri",
+        "inactive": "Haifanyi kazi"
+      },
+      "active_until": "Hai hadi {{date}}",
+      "pending_description": "Ombi lako la uhifadhi linakaguliwa.",
+      "inactive_description": "Hifadhi rekodi za zamani za mwanachama kwa kuwezesha uhifadhi.",
+      "limited_history_notice": "Shughuli za mwezi huu zinaonyeshwa hapa. Rekodi zako zimehifadhiwa salama. Sasisha kuona kumbukumbu zako zote za zamani.",
+      "extend_action": "Ongeza muda wa uhifadhi",
+      "save_action": "Hifadhi rekodi zangu",
+      "monthly_price": "Uhifadhi wa mwezi: {{amount}}",
+      "yearly_price": "Uhifadhi wa mwaka: {{amount}}",
+      "payment_help": "Lipa kwa maelekezo ya malipo ya parokia, kisha wasilisha kumbukumbu ya muamala.",
+      "plan_label": "Mpango",
+      "plan_placeholder": "Chagua mpango",
+      "monthly_option": "Mwezi - {{amount}}",
+      "yearly_option": "Mwaka - {{amount}}",
+      "transaction_label": "Namba ya Muamala",
+      "transaction_placeholder": "Weka namba ya muamala",
+      "proof_label": "Uthibitisho wa malipo",
+      "submit_action": "Wasilisha ombi"
+    },
+    "summary": {
+      "total_contributions": "Jumla ya Michango",
+      "this_month": "Mwezi Huu",
+      "this_year": "Mwaka Huu",
+      "member_since": "Mwanachama Tangu",
+      "today": "Leo",
+      "records": "Rekodi",
+      "last_contribution": "Mwisho Kuchangia",
+      "status": "Hali"
+    },
+    "contributions": {
+      "analytics_title": "Takwimu za Michango",
+      "analytics_empty_title": "Bado hakuna michango",
+      "analytics_empty_description": "Takwimu za michango yako zitaonekana hapa ukianza kuchangia.",
+      "history_title": "Historia ya Michango",
+      "search_label": "Tafuta michango",
+      "search_placeholder": "Tafuta...",
+      "category_filter_label": "Chuja kwa aina",
+      "category_placeholder": "Aina",
+      "all_categories": "Aina Zote",
+      "empty_title": "Hakuna rekodi zilizopatikana",
+      "empty_description": "Historia ya michango yako itaonekana hapa.",
+      "date": "Tarehe",
+      "category": "Aina",
+      "amount": "Kiasi",
+      "note": "Dokezo"
+    },
+    "pagination": {
+      "page_of": "Ukurasa {{page}} kati ya {{total}}",
+      "previous": "Ukurasa uliopita",
+      "next": "Ukurasa unaofuata"
+    },
+    "prayers": {
+      "title": "Maombi Yangu",
+      "empty_title": "Bado hakuna maombi",
+      "empty_description": "Tuma ombi la sala na litaonekana hapa."
+    },
+    "mass_intentions": {
+      "title": "Nia Zangu za Misa",
+      "empty_title": "Bado hakuna nia za misa",
+      "empty_description": "Tuma nia ya misa na itaonekana hapa."
+    },
+    "announcements": {
+      "title": "Matangazo Mapya",
+      "empty_title": "Hakuna matangazo",
+      "empty_description": "Rudi baadaye kuona taarifa za parokia."
+    },
+    "events": {
+      "title": "Matukio Yajayo",
+      "empty_title": "Hakuna matukio yajayo",
+      "empty_description": "Matukio mapya yataonekana hapa."
+    },
+    "community_leadership": {
+      "title": "Dashibodi za Uongozi wa Jumuiya",
+      "description": "Fungua wanachama, michango, ripoti, na takwimu za uongozi.",
+      "open_dashboard": "Fungua dashibodi"
+    },
+    "quick_actions": {
+      "title": "Vitendo vya Haraka",
+      "give": "Changia Sasa",
+      "pledges": "Ahadi",
+      "prayer_request": "Ombi la Sala",
+      "mass_intention": "Nia ya Misa",
+      "events": "Tazama Matukio",
+      "sermons": "Tazama Mahubiri",
+      "announcements": "Matangazo",
+      "leader_dashboard": "Dashibodi ya Kiongozi",
+      "home": "Nyumbani"
+    },
+    "pledges": {
+      "title": "Ahadi Zangu",
+      "open": "Fungua Ahadi",
+      "empty_title": "Bado hakuna ahadi",
+      "empty_description": "Ahadi zako zitaonekana hapa zikirekodiwa.",
+      "pledged": "Ahadi",
+      "paid": "Imelipwa",
+      "balance": "Salio",
+      "progress": "{{percent}}% imekamilika",
+      "count": "Ahadi {{count}}",
+      "count_plural": "Ahadi {{count}}"
+    },
+    "verse": {
+      "title": "Neno la Leo"
+    },
+    "participation": {
+      "title": "Ushiriki Wangu",
+      "description": "Jumuiya, huduma, familia, na jukumu lako parokiani.",
+      "jumuiya": "Jumuiya",
+      "community_loading": "Inapakia Jumuiya yako...",
+      "community_error": "Jumuiya yako haikuweza kupakiwa.",
+      "community_empty": "Bado hujapangiwa Jumuiya.",
+      "ministry": "Huduma",
+      "ministry_empty": "Bado hujapangiwa huduma.",
+      "family": "Familia",
+      "family_role": "Jukumu la Familia",
+      "family_empty": "Bado hujapangiwa familia.",
+      "personal_role": "Jukumu Binafsi",
+      "role_empty": "Bado hujapangiwa jukumu."
+    },
+    "leadership": {
+      "title": "Uongozi",
+      "description": "Maeneo ya usimamizi na uongozi wa Jumuiya yanayopatikana kwako.",
+      "summary": {
+        "community": "Unaongoza {{name}}.",
+        "admin": "Unasaidia kusimamia {{name}}."
+      },
+      "this_church": "kanisa hili",
+      "church_leadership": "Uongozi wa Kanisa",
+      "leader": "Kiongozi",
+      "managing": "Unasimamia",
+      "church_members_operations": "Wanachama na uendeshaji wa kanisa",
+      "member_count": "Idadi ya Wanachama",
+      "view_members": "Tazama wanachama",
+      "add_member": "Ongeza mwanachama",
+      "manage_attendance_contributions": "Simamia mahudhurio na michango"
+    },
+    "toasts": {
+      "photo_updated": "Picha ya wasifu imesasishwa",
+      "preservation_submitted_title": "Ombi limewasilishwa",
+      "preservation_submitted_description": "Ombi lako la uhifadhi wa rekodi limetumwa kwa ukaguzi.",
+      "preservation_submit_failed": "Ombi halikuwasilishwa"
+    },
+    "validation": {
+      "member_profile_missing": "Wasifu wa mwanachama haujapatikana",
+      "transaction_required": "Namba ya muamala inahitajika",
+      "transaction_invalid": "Weka namba halali ya muamala",
+      "proof_size": "Faili ya uthibitisho iwe MB 5 au chini"
+    }
+  },
   "staff_mobile": {
     "all_services": "Huduma zote",
     "back_as_member": "Rudi kama Mwanachama",

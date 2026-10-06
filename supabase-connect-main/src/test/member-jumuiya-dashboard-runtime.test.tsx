@@ -64,7 +64,7 @@ vi.mock("@/lib/file-upload", () => ({
 }));
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string) => key, i18n: { language: "sw" } }),
 }));
 
 type Filter = { column: string; value: unknown };
@@ -278,7 +278,7 @@ describe("Wave 12 Slice 3 member Jumuiya dashboard runtime states", () => {
     state.communityMode = "unassigned";
     const host = renderDashboard();
 
-    await waitForText(host, "Jumuiya yako bado haijawekwa. Wasiliana na ofisi ya parokia ili kusasisha taarifa hii.");
+    await waitForText(host, "member_dashboard.participation.community_empty");
 
     expect(host.textContent).not.toContain("Jumuiya ya Mtakatifu Monica");
     expect(mutationControlText(host)).toBe(false);
@@ -289,9 +289,9 @@ describe("Wave 12 Slice 3 member Jumuiya dashboard runtime states", () => {
     state.communityMode = "loading";
     const host = renderDashboard();
 
-    await waitForText(host, "Tunaangalia taarifa ya Jumuiya yako...");
+    await waitForText(host, "member_dashboard.participation.community_loading");
 
-    expect(host.textContent).not.toContain("Jumuiya yako bado haijawekwa");
+    expect(host.textContent).not.toContain("member_dashboard.participation.community_empty");
     expect(host.textContent).not.toContain("Jumuiya ya Mtakatifu Monica");
     expect(mutationControlText(host)).toBe(false);
   });
@@ -300,10 +300,10 @@ describe("Wave 12 Slice 3 member Jumuiya dashboard runtime states", () => {
     state.communityMode = "error";
     const host = renderDashboard();
 
-    await waitForText(host, "Taarifa ya Jumuiya haikuweza kupakiwa kwa sasa.");
+    await waitForText(host, "member_dashboard.participation.community_error");
 
     expect(host.textContent).not.toContain(BACKEND_ERROR);
-    expect(host.textContent).not.toContain("Jumuiya yako bado haijawekwa");
+    expect(host.textContent).not.toContain("member_dashboard.participation.community_empty");
     expect(host.textContent).not.toContain("Jumuiya ya Mtakatifu Monica");
     expect(mutationControlText(host)).toBe(false);
   });
@@ -312,8 +312,8 @@ describe("Wave 12 Slice 3 member Jumuiya dashboard runtime states", () => {
     state.communityMode = "error-then-assigned";
     const host = renderDashboard();
 
-    await waitForText(host, "Taarifa ya Jumuiya haikuweza kupakiwa kwa sasa.");
-    const retry = Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("Jaribu tena"));
+    await waitForText(host, "member_dashboard.participation.community_error");
+    const retry = Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("member_dashboard.actions.retry"));
     expect(retry).toBeDefined();
 
     await act(async () => {
@@ -323,7 +323,7 @@ describe("Wave 12 Slice 3 member Jumuiya dashboard runtime states", () => {
 
     await waitForText(host, "Jumuiya ya Mtakatifu Monica");
     expect(host.textContent).not.toContain(BACKEND_ERROR);
-    expect(host.textContent).not.toContain("Jumuiya yako bado haijawekwa");
+    expect(host.textContent).not.toContain("member_dashboard.participation.community_empty");
     expect(state.communityAttempts).toBeGreaterThanOrEqual(2);
     expect(state.mutationCalls).toEqual([]);
   });
