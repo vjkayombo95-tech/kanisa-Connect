@@ -16,6 +16,7 @@ import { useTypewriterAdvanced } from "@/hooks/use-typewriter-advanced";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { supabase } from "@/integrations/supabase/client";
 import type { PortalFeatureKey } from "@/lib/portal-features";
+import { useTranslation } from "react-i18next";
 
 type VerseLanguage = "sw" | "en";
 
@@ -213,19 +214,18 @@ function TypewriterVerseText({
 function VerseFocusMode({
   isOpen,
   verse,
-  language,
   soundEnabled,
   onClose,
   onCharacterTyped,
 }: {
   isOpen: boolean;
   verse: BibleVerse | null;
-  language: VerseLanguage;
   soundEnabled: boolean;
   onClose: () => void;
   onCharacterTyped?: (payload: { char: string; index: number }) => void;
 }) {
   const [displayed, setDisplayed] = useState("");
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!isOpen) {
@@ -297,10 +297,10 @@ function VerseFocusMode({
         <div className="relative flex items-start justify-between gap-4">
           <div>
             <p id="verse-focus-title" className="text-xs font-medium uppercase tracking-[0.3em] text-primary">
-              {language === "sw" ? "Neno la Leo" : "Verse of the Day"}
+              {t("member_home.verse.title")}
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              {soundEnabled ? "Immersive reading with soft typing ambience" : "Immersive reading mode"}
+              {soundEnabled ? t("member_home.verse.focus.sound_on") : t("member_home.verse.focus.sound_off")}
             </p>
           </div>
 
@@ -308,7 +308,7 @@ function VerseFocusMode({
             type="button"
             onClick={onClose}
             className="rounded-full border border-primary/20 bg-background/50 p-2 text-muted-foreground transition-colors hover:text-foreground"
-            aria-label="Close focus mode"
+            aria-label={t("member_home.verse.actions.close_focus")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -330,6 +330,7 @@ function VerseFocusMode({
 export default function PortalHome() {
   const { churchId } = useAuth();
   const { isFeatureEnabled } = useFeatureAccess();
+  const { t } = useTranslation();
   const [selectedLanguage, setSelectedLanguage] = useState<VerseLanguage>(() => {
     if (typeof window === "undefined") {
       return "sw";
@@ -537,10 +538,10 @@ export default function PortalHome() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="space-y-1">
                     <p className="text-xs font-medium uppercase tracking-[0.24em] text-primary">
-                      {selectedLanguage === "sw" ? "Neno la Leo" : "Verse of the Day"}
+                      {t("member_home.verse.title")}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {selectedLanguage === "sw" ? "Soma kwa utulivu na tafakari." : "Read slowly and reflect."}
+                      {t("member_home.verse.subtitle")}
                     </p>
                   </div>
 
@@ -553,7 +554,7 @@ export default function PortalHome() {
                       onClick={() => setSoundEnabled((current) => !current)}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary/20 bg-background/40 text-muted-foreground transition-all duration-200 hover:border-primary/35 hover:text-foreground"
                       aria-pressed={soundEnabled}
-                      aria-label={soundEnabled ? "Mute typing sound" : "Enable typing sound"}
+                      aria-label={soundEnabled ? t("member_home.verse.actions.mute_sound") : t("member_home.verse.actions.enable_sound")}
                     >
                       {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                     </button>
@@ -561,7 +562,7 @@ export default function PortalHome() {
                       type="button"
                       onClick={() => activeVerse && setIsFocusModeOpen(true)}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary/20 bg-background/40 text-muted-foreground transition-all duration-200 hover:border-primary/35 hover:text-foreground"
-                      aria-label="Open focus mode"
+                      aria-label={t("member_home.verse.actions.open_focus")}
                       disabled={!activeVerse}
                     >
                       <Maximize2 className="h-4 w-4" />
@@ -571,8 +572,8 @@ export default function PortalHome() {
 
                 {showAdvancedVerseUpsell && (
                   <div className="rounded-xl border border-primary/15 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground">Advanced verse tools are LOCKED 🔒</span>
-                    {" "}Upgrade to Intermediate or higher to unlock Focus Mode, typewriter sound, and premium verse interactions.
+                    <span className="font-medium text-foreground">{t("member_home.verse.advanced.locked")}</span>
+                    {" "}{t("member_home.verse.advanced.description")}
                   </div>
                 )}
 
@@ -598,7 +599,7 @@ export default function PortalHome() {
                         </p>
                       </>
                     ) : (
-                      <p className="text-sm text-muted-foreground">No verses available</p>
+                      <p className="text-sm text-muted-foreground">{t("member_home.verse.empty")}</p>
                     )}
                   </div>
                 </button>
@@ -611,7 +612,6 @@ export default function PortalHome() {
       <VerseFocusMode
         isOpen={isFocusModeOpen}
         verse={activeVerse}
-        language={selectedLanguage}
         soundEnabled={soundEnabled}
         onClose={() => setIsFocusModeOpen(false)}
         onCharacterTyped={handleCharacterTyped}

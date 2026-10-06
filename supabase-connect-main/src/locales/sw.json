@@ -1338,6 +1338,25 @@
         "yes": "Ndiyo"
       },
       "saving": "Inahifadhi..."
+    },
+    "verse": {
+      "title": "Neno la Leo",
+      "subtitle": "Soma kwa utulivu na tafakari.",
+      "empty": "Hakuna mistari iliyopo",
+      "focus": {
+        "sound_on": "Usomaji wa kina wenye sauti tulivu ya kuchapa",
+        "sound_off": "Hali ya usomaji wa kina"
+      },
+      "actions": {
+        "open_focus": "Fungua hali ya kutazama kwa makini",
+        "close_focus": "Funga hali ya kutazama kwa makini",
+        "mute_sound": "Zima sauti ya kuchapa",
+        "enable_sound": "Washa sauti ya kuchapa"
+      },
+      "advanced": {
+        "locked": "Zana za juu za mstari ZIMEFUNGWA 🔒",
+        "description": "Panda hadi mpango wa Intermediate au zaidi ili kufungua Focus Mode, sauti ya typewriter, na mwingiliano wa juu wa mistari."
+      }
     }
   },
   "member_my_parish": {

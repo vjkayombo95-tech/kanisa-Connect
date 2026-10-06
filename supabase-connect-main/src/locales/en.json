@@ -1338,6 +1338,25 @@
         "yes": "Yes"
       },
       "saving": "Saving..."
+    },
+    "verse": {
+      "title": "Verse of the Day",
+      "subtitle": "Read slowly and reflect.",
+      "empty": "No verses available",
+      "focus": {
+        "sound_on": "Immersive reading with soft typing ambience",
+        "sound_off": "Immersive reading mode"
+      },
+      "actions": {
+        "open_focus": "Open focus mode",
+        "close_focus": "Close focus mode",
+        "mute_sound": "Mute typing sound",
+        "enable_sound": "Enable typing sound"
+      },
+      "advanced": {
+        "locked": "Advanced verse tools are LOCKED 🔒",
+        "description": "Upgrade to Intermediate or higher to unlock Focus Mode, typewriter sound, and premium verse interactions."
+      }
     }
   },
   "member_my_parish": {
