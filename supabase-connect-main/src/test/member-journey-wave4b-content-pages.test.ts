@@ -17,7 +17,8 @@ describe("member journey Wave 4B content pages", () => {
     expect(sw.member_announcements.title).toBe("Matangazo");
     expect(events).toContain('t("member_events.title")');
     expect(sw.member_events.title).toBe("Matukio");
-    expect(sermons).toContain(">Mahubiri<");
+    expect(sermons).toContain('t("member_sermons.title")');
+    expect(sw.member_sermons.title).toBe("Mahubiri");
     expect(announcements).not.toContain(">Announcements<");
     expect(events).not.toContain(">Events<");
     expect(sermons).not.toContain(">Sermons<");
@@ -42,9 +43,10 @@ describe("member journey Wave 4B content pages", () => {
     expect(sw.member_events.loading).toBe("Matukio yanapakiwa...");
     expect(sw.member_events.empty.title).toBe("Hakuna matukio yajayo kwa sasa.");
     expect(sw.member_events.error.title).toBe("Imeshindikana kupakia matukio.");
-    expect(sermons).toContain("Mahubiri yanapakiwa");
-    expect(sermons).toContain("Hakuna mahubiri kwa sasa.");
-    expect(sermons).toContain("Imeshindikana kupakia mahubiri.");
+    expect(sermons).toContain('t("member_sermons.loading")');
+    expect(sw.member_sermons.loading).toBe("Mahubiri yanapakiwa...");
+    expect(sw.member_sermons.empty.title).toBe("Hakuna mahubiri kwa sasa.");
+    expect(sw.member_sermons.error.title).toBe("Imeshindikana kupakia mahubiri.");
     expect([announcements, events, sermons].join("\n")).not.toContain("Loading...");
   });
 

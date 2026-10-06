@@ -1034,6 +1034,27 @@
     "posting": "Inachapisha...",
     "post_comment": "Chapisha Maoni"
   },
+  "member_sermons": {
+    "title": "Mahubiri",
+    "description": "Sikiliza au tazama mahubiri yaliyoshirikiwa na parokia.",
+    "loading": "Mahubiri yanapakiwa...",
+    "error": {
+      "title": "Imeshindikana kupakia mahubiri.",
+      "description": "Jaribu tena kupata mahubiri ya parokia."
+    },
+    "actions": {
+      "retry": "Jaribu tena",
+      "watch_video": "Tazama video",
+      "listen_audio": "Sikiliza sauti"
+    },
+    "empty": {
+      "title": "Hakuna mahubiri kwa sasa.",
+      "description": "Mahubiri mapya yataonekana hapa yatakapochapishwa."
+    },
+    "fallbacks": {
+      "no_notes": "Hakuna maelezo yaliyopo."
+    }
+  },
   "staff_mobile": {
     "all_services": "Huduma zote",
     "back_as_member": "Rudi kama Mwanachama",

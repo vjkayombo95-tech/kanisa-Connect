@@ -1034,6 +1034,27 @@
     "posting": "Posting...",
     "post_comment": "Post Comment"
   },
+  "member_sermons": {
+    "title": "Sermons",
+    "description": "Listen to or watch sermons shared by your parish.",
+    "loading": "Sermons are loading...",
+    "error": {
+      "title": "Sermons could not be loaded.",
+      "description": "Try again to get parish sermons."
+    },
+    "actions": {
+      "retry": "Try again",
+      "watch_video": "Watch video",
+      "listen_audio": "Listen to audio"
+    },
+    "empty": {
+      "title": "No sermons right now.",
+      "description": "New sermons will appear here when published."
+    },
+    "fallbacks": {
+      "no_notes": "No notes available."
+    }
+  },
   "staff_mobile": {
     "all_services": "All services",
     "back_as_member": "Back as Member",
