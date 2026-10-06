@@ -963,6 +963,7 @@
     "greeting": "Habari {{firstName}}",
     "intro": "Ninaweza kukusaidia kupata huduma na taarifa zilizoidhinishwa za {{churchName}}. Chagua huduma au andika swali rahisi.",
     "loading": "Inapakia taarifa...",
+    "loading_service": "Inapakia huduma...",
     "fallbacks": {
       "first_name": "Mshirika",
       "church_name": "parokia yako"
@@ -1027,6 +1028,31 @@
       "label": "Andika swali lako",
       "placeholder": "Andika swali lako...",
       "send_aria": "Tuma swali"
+    }
+  },
+  "member_bible_verse_popup": {
+    "aria_label": "Aya ya Biblia ya kila siku",
+    "daily_blessing": "Baraka ya Leo",
+    "verse_of_day": "Aya ya Biblia ya Leo",
+    "welcome": "Karibu, {{name}}",
+    "logo_alt": "Nembo ya {{church}}",
+    "fallbacks": {
+      "church": "Kanisa lako",
+      "reference": "Aya ya Leo"
+    },
+    "greetings": {
+      "admin": "Hekima ya Mungu ikuongoze katika uongozi wako na maamuzi ya leo.",
+      "pastor": "Neema na nguvu za Mungu zikufunike unapolichunga kanisa leo.",
+      "member": "Amani ya Mungu ijaze moyo wako unapoanza siku hii kwa imani."
+    },
+    "blessings": {
+      "admin": "Mungu abariki kazi ya mikono yako na kanisa unalolitumikia.",
+      "pastor": "Bwana aufanye upya moyo wako na aimimine neema mpya juu ya huduma yako.",
+      "member": "Mungu abariki safari yako ya leo na ailinde nyumba yako kwa amani."
+    },
+    "actions": {
+      "amen": "Amina",
+      "continue": "Endelea"
     }
   },
   "member_comments": {

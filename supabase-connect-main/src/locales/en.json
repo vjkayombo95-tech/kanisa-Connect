@@ -963,6 +963,7 @@
     "greeting": "Hello {{firstName}}",
     "intro": "I can help you find approved services and information for {{churchName}}. Choose a service or type a simple question.",
     "loading": "Loading information...",
+    "loading_service": "Loading service...",
     "fallbacks": {
       "first_name": "Member",
       "church_name": "your parish"
@@ -1027,6 +1028,31 @@
       "label": "Type your question",
       "placeholder": "Type your question...",
       "send_aria": "Send question"
+    }
+  },
+  "member_bible_verse_popup": {
+    "aria_label": "Daily Bible verse",
+    "daily_blessing": "Daily Blessing",
+    "verse_of_day": "Bible Verse of the Day",
+    "welcome": "Welcome, {{name}}",
+    "logo_alt": "{{church}} logo",
+    "fallbacks": {
+      "church": "Your Church",
+      "reference": "Daily Verse"
+    },
+    "greetings": {
+      "admin": "May wisdom guide your leadership and every decision you make today.",
+      "pastor": "May grace and strength cover you as you shepherd the church today.",
+      "member": "May peace fill your heart as you begin your day in faith."
+    },
+    "blessings": {
+      "admin": "May God bless the work of your hands and the church you serve.",
+      "pastor": "May the Lord renew your spirit and pour fresh favor on your ministry.",
+      "member": "May God bless your journey today and keep your home in peace."
+    },
+    "actions": {
+      "amen": "Amen",
+      "continue": "Continue"
     }
   },
   "member_comments": {

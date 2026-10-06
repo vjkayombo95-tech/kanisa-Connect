@@ -1,7 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import type { TFunction } from "i18next";
 import { Church, Heart, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,27 +62,27 @@ function normalizeRole(role: string | null): PopupRole {
   return "member";
 }
 
-export function getGreeting(role: PopupRole) {
+export function getGreeting(role: PopupRole, t: TFunction) {
   switch (role) {
     case "admin":
-      return "May wisdom guide your leadership and every decision you make today.";
+      return t("member_bible_verse_popup.greetings.admin");
     case "pastor":
-      return "May grace and strength cover you as you shepherd the church today.";
+      return t("member_bible_verse_popup.greetings.pastor");
     case "member":
     default:
-      return "May peace fill your heart as you begin your day in faith.";
+      return t("member_bible_verse_popup.greetings.member");
   }
 }
 
-function getBlessing(role: PopupRole) {
+function getBlessing(role: PopupRole, t: TFunction) {
   switch (role) {
     case "admin":
-      return "May God bless the work of your hands and the church you serve.";
+      return t("member_bible_verse_popup.blessings.admin");
     case "pastor":
-      return "May the Lord renew your spirit and pour fresh favor on your ministry.";
+      return t("member_bible_verse_popup.blessings.pastor");
     case "member":
     default:
-      return "May God bless your journey today and keep your home in peace.";
+      return t("member_bible_verse_popup.blessings.member");
   }
 }
 
@@ -98,6 +100,7 @@ function pickBestVerse(records: BibleVerseRecord[]) {
 
 export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
   const { churchId, user, isLoading: authLoading } = useAuth();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
@@ -194,10 +197,10 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
       if (!verseText) return null;
 
       return {
-        churchName: church?.name || "Your Church",
+        churchName: church?.name || t("member_bible_verse_popup.fallbacks.church"),
         churchLogoUrl: church?.logo_url ?? null,
         verseText,
-        verseReference: verse?.reference?.trim() || "Daily Verse",
+        verseReference: verse?.reference?.trim() || t("member_bible_verse_popup.fallbacks.reference"),
       };
     },
     enabled: !!resolvedChurchId && !alreadySeenToday,
@@ -259,7 +262,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
           onClick={closePopup}
           role="dialog"
           aria-modal="true"
-          aria-label="Daily Bible verse"
+          aria-label={t("member_bible_verse_popup.aria_label")}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 18 }}
@@ -279,7 +282,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
                   {data.churchLogoUrl ? (
                     <img
                       src={data.churchLogoUrl}
-                      alt={`${data.churchName} logo`}
+                      alt={t("member_bible_verse_popup.logo_alt", { church: data.churchName })}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -290,14 +293,14 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
                 <div className="space-y-2">
                   <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
                     <Sparkles className="h-3.5 w-3.5" />
-                    Daily Blessing
+                    {t("member_bible_verse_popup.daily_blessing")}
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Welcome, {userName}</p>
+                    <p className="text-sm text-muted-foreground">{t("member_bible_verse_popup.welcome", { name: userName })}</p>
                     <h2 className="mt-1 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                       {data.churchName}
                     </h2>
-                    <p className="mt-2 max-w-xl text-sm text-muted-foreground">{getGreeting(popupRole)}</p>
+                    <p className="mt-2 max-w-xl text-sm text-muted-foreground">{getGreeting(popupRole, t)}</p>
                   </div>
                 </div>
               </div>
@@ -305,7 +308,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
               <div className="rounded-[28px] border border-primary/15 bg-white/[0.03] p-4 sm:p-5">
                 <div className="rounded-[24px] border border-primary/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(245,158,11,0.05))] px-5 py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-7 sm:py-8">
                   <p className="text-center text-xs font-semibold uppercase tracking-[0.28em] text-primary/85">
-                    Bible Verse of the Day
+                    {t("member_bible_verse_popup.verse_of_day")}
                   </p>
                   <blockquote className="mx-auto mt-5 max-w-2xl text-center text-lg italic leading-8 text-foreground sm:text-[1.7rem] sm:leading-[2.7rem]">
                     "{data.verseText}"
@@ -316,7 +319,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
                 </div>
 
                 <p className="mt-5 text-center text-sm text-muted-foreground">
-                  {getBlessing(popupRole)}
+                  {getBlessing(popupRole, t)}
                 </p>
               </div>
 
@@ -327,7 +330,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
                   className="h-11 rounded-2xl px-6 shadow-[0_16px_42px_-24px_rgba(245,158,11,0.75)]"
                 >
                   <Heart className="h-4 w-4 fill-current" />
-                  Amen
+                  {t("member_bible_verse_popup.actions.amen")}
                 </Button>
                 <Button
                   type="button"
@@ -335,7 +338,7 @@ export function BibleVersePopup({ userName, userRole }: BibleVersePopupProps) {
                   onClick={closePopup}
                   className="h-11 rounded-2xl border-primary/20 bg-white/[0.03] px-6 text-foreground hover:border-primary/30 hover:bg-white/[0.06] hover:text-foreground"
                 >
-                  Continue
+                  {t("member_bible_verse_popup.actions.continue")}
                   <span aria-hidden="true">-&gt;</span>
                 </Button>
               </div>
