@@ -1122,6 +1122,80 @@
       "next": "Next Chapter"
     }
   },
+  "member_library": {
+    "feast_day_not_set": "Feast day not set",
+    "hero": {
+      "eyebrow": "Catholic formation",
+      "title": "Saints",
+      "description": "Grow in faith through the lives of the saints."
+    },
+    "search": {
+      "label": "Search saints",
+      "placeholder": "Search by name, title, patronage, country, or tags..."
+    },
+    "categories": {
+      "aria_label": "Saint categories",
+      "all": "All Saints",
+      "apostles": "Apostles",
+      "holy_family": "Holy Family",
+      "doctors": "Doctors of the Church",
+      "african": "African Saints",
+      "modern": "Modern Saints",
+      "martyrs": "Martyrs",
+      "popes": "Popes",
+      "religious_orders": "Religious Orders"
+    },
+    "card": {
+      "featured": "Featured",
+      "read_more": "Read More"
+    },
+    "results_count_one": "{{count}} saint found",
+    "results_count_other": "{{count}} saints found",
+    "actions": {
+      "clear_filters": "Clear filters"
+    },
+    "states": {
+      "load_error": "Unable to load saints: {{message}}",
+      "load_error_fallback": "Please try again.",
+      "empty_published": "No saints have been published yet.",
+      "empty_search": "No saints match your search."
+    },
+    "grid_aria": "Saints",
+    "pagination": {
+      "aria_label": "Saints pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "page_of": "Page {{page}} of {{total}}"
+    },
+    "detail": {
+      "share_text": "Read about {{name}} in the Kanisa Connect Catholic Library.",
+      "link_copied": "Link copied",
+      "link_copied_description": "{{name}} can now be shared.",
+      "load_error": "Unable to load this saint: {{message}}",
+      "load_error_fallback": "Please try again.",
+      "not_found": "Saint not found.",
+      "return_to_library": "Return to Saints",
+      "back": "Back",
+      "share": "Share",
+      "badge": "Today's saint and Catholic library",
+      "not_listed": "Not listed",
+      "fields": {
+        "feast_day": "Feast Day",
+        "patron_of": "Patron Of",
+        "country": "Country",
+        "scripture": "Scripture"
+      },
+      "sections": {
+        "long_biography": "Long Biography",
+        "reflection": "Reflection",
+        "prayer": "Prayer",
+        "tags": "Tags",
+        "related_saints": "Related Saints"
+      },
+      "no_tags": "No tags listed.",
+      "related_empty": "Related saints will appear as the library grows."
+    }
+  },
   "member_sermons": {
     "title": "Sermons",
     "description": "Listen to or watch sermons shared by your parish.",

@@ -211,7 +211,7 @@ describe("Wave 4C behavioral content boundaries", () => {
   it("shows a safe invalid saint state without a redirect loop", async () => {
     database.saints = [];
     mount("/portal/saints/00000000-0000-4000-8000-000000000000", [{ path: "/portal/saints/:saintId", element: <MemberSaintDetailsPage /> }]);
-    expect(await screen.findByText("Saint not found.")).toBeInTheDocument();
+    expect(await screen.findByText("Mtakatifu hakupatikana.")).toBeInTheDocument();
   });
 
   it("behaviorally mounts the existing Bible route hierarchy", async () => {

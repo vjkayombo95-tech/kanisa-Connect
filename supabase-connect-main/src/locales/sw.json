@@ -1122,6 +1122,80 @@
       "next": "Sura Inayofuata"
     }
   },
+  "member_library": {
+    "feast_day_not_set": "Sikukuu haijawekwa",
+    "hero": {
+      "eyebrow": "Malezi ya Kikatoliki",
+      "title": "Watakatifu",
+      "description": "Kua katika imani kupitia maisha ya watakatifu."
+    },
+    "search": {
+      "label": "Tafuta watakatifu",
+      "placeholder": "Tafuta kwa jina, cheo, usimamizi, nchi, au lebo..."
+    },
+    "categories": {
+      "aria_label": "Makundi ya watakatifu",
+      "all": "Watakatifu Wote",
+      "apostles": "Mitume",
+      "holy_family": "Familia Takatifu",
+      "doctors": "Walimu wa Kanisa",
+      "african": "Watakatifu wa Afrika",
+      "modern": "Watakatifu wa Kisasa",
+      "martyrs": "Mashahidi",
+      "popes": "Mapapa",
+      "religious_orders": "Mashirika ya Kitawa"
+    },
+    "card": {
+      "featured": "Iliyoangaziwa",
+      "read_more": "Soma Zaidi"
+    },
+    "results_count_one": "Mtakatifu {{count}} amepatikana",
+    "results_count_other": "Watakatifu {{count}} wamepatikana",
+    "actions": {
+      "clear_filters": "Futa vichujio"
+    },
+    "states": {
+      "load_error": "Imeshindikana kupakia watakatifu: {{message}}",
+      "load_error_fallback": "Jaribu tena.",
+      "empty_published": "Hakuna watakatifu waliochapishwa bado.",
+      "empty_search": "Hakuna watakatifu wanaolingana na utafutaji wako."
+    },
+    "grid_aria": "Watakatifu",
+    "pagination": {
+      "aria_label": "Kurasa za watakatifu",
+      "previous": "Iliyopita",
+      "next": "Inayofuata",
+      "page_of": "Ukurasa {{page}} kati ya {{total}}"
+    },
+    "detail": {
+      "share_text": "Soma kuhusu {{name}} kwenye Maktaba ya Kikatoliki ya Kanisa Connect.",
+      "link_copied": "Kiungo kimenakiliwa",
+      "link_copied_description": "{{name}} sasa anaweza kushirikiwa.",
+      "load_error": "Imeshindikana kupakia mtakatifu huyu: {{message}}",
+      "load_error_fallback": "Tafadhali jaribu tena.",
+      "not_found": "Mtakatifu hakupatikana.",
+      "return_to_library": "Rudi kwa Watakatifu",
+      "back": "Rudi",
+      "share": "Shiriki",
+      "badge": "Mtakatifu wa leo na maktaba ya Kikatoliki",
+      "not_listed": "Haijaorodheshwa",
+      "fields": {
+        "feast_day": "Sikukuu",
+        "patron_of": "Msimamizi wa",
+        "country": "Nchi",
+        "scripture": "Maandiko"
+      },
+      "sections": {
+        "long_biography": "Wasifu Mrefu",
+        "reflection": "Tafakari",
+        "prayer": "Sala",
+        "tags": "Lebo",
+        "related_saints": "Watakatifu Wanaohusiana"
+      },
+      "no_tags": "Hakuna lebo zilizoorodheshwa.",
+      "related_empty": "Watakatifu wanaohusiana wataonekana maktaba itakapokua."
+    }
+  },
   "member_sermons": {
     "title": "Mahubiri",
     "description": "Sikiliza au tazama mahubiri yaliyoshirikiwa na parokia.",
