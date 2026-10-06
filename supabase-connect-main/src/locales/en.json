@@ -2530,5 +2530,26 @@
       "expand": "Open Live Mass: {{title}}",
       "close": "Close Live Mass"
     }
+  },
+  "member_jumuiya": {
+    "description": "View the parish community assigned to you. Membership changes are managed by the parish office or an authorized leader.",
+    "assignment": {
+      "position": "Community {{current}} of {{total}}",
+      "single_label": "Your assigned community",
+      "multiple_label": "Your assigned communities",
+      "no_description": "A description for this community has not been added yet."
+    },
+    "loading": {
+      "aria_label": "Loading your community information",
+      "message": "Checking your community information..."
+    },
+    "error": {
+      "title": "Your community information could not be loaded right now.",
+      "description": "Try again to see your assigned community."
+    },
+    "unassigned": {
+      "title": "You have not been assigned to a community yet.",
+      "description": "Contact the parish office to confirm or update your community information."
+    }
   }
 }

@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import i18n from "@/i18n";
 
 const BACKEND_ERROR = "permission denied for table member_communities INTERNAL_TEST_ERROR";
 
@@ -89,7 +90,8 @@ function expectNoMutationControls(host: HTMLElement) {
   expect(interactiveText).not.toMatch(/jiunge|ondoka|badili|hariri|join|leave|change|edit|manage members|roster/i);
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  await i18n.changeLanguage("sw");
   state.mode = "single";
   state.rpcCalls = [];
 });
@@ -123,6 +125,41 @@ describe("Wave 12 Slice 4B member Jumuiya page runtime", () => {
     expect(state.rpcCalls).toEqual([{ name: "get_my_jumuiya_assignments", args: [{ _church_id: "church-a" }] }]);
     expectNoMutationControls(host);
   });
+  it("switches Jumuiya app copy between Swahili and English while preserving dynamic community content", async () => {
+  const host = renderPage();
+
+  await waitForText(host, "Jumuiya ya Mtakatifu Monica");
+
+  // Swahili app-owned copy.
+  expect(host.textContent).toContain("Jumuiya uliyopewa");
+  expect(host.textContent).toContain("Jumuiya Yangu");
+
+  // Dynamic church-provided content.
+  expect(host.textContent).toContain("Jumuiya ya Mtakatifu Monica");
+  expect(host.textContent).toContain("Hukutana kila Alhamisi.");
+
+  await act(async () => {
+    await i18n.changeLanguage("en");
+  });
+
+  // App-owned copy changes to English.
+  expect(host.textContent).toContain("Your assigned community");
+  expect(host.textContent).toContain("My Small Christian Community");
+
+  // Dynamic church-provided content must not be translated.
+  expect(host.textContent).toContain("Jumuiya ya Mtakatifu Monica");
+  expect(host.textContent).toContain("Hukutana kila Alhamisi.");
+
+  // Language switching must not cause another backend request.
+  expect(state.rpcCalls).toEqual([
+    {
+      name: "get_my_jumuiya_assignments",
+      args: [{ _church_id: "church-a" }],
+    },
+  ]);
+
+  expectNoMutationControls(host);
+});
 
   it("preserves multiple assigned Jumuiya rows and uses only member-safe fields", async () => {
     state.mode = "multiple";
@@ -222,17 +259,31 @@ describe("Wave 12 Slice 4B route and navigation contract", () => {
     expect(page).not.toMatch(/join|leave|change|edit|roster|phone|email|contribution|pledge|member_id|community_id|church_id/i);
   });
 
-  it("keeps Kiswahili-first copy and safe error/retry/empty semantics", () => {
-    for (const text of [
-      "Jumuiya Yangu",
-      "Taarifa ya Jumuiya haikuweza kupakiwa kwa sasa.",
-      "Jaribu tena",
-      "Hujapangiwa Jumuiya kwa sasa.",
-      "Maelezo ya Jumuiya hii bado hayajawekwa.",
-    ]) {
-      expect(page).toContain(text);
-    }
-    expect(page).not.toContain("assignments.error");
-    expect(page).not.toContain("error.message");
-  });
+ it("uses localized Jumuiya copy while preserving safe error/retry/empty semantics", () => {
+  for (const key of [
+    "member_services.jumuiya.label",
+    "member_services.jumuiya.back_title",
+    "member_jumuiya.description",
+    "member_jumuiya.assignment.position",
+    "member_jumuiya.assignment.single_label",
+    "member_jumuiya.assignment.multiple_label",
+    "member_jumuiya.assignment.no_description",
+    "member_jumuiya.loading.aria_label",
+    "member_jumuiya.loading.message",
+    "member_jumuiya.error.title",
+    "member_jumuiya.error.description",
+    "member_jumuiya.unassigned.title",
+    "member_jumuiya.unassigned.description",
+    "shared.actions.retry",
+  ]) {
+    expect(page).toContain(key);
+  }
+
+  expect(page).not.toContain("Taarifa ya Jumuiya haikuweza kupakiwa kwa sasa.");
+  expect(page).not.toContain("Hujapangiwa Jumuiya kwa sasa.");
+  expect(page).not.toContain("Maelezo ya Jumuiya hii bado hayajawekwa.");
+  expect(page).not.toContain("assignments.error");
+  expect(page).not.toContain("error.message");
+});
+
 });

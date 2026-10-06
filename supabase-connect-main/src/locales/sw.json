@@ -2530,5 +2530,26 @@
       "expand": "Fungua Misa Mubashara: {{title}}",
       "close": "Funga Misa Mubashara"
     }
+  },
+  "member_jumuiya": {
+    "description": "Angalia Jumuiya ya parokia uliyopewa. Mabadiliko ya uanachama hufanywa na ofisi ya parokia au kiongozi aliyeidhinishwa.",
+    "assignment": {
+      "position": "Jumuiya {{current}} kati ya {{total}}",
+      "single_label": "Jumuiya uliyopewa",
+      "multiple_label": "Jumuiya ulizopewa",
+      "no_description": "Maelezo ya Jumuiya hii bado hayajawekwa."
+    },
+    "loading": {
+      "aria_label": "Inapakia taarifa ya Jumuiya",
+      "message": "Tunaangalia taarifa ya Jumuiya yako..."
+    },
+    "error": {
+      "title": "Taarifa ya Jumuiya haikuweza kupakiwa kwa sasa.",
+      "description": "Jaribu tena ili kuona Jumuiya uliyopewa."
+    },
+    "unassigned": {
+      "title": "Hujapangiwa Jumuiya kwa sasa.",
+      "description": "Wasiliana na ofisi ya parokia ili kuthibitisha au kusasisha taarifa ya Jumuiya yako."
+    }
   }
 }
