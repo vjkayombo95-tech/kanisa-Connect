@@ -954,6 +954,78 @@
       "sign_in_to_react": "Unahitaji kuingia ili kujibu."
     }
   },
+  "member_assistant": {
+    "title": "Uliza Kanisa",
+    "subtitle": "Uliza kuhusu huduma za kanisa lako",
+    "greeting": "Habari {{firstName}}",
+    "intro": "Ninaweza kukusaidia kupata huduma na taarifa zilizoidhinishwa za {{churchName}}. Chagua huduma au andika swali rahisi.",
+    "loading": "Inapakia taarifa...",
+    "fallbacks": {
+      "first_name": "Mshirika",
+      "church_name": "parokia yako"
+    },
+    "quick_questions": {
+      "heading": "Maswali ya haraka",
+      "contributions": "Michango yangu",
+      "mass": "Nia za Misa",
+      "announcements": "Matangazo",
+      "readings": "Masomo ya leo",
+      "calendar": "Kalenda",
+      "prayers": "Sala",
+      "reflections": "Tafakari",
+      "saints": "Watakatifu",
+      "radio": "Radio"
+    },
+    "responses": {
+      "contribution_summary_checking": "Ninakagua jumla ya michango yako.",
+      "contribution_summary_unlinked": "Akaunti yako haijaunganishwa na rekodi ya mwanachama. Tumia Historia ya Michango kwa msaada zaidi.",
+      "contribution_summary_total": "Jumla ya michango yako iliyorekodiwa ni {{amount}}.",
+      "contribution_summary_zero": "Hakuna michango iliyorekodiwa kwenye akaunti yako kwa sasa.",
+      "contribution_summary_error": "Taarifa za michango hazikuweza kupakiwa kwa sasa. Tafadhali jaribu tena baadaye.",
+      "contribution_history": "Fungua historia yako ya michango na risiti.",
+      "contribute": "Unaweza kufungua huduma ya kutoa mchango hapa.",
+      "mass_intentions": "Unaweza kuweka au kufuatilia Nia ya Misa hapa.",
+      "mass_schedule": "Angalia ratiba ya Misa ya parokia yako.",
+      "announcements": "Soma matangazo yaliyochapishwa na parokia yako.",
+      "reflections": "Fungua tafakari za kiroho zilizochapishwa.",
+      "daily_readings": "Soma masomo ya leo hapa.",
+      "bible": "Fungua Biblia na uchague kitabu unachotaka kusoma.",
+      "prayers": "Fungua sala zilizochapishwa.",
+      "saints": "Jifunze maisha ya watakatifu hapa.",
+      "calendar": "Fungua kalenda ya parokia yako.",
+      "radio_available": "Radio ya parokia yako inapatikana.",
+      "radio_unavailable": "Huduma ya Radio haipatikani kwa parokia yako kwa sasa.",
+      "live_mass_available": "Misa ya moja kwa moja inapatikana kwenye ukurasa wako wa mwanzo.",
+      "live_mass_unavailable": "Hakuna Misa ya moja kwa moja inayopatikana kwa sasa.",
+      "parish_information": "Taarifa za msingi za parokia yako zinaonekana kwenye ukurasa wako wa mwanzo.",
+      "unknown": "Sijaelewa vizuri. Unaweza kuchagua moja ya huduma hapa chini."
+    },
+    "actions": {
+      "open": "Fungua",
+      "contribution_history": "Angalia Historia",
+      "contribute": "Toa Mchango",
+      "mass_intentions": "Nia za Misa",
+      "mass_schedule": "Ratiba ya Misa",
+      "announcements": "Matangazo",
+      "reflections": "Tafakari",
+      "daily_readings": "Masomo ya Leo",
+      "bible": "Biblia",
+      "prayers": "Sala",
+      "saints": "Watakatifu",
+      "calendar": "Kalenda",
+      "radio": "Fungua Radio",
+      "live_mass": "Angalia Misa Live"
+    },
+    "suggestions": {
+      "announcements": "Matangazo",
+      "readings": "Masomo ya leo"
+    },
+    "input": {
+      "label": "Andika swali lako",
+      "placeholder": "Andika swali lako...",
+      "send_aria": "Tuma swali"
+    }
+  },
   "staff_mobile": {
     "all_services": "Huduma zote",
     "back_as_member": "Rudi kama Mwanachama",
