@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { formatAppDate } from "@/lib/localization";
 
 type FormErrors = {
   event_type?: string;
@@ -117,7 +118,7 @@ export default function EventRequests() {
   const { user, churchId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const member = useQuery({
     queryKey: ["event-request-member", churchId, user?.id],
@@ -375,7 +376,7 @@ export default function EventRequests() {
                         <p className="font-medium">{serviceLabel(request)}</p>
                         {request.preferred_date && (
                           <p className="mt-1 text-sm text-muted-foreground">
-                            {t("event_request.preferred_date")}: {request.preferred_date}
+                            {t("event_request.preferred_date")}: {formatAppDate(request.preferred_date, i18n.language, { dateStyle: "medium" })}
                           </p>
                         )}
                       </div>
