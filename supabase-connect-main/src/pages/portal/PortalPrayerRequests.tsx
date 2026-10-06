@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,8 +23,31 @@ import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { CommentThread, type CommentReactionSummary, type ThreadComment } from "@/components/portal/CommentThread";
 import { assertClientRateLimit } from "@/lib/client-rate-limit";
 import { logSupabaseError } from "@/lib/error-logger";
+import { formatAppDate } from "@/lib/localization";
 
 const QUICK_COMMENT_EMOJIS = ["🙏", "❤️", "🙌", "🕊️"];
+
+const PRAYER_PRIVACY_OPTIONS: Array<{
+  value: PrayerRequestPrivacy;
+  labelKey: string;
+  descriptionKey: string;
+}> = [
+  {
+    value: "public_to_church",
+    labelKey: "member_prayer_requests.privacy.public_to_church.label",
+    descriptionKey: "member_prayer_requests.privacy.public_to_church.description",
+  },
+  {
+    value: "private_to_pastor_admin",
+    labelKey: "member_prayer_requests.privacy.private_to_pastor_admin.label",
+    descriptionKey: "member_prayer_requests.privacy.private_to_pastor_admin.description",
+  },
+  {
+    value: "anonymous_public",
+    labelKey: "member_prayer_requests.privacy.anonymous_public.label",
+    descriptionKey: "member_prayer_requests.privacy.anonymous_public.description",
+  },
+];
 
 function useMemberRecord() {
   const { user, churchId } = useAuth();
@@ -64,6 +88,7 @@ function PrayerRequestCard({
   const attemptedPrayerOperation = useRef<"insert" | "delete">("insert");
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
 
   const { data: comments = [] } = useQuery({
     queryKey: ["prayer-request-comments", request.id, user?.id],
@@ -126,8 +151,8 @@ function PrayerRequestCard({
     mutationFn: async () => {
       attemptedPrayerOperation.current = prayerStats.prayedByMe ? "delete" : "insert";
 
-      if (!churchId) throw new Error("No church context");
-      if (!member?.id) throw new Error("Your member profile is required");
+      if (!churchId) throw new Error(t("member_prayer_requests.errors.no_church_context"));
+      if (!member?.id) throw new Error(t("member_prayer_requests.errors.member_profile_required"));
 
       if (prayerStats.prayedByMe) {
         const { error } = await supabase
@@ -150,7 +175,11 @@ function PrayerRequestCard({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["prayer-request-prayers", churchId] });
-      toast({ title: prayerStats.prayedByMe ? "Prayer mark removed" : "Marked as prayed" });
+      toast({
+        title: prayerStats.prayedByMe
+          ? t("member_prayer_requests.toasts.prayer_mark_removed")
+          : t("member_prayer_requests.toasts.marked_as_prayed"),
+      });
     },
     onError: (error: Error) => {
       logSupabaseError(error, {
@@ -166,14 +195,14 @@ function PrayerRequestCard({
           prayed_by_me: prayerStats.prayedByMe,
         },
       });
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
 
   const addComment = useMutation({
     mutationFn: async () => {
-      if (!churchId) throw new Error("No church context");
-      if (!commentText.trim()) throw new Error("Comment cannot be empty");
+      if (!churchId) throw new Error(t("member_prayer_requests.errors.no_church_context"));
+      if (!commentText.trim()) throw new Error(t("member_prayer_requests.errors.comment_empty"));
 
       const { error } = await supabase.from("prayer_request_comments").insert({
         prayer_request_id: request.id,
@@ -187,12 +216,12 @@ function PrayerRequestCard({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["prayer-request-comments", request.id] });
-      toast({ title: "Comment posted" });
+      toast({ title: t("member_prayer_requests.toasts.comment_posted") });
       setCommentText("");
       setShowComments(true);
     },
     onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -206,7 +235,7 @@ function PrayerRequestCard({
       emoji: string;
       reacted: boolean;
     }) => {
-      if (!user) throw new Error("You need to sign in to react.");
+      if (!user) throw new Error(t("member_prayer_requests.errors.sign_in_to_react"));
 
       if (reacted) {
         const { error } = await supabase
@@ -231,7 +260,7 @@ function PrayerRequestCard({
       queryClient.invalidateQueries({ queryKey: ["prayer-request-comments", request.id] });
     },
     onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -242,23 +271,23 @@ function PrayerRequestCard({
   };
 
   const statusLabel = (status: string) => {
-    if (status === "approved") return "Imepokelewa";
-    if (status === "pending") return "Inasubiri mapitio";
-    if (status === "rejected") return "Haikuchapishwa";
+    if (status === "approved") return t("member_prayer_requests.status.approved");
+    if (status === "pending") return t("member_prayer_requests.status.pending");
+    if (status === "rejected") return t("member_prayer_requests.status.rejected");
     return status;
   };
 
   const statusHelp = (status: string) => {
     if (status === "pending") {
-      return "Ombi lako limepokelewa na linasubiri mapitio kabla ya kuonekana kwa waumini.";
+      return t("member_prayer_requests.status_help.pending");
     }
     if (status === "rejected") {
-      return "Ombi hili halijawekwa kwenye maombi ya waumini, lakini bado lipo kwenye historia yako.";
+      return t("member_prayer_requests.status_help.rejected");
     }
     return null;
   };
 
-  const requesterName = request.privacy === "anonymous_public" ? "Muumini" : request.member_name;
+  const requesterName = request.privacy === "anonymous_public" ? t("member_prayer_requests.anonymous_requester") : request.member_name;
   const helpText = statusHelp(request.status);
 
   return (
@@ -273,14 +302,14 @@ function PrayerRequestCard({
             {Number(request.offering_amount) > 0 && (
               <Badge variant="outline" className="max-w-full whitespace-normal border-primary/20 bg-primary/5 text-xs text-primary">
                 <Star className="mr-1 h-3 w-3" />
-                Sadaka ya hiari
+                {t("member_prayer_requests.offering.badge")}
               </Badge>
             )}
           </div>
           <p className="whitespace-pre-wrap break-words text-base leading-7 text-foreground">{request.request_text}</p>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-            <span>{new Date(request.created_at).toLocaleDateString()}</span>
-            {Number(request.offering_amount) > 0 && <span>Sadaka: {formatTZS(request.offering_amount)}</span>}
+            <span>{formatAppDate(request.created_at, i18n.language)}</span>
+            {Number(request.offering_amount) > 0 && <span>{t("member_prayer_requests.offering.request_amount", { amount: formatTZS(request.offering_amount) })}</span>}
           </div>
           {helpText && <p className="rounded-lg bg-muted/60 px-3 py-2 text-xs leading-5 text-muted-foreground">{helpText}</p>}
         </div>
@@ -298,19 +327,19 @@ function PrayerRequestCard({
             ) : (
               <Heart className={`h-3.5 w-3.5 ${prayerStats.prayedByMe ? "fill-current" : ""}`} />
             )}
-            {prayerStats.prayedByMe ? "Umeombea" : "Nimeombea"} ({prayerStats.count})
+            {prayerStats.prayedByMe ? t("member_prayer_requests.actions.prayed") : t("member_prayer_requests.actions.pray")} ({prayerStats.count})
           </Button>
 
           <Button size="sm" variant="outline" className="min-h-10 min-w-0 max-w-full whitespace-normal text-center leading-snug" onClick={() => setShowComments((current) => !current)}>
             <MessageCircle className="h-3.5 w-3.5" />
-            Ujumbe wa Faraja {comments.length > 0 ? `(${comments.length})` : ""}
+            {t("member_prayer_requests.comments.heading")} {comments.length > 0 ? `(${comments.length})` : ""}
           </Button>
         </div>
 
         {showComments && (
           <CommentThread
             className="min-w-0 max-w-full"
-            headingLabel="Ujumbe wa Faraja"
+            headingLabel={t("member_prayer_requests.comments.heading")}
             comments={comments}
             draft={commentText}
             onDraftChange={setCommentText}
@@ -320,8 +349,8 @@ function PrayerRequestCard({
             reactionPending={toggleCommentReaction.isPending}
             quickEmojis={QUICK_COMMENT_EMOJIS}
             reactionEmojis={QUICK_COMMENT_EMOJIS}
-            draftPlaceholder="Andika ujumbe wa faraja au sala fupi..."
-            emptyState="Hakuna ujumbe bado. Unaweza kuacha faraja au sala fupi."
+            draftPlaceholder={t("member_prayer_requests.comments.placeholder")}
+            emptyState={t("member_prayer_requests.comments.empty")}
             onToggleReaction={(commentId, emoji, reacted) =>
               toggleCommentReaction.mutate({ commentId, emoji, reacted })
             }
@@ -341,6 +370,7 @@ export default function PortalPrayerRequests() {
   const { churchId } = useAuth();
   const { isOnline } = useNetworkStatus();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const { data: member } = useMemberRecord();
   const offlineQueue = useOfflineSyncQueue();
@@ -498,12 +528,12 @@ export default function PortalPrayerRequests() {
 
   const submit = useMutation({
     mutationFn: async () => {
-      if (!churchId) throw new Error("No church context");
-      if (!member?.id) throw new Error("No member profile found");
+      if (!churchId) throw new Error(t("member_prayer_requests.errors.no_church_context"));
+      if (!member?.id) throw new Error(t("member_prayer_requests.errors.no_member_profile"));
       assertClientRateLimit(`prayer-request:${churchId}:${member.id}`, 5, 60 * 60 * 1000, "prayer request submissions");
       const requestedOffering = offeringAmount ? parseFloat(offeringAmount) : null;
       if (requestedOffering !== null && (Number.isNaN(requestedOffering) || requestedOffering < 0)) {
-        throw new Error("Offering amount cannot be negative.");
+        throw new Error(t("member_prayer_requests.errors.offering_negative"));
       }
 
       if (!isOnline) {
@@ -545,12 +575,18 @@ export default function PortalPrayerRequests() {
       const gross = offering > 0 ? Number((offering / (1 - PLATFORM_FEE_PERCENT / 100)).toFixed(2)) : 0;
       const fee = gross > 0 ? Number((gross - offering).toFixed(2)) : 0;
       toast({
-        title: result?.queuedOffline ? "Ombi la maombi limesubiri kutumwa" : "Ombi la maombi limetumwa",
+        title: result?.queuedOffline
+          ? t("member_prayer_requests.toasts.queued_title")
+          : t("member_prayer_requests.toasts.submitted_title"),
         description: result?.queuedOffline
-          ? "Ombi lako litatumwa kiotomatiki mtandao utakaporudi."
+          ? t("member_prayer_requests.toasts.queued_description")
           : offering > 0
-            ? `${formatTZS(offering)} itaenda kanisani. Jumla iliyolipwa ni ${formatTZS(gross)}, ikijumuisha ada ya mfumo ya ${formatTZS(fee)}.`
-            : "Ombi lako limepokelewa kwa maombi.",
+            ? t("member_prayer_requests.toasts.submitted_with_offering", {
+                churchAmount: formatTZS(offering),
+                totalAmount: formatTZS(gross),
+                feeAmount: formatTZS(fee),
+              })
+            : t("member_prayer_requests.toasts.submitted_without_offering"),
       });
       setDialogOpen(false);
       setRequestText("");
@@ -558,7 +594,7 @@ export default function PortalPrayerRequests() {
       setPrivacy("public_to_church");
     },
     onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -568,9 +604,9 @@ export default function PortalPrayerRequests() {
         <div className="flex min-w-0 max-w-full flex-col gap-4 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div className="min-w-0 space-y-2">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Kanisa Connect</p>
-            <h1 className="font-serif text-3xl font-bold leading-tight text-foreground md:text-4xl">Maombi</h1>
+            <h1 className="font-serif text-3xl font-bold leading-tight text-foreground md:text-4xl">{t("member_prayer_requests.title")}</h1>
             <p className="max-w-2xl break-words text-sm leading-6 text-muted-foreground">
-              Shiriki ombi lako la maombi au ungana na waumini wengine katika kuwaombea.
+              {t("member_prayer_requests.subtitle")}
             </p>
           </div>
 
@@ -578,12 +614,12 @@ export default function PortalPrayerRequests() {
             <DialogTrigger asChild>
               <Button className="min-h-12 w-full min-w-0 max-w-full whitespace-normal text-center leading-snug sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
-                Tuma Ombi la Maombi
+                {t("member_prayer_requests.actions.create")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle className="font-serif text-2xl">Tuma Ombi la Maombi</DialogTitle>
+                <DialogTitle className="font-serif text-2xl">{t("member_prayer_requests.actions.create")}</DialogTitle>
               </DialogHeader>
 
               <form
@@ -597,18 +633,18 @@ export default function PortalPrayerRequests() {
                   <div className="flex items-center gap-3 rounded-xl border border-primary/10 bg-primary/5 p-3">
                     <User className="h-4 w-4 shrink-0 text-primary" />
                     <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">Unatuma kama</p>
+                      <p className="text-xs text-muted-foreground">{t("member_prayer_requests.form.submitting_as")}</p>
                       <p className="truncate text-sm font-medium">{member.full_name}</p>
                     </div>
                   </div>
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="request_text">Ombi lako la Maombi *</Label>
+                  <Label htmlFor="request_text">{t("member_prayer_requests.form.request_label")}</Label>
                   <Textarea
                     id="request_text"
                     rows={5}
-                    placeholder="Andika unachohitaji kuombewa kwa utulivu..."
+                    placeholder={t("member_prayer_requests.form.request_placeholder")}
                     value={requestText}
                     onChange={(event) => setRequestText(event.target.value)}
                     required
@@ -617,59 +653,61 @@ export default function PortalPrayerRequests() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="prayer_privacy">Nani anaweza kuona ombi hili?</Label>
+                  <Label htmlFor="prayer_privacy">{t("member_prayer_requests.form.privacy_label")}</Label>
                   <select
                     id="prayer_privacy"
                     value={privacy}
                     onChange={(event) => setPrivacy(event.target.value as PrayerRequestPrivacy)}
                     className="flex min-h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
                   >
-                    <option value="public_to_church">Waumini wa Kanisa</option>
-                    <option value="private_to_pastor_admin">Mchungaji/Uongozi pekee</option>
-                    <option value="anonymous_public">Bila kutaja jina</option>
+                    {PRAYER_PRIVACY_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {t(option.labelKey)}
+                      </option>
+                    ))}
                   </select>
                   <div className="space-y-1 rounded-xl bg-muted/60 p-3 text-xs leading-5 text-muted-foreground">
-                    <p>Waumini wa Kanisa: litaonekana kwa waumini baada ya mapitio.</p>
-                    <p>Mchungaji/Uongozi pekee: halitakuwa ombi la waumini wote.</p>
-                    <p>Bila kutaja jina: linaweza kuonekana baada ya mapitio bila kuonyesha jina lako kwa waumini.</p>
+                    {PRAYER_PRIVACY_OPTIONS.map((option) => (
+                      <p key={option.value}>{t(option.descriptionKey)}</p>
+                    ))}
                   </div>
                 </div>
 
                 <div className="space-y-3 rounded-xl border border-border/70 bg-muted/30 p-3">
                   <div className="space-y-1">
-                    <Label htmlFor="offering_amount">Sadaka ya Hiari (TZS)</Label>
+                    <Label htmlFor="offering_amount">{t("member_prayer_requests.offering.label")}</Label>
                     <p className="text-xs leading-5 text-muted-foreground">
-                      Sadaka ni ya hiari kabisa na si sharti la kutuma ombi la maombi.
+                      {t("member_prayer_requests.offering.helper")}
                     </p>
                   </div>
                   <Input
                     id="offering_amount"
                     type="number"
-                    placeholder="Hiari - kiasi kitakachopokelewa na kanisa"
+                    placeholder={t("member_prayer_requests.offering.placeholder")}
                     value={offeringAmount}
                     onChange={(event) => setOfferingAmount(event.target.value)}
                   />
                   <p className="flex items-start gap-1.5 text-xs leading-5 text-muted-foreground">
                     <Star className="h-3 w-3 text-primary" />
-                    Maombi yako yatapokelewa hata kama hutachagua kutoa sadaka.
+                    {t("member_prayer_requests.offering.reassurance")}
                   </p>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Rasimu hii inahifadhiwa kwenye kifaa hiki unapoandika.
+                  {t("member_prayer_requests.form.draft_saved")}
                 </p>
 
                 {requestedChurchAmount > 0 && (
                   <div className="space-y-1 rounded-xl border border-border bg-background/80 p-3">
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Kanisa linapokea</span>
+                      <span>{t("member_prayer_requests.offering.church_receives")}</span>
                       <span>{formatTZS(requestedChurchAmount)}</span>
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Ada ya mfumo ({PLATFORM_FEE_PERCENT}%)</span>
+                      <span>{t("member_prayer_requests.offering.platform_fee", { percent: PLATFORM_FEE_PERCENT })}</span>
                       <span>{formatTZS(feeAmount)}</span>
                     </div>
                     <div className="flex justify-between border-t border-border pt-1 text-sm font-medium">
-                      <span>Jumla</span>
+                      <span>{t("member_prayer_requests.offering.total")}</span>
                       <span className="text-primary">{formatTZS(grossOffering)}</span>
                     </div>
                   </div>
@@ -677,11 +715,13 @@ export default function PortalPrayerRequests() {
 
                 <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <Button variant="outline" type="button" className="min-w-0 whitespace-normal" onClick={() => setDialogOpen(false)}>
-                    Ghairi
+                    {t("common.cancel")}
                   </Button>
                   <Button type="submit" className="min-w-0 whitespace-normal text-center leading-snug" disabled={submit.isPending || !requestText.trim() || !member?.id}>
                     {submit.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {requestedChurchAmount > 0 ? `Tuma Ombi na Sadaka ${formatTZS(grossOffering)}` : "Tuma Ombi"}
+                    {requestedChurchAmount > 0
+                      ? t("member_prayer_requests.actions.submit_with_offering", { amount: formatTZS(grossOffering) })
+                      : t("member_prayer_requests.actions.submit")}
                   </Button>
                 </div>
               </form>
@@ -694,13 +734,15 @@ export default function PortalPrayerRequests() {
             <CardContent className="min-w-0 max-w-full space-y-3 p-4 sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">Maombi yaliyosubiri kutumwa</p>
+                  <p className="text-sm font-medium">{t("member_prayer_requests.offline.title")}</p>
                   <p className="break-words text-sm text-muted-foreground">
-                    Yatatumiwa kiotomatiki mtandao utakaporudi.
+                    {t("member_prayer_requests.offline.description")}
                   </p>
                 </div>
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <Badge variant="outline" className="max-w-full whitespace-normal">{pendingPrayerRequests.length} imesubiri kutumwa</Badge>
+                  <Badge variant="outline" className="max-w-full whitespace-normal">
+                    {t("member_prayer_requests.offline.count", { count: pendingPrayerRequests.length })}
+                  </Badge>
                   <Button
                     size="sm"
                     variant="outline"
@@ -711,12 +753,12 @@ export default function PortalPrayerRequests() {
                       const result = await processOfflineSyncQueue(queryClient);
                       setIsSyncingPending(false);
                       if (result.processedCount === 0 && result.error) {
-                        toast({ title: "Sawazisho halikufaulu", description: result.error.message, variant: "destructive" });
+                        toast({ title: t("member_prayer_requests.errors.sync_failed"), description: result.error.message, variant: "destructive" });
                       }
                     }}
                   >
                     {isSyncingPending ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
-                    Sawazisha sasa
+                    {t("common.sync_now")}
                   </Button>
                 </div>
               </div>
@@ -727,7 +769,9 @@ export default function PortalPrayerRequests() {
                       <div className="min-w-0">
                         <p className="break-words text-sm">{item.payload.requestText}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Ilihifadhiwa {new Date(item.createdAt).toLocaleString()}
+                          {t("member_prayer_requests.offline.saved_at", {
+                            date: formatAppDate(item.createdAt, i18n.language, { dateStyle: "medium", timeStyle: "short" }),
+                          })}
                         </p>
                       </div>
                       <Button
@@ -736,7 +780,7 @@ export default function PortalPrayerRequests() {
                         className="w-full min-w-0 max-w-full whitespace-normal text-destructive min-[420px]:w-auto"
                         onClick={() => removeOfflineSyncAction(item.id)}
                       >
-                        Ondoa
+                        {t("common.remove")}
                       </Button>
                     </div>
                   </div>
@@ -757,8 +801,8 @@ export default function PortalPrayerRequests() {
           }}
         >
           <TabsList className="mb-4 grid h-auto min-w-0 max-w-full grid-cols-2 bg-secondary p-1">
-            <TabsTrigger value="community" className="min-h-11 min-w-0 max-w-full whitespace-normal break-words px-1.5 text-center text-sm leading-snug sm:px-2">Maombi ya Waumini</TabsTrigger>
-            <TabsTrigger value="mine" className="min-h-11 min-w-0 max-w-full whitespace-normal break-words px-1.5 text-center text-sm leading-snug sm:px-2">Maombi Yangu ({myRequests.length})</TabsTrigger>
+            <TabsTrigger value="community" className="min-h-11 min-w-0 max-w-full whitespace-normal break-words px-1.5 text-center text-sm leading-snug sm:px-2">{t("member_prayer_requests.tabs.community")}</TabsTrigger>
+            <TabsTrigger value="mine" className="min-h-11 min-w-0 max-w-full whitespace-normal break-words px-1.5 text-center text-sm leading-snug sm:px-2">{t("member_prayer_requests.tabs.mine", { count: myRequests.length })}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="community" className="mt-0 min-w-0 max-w-full">
@@ -766,20 +810,20 @@ export default function PortalPrayerRequests() {
               <Card className="min-w-0 max-w-full border-border/70 bg-card/80">
                 <CardContent className="flex items-center gap-3 p-5 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  Inapakia maombi...
+                  {t("member_prayer_requests.states.loading")}
                 </CardContent>
               </Card>
             ) : requests.length === 0 ? (
               <Card className="min-w-0 max-w-full border-dashed border-border/80 bg-card/70">
                 <CardContent className="px-4 py-14 text-center sm:px-6">
                   <MessageCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
-                  <h2 className="text-lg font-semibold">Hakuna maombi yaliyoshirikiwa kwa sasa.</h2>
+                  <h2 className="text-lg font-semibold">{t("member_prayer_requests.states.community_empty_title")}</h2>
                   <p className="mx-auto mt-2 max-w-sm break-words text-sm leading-6 text-muted-foreground">
-                    Unaweza kuwa wa kwanza kushiriki ombi la maombi.
+                    {t("member_prayer_requests.states.community_empty_description")}
                   </p>
                   <Button className="mt-5 min-h-11 min-w-0 max-w-full whitespace-normal text-center leading-snug" onClick={() => setDialogOpen(true)}>
                     <Plus className="h-4 w-4" />
-                    Tuma Ombi la Maombi
+                    {t("member_prayer_requests.actions.create")}
                   </Button>
                 </CardContent>
               </Card>
@@ -804,13 +848,13 @@ export default function PortalPrayerRequests() {
               <Card className="min-w-0 max-w-full border-dashed border-border/80 bg-card/70">
                 <CardContent className="px-4 py-14 text-center sm:px-6">
                   <MessageCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
-                  <h2 className="text-lg font-semibold">Bado hujatuma ombi la maombi.</h2>
+                  <h2 className="text-lg font-semibold">{t("member_prayer_requests.states.mine_empty_title")}</h2>
                   <p className="mx-auto mt-2 max-w-sm break-words text-sm leading-6 text-muted-foreground">
-                    Ukiwa tayari, tuma ombi lako kwa utulivu. Litasubiri mapitio kabla ya kushirikiwa.
+                    {t("member_prayer_requests.states.mine_empty_description")}
                   </p>
                   <Button className="mt-5 min-h-11 min-w-0 max-w-full whitespace-normal text-center leading-snug" onClick={() => setDialogOpen(true)}>
                     <Plus className="h-4 w-4" />
-                    Tuma Ombi la Maombi
+                    {t("member_prayer_requests.actions.create")}
                   </Button>
                 </CardContent>
               </Card>

@@ -10,11 +10,15 @@ describe("member journey Wave 4B content pages", () => {
   const sermons = read("pages/portal/PortalSermons.tsx");
   const portalFeatures = read("lib/portal-features.ts");
   const memberRoutes = read("routes/MemberRoutes.tsx");
+  const sw = JSON.parse(read("locales/sw.json"));
 
   it("uses member-facing Swahili page titles instead of legacy English titles", () => {
-    expect(announcements).toContain(">Matangazo<");
-    expect(events).toContain(">Matukio<");
-    expect(sermons).toContain(">Mahubiri<");
+    expect(announcements).toContain('t("member_announcements.title")');
+    expect(sw.member_announcements.title).toBe("Matangazo");
+    expect(events).toContain('t("member_events.title")');
+    expect(sw.member_events.title).toBe("Matukio");
+    expect(sermons).toContain('t("member_sermons.title")');
+    expect(sw.member_sermons.title).toBe("Mahubiri");
     expect(announcements).not.toContain(">Announcements<");
     expect(events).not.toContain(">Events<");
     expect(sermons).not.toContain(">Sermons<");
@@ -31,15 +35,18 @@ describe("member journey Wave 4B content pages", () => {
   });
 
   it("keeps loading, empty, and retry states member-friendly", () => {
-    expect(announcements).toContain("Matangazo yanapakiwa");
-    expect(announcements).toContain("Hakuna matangazo kwa sasa.");
-    expect(announcements).toContain("Imeshindikana kupakia matangazo.");
-    expect(events).toContain("Matukio yanapakiwa");
-    expect(events).toContain("Hakuna matukio yajayo kwa sasa.");
-    expect(events).toContain("Imeshindikana kupakia matukio.");
-    expect(sermons).toContain("Mahubiri yanapakiwa");
-    expect(sermons).toContain("Hakuna mahubiri kwa sasa.");
-    expect(sermons).toContain("Imeshindikana kupakia mahubiri.");
+    expect(announcements).toContain('t("member_announcements.loading")');
+    expect(sw.member_announcements.loading).toBe("Matangazo yanapakiwa...");
+    expect(sw.member_announcements.empty.title).toBe("Hakuna matangazo kwa sasa.");
+    expect(sw.member_announcements.error.title).toBe("Imeshindikana kupakia matangazo.");
+    expect(events).toContain('t("member_events.loading")');
+    expect(sw.member_events.loading).toBe("Matukio yanapakiwa...");
+    expect(sw.member_events.empty.title).toBe("Hakuna matukio yajayo kwa sasa.");
+    expect(sw.member_events.error.title).toBe("Imeshindikana kupakia matukio.");
+    expect(sermons).toContain('t("member_sermons.loading")');
+    expect(sw.member_sermons.loading).toBe("Mahubiri yanapakiwa...");
+    expect(sw.member_sermons.empty.title).toBe("Hakuna mahubiri kwa sasa.");
+    expect(sw.member_sermons.error.title).toBe("Imeshindikana kupakia mahubiri.");
     expect([announcements, events, sermons].join("\n")).not.toContain("Loading...");
   });
 

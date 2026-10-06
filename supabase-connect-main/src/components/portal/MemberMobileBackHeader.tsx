@@ -6,44 +6,6 @@ import { isPrimaryMemberRoute, resolveMemberBackTarget } from "@/lib/member-mobi
 import { getMemberBackTitle, getMemberBackTitleKey } from "@/lib/member-service-registry";
 import { translateSystemLabel } from "@/lib/localization";
 
-const titleByRoute: Record<string, string> = {
-  "/portal/dashboard": "Historia Yangu",
-  "/portal/give": "Michango",
-  "/portal/contribution-history": "Historia ya Michango",
-  "/portal/mass-intentions": "Nia za Misa",
-  "/portal/announcements": "Matangazo",
-  "/portal/prayer-requests": "Maombi",
-  "/portal/channels": "Njia za Mawasiliano",
-  "/portal/bible": "Biblia",
-  "/portal/library": "Watakatifu",
-  "/member/library": "Watakatifu",
-  "/portal/liturgical-calendar": "Kalenda ya Liturujia",
-  "/portal/daily-readings": "Masomo ya Leo",
-  "/portal/today": "Leo",
-  "/portal/my-parish": "Parokia Yangu",
-  "/portal/jumuiya": "Jumuiya Yangu",
-  "/portal/ministries": "Huduma za Parokia",
-};
-
-const titleKeyByRoute: Record<string, string> = {
-  "/portal/dashboard": "member_services.dashboard.back_title",
-  "/portal/give": "member_services.give.back_title",
-  "/portal/contribution-history": "member_services.contribution_history.back_title",
-  "/portal/mass-intentions": "member_services.mass_intentions.back_title",
-  "/portal/announcements": "member_services.announcements.back_title",
-  "/portal/prayer-requests": "member_services.prayer_requests.back_title",
-  "/portal/channels": "member_services.channels.back_title",
-  "/portal/bible": "member_services.bible.back_title",
-  "/portal/library": "member_services.library.back_title",
-  "/member/library": "member_services.library.back_title",
-  "/portal/liturgical-calendar": "member_services.liturgical_calendar.back_title",
-  "/portal/daily-readings": "member_services.daily_readings.back_title",
-  "/portal/today": "member_services.today.back_title",
-  "/portal/my-parish": "member_services.my_parish.back_title",
-  "/portal/jumuiya": "member_services.jumuiya.back_title",
-  "/portal/ministries": "member_services.ministries.back_title",
-};
-
 function getMemberPageTitle(pathname: string, t: ReturnType<typeof useTranslation>["t"]) {
   if (/^\/(?:portal|member)\/contribution-receipt\/[^/]+$/.test(pathname)) return t("member_services.contribution_history.receipt_title");
   if (/^\/(?:portal|member)\/bible\/[^/]+\/chapter\//.test(pathname)) return t("member_services.bible.chapter_title");
@@ -51,7 +13,7 @@ function getMemberPageTitle(pathname: string, t: ReturnType<typeof useTranslatio
   if (/^\/(?:portal|member)\/library\/[^/]+$/.test(pathname)) return t("member_services.library.detail_title");
   if (/^\/(?:portal|member)\/live\/[^/]+$/.test(pathname)) return t("member_services.livestream.back_title");
   if (/^\/(?:portal|member)\/ministries\/[^/]+$/.test(pathname)) return t("member_services.ministries.back_title");
-  return translateSystemLabel(t, getMemberBackTitleKey(pathname) ?? titleKeyByRoute[pathname], getMemberBackTitle(pathname) ?? titleByRoute[pathname] ?? t("member_services.services.label"));
+  return translateSystemLabel(t, getMemberBackTitleKey(pathname), getMemberBackTitle(pathname) ?? t("member_services.services.label"));
 }
 
 export function MemberMobileBackHeader() {

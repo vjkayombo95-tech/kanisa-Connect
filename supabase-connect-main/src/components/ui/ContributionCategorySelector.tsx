@@ -12,6 +12,7 @@ type ContributionCategorySelectorProps = {
   value: string;
   onValueChange: (value: string) => void;
   placeholderKey?: string;
+  translateLabels?: boolean;
 };
 
 export function ContributionCategorySelector({
@@ -19,6 +20,7 @@ export function ContributionCategorySelector({
   value,
   onValueChange,
   placeholderKey = "contributions.select_category",
+  translateLabels = true,
 }: ContributionCategorySelectorProps) {
   const { t } = useTranslation();
 
@@ -30,7 +32,7 @@ export function ContributionCategorySelector({
       <SelectContent>
         {categories.map((category) => (
           <SelectItem key={category.id} value={category.id}>
-            {translateContributionCategory(t, category.name, "short")}
+            {translateLabels ? translateContributionCategory(t, category.name, "short") : category.name}
           </SelectItem>
         ))}
       </SelectContent>

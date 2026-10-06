@@ -4,6 +4,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { changeAppLanguage } from "@/i18n";
+
 type Row = Record<string, unknown>;
 const database: Record<string, Row[]> = {};
 const queryLog: Array<{ table: string; operation: string; args: unknown[] }> = [];
@@ -132,7 +134,10 @@ function mount(path: string, routes: Array<{ path: string; element: ReactNode }>
   return router;
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  await act(async () => {
+    await changeAppLanguage("sw");
+  });
   for (const key of Object.keys(database)) delete database[key];
   queryLog.length = 0;
   database.daily_reading_passages = [];
@@ -140,11 +145,14 @@ beforeEach(() => {
   vi.stubGlobal("scrollTo", vi.fn());
 });
 
-afterEach(() => {
+afterEach(async () => {
   if (root) act(() => root!.unmount());
   container?.remove();
   root = null;
   container = null;
+  await act(async () => {
+    await changeAppLanguage("en");
+  });
 });
 
 describe("Wave 4C behavioral content boundaries", () => {
@@ -203,7 +211,7 @@ describe("Wave 4C behavioral content boundaries", () => {
   it("shows a safe invalid saint state without a redirect loop", async () => {
     database.saints = [];
     mount("/portal/saints/00000000-0000-4000-8000-000000000000", [{ path: "/portal/saints/:saintId", element: <MemberSaintDetailsPage /> }]);
-    expect(await screen.findByText("Saint not found.")).toBeInTheDocument();
+    expect(await screen.findByText("Mtakatifu hakupatikana.")).toBeInTheDocument();
   });
 
   it("behaviorally mounts the existing Bible route hierarchy", async () => {
@@ -219,7 +227,7 @@ describe("Wave 4C behavioral content boundaries", () => {
     database.bible_chapters = [{ id: "chapter-1", book_id: "book-1", chapter_number: 1 }];
     database.bible_verses = [{ id: "verse-1", book_id: "book-1", chapter_number: 1, verse_number: 1, verse_text: "In the beginning", text: null }];
     mount("/portal/bible/book-1", [{ path: "/portal/bible/:bookId", element: <MemberBibleBookPage /> }]);
-    expect(await screen.findByText("Chapter 1")).toBeInTheDocument();
+    expect(await screen.findByText("Sura 1")).toBeInTheDocument();
     mount("/portal/bible/book-1/chapter/1", [{ path: "/portal/bible/:bookId/chapter/:chapterNumber", element: <MemberBibleChapterPage /> }]);
     expect(await screen.findByRole("heading", { name: "Genesis", level: 1 })).toBeInTheDocument();
     await waitFor(() => expect(queryLog.some((entry) => entry.table === "bible_verses" && entry.operation === "eq")).toBe(true));

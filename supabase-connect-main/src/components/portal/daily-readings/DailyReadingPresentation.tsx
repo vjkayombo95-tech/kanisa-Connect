@@ -1,16 +1,18 @@
 import { AlertCircle, BookOpen, CalendarDays, RotateCw, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatAppDate } from "@/lib/localization";
 import { cn } from "@/lib/utils";
-import { getReadableReadingDate, type DailyReadingEntry, type DailyReadingKind, type DailyReadingSection } from "@/lib/daily-readings";
+import { type DailyReadingEntry, type DailyReadingKind, type DailyReadingSection } from "@/lib/daily-readings";
 
-const READING_LABELS: Record<DailyReadingKind, string> = {
-  first: "Somo la Kwanza",
-  psalm: "Zaburi ya Kujibu",
-  second: "Somo la Pili",
-  gospel_acclamation: "Shangilio la Injili",
-  gospel: "Injili",
+const READING_LABEL_KEYS: Record<DailyReadingKind, string> = {
+  first: "member_daily_readings.reading_labels.first",
+  psalm: "member_daily_readings.reading_labels.psalm",
+  second: "member_daily_readings.reading_labels.second",
+  gospel_acclamation: "member_daily_readings.reading_labels.gospel_acclamation",
+  gospel: "member_daily_readings.reading_labels.gospel",
 };
 
 function cleanText(value: string | null | undefined) {
@@ -31,8 +33,9 @@ export function DailyReadingLiturgicalHeader({
   className?: string;
   titleId?: string;
 }) {
-  const dateLabel = getReadableReadingDate(reading);
-  const title = cleanText(reading.celebration) ?? "Masomo ya Leo";
+  const { t, i18n } = useTranslation();
+  const dateLabel = formatAppDate(reading.date, i18n.language, { dateStyle: "full" });
+  const title = cleanText(reading.celebration) ?? t("member_daily_readings.hero.title");
   const details = [
     cleanText(reading.liturgicalSeason),
     cleanText(reading.liturgicalColor),
@@ -59,7 +62,7 @@ export function DailyReadingLiturgicalHeader({
         <dl className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-muted-foreground">
           {details.map((detail) => (
             <div key={detail} className="rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-primary/90">
-              <dt className="sr-only">Taarifa ya liturujia</dt>
+              <dt className="sr-only">{t("member_daily_readings.sections.liturgical_detail")}</dt>
               <dd>{detail}</dd>
             </div>
           ))}
@@ -78,6 +81,7 @@ export function DailyReadingReferenceList({
   className?: string;
   headingId?: string;
 }) {
+  const { t } = useTranslation();
   const visibleReadings = readings
     .map((reading) => ({ ...reading, reference: cleanText(reading.reference) }))
     .filter((reading) => reading.reference);
@@ -87,7 +91,7 @@ export function DailyReadingReferenceList({
   return (
     <section aria-labelledby={headingId} className={cn("space-y-3", className)} data-testid="daily-reading-reference-list">
       <h2 id={headingId} className="text-lg font-bold tracking-tight text-foreground">
-        Masomo
+        {t("member_daily_readings.sections.readings")}
       </h2>
       <ol className="space-y-3">
         {visibleReadings.map((reading) => (
@@ -98,7 +102,7 @@ export function DailyReadingReferenceList({
           >
             <p className="flex items-center gap-2 text-sm font-semibold text-primary">
               <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>{READING_LABELS[reading.id]}</span>
+              <span>{t(READING_LABEL_KEYS[reading.id])}</span>
             </p>
             <p className="mt-1 break-words text-base leading-7 text-foreground">{reading.reference}</p>
           </li>
@@ -109,6 +113,8 @@ export function DailyReadingReferenceList({
 }
 
 export function DailyReadingEmptyState({ className }: { className?: string }) {
+  const { t } = useTranslation();
+
   return (
     <section
       aria-labelledby="daily-reading-empty-title"
@@ -117,10 +123,10 @@ export function DailyReadingEmptyState({ className }: { className?: string }) {
     >
       <Sparkles className="mx-auto h-9 w-9 text-primary" aria-hidden="true" />
       <h1 id="daily-reading-empty-title" className="mt-4 text-2xl font-bold tracking-tight">
-        Masomo ya siku hiyo bado hayajachapishwa.
+        {t("member_daily_readings.states.empty_title")}
       </h1>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        Tutayaonyesha hapa mara tu yatakapokuwa tayari kwa waumini.
+        {t("member_daily_readings.states.empty_description")}
       </p>
     </section>
   );
@@ -133,6 +139,8 @@ export function DailyReadingErrorState({
   onRetry?: () => void;
   className?: string;
 }) {
+  const { t } = useTranslation();
+
   return (
     <section
       aria-labelledby="daily-reading-error-title"
@@ -141,13 +149,13 @@ export function DailyReadingErrorState({
     >
       <AlertCircle className="mx-auto h-9 w-9 text-destructive" aria-hidden="true" />
       <h1 id="daily-reading-error-title" className="mt-4 text-2xl font-bold tracking-tight">
-        Hatukuweza kupakia masomo kwa sasa.
+        {t("member_daily_readings.states.error_title")}
       </h1>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">Tafadhali jaribu tena.</p>
+      <p className="mt-3 text-sm leading-6 text-muted-foreground">{t("member_daily_readings.states.error_description")}</p>
       {onRetry ? (
-        <Button type="button" onClick={onRetry} variant="outline" className="mt-5 rounded-2xl" aria-label="Jaribu kupakia masomo tena">
+        <Button type="button" onClick={onRetry} variant="outline" className="mt-5 rounded-2xl" aria-label={t("member_daily_readings.states.retry_aria")}>
           <RotateCw className="mr-2 h-4 w-4" aria-hidden="true" />
-          Jaribu tena
+          {t("member_daily_readings.states.retry")}
         </Button>
       ) : null}
     </section>
@@ -155,11 +163,13 @@ export function DailyReadingErrorState({
 }
 
 export function DailyReadingLoadingState({ className }: { className?: string }) {
+  const { t } = useTranslation();
+
   return (
     <section
       aria-busy="true"
       aria-live="polite"
-      aria-label="Inapakia masomo ya leo"
+      aria-label={t("member_daily_readings.states.loading_label")}
       className={cn("mx-auto w-full max-w-3xl space-y-4", className)}
       data-testid="daily-reading-loading-state"
     >
@@ -190,6 +200,7 @@ export function DailyReadingSourceAttribution({
   reading: DailyReadingEntry;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const attribution = cleanText(reading.sourceAttribution);
   if (!attribution) return null;
 
@@ -203,7 +214,7 @@ export function DailyReadingSourceAttribution({
   return (
     <aside className={cn("text-xs leading-5 text-muted-foreground", className)} data-testid="daily-reading-source-attribution">
       <p>
-        <span className="font-semibold text-foreground">Chanzo:</span> {attribution}
+        <span className="font-semibold text-foreground">{t("member_daily_readings.sections.source")}</span> {attribution}
       </p>
       {supporting ? <p className="mt-1">{supporting}</p> : null}
     </aside>

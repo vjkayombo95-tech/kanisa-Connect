@@ -8,7 +8,7 @@ describe("Wave 12 Slice 3 member Jumuiya legacy hardening", () => {
   const dashboard = read("src/pages/portal/PortalDashboard.tsx");
 
   it("keeps assigned Jumuiya display read-only on the legacy dashboard", () => {
-    expect(dashboard).toContain('label="Jumuiya"');
+    expect(dashboard).toContain('label={t("member_dashboard.participation.jumuiya")}');
     expect(dashboard).toContain("value={community?.name ?? null}");
     expect(dashboard).not.toContain("Edit Jumuiya");
     expect(dashboard).not.toContain("Change Jumuiya");
@@ -26,10 +26,10 @@ describe("Wave 12 Slice 3 member Jumuiya legacy hardening", () => {
   });
 
   it("uses truthful loading, error, retry, and not-assigned states", () => {
-    expect(dashboard).toContain("Tunaangalia taarifa ya Jumuiya yako...");
-    expect(dashboard).toContain("Taarifa ya Jumuiya haikuweza kupakiwa kwa sasa.");
-    expect(dashboard).toContain("Jaribu tena");
-    expect(dashboard).toContain("Jumuiya yako bado haijawekwa. Wasiliana na ofisi ya parokia ili kusasisha taarifa hii.");
+    expect(dashboard).toContain("member_dashboard.participation.community_loading");
+    expect(dashboard).toContain("member_dashboard.participation.community_error");
+    expect(dashboard).toContain("member_dashboard.actions.retry");
+    expect(dashboard).toContain("member_dashboard.participation.community_empty");
     expect(dashboard).not.toContain("Assignment request noted");
     expect(dashboard).not.toContain("Request Assignment");
   });
@@ -38,7 +38,7 @@ describe("Wave 12 Slice 3 member Jumuiya legacy hardening", () => {
     expect(dashboard).not.toContain("communityError.message");
     expect(dashboard).not.toContain("community?.id");
     expect(dashboard).not.toContain("value={community?.id");
-    expect(dashboard).not.toContain("Taarifa ya Jumuiya haikuweza kupakiwa kwa sasa.{");
+    expect(dashboard).not.toContain("member_dashboard.participation.community_error{");
   });
 
   it("keeps community lookup scoped to the member church and preserves first-link behavior", () => {

@@ -18,10 +18,13 @@ import {
   saintMatchesSearch,
   type LibrarySaint,
 } from "@/lib/catholic-library";
+import { useTranslation } from "react-i18next";
 
 const PAGE_SIZE = 12;
 
 function SaintCard({ saint }: { saint: LibrarySaint }) {
+  const { t, i18n } = useTranslation();
+
   return (
     <Card className="group overflow-hidden rounded-[28px] border-border/70 bg-card/85 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/25 hover:shadow-lg">
       <div className="aspect-[4/3] overflow-hidden bg-primary/10">
@@ -41,9 +44,9 @@ function SaintCard({ saint }: { saint: LibrarySaint }) {
       <CardContent className="space-y-4 p-5">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            {saint.is_featured ? <Badge className="rounded-full">Featured</Badge> : null}
+            {saint.is_featured ? <Badge className="rounded-full">{t("member_library.card.featured")}</Badge> : null}
             <Badge variant="outline" className="rounded-full">
-              {formatFeastDay(saint.feast_month, saint.feast_day)}
+              {formatFeastDay(saint.feast_month, saint.feast_day, i18n.language, t("member_library.feast_day_not_set"))}
             </Badge>
           </div>
           <div>
@@ -54,7 +57,7 @@ function SaintCard({ saint }: { saint: LibrarySaint }) {
         <p className="line-clamp-4 text-sm leading-6 text-muted-foreground">{saint.biography_short}</p>
         <Button asChild variant="outline" className="h-11 w-full rounded-2xl">
           <Link to={`/member/library/${saint.slug}`}>
-            Read More
+            {t("member_library.card.read_more")}
             <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
           </Link>
         </Button>
@@ -73,7 +76,12 @@ function LibrarySkeleton() {
   );
 }
 
+function categoryLabelKey(categoryId: string) {
+  return `member_library.categories.${categoryId.replace(/-/g, "_")}`;
+}
+
 export default function MemberLibraryPage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [page, setPage] = useState(1);
@@ -120,14 +128,14 @@ export default function MemberLibraryPage() {
           <div className="max-w-3xl">
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
               <BookOpen className="h-4 w-4" aria-hidden="true" />
-              Catholic formation
+              {t("member_library.hero.eyebrow")}
             </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Watakatifu</h1>
-            <p className="mt-3 text-base text-muted-foreground">Grow in faith through the lives of the saints.</p>
+            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">{t("member_library.hero.title")}</h1>
+            <p className="mt-3 text-base text-muted-foreground">{t("member_library.hero.description")}</p>
           </div>
           <div className="mt-6 max-w-2xl">
             <label htmlFor="saint-search" className="sr-only">
-              Search saints
+              {t("member_library.search.label")}
             </label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
@@ -135,14 +143,14 @@ export default function MemberLibraryPage() {
                 id="saint-search"
                 value={search}
                 onChange={(event) => updateSearch(event.target.value)}
-                placeholder="Search by name, title, patronage, country, or tags..."
+                placeholder={t("member_library.search.placeholder")}
                 className="h-12 rounded-2xl border-border/70 bg-background/70 pl-12 text-base"
               />
             </div>
           </div>
         </section>
 
-        <section aria-label="Saint categories" className="flex gap-2 overflow-x-auto pb-1">
+        <section aria-label={t("member_library.categories.aria_label")} className="flex gap-2 overflow-x-auto pb-1">
           {SAINT_CATEGORIES.map((item) => (
             <Button
               key={item.id}
@@ -151,14 +159,16 @@ export default function MemberLibraryPage() {
               className="h-10 shrink-0 rounded-full"
               onClick={() => updateCategory(item.id)}
             >
-              {item.label}
+              {t(categoryLabelKey(item.id))}
             </Button>
           ))}
         </section>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground" aria-live="polite">
-            {filteredSaints.length} saint{filteredSaints.length === 1 ? "" : "s"} found
+            {filteredSaints.length === 1
+              ? t("member_library.results_count_one", { count: filteredSaints.length })
+              : t("member_library.results_count_other", { count: filteredSaints.length })}
           </p>
           {search || category !== "all" ? (
             <Button
@@ -171,7 +181,7 @@ export default function MemberLibraryPage() {
                 setPage(1);
               }}
             >
-              Clear filters
+              {t("member_library.actions.clear_filters")}
             </Button>
           ) : null}
         </div>
@@ -181,33 +191,33 @@ export default function MemberLibraryPage() {
         ) : isError ? (
           <Card className="rounded-[28px] border-destructive/25 bg-destructive/5">
             <CardContent className="p-6 text-sm text-destructive">
-              Imeshindikana kupakia Watakatifu: {(error as Error)?.message || "Jaribu tena."}
+              {t("member_library.states.load_error", { message: (error as Error)?.message || t("member_library.states.load_error_fallback") })}
             </CardContent>
           </Card>
         ) : saints.length === 0 ? (
           <Card className="rounded-[28px] border-border/70 bg-card/85">
             <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
               <BookOpen className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
-              <p className="mt-4 text-lg font-semibold">No saints have been published yet.</p>
+              <p className="mt-4 text-lg font-semibold">{t("member_library.states.empty_published")}</p>
             </CardContent>
           </Card>
         ) : filteredSaints.length === 0 ? (
           <Card className="rounded-[28px] border-border/70 bg-card/85">
             <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
               <Search className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
-              <p className="mt-4 text-lg font-semibold">No saints match your search.</p>
+              <p className="mt-4 text-lg font-semibold">{t("member_library.states.empty_search")}</p>
             </CardContent>
           </Card>
         ) : (
           <>
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Saints">
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label={t("member_library.grid_aria")}>
               {pagedSaints.map((saint) => (
                 <SaintCard key={saint.id} saint={saint} />
               ))}
             </section>
 
             {totalPages > 1 ? (
-              <nav className="flex items-center justify-center gap-3" aria-label="Saints pagination">
+              <nav className="flex items-center justify-center gap-3" aria-label={t("member_library.pagination.aria_label")}>
                 <Button
                   type="button"
                   variant="outline"
@@ -215,10 +225,10 @@ export default function MemberLibraryPage() {
                   disabled={safePage === 1}
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                 >
-                  Previous
+                  {t("member_library.pagination.previous")}
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  Page {safePage} of {totalPages}
+                  {t("member_library.pagination.page_of", { page: safePage, total: totalPages })}
                 </span>
                 <Button
                   type="button"
@@ -227,7 +237,7 @@ export default function MemberLibraryPage() {
                   disabled={safePage === totalPages}
                   onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
                 >
-                  Next
+                  {t("member_library.pagination.next")}
                 </Button>
               </nav>
             ) : null}

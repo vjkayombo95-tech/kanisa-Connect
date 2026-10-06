@@ -4,6 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { changeAppLanguage } from "@/i18n";
 import {
   DailyReadingEmptyState,
   DailyReadingErrorState,
@@ -58,15 +59,21 @@ function render(node: ReactNode) {
   });
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  await act(async () => {
+    await changeAppLanguage("sw");
+  });
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
 });
 
-afterEach(() => {
+afterEach(async () => {
   act(() => root.unmount());
   host.remove();
+  await act(async () => {
+    await changeAppLanguage("en");
+  });
 });
 
 describe("member Daily Readings presentation components", () => {

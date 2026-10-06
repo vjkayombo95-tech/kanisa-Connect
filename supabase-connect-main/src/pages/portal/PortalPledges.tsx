@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleDollarSign, HandCoins, Loader2, Plus, Target, Wallet } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,13 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 
 const PLEDGE_PLATFORM_FEE_PERCENT = 1;
 
-const pledgeStatusLabels = {
-  pending: "Inasubiri",
-  partial: "Inaendelea",
-  completed: "Imekamilika",
-} as const;
-
 export default function PortalPledges() {
+  const { t } = useTranslation();
   const { user, churchId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -147,21 +143,21 @@ export default function PortalPledges() {
               <Target className="h-6 w-6" />
             </div>
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">Kanisa Connect</p>
-            <h1 className="mt-1 font-serif text-3xl font-bold tracking-normal text-foreground sm:text-4xl">Ahadi za Michango</h1>
+            <h1 className="mt-1 font-serif text-3xl font-bold tracking-normal text-foreground sm:text-4xl">{t("member_pledges.title")}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-              Fuatilia ahadi zako na maendeleo ya michango yako.
+              {t("member_pledges.subtitle")}
             </p>
           </div>
           <Dialog open={createOpen} onOpenChange={handleCreateDialogChange}>
             <DialogTrigger asChild>
               <Button className="min-h-12 w-full sm:w-auto" disabled={!canOpenCreateDialog}>
                 <Plus className="mr-2 h-4 w-4" />
-                Weka Ahadi
+                {t("member_pledges.actions.create")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="font-serif">Weka Ahadi</DialogTitle>
+                <DialogTitle className="font-serif">{t("member_pledges.create.title")}</DialogTitle>
               </DialogHeader>
               <form
                 className="space-y-4"
@@ -181,54 +177,57 @@ export default function PortalPledges() {
                     queryClient.invalidateQueries({ queryKey: ["church-pledges-summary", churchId] });
                     queryClient.invalidateQueries({ queryKey: ["community-pledges", memberCommunity.id] });
                     toast({
-                      title: "Ahadi imewekwa",
-                      description: `${formatTZS(numericPledgeAmount)} imeongezwa kwenye ${memberCommunity.name}.`,
+                      title: t("member_pledges.create.success_title"),
+                      description: t("member_pledges.create.success_description", {
+                        amount: formatTZS(numericPledgeAmount),
+                        community: memberCommunity.name,
+                      }),
                     });
                     handleCreateDialogChange(false);
-                  } catch (error: any) {
+                  } catch (error: unknown) {
                     toast({
-                      title: "Ahadi haikuwekwa",
-                      description: error?.message || "Tatizo limetokea wakati wa kuweka ahadi.",
+                      title: t("member_pledges.create.error_title"),
+                      description: error instanceof Error ? error.message : t("member_pledges.create.error_description"),
                       variant: "destructive",
                     });
                   }
                 }}
               >
                 <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm">
-                  <p className="font-medium">{member?.full_name || "Mwanachama"}</p>
+                  <p className="font-medium">{member?.full_name || t("member_pledges.fallback_member")}</p>
                   <p className="mt-1 text-muted-foreground">
-                    Jumuiya: {isCommunityLoading ? "Inatafutwa..." : memberCommunity?.name || "Hujaunganishwa na Jumuiya"}
+                    {t("member_pledges.create.community_label")}: {isCommunityLoading ? t("member_pledges.states.searching_community") : memberCommunity?.name || t("member_pledges.states.no_community_short")}
                   </p>
                 </div>
                 {cannotCreatePledge && (
                   <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm leading-6 text-muted-foreground">
                     {isMemberLoading || isCommunityLoading
-                      ? "Tunakagua taarifa ya Jumuiya yako..."
-                      : "Unahitaji kuunganishwa na Jumuiya kabla ya kuweka ahadi ya mchango."}
+                      ? t("member_pledges.states.checking_community")
+                      : t("member_pledges.states.no_community_create")}
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label>Kiasi cha Ahadi (TZS)</Label>
+                  <Label>{t("member_pledges.create.amount_label")}</Label>
                   <Input
                     type="number"
                     min="1"
                     value={amountPledged}
                     onChange={(event) => setAmountPledged(event.target.value)}
-                    placeholder="Weka kiasi"
+                    placeholder={t("member_pledges.create.amount_placeholder")}
                     className="h-12 text-base"
                     required
                   />
                 </div>
                 <p className="text-xs leading-5 text-muted-foreground">
-                  Weka kiasi unachoahidi kuchangia. Malipo yatarekodiwa kando baada ya kuwasilishwa na kuthibitishwa.
+                  {t("member_pledges.create.helper")}
                 </p>
                 <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <Button variant="outline" type="button" className="min-h-11" onClick={() => handleCreateDialogChange(false)}>
-                    Ghairi
+                    {t("common.cancel")}
                   </Button>
                   <Button type="submit" className="min-h-11" disabled={createPledge.isPending || numericPledgeAmount <= 0 || !memberCommunity?.id || !member?.id || !churchId}>
                     {createPledge.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Weka Ahadi
+                    {createPledge.isPending ? t("member_pledges.create.submitting") : t("member_pledges.actions.create")}
                   </Button>
                 </div>
               </form>
@@ -239,23 +238,23 @@ export default function PortalPledges() {
         {cannotCreatePledge && (
           <div className="rounded-2xl border border-primary/15 bg-primary/5 p-4 text-sm leading-6 text-muted-foreground">
             {isMemberLoading || isCommunityLoading
-              ? "Tunakagua taarifa ya Jumuiya yako..."
-              : "Unahitaji kuunganishwa na Jumuiya kabla ya kuweka ahadi inayojumuishwa kwenye takwimu za Jumuiya."}
+              ? t("member_pledges.states.checking_community")
+              : t("member_pledges.states.no_community_page")}
           </div>
         )}
 
         <section className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-stretch">
           <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4">
-            <SummaryCard icon={Target} label="Jumla ya Ahadi" value={formatTZS(totals.pledged)} />
-            <SummaryCard icon={HandCoins} label="Niliyolipa" value={formatTZS(totals.paid)} />
-            <SummaryCard icon={Wallet} label="Salio" value={formatTZS(totals.balance)} />
-            <SummaryCard icon={CircleDollarSign} label="Maendeleo" value={`${overallProgress.toFixed(0)}%`} />
+            <SummaryCard icon={Target} label={t("member_pledges.summary.total_pledged")} value={formatTZS(totals.pledged)} />
+            <SummaryCard icon={HandCoins} label={t("member_pledges.summary.total_paid")} value={formatTZS(totals.paid)} />
+            <SummaryCard icon={Wallet} label={t("member_pledges.summary.remaining")} value={formatTZS(totals.balance)} />
+            <SummaryCard icon={CircleDollarSign} label={t("member_pledges.summary.progress")} value={`${overallProgress.toFixed(0)}%`} />
           </div>
 
           <Card className="min-w-0 rounded-2xl border-border/70 bg-card/95 shadow-sm">
             <CardContent className="flex h-full min-w-0 flex-col justify-between p-5">
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">Maendeleo ya Ahadi</p>
+                <p className="text-sm font-semibold text-foreground">{t("member_pledges.progress.title")}</p>
                 <p className="mt-2 text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">{formatTZS(totals.paid)}</span> / {formatTZS(totals.pledged)}
                 </p>
@@ -263,8 +262,8 @@ export default function PortalPledges() {
               <div className="mt-5 space-y-3">
                 <Progress value={overallProgress} className="h-3" />
                 <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-                  <span>{overallProgress.toFixed(0)}% imetimia</span>
-                  <span className="text-right">Salio {formatTZS(totals.balance)}</span>
+                  <span>{t("member_pledges.progress.percent_complete", { percent: overallProgress.toFixed(0) })}</span>
+                  <span className="text-right">{t("member_pledges.progress.remaining", { amount: formatTZS(totals.balance) })}</span>
                 </div>
               </div>
             </CardContent>
@@ -273,26 +272,26 @@ export default function PortalPledges() {
 
         <Card className="rounded-2xl border-border/70 bg-card/95 shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Ahadi Zinazoendelea</CardTitle>
+            <CardTitle className="text-base">{t("member_pledges.list.title")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {isLoading ? (
-              <div className="flex min-h-32 items-center justify-center rounded-2xl bg-muted/40 text-sm text-muted-foreground">
+              <div className="flex min-h-32 items-center justify-center rounded-2xl bg-muted/40 text-sm text-muted-foreground" aria-label={t("member_pledges.states.loading_aria")}>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Inapakia ahadi zako...
+                {t("member_pledges.states.loading")}
               </div>
             ) : pledges.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-6 text-center">
                 <Target className="mx-auto mb-3 h-10 w-10 text-muted-foreground/35" />
-                <p className="font-medium text-foreground">Bado hujaweka ahadi ya mchango.</p>
+                <p className="font-medium text-foreground">{t("member_pledges.states.empty_title")}</p>
                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-                  Unaweza kuweka ahadi mpya na kufuatilia maendeleo yake hapa.
+                  {t("member_pledges.states.empty_description")}
                 </p>
                 <Button className="mt-5 min-h-11" disabled={!canOpenCreateDialog} onClick={() => {
                   if (canOpenCreateDialog) setCreateOpen(true);
                 }}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Weka Ahadi
+                  {t("member_pledges.actions.create")}
                 </Button>
               </div>
             ) : (
@@ -305,20 +304,20 @@ export default function PortalPledges() {
                       <div className="min-w-0 flex-1 space-y-3">
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
                           <p className="min-w-0 truncate text-sm font-semibold">
-                            {pledge.community_name || "Ahadi ya Parokia"}
+                            {pledge.community_name || t("member_pledges.fallback_pledge")}
                           </p>
                           <Badge variant={pledge.status === "completed" ? "default" : "secondary"}>
-                            {pledgeStatusLabels[pledge.status] ?? pledge.status}
+                            {t(`member_pledges.status.${pledge.status}`, { defaultValue: pledge.status })}
                           </Badge>
                         </div>
                         <div className="grid min-w-0 grid-cols-1 gap-2 text-sm text-muted-foreground sm:grid-cols-3">
-                          <Metric label="Ahadi" value={formatTZS(pledge.amount_pledged)} />
-                          <Metric label="Imelipwa" value={formatTZS(pledge.amount_paid)} />
-                          <Metric label="Salio" value={formatTZS(pledge.balance)} />
+                          <Metric label={t("member_pledges.metrics.pledged")} value={formatTZS(pledge.amount_pledged)} />
+                          <Metric label={t("member_pledges.metrics.paid")} value={formatTZS(pledge.amount_paid)} />
+                          <Metric label={t("member_pledges.metrics.balance")} value={formatTZS(pledge.balance)} />
                         </div>
                         <div className="space-y-2">
                           <Progress value={progress} className="h-2" />
-                          <p className="text-xs text-muted-foreground">{progress.toFixed(0)}% imetimia</p>
+                          <p className="text-xs text-muted-foreground">{t("member_pledges.progress.percent_complete", { percent: progress.toFixed(0) })}</p>
                         </div>
                       </div>
                       <Button
@@ -326,7 +325,7 @@ export default function PortalPledges() {
                         onClick={() => setActivePledge(pledge)}
                         disabled={pledge.balance <= 0}
                       >
-                        Wasilisha Malipo
+                        {t("member_pledges.actions.pay")}
                       </Button>
                     </div>
                   </div>
@@ -341,13 +340,13 @@ export default function PortalPledges() {
           onOpenChange={(open) => {
             if (!open) setActivePledge(null);
           }}
-          title={activePledge ? `Wasilisha malipo ya ${activePledge.community_name || "ahadi"}` : "Wasilisha Malipo ya Ahadi"}
+          title={activePledge ? t("member_pledges.payment.title_with_pledge", { pledge: activePledge.community_name || t("member_pledges.payment.fallback_title_subject") }) : t("member_pledges.payment.title")}
           maxAmount={activePledge?.balance ?? 0}
           feePercentage={PLEDGE_PLATFORM_FEE_PERCENT}
           isSubmitting={paymentMutation.isPending}
           onSubmit={async (amount, paymentMethod, transactionId, proofUrl) => {
             if (!activePledge) return;
-            const result = await paymentMutation.mutateAsync({
+            await paymentMutation.mutateAsync({
               pledgeId: activePledge.id,
               amount,
               paymentMethod,
@@ -357,12 +356,9 @@ export default function PortalPledges() {
             queryClient.invalidateQueries({ queryKey: ["member-pledges", member?.id] });
             queryClient.invalidateQueries({ queryKey: ["church-pledges-summary", churchId] });
             queryClient.invalidateQueries({ queryKey: ["community-pledges", activePledge.community_id] });
-            const fee = Number((result as any)?.fee_amount ?? 0);
-            const net = Number((result as any)?.net_amount ?? 0);
-            const gross = Number((result as any)?.gross_amount ?? amount);
             toast({
-              title: "Malipo yametumwa kwa uthibitisho",
-              description: "Salio la ahadi litasasishwa baada ya msimamizi wa kanisa au padre kuthibitisha malipo.",
+              title: t("member_pledges.payment.success_title"),
+              description: t("member_pledges.payment.success_description"),
             });
           }}
         />

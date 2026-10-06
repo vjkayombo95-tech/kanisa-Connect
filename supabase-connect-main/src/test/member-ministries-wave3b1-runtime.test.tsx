@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import i18n from "@/i18n";
 
 type LinkedMemberMockState = {
   data?: { id: string };
@@ -75,7 +76,8 @@ describe("Wave 3B1 ministry hierarchy", () => {
 
   const button = (label: string) => [...host.querySelectorAll("button")].find((item) => item.textContent?.trim() === label);
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await i18n.changeLanguage("sw");
     memberRefetch.mockClear();
     leaveMemberMinistry.mockClear();
     requestMinistryMembership.mockClear();
@@ -241,5 +243,42 @@ describe("Wave 3B1 ministry hierarchy", () => {
       title: "Ombi limetumwa",
       description: "Parokia itakagua ombi lako.",
     }));
+  });
+
+  it("switches app-owned ministry copy from Kiswahili to English without translating church-created content", async () => {
+    state.ministries = [
+      {
+        id: "available",
+        churchId: "church-a",
+        name: "Wahudumu wa Altare",
+        description: "Huduma ya madhabahuni",
+        memberCount: 2,
+        joined: false,
+        requestPending: false,
+      },
+    ];
+
+    await renderPage();
+
+    expect(host.textContent).toContain("Tumikia pamoja na jumuiya yako");
+    expect(host.textContent).toContain("Omba kujiunga");
+    expect(host.textContent).toContain("Wahudumu wa Altare");
+    expect(host.textContent).toContain("Huduma ya madhabahuni");
+
+    await act(async () => {
+      await i18n.changeLanguage("en");
+      await tick();
+    });
+
+    expect(host.textContent).toContain("Serve together with your parish community");
+    expect(host.textContent).toContain("Request to join");
+    expect(host.textContent).toContain("Wahudumu wa Altare");
+    expect(host.textContent).toContain("Huduma ya madhabahuni");
+    expect(host.textContent).not.toContain("Tumikia pamoja na jumuiya yako");
+    expect(host.textContent).not.toContain("Omba kujiunga");
+
+    expect(requestMinistryMembership).not.toHaveBeenCalled();
+    expect(leaveMemberMinistry).not.toHaveBeenCalled();
+    expect(fetchMemberMinistries).toHaveBeenCalledTimes(1);
   });
 });

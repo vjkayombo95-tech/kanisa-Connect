@@ -17,7 +17,12 @@ const sw = JSON.parse(read("locales/sw.json")) as {
     sections: Record<"contact_location" | "next_mass" | "latest_announcement" | "upcoming_events" | "my_ministries" | "quick_links", string>;
     hero: { eyebrow: string };
   };
-  member_services: Record<"livestream" | "radio", { label: string }>;
+  member_ministries: {
+    empty: Record<"no_configured" | "no_results", string>;
+    leave: { description: string };
+    sections: Record<"joined" | "other", string>;
+  };
+  member_services: Record<"dashboard" | "livestream" | "radio", { label: string }>;
 };
 
 describe("Wave 3B1 parish usefulness", () => {
@@ -96,16 +101,22 @@ describe("Wave 3B1 parish usefulness", () => {
   });
 
   it("uses explicit ministry hierarchy, empty states, and named leave confirmation", () => {
-    expect(ministriesPage.indexOf("Huduma zangu")).toBeLessThan(ministriesPage.indexOf("Huduma nyingine"));
-    expect(ministriesPage).toContain("Hakuna huduma zilizowekwa kwa parokia hii.");
-    expect(ministriesPage).toContain("Hakuna huduma zinazolingana na utafutaji wako.");
-    expect(ministriesPage).toContain("Unakaribia kuondoka kwenye huduma ya {ministry.name}");
+    expect(ministriesPage.indexOf('t("member_ministries.sections.joined")')).toBeLessThan(ministriesPage.indexOf('t("member_ministries.sections.other")'));
+    expect(ministriesPage).toContain('t("member_ministries.empty.no_configured")');
+    expect(ministriesPage).toContain('t("member_ministries.empty.no_results")');
+    expect(ministriesPage).toContain('t("member_ministries.leave.description", { name: ministry.name })');
+    expect(sw.member_ministries.sections.joined).toBe("Huduma zangu");
+    expect(sw.member_ministries.sections.other).toBe("Huduma nyingine");
+    expect(sw.member_ministries.empty.no_configured).toBe("Hakuna huduma zilizowekwa kwa parokia hii.");
+    expect(sw.member_ministries.empty.no_results).toBe("Hakuna huduma zinazolingana na utafutaji wako.");
+    expect(sw.member_ministries.leave.description).toContain("{{name}}");
     expect(ministriesPage).toContain("if (leaveRequested.current || mutation.isPending) return");
   });
 
   it("routes Historia Yangu through the existing SPA link", () => {
     expect(portalLayout).toContain('<AppLink to="/portal/dashboard" onClick={() => setMobileOpen(false)}>');
-    expect(portalLayout).toContain("Historia Yangu");
+    expect(portalLayout).toContain('translateSystemLabel(t, "member_services.dashboard.label"');
+    expect(sw.member_services.dashboard.label).toBe("Historia Yangu");
     expect(portalLayout).not.toContain('titleKey: "Wasifu"');
     expect(portalLayout).not.toContain('window.location.assign("/portal/dashboard")');
   });

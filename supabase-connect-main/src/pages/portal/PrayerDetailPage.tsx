@@ -1,12 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ScrollText } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchPublishedPrayer } from "@/lib/content-display";
 
 export default function PrayerDetailPage() {
+  const { t } = useTranslation();
   const { slug } = useParams();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["published-prayer", slug],
@@ -16,7 +19,7 @@ export default function PrayerDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-full px-4 py-6 pb-28 lg:px-8" data-sala-loading>
+      <main className="min-h-full px-4 py-6 pb-28 lg:px-8" data-sala-loading aria-label={t("member_prayers.loading_detail")}>
         <article className="mx-auto max-w-3xl space-y-4">
           <Skeleton className="h-11 w-24 rounded-2xl" />
           <Card className="min-w-0 rounded-3xl">
@@ -42,12 +45,12 @@ export default function PrayerDetailPage() {
         <Card className="mx-auto max-w-3xl min-w-0 rounded-3xl">
           <CardContent className="flex flex-col items-center px-5 py-12 text-center">
             <ScrollText className="h-10 w-10 text-muted-foreground" />
-            <h1 className="mt-4 break-words text-xl font-bold">Sala haijapatikana.</h1>
+            <h1 className="mt-4 break-words text-xl font-bold">{t("member_prayers.not_found.title")}</h1>
             <p className="mt-2 max-w-md break-words text-sm leading-6 text-muted-foreground">
-              Huenda sala hii haijachapishwa au haipatikani tena.
+              {t("member_prayers.not_found.description")}
             </p>
             <Button asChild className="mt-5 min-h-11 rounded-2xl">
-              <Link to="/portal/prayers">Rudi kwenye sala</Link>
+              <Link to="/portal/prayers">{t("member_prayers.actions.back_to_prayers")}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -61,7 +64,7 @@ export default function PrayerDetailPage() {
         <Button asChild variant="ghost" className="min-h-11 rounded-2xl">
           <Link to="/portal/prayers">
             <ArrowLeft className="mr-2 h-4 w-4 shrink-0" />
-            Rudi
+            {t("member_prayers.actions.back")}
           </Link>
         </Button>
         <Card className="mt-3 min-w-0 rounded-3xl">

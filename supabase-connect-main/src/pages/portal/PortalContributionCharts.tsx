@@ -2,6 +2,7 @@ import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis
 
 import { Card, CardContent } from "@/components/ui/card";
 import { formatTZS } from "@/lib/currency";
+import { useTranslation } from "react-i18next";
 
 const CHART_COLORS = [
   "hsl(var(--primary))",
@@ -25,10 +26,12 @@ export default function PortalContributionCharts({
   monthTotal,
   lastMonthTotal,
 }: PortalContributionChartsProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
-        <p className="text-sm font-medium mb-3">Monthly Trend (6 months)</p>
+        <p className="text-sm font-medium mb-3">{t("member_dashboard.contributions.monthly_trend")}</p>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={monthlyTrend}>
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
@@ -39,7 +42,7 @@ export default function PortalContributionCharts({
         </ResponsiveContainer>
       </div>
       <div>
-        <p className="text-sm font-medium mb-3">Category Breakdown</p>
+        <p className="text-sm font-medium mb-3">{t("member_dashboard.contributions.category_breakdown")}</p>
         {categoryBreakdown.length > 0 ? (
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
@@ -56,13 +59,13 @@ export default function PortalContributionCharts({
       <div className="md:col-span-2 grid grid-cols-2 gap-4">
         <Card className="bg-muted/30">
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground">This Month</p>
+            <p className="text-xs text-muted-foreground">{t("member_dashboard.summary.this_month")}</p>
             <p className="text-lg font-bold text-primary">{formatTZS(monthTotal)}</p>
           </CardContent>
         </Card>
         <Card className="bg-muted/30">
           <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground">Last Month</p>
+            <p className="text-xs text-muted-foreground">{t("member_dashboard.contributions.last_month")}</p>
             <p className="text-lg font-bold">{formatTZS(lastMonthTotal)}</p>
           </CardContent>
         </Card>

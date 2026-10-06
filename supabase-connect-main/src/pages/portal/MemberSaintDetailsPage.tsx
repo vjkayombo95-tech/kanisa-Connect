@@ -16,6 +16,7 @@ import {
   normalizeTags,
   type LibrarySaint,
 } from "@/lib/catholic-library";
+import { useTranslation } from "react-i18next";
 
 function DetailSkeleton() {
   return (
@@ -33,6 +34,7 @@ export default function MemberSaintDetailsPage() {
   const { slug, saintId } = useParams();
   const saintKey = saintId ?? slug;
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
 
   const { data: saint, isLoading, isError, error } = useQuery({
     queryKey: ["member-catholic-library-saint", saintKey],
@@ -98,14 +100,14 @@ export default function MemberSaintDetailsPage() {
     if (navigator.share) {
       await navigator.share({
         title: saint.name,
-        text: `Read about ${saint.name} in the Kanisa Connect Catholic Library.`,
+        text: t("member_library.detail.share_text", { name: saint.name }),
         url,
       });
       return;
     }
 
     await navigator.clipboard.writeText(url);
-    toast({ title: "Link copied", description: `${saint.name} can now be shared.` });
+    toast({ title: t("member_library.detail.link_copied"), description: t("member_library.detail.link_copied_description", { name: saint.name }) });
   };
 
   if (isLoading) return <DetailSkeleton />;
@@ -115,7 +117,7 @@ export default function MemberSaintDetailsPage() {
       <main className="min-h-full px-4 py-10 lg:px-8">
         <Card className="mx-auto max-w-3xl rounded-[28px] border-destructive/25 bg-destructive/5">
           <CardContent className="p-6 text-sm text-destructive">
-            Unable to load this saint: {(error as Error)?.message || "Please try again."}
+            {t("member_library.detail.load_error", { message: (error as Error)?.message || t("member_library.detail.load_error_fallback") })}
           </CardContent>
         </Card>
       </main>
@@ -128,9 +130,9 @@ export default function MemberSaintDetailsPage() {
         <Card className="mx-auto max-w-3xl rounded-[28px] border-border/70 bg-card/85">
           <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
             <BookOpen className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
-            <p className="mt-4 text-lg font-semibold">Saint not found.</p>
+            <p className="mt-4 text-lg font-semibold">{t("member_library.detail.not_found")}</p>
             <Button asChild className="mt-5 rounded-2xl">
-              <Link to="/member/library">Rudi kwa Watakatifu</Link>
+              <Link to="/member/library">{t("member_library.detail.return_to_library")}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -145,12 +147,12 @@ export default function MemberSaintDetailsPage() {
           <Button asChild variant="ghost" className="rounded-xl">
             <Link to="/member/library">
               <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
-              Back
+              {t("member_library.detail.back")}
             </Link>
           </Button>
           <Button type="button" variant="outline" className="rounded-xl" onClick={shareSaint}>
             <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
-            Share
+            {t("member_library.detail.share")}
           </Button>
         </div>
 
@@ -171,30 +173,30 @@ export default function MemberSaintDetailsPage() {
             </div>
             <div className="space-y-5 p-6 sm:p-8">
               <div className="space-y-2">
-                <Badge className="rounded-full">Today's saint and Catholic library</Badge>
+                <Badge className="rounded-full">{t("member_library.detail.badge")}</Badge>
                 <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">{saint.name}</h1>
                 {saint.title ? <p className="text-lg text-muted-foreground">{saint.title}</p> : null}
               </div>
               <p className="text-base leading-7 text-muted-foreground">{saint.biography_short}</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Feast Day</p>
-                  <p className="mt-1 font-semibold">{formatFeastDay(saint.feast_month, saint.feast_day)}</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("member_library.detail.fields.feast_day")}</p>
+                  <p className="mt-1 font-semibold">{formatFeastDay(saint.feast_month, saint.feast_day, i18n.language, t("member_library.feast_day_not_set"))}</p>
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Patron Of</p>
-                  <p className="mt-1 font-semibold">{saint.patron_of || "Not listed"}</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("member_library.detail.fields.patron_of")}</p>
+                  <p className="mt-1 font-semibold">{saint.patron_of || t("member_library.detail.not_listed")}</p>
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Country</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("member_library.detail.fields.country")}</p>
                   <p className="mt-1 flex items-center gap-2 font-semibold">
                     <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
-                    {saint.country || "Not listed"}
+                    {saint.country || t("member_library.detail.not_listed")}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-border/60 bg-background/55 p-4">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Scripture</p>
-                  <p className="mt-1 font-semibold">{saint.scripture_reference || "Not listed"}</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("member_library.detail.fields.scripture")}</p>
+                  <p className="mt-1 font-semibold">{saint.scripture_reference || t("member_library.detail.not_listed")}</p>
                 </div>
               </div>
             </div>
@@ -205,7 +207,7 @@ export default function MemberSaintDetailsPage() {
           <div className="space-y-6">
             <Card className="rounded-[28px] border-border/70 bg-card/85">
               <CardHeader>
-                <CardTitle>Long Biography</CardTitle>
+                <CardTitle>{t("member_library.detail.sections.long_biography")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{saint.biography_long}</p>
@@ -220,7 +222,7 @@ export default function MemberSaintDetailsPage() {
 
             <Card className="rounded-[28px] border-border/70 bg-card/85">
               <CardHeader>
-                <CardTitle>Reflection</CardTitle>
+                <CardTitle>{t("member_library.detail.sections.reflection")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{saint.reflection}</p>
@@ -229,7 +231,7 @@ export default function MemberSaintDetailsPage() {
 
             <Card className="rounded-[28px] border-primary/20 bg-primary/5">
               <CardHeader>
-                <CardTitle>Prayer</CardTitle>
+                <CardTitle>{t("member_library.detail.sections.prayer")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{saint.prayer}</p>
@@ -240,7 +242,7 @@ export default function MemberSaintDetailsPage() {
           <aside className="space-y-6">
             <Card className="rounded-[28px] border-border/70 bg-card/85">
               <CardHeader>
-                <CardTitle>Tags</CardTitle>
+                <CardTitle>{t("member_library.detail.sections.tags")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {saint.tags?.length ? (
@@ -252,14 +254,14 @@ export default function MemberSaintDetailsPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No tags listed.</p>
+                  <p className="text-sm text-muted-foreground">{t("member_library.detail.no_tags")}</p>
                 )}
               </CardContent>
             </Card>
 
             <Card className="rounded-[28px] border-border/70 bg-card/85">
               <CardHeader>
-                <CardTitle>Related Saints</CardTitle>
+                <CardTitle>{t("member_library.detail.sections.related_saints")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {relatedSaints.length ? (
@@ -270,11 +272,11 @@ export default function MemberSaintDetailsPage() {
                       className="block rounded-2xl border border-border/60 bg-background/50 p-3 transition-colors hover:border-primary/25 hover:bg-primary/5"
                     >
                       <p className="font-medium">{item.name}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{formatFeastDay(item.feast_month, item.feast_day)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{formatFeastDay(item.feast_month, item.feast_day, i18n.language, t("member_library.feast_day_not_set"))}</p>
                     </Link>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">Related saints will appear as the library grows.</p>
+                  <p className="text-sm text-muted-foreground">{t("member_library.detail.related_empty")}</p>
                 )}
               </CardContent>
             </Card>

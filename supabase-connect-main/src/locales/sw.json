@@ -548,6 +548,7 @@
     "cancel": "Ghairi",
     "remove": "Ondoa",
     "sync_now": "Sawazisha sasa",
+    "error": "Hitilafu",
     "pending": "Inasubiri",
     "approved": "Imekubaliwa",
     "rejected": "Imekataliwa",
@@ -649,6 +650,599 @@
     "treasurer": "Mhazini",
     "community": "Uongozi wa Jumuiya"
   },
+  "member_dashboard": {
+    "common": {
+      "not_set": "Haijawekwa"
+    },
+    "actions": {
+      "retry": "Jaribu tena",
+      "view_all": "Tazama yote"
+    },
+    "limited": {
+      "title": "Ufikiaji mdogo wa portal",
+      "description": "Wasifu wako unapatikana, lakini historia yote na huduma za wanachama zinahitaji rekodi hai ya mwanachama.",
+      "badge": "Mdogo"
+    },
+    "locked": {
+      "contributions_title": "Michango imefungwa",
+      "contributions_description": "Rekodi zako za michango zimehifadhiwa na zitaonekana wasifu wako wa mwanachama ukiwa hai.",
+      "prayers_title": "Huduma za maombi zimefungwa",
+      "prayers_description": "Maombi na nia za Misa zinahitaji wasifu hai wa mwanachama.",
+      "communication_title": "Taarifa za parokia zimefungwa",
+      "communication_description": "Matangazo, matukio, na taarifa nyingine za wanachama zitafunguka wasifu wako ukiwa hai."
+    },
+    "welcome": {
+      "eyebrow": "Portal ya mwanachama",
+      "subtitle": "Wasifu, historia, na huduma zako kwa {{church}}.",
+      "parish_fallback": "parokia yako",
+      "community": "Jumuiya: {{value}}",
+      "ministry": "Huduma: {{value}}"
+    },
+    "profile": {
+      "section_title": "Wasifu Wangu",
+      "section_description": "Taarifa zako za mwanachama na rekodi za ushiriki parokiani.",
+      "personal_title": "Wasifu Binafsi",
+      "full_name": "Jina Kamili",
+      "email": "Barua Pepe",
+      "phone": "Simu",
+      "gender": "Jinsia",
+      "since": "Tangu",
+      "joined_date": "Tarehe ya Kujiunga",
+      "member_number": "Namba ya Mwanachama"
+    },
+    "parish": {
+      "title": "Parokia",
+      "parish": "Parokia",
+      "role": "Jukumu"
+    },
+    "gender": {
+      "male": "Mwanaume",
+      "female": "Mwanamke",
+      "other": "Nyingine"
+    },
+    "roles": {
+      "jumuiya_leader": "Kiongozi wa Jumuiya",
+      "community_leader": "Kiongozi wa Jumuiya",
+      "ministry_leader": "Kiongozi wa Huduma"
+    },
+    "family_roles": {
+      "head": "Mkuu",
+      "spouse": "Mwenzi",
+      "child": "Mtoto",
+      "dependent": "Mtegemezi",
+      "guardian": "Mlezi"
+    },
+    "record_preservation": {
+      "title": "Uhifadhi wa Rekodi",
+      "status": {
+        "active": "Hai",
+        "pending": "Inasubiri",
+        "inactive": "Haifanyi kazi"
+      },
+      "active_until": "Hai hadi {{date}}",
+      "pending_description": "Ombi lako la uhifadhi linakaguliwa.",
+      "inactive_description": "Hifadhi rekodi za zamani za mwanachama kwa kuwezesha uhifadhi.",
+      "limited_history_notice": "Shughuli za mwezi huu zinaonyeshwa hapa. Rekodi zako zimehifadhiwa salama. Sasisha kuona kumbukumbu zako zote za zamani.",
+      "extend_action": "Ongeza muda wa uhifadhi",
+      "save_action": "Hifadhi rekodi zangu",
+      "monthly_price": "Uhifadhi wa mwezi: {{amount}}",
+      "yearly_price": "Uhifadhi wa mwaka: {{amount}}",
+      "payment_help": "Lipa kwa maelekezo ya malipo ya parokia, kisha wasilisha kumbukumbu ya muamala.",
+      "plan_label": "Mpango",
+      "plan_placeholder": "Chagua mpango",
+      "monthly_option": "Mwezi - {{amount}}",
+      "yearly_option": "Mwaka - {{amount}}",
+      "transaction_label": "Namba ya Muamala",
+      "transaction_placeholder": "Weka namba ya muamala",
+      "proof_label": "Uthibitisho wa malipo",
+      "submit_action": "Wasilisha ombi"
+    },
+    "summary": {
+      "total_contributions": "Jumla ya Michango",
+      "this_month": "Mwezi Huu",
+      "this_year": "Mwaka Huu",
+      "member_since": "Mwanachama Tangu",
+      "today": "Leo",
+      "records": "Rekodi",
+      "last_contribution": "Mwisho Kuchangia",
+      "status": "Hali"
+    },
+    "contributions": {
+      "analytics_title": "Takwimu za Michango",
+      "analytics_empty_title": "Bado hakuna michango",
+      "analytics_empty_description": "Takwimu za michango yako zitaonekana hapa ukianza kuchangia.",
+      "monthly_trend": "Mwenendo wa Miezi 6",
+      "category_breakdown": "Mgawanyo kwa Aina",
+      "last_month": "Mwezi Uliopita",
+      "history_title": "Historia ya Michango",
+      "search_label": "Tafuta michango",
+      "search_placeholder": "Tafuta...",
+      "category_filter_label": "Chuja kwa aina",
+      "category_placeholder": "Aina",
+      "all_categories": "Aina Zote",
+      "empty_title": "Hakuna rekodi zilizopatikana",
+      "empty_description": "Historia ya michango yako itaonekana hapa.",
+      "date": "Tarehe",
+      "category": "Aina",
+      "amount": "Kiasi",
+      "note": "Dokezo"
+    },
+    "pagination": {
+      "page_of": "Ukurasa {{page}} kati ya {{total}}",
+      "previous": "Ukurasa uliopita",
+      "next": "Ukurasa unaofuata"
+    },
+    "prayers": {
+      "title": "Maombi Yangu",
+      "empty_title": "Bado hakuna maombi",
+      "empty_description": "Tuma ombi la sala na litaonekana hapa."
+    },
+    "mass_intentions": {
+      "title": "Nia Zangu za Misa",
+      "empty_title": "Bado hakuna nia za misa",
+      "empty_description": "Tuma nia ya misa na itaonekana hapa."
+    },
+    "announcements": {
+      "title": "Matangazo Mapya",
+      "empty_title": "Hakuna matangazo",
+      "empty_description": "Rudi baadaye kuona taarifa za parokia."
+    },
+    "events": {
+      "title": "Matukio Yajayo",
+      "empty_title": "Hakuna matukio yajayo",
+      "empty_description": "Matukio mapya yataonekana hapa."
+    },
+    "community_leadership": {
+      "title": "Dashibodi za Uongozi wa Jumuiya",
+      "description": "Fungua wanachama, michango, ripoti, na takwimu za uongozi.",
+      "open_dashboard": "Fungua dashibodi"
+    },
+    "quick_actions": {
+      "title": "Vitendo vya Haraka",
+      "give": "Changia Sasa",
+      "pledges": "Ahadi",
+      "prayer_request": "Ombi la Sala",
+      "mass_intention": "Nia ya Misa",
+      "events": "Tazama Matukio",
+      "sermons": "Tazama Mahubiri",
+      "announcements": "Matangazo",
+      "leader_dashboard": "Dashibodi ya Kiongozi",
+      "home": "Nyumbani"
+    },
+    "pledges": {
+      "title": "Ahadi Zangu",
+      "open": "Fungua Ahadi",
+      "empty_title": "Bado hakuna ahadi",
+      "empty_description": "Ahadi zako zitaonekana hapa zikirekodiwa.",
+      "pledged": "Ahadi",
+      "paid": "Imelipwa",
+      "balance": "Salio",
+      "progress": "{{percent}}% imekamilika",
+      "count": "Ahadi {{count}}",
+      "count_plural": "Ahadi {{count}}"
+    },
+    "verse": {
+      "title": "Neno la Leo"
+    },
+    "participation": {
+      "title": "Ushiriki Wangu",
+      "description": "Jumuiya, huduma, familia, na jukumu lako parokiani.",
+      "jumuiya": "Jumuiya",
+      "community_loading": "Inapakia Jumuiya yako...",
+      "community_error": "Jumuiya yako haikuweza kupakiwa.",
+      "community_empty": "Bado hujapangiwa Jumuiya.",
+      "ministry": "Huduma",
+      "ministry_empty": "Bado hujapangiwa huduma.",
+      "family": "Familia",
+      "family_role": "Jukumu la Familia",
+      "family_empty": "Bado hujapangiwa familia.",
+      "personal_role": "Jukumu Binafsi",
+      "role_empty": "Bado hujapangiwa jukumu."
+    },
+    "leadership": {
+      "title": "Uongozi",
+      "description": "Maeneo ya usimamizi na uongozi wa Jumuiya yanayopatikana kwako.",
+      "summary": {
+        "community": "Unaongoza {{name}}.",
+        "admin": "Unasaidia kusimamia {{name}}."
+      },
+      "this_church": "kanisa hili",
+      "church_leadership": "Uongozi wa Kanisa",
+      "leader": "Kiongozi",
+      "managing": "Unasimamia",
+      "church_members_operations": "Wanachama na uendeshaji wa kanisa",
+      "member_count": "Idadi ya Wanachama",
+      "view_members": "Tazama wanachama",
+      "add_member": "Ongeza mwanachama",
+      "manage_attendance_contributions": "Simamia mahudhurio na michango"
+    },
+    "toasts": {
+      "photo_updated": "Picha ya wasifu imesasishwa",
+      "preservation_submitted_title": "Ombi limewasilishwa",
+      "preservation_submitted_description": "Ombi lako la uhifadhi wa rekodi limetumwa kwa ukaguzi.",
+      "preservation_submit_failed": "Ombi halikuwasilishwa"
+    },
+    "validation": {
+      "member_profile_missing": "Wasifu wa mwanachama haujapatikana",
+      "transaction_required": "Namba ya muamala inahitajika",
+      "transaction_invalid": "Weka namba halali ya muamala",
+      "proof_size": "Faili ya uthibitisho iwe MB 5 au chini"
+    }
+  },
+  "member_community_help": {
+    "title": "Msaada wa Jamii",
+    "description": "Saidia wanachama wa jumuiya yako wanaohitaji msaada.",
+    "actions": {
+      "request_help": "Omba Msaada",
+      "cancel": "Ghairi",
+      "submit": "Wasilisha",
+      "submitting": "Inawasilishwa..."
+    },
+    "dialog": {
+      "title": "Omba Msaada wa Jamii"
+    },
+    "categories": {
+      "medical": "Matibabu",
+      "education": "Elimu",
+      "housing": "Makazi",
+      "food": "Chakula",
+      "emergency": "Dharura",
+      "funeral": "Msiba",
+      "other": "Nyingine"
+    },
+    "form": {
+      "category_label": "Aina *",
+      "category_placeholder": "Chagua aina",
+      "description_label": "Maelezo *",
+      "description_placeholder": "Eleza hitaji...",
+      "target_amount_label": "Kiasi Kinacholengwa (TZS)",
+      "target_amount_placeholder": "Kiasi cha lengo, hiari",
+      "review_notice": "Ombi lako litakaguliwa na msimamizi wa kanisa kabla halijaonekana kwa jumuiya.",
+      "draft_notice": "Rasimu hii inahifadhiwa kwenye kifaa hiki unapoandika."
+    },
+    "offline": {
+      "pending_title": "Maombi ya msaada yanayosubiri nje ya mtandao",
+      "pending_description": "Yatasawazishwa kiotomatiki intaneti itakaporejea.",
+      "pending_count": "{{count}} yanasubiri",
+      "sync_now": "Sawazisha sasa",
+      "syncing": "Inasawazisha...",
+      "saved_at": "Imehifadhiwa {{date}}",
+      "remove": "Ondoa"
+    },
+    "tabs": {
+      "community_requests": "Maombi ya Jamii",
+      "my_requests": "Maombi Yangu ({{count}})"
+    },
+    "states": {
+      "loading": "Inapakia...",
+      "empty_approved": "Hakuna maombi ya msaada yaliyoidhinishwa kwa sasa.",
+      "empty_mine": "Bado hujawasilisha ombi la msaada."
+    },
+    "amounts": {
+      "raised": "{{amount}} zimekusanywa",
+      "goal": "Lengo {{amount}}"
+    },
+    "donation": {
+      "action": "Changia",
+      "title": "Changia Ombi la Msaada",
+      "amount_label": "Kiasi (TZS) *",
+      "amount_placeholder": "Kiasi ambacho ombi lipokee",
+      "net_label": "Ombi la msaada linapokea",
+      "platform_fee_label": "Ada ya jukwaa ({{percent}}%)",
+      "total_label": "Utalipa",
+      "submit": "Changia",
+      "submit_with_amount": "Changia {{amount}}"
+    },
+    "comments": {
+      "toggle": "Maoni ({{count}})",
+      "heading": "Maoni",
+      "placeholder": "Toa faraja au uliza swali la kufuatilia...",
+      "empty": "Hakuna maoni bado. Toa faraja au uliza jinsi unaweza kusaidia."
+    },
+    "toasts": {
+      "request_queued_title": "Ombi la msaada limewekwa foleni",
+      "request_submitted_title": "Ombi la msaada limewasilishwa",
+      "request_queued_description": "Ombi lako la msaada litasawazishwa kiotomatiki intaneti itakaporejea.",
+      "request_submitted_description": "Ombi lako litakaguliwa na msimamizi wa kanisa kabla ya kuchapishwa.",
+      "sync_failed": "Usawazishaji umeshindikana",
+      "donation_recorded_title": "Mchango umerekodiwa!",
+      "donation_recorded_description": "{{net}} zitaenda kwenye ombi la msaada. Jumla iliyolipwa ilikuwa {{gross}}, ikijumuisha ada ya jukwaa ya {{fee}}.",
+      "comment_posted": "Maoni yamechapishwa"
+    },
+    "errors": {
+      "no_church_context": "Hakuna muktadha wa kanisa",
+      "no_member_profile": "Wasifu wa mwanachama haujapatikana",
+      "invalid_amount": "Weka kiasi halali",
+      "comment_required": "Maoni hayawezi kuwa tupu",
+      "sign_in_to_react": "Unahitaji kuingia ili kujibu."
+    }
+  },
+  "member_assistant": {
+    "title": "Uliza Kanisa",
+    "subtitle": "Uliza kuhusu huduma za kanisa lako",
+    "greeting": "Habari {{firstName}}",
+    "intro": "Ninaweza kukusaidia kupata huduma na taarifa zilizoidhinishwa za {{churchName}}. Chagua huduma au andika swali rahisi.",
+    "loading": "Inapakia taarifa...",
+    "loading_service": "Inapakia huduma...",
+    "fallbacks": {
+      "first_name": "Mshirika",
+      "church_name": "parokia yako"
+    },
+    "quick_questions": {
+      "heading": "Maswali ya haraka",
+      "contributions": "Michango yangu",
+      "mass": "Nia za Misa",
+      "announcements": "Matangazo",
+      "readings": "Masomo ya leo",
+      "calendar": "Kalenda",
+      "prayers": "Sala",
+      "reflections": "Tafakari",
+      "saints": "Watakatifu",
+      "radio": "Radio"
+    },
+    "responses": {
+      "contribution_summary_checking": "Ninakagua jumla ya michango yako.",
+      "contribution_summary_unlinked": "Akaunti yako haijaunganishwa na rekodi ya mwanachama. Tumia Historia ya Michango kwa msaada zaidi.",
+      "contribution_summary_total": "Jumla ya michango yako iliyorekodiwa ni {{amount}}.",
+      "contribution_summary_zero": "Hakuna michango iliyorekodiwa kwenye akaunti yako kwa sasa.",
+      "contribution_summary_error": "Taarifa za michango hazikuweza kupakiwa kwa sasa. Tafadhali jaribu tena baadaye.",
+      "contribution_history": "Fungua historia yako ya michango na risiti.",
+      "contribute": "Unaweza kufungua huduma ya kutoa mchango hapa.",
+      "mass_intentions": "Unaweza kuweka au kufuatilia Nia ya Misa hapa.",
+      "mass_schedule": "Angalia ratiba ya Misa ya parokia yako.",
+      "announcements": "Soma matangazo yaliyochapishwa na parokia yako.",
+      "reflections": "Fungua tafakari za kiroho zilizochapishwa.",
+      "daily_readings": "Soma masomo ya leo hapa.",
+      "bible": "Fungua Biblia na uchague kitabu unachotaka kusoma.",
+      "prayers": "Fungua sala zilizochapishwa.",
+      "saints": "Jifunze maisha ya watakatifu hapa.",
+      "calendar": "Fungua kalenda ya parokia yako.",
+      "radio_available": "Radio ya parokia yako inapatikana.",
+      "radio_unavailable": "Huduma ya Radio haipatikani kwa parokia yako kwa sasa.",
+      "live_mass_available": "Misa ya moja kwa moja inapatikana kwenye ukurasa wako wa mwanzo.",
+      "live_mass_unavailable": "Hakuna Misa ya moja kwa moja inayopatikana kwa sasa.",
+      "parish_information": "Taarifa za msingi za parokia yako zinaonekana kwenye ukurasa wako wa mwanzo.",
+      "unknown": "Sijaelewa vizuri. Unaweza kuchagua moja ya huduma hapa chini."
+    },
+    "actions": {
+      "open": "Fungua",
+      "contribution_history": "Angalia Historia",
+      "contribute": "Toa Mchango",
+      "mass_intentions": "Nia za Misa",
+      "mass_schedule": "Ratiba ya Misa",
+      "announcements": "Matangazo",
+      "reflections": "Tafakari",
+      "daily_readings": "Masomo ya Leo",
+      "bible": "Biblia",
+      "prayers": "Sala",
+      "saints": "Watakatifu",
+      "calendar": "Kalenda",
+      "radio": "Fungua Radio",
+      "live_mass": "Angalia Misa Live"
+    },
+    "suggestions": {
+      "announcements": "Matangazo",
+      "readings": "Masomo ya leo"
+    },
+    "input": {
+      "label": "Andika swali lako",
+      "placeholder": "Andika swali lako...",
+      "send_aria": "Tuma swali"
+    }
+  },
+  "member_bible_verse_popup": {
+    "aria_label": "Aya ya Biblia ya kila siku",
+    "daily_blessing": "Baraka ya Leo",
+    "verse_of_day": "Aya ya Biblia ya Leo",
+    "welcome": "Karibu, {{name}}",
+    "logo_alt": "Nembo ya {{church}}",
+    "fallbacks": {
+      "church": "Kanisa lako",
+      "reference": "Aya ya Leo"
+    },
+    "greetings": {
+      "admin": "Hekima ya Mungu ikuongoze katika uongozi wako na maamuzi ya leo.",
+      "pastor": "Neema na nguvu za Mungu zikufunike unapolichunga kanisa leo.",
+      "member": "Amani ya Mungu ijaze moyo wako unapoanza siku hii kwa imani."
+    },
+    "blessings": {
+      "admin": "Mungu abariki kazi ya mikono yako na kanisa unalolitumikia.",
+      "pastor": "Bwana aufanye upya moyo wako na aimimine neema mpya juu ya huduma yako.",
+      "member": "Mungu abariki safari yako ya leo na ailinde nyumba yako kwa amani."
+    },
+    "actions": {
+      "amen": "Amina",
+      "continue": "Endelea"
+    }
+  },
+  "member_comments": {
+    "heading": "Maoni",
+    "empty": "Hakuna maoni bado. Anzisha mazungumzo.",
+    "placeholder": "Andika maoni...",
+    "add_voice": "Ongeza Sauti Yako",
+    "posting": "Inachapisha...",
+    "post_comment": "Chapisha Maoni"
+  },
+  "member_channels": {
+    "title": "Mawasiliano",
+    "description": "Endelea kupata taarifa za huduma, jumuiya, na uongozi mahali pamoja.",
+    "states": {
+      "load_error_title": "Hatukuweza kupakia mawasiliano.",
+      "load_error_description": "Tafadhali pakia upya na ujaribu tena.",
+      "empty_channels": "Hakuna mawasiliano bado.",
+      "no_description": "Hakuna maelezo bado."
+    },
+    "conversation": {
+      "title": "Mazungumzo ya kituo",
+      "select_channel": "Chagua kituo ili uanze kusoma taarifa.",
+      "empty_messages": "Hakuna ujumbe bado. Anzisha kituo hiki kwa ujumbe.",
+      "load_earlier": "Pakia ujumbe wa awali",
+      "you": "Wewe"
+    },
+    "attachments": {
+      "attached_pdf": "PDF iliyoambatishwa",
+      "pdf_document": "Hati ya PDF",
+      "remove": "Ondoa"
+    },
+    "composer": {
+      "reactions_hint": "Tumia emoji kujibu ujumbe wowote.",
+      "member_chat_only": "Wanachama wanaweza kutuma ujumbe pekee.",
+      "placeholder": "Andika ujumbe wako..."
+    },
+    "audience": {
+      "ministry": "Huduma",
+      "community_leaders": "Viongozi wa Jumuiya",
+      "all_community_leaders": "Viongozi Wote wa Jumuiya",
+      "admin_roles": "Timu ya Utawala",
+      "community_members": "Wanachama wa Jumuiya",
+      "channel": "Kituo"
+    }
+  },
+  "member_bible": {
+    "common": {
+      "bible": "Biblia",
+      "try_again": "Tafadhali jaribu tena.",
+      "retry": "Jaribu tena"
+    },
+    "testaments": {
+      "old": "Agano la Kale",
+      "new": "Agano Jipya",
+      "deuterocanonical": "Deuterokanoni"
+    },
+    "home": {
+      "title": "Biblia Takatifu",
+      "books_error_title": "Vitabu havikuweza kupakiwa",
+      "empty_books_title": "Hakuna vitabu vilivyopatikana",
+      "empty_books_description": "Vitabu vya Biblia bado havijapatikana.",
+      "books_count": "Vitabu {{count}}"
+    },
+    "search": {
+      "label": "Tafuta kwenye Biblia",
+      "placeholder": "Tafuta maneno, vifungu, au rejea",
+      "results_title": "Matokeo ya Utafutaji",
+      "results_limit": "Inaonyesha hadi mistari 50 inayolingana.",
+      "results_count": "{{count}} zimepatikana",
+      "error_title": "Utafutaji wa Biblia haukuweza kufanyika",
+      "empty_title": "Hakuna mistari iliyopatikana",
+      "empty_description": "Jaribu neno, kifungu, au rejea nyingine.",
+      "chapter_verse": "Sura {{chapter}}, Mstari {{verse}}"
+    },
+    "book": {
+      "chapter_label": "Sura {{number}}",
+      "open_chapter": "Fungua sura",
+      "error_title": "Sura hazikuweza kupakiwa",
+      "book_number": "Kitabu {{number}}",
+      "chapters_count_label": "sura",
+      "empty_title": "Hakuna sura zilizopatikana",
+      "empty_description": "Sura bado hazijapatikana kwa kitabu hiki.",
+      "chapters_title": "Sura",
+      "ordered_by_chapter": "Zimepangwa kwa namba ya sura"
+    },
+    "chapter": {
+      "back_to_chapters": "Rudi kwenye Sura",
+      "error_title": "Sura haikuweza kupakiwa",
+      "invalid_link": "Kiungo cha sura si sahihi.",
+      "empty_verses": "Hakuna mistari iliyopatikana kwa sura hii.",
+      "navigation_aria": "Urambazaji wa sura",
+      "previous": "Sura Iliyopita",
+      "next": "Sura Inayofuata"
+    }
+  },
+  "member_library": {
+    "feast_day_not_set": "Sikukuu haijawekwa",
+    "hero": {
+      "eyebrow": "Malezi ya Kikatoliki",
+      "title": "Watakatifu",
+      "description": "Kua katika imani kupitia maisha ya watakatifu."
+    },
+    "search": {
+      "label": "Tafuta watakatifu",
+      "placeholder": "Tafuta kwa jina, cheo, usimamizi, nchi, au lebo..."
+    },
+    "categories": {
+      "aria_label": "Makundi ya watakatifu",
+      "all": "Watakatifu Wote",
+      "apostles": "Mitume",
+      "holy_family": "Familia Takatifu",
+      "doctors": "Walimu wa Kanisa",
+      "african": "Watakatifu wa Afrika",
+      "modern": "Watakatifu wa Kisasa",
+      "martyrs": "Mashahidi",
+      "popes": "Mapapa",
+      "religious_orders": "Mashirika ya Kitawa"
+    },
+    "card": {
+      "featured": "Iliyoangaziwa",
+      "read_more": "Soma Zaidi"
+    },
+    "results_count_one": "Mtakatifu {{count}} amepatikana",
+    "results_count_other": "Watakatifu {{count}} wamepatikana",
+    "actions": {
+      "clear_filters": "Futa vichujio"
+    },
+    "states": {
+      "load_error": "Imeshindikana kupakia watakatifu: {{message}}",
+      "load_error_fallback": "Jaribu tena.",
+      "empty_published": "Hakuna watakatifu waliochapishwa bado.",
+      "empty_search": "Hakuna watakatifu wanaolingana na utafutaji wako."
+    },
+    "grid_aria": "Watakatifu",
+    "pagination": {
+      "aria_label": "Kurasa za watakatifu",
+      "previous": "Iliyopita",
+      "next": "Inayofuata",
+      "page_of": "Ukurasa {{page}} kati ya {{total}}"
+    },
+    "detail": {
+      "share_text": "Soma kuhusu {{name}} kwenye Maktaba ya Kikatoliki ya Kanisa Connect.",
+      "link_copied": "Kiungo kimenakiliwa",
+      "link_copied_description": "{{name}} sasa anaweza kushirikiwa.",
+      "load_error": "Imeshindikana kupakia mtakatifu huyu: {{message}}",
+      "load_error_fallback": "Tafadhali jaribu tena.",
+      "not_found": "Mtakatifu hakupatikana.",
+      "return_to_library": "Rudi kwa Watakatifu",
+      "back": "Rudi",
+      "share": "Shiriki",
+      "badge": "Mtakatifu wa leo na maktaba ya Kikatoliki",
+      "not_listed": "Haijaorodheshwa",
+      "fields": {
+        "feast_day": "Sikukuu",
+        "patron_of": "Msimamizi wa",
+        "country": "Nchi",
+        "scripture": "Maandiko"
+      },
+      "sections": {
+        "long_biography": "Wasifu Mrefu",
+        "reflection": "Tafakari",
+        "prayer": "Sala",
+        "tags": "Lebo",
+        "related_saints": "Watakatifu Wanaohusiana"
+      },
+      "no_tags": "Hakuna lebo zilizoorodheshwa.",
+      "related_empty": "Watakatifu wanaohusiana wataonekana maktaba itakapokua."
+    }
+  },
+  "member_sermons": {
+    "title": "Mahubiri",
+    "description": "Sikiliza au tazama mahubiri yaliyoshirikiwa na parokia.",
+    "loading": "Mahubiri yanapakiwa...",
+    "error": {
+      "title": "Imeshindikana kupakia mahubiri.",
+      "description": "Jaribu tena kupata mahubiri ya parokia."
+    },
+    "actions": {
+      "retry": "Jaribu tena",
+      "watch_video": "Tazama video",
+      "listen_audio": "Sikiliza sauti"
+    },
+    "empty": {
+      "title": "Hakuna mahubiri kwa sasa.",
+      "description": "Mahubiri mapya yataonekana hapa yatakapochapishwa."
+    },
+    "fallbacks": {
+      "no_notes": "Hakuna maelezo yaliyopo."
+    }
+  },
   "staff_mobile": {
     "all_services": "Huduma zote",
     "back_as_member": "Rudi kama Mwanachama",
@@ -692,45 +1286,124 @@
     "system": "Mfumo"
   },
   "staff_services": {
-    "activity": { "label": "Shughuli za Watumiaji" },
-    "analytics": { "label": "Uchambuzi" },
-    "announcements": { "label": "Matangazo" },
-    "audit_logs": { "label": "Kumbukumbu za Ukaguzi" },
-    "bible_verses": { "label": "Mistari ya Biblia" },
-    "billing": { "label": "Malipo ya Kanisa" },
-    "billing_verification": { "label": "Uhakiki wa Malipo" },
-    "calendar": { "label": "Kalenda ya Parokia" },
-    "channels": { "label": "Mawasiliano" },
-    "churches": { "label": "Makanisa" },
-    "communities": { "label": "Jumuiya" },
-    "community_help": { "label": "Msaada wa Jamii" },
-    "contributions": { "label": "Michango" },
-    "event_requests": { "label": "Huduma za Ofisi" },
-    "events": { "label": "Matukio" },
-    "families": { "label": "Familia" },
-    "features": { "label": "Vipengele" },
-    "invite_members": { "label": "Alika Wanachama" },
-    "leadership": { "label": "Viongozi" },
-    "livestreams": { "label": "Matangazo Mubashara" },
-    "mass_intentions": { "label": "Nia za Misa", "short_label": "Nia" },
-    "mass_timetable": { "label": "Ratiba za Misa" },
-    "members": { "label": "Wanachama" },
-    "ministries": { "label": "Huduma" },
-    "notifications": { "label": "Arifa" },
-    "pledges": { "label": "Ahadi" },
-    "prayer_requests": { "label": "Maombi" },
-    "qr_payments": { "label": "Malipo ya QR" },
-    "radio": { "label": "Radio" },
-    "record_preservation": { "label": "Uhifadhi wa Rekodi" },
-    "reports": { "label": "Ripoti" },
-    "revenue": { "label": "Mapato" },
-    "roles": { "label": "Mialiko na Majukumu" },
-    "sermons": { "label": "Mahubiri" },
-    "settings": { "label": "Mipangilio" },
-    "subscriptions": { "label": "Usajili" },
-    "system_health": { "label": "Afya ya Mfumo" },
-    "system_jobs": { "label": "Kazi za Mfumo" },
-    "system_logs": { "label": "Hitilafu za Mfumo" }
+    "activity": {
+      "label": "Shughuli za Watumiaji"
+    },
+    "analytics": {
+      "label": "Uchambuzi"
+    },
+    "announcements": {
+      "label": "Matangazo"
+    },
+    "audit_logs": {
+      "label": "Kumbukumbu za Ukaguzi"
+    },
+    "bible_verses": {
+      "label": "Mistari ya Biblia"
+    },
+    "billing": {
+      "label": "Malipo ya Kanisa"
+    },
+    "billing_verification": {
+      "label": "Uhakiki wa Malipo"
+    },
+    "calendar": {
+      "label": "Kalenda ya Parokia"
+    },
+    "channels": {
+      "label": "Mawasiliano"
+    },
+    "churches": {
+      "label": "Makanisa"
+    },
+    "communities": {
+      "label": "Jumuiya"
+    },
+    "community_help": {
+      "label": "Msaada wa Jamii"
+    },
+    "contributions": {
+      "label": "Michango"
+    },
+    "event_requests": {
+      "label": "Huduma za Ofisi"
+    },
+    "events": {
+      "label": "Matukio"
+    },
+    "families": {
+      "label": "Familia"
+    },
+    "features": {
+      "label": "Vipengele"
+    },
+    "invite_members": {
+      "label": "Alika Wanachama"
+    },
+    "leadership": {
+      "label": "Viongozi"
+    },
+    "livestreams": {
+      "label": "Matangazo Mubashara"
+    },
+    "mass_intentions": {
+      "label": "Nia za Misa",
+      "short_label": "Nia"
+    },
+    "mass_timetable": {
+      "label": "Ratiba za Misa"
+    },
+    "members": {
+      "label": "Wanachama"
+    },
+    "ministries": {
+      "label": "Huduma"
+    },
+    "notifications": {
+      "label": "Arifa"
+    },
+    "pledges": {
+      "label": "Ahadi"
+    },
+    "prayer_requests": {
+      "label": "Maombi"
+    },
+    "qr_payments": {
+      "label": "Malipo ya QR"
+    },
+    "radio": {
+      "label": "Radio"
+    },
+    "record_preservation": {
+      "label": "Uhifadhi wa Rekodi"
+    },
+    "reports": {
+      "label": "Ripoti"
+    },
+    "revenue": {
+      "label": "Mapato"
+    },
+    "roles": {
+      "label": "Mialiko na Majukumu"
+    },
+    "sermons": {
+      "label": "Mahubiri"
+    },
+    "settings": {
+      "label": "Mipangilio"
+    },
+    "subscriptions": {
+      "label": "Usajili"
+    },
+    "system_health": {
+      "label": "Afya ya Mfumo"
+    },
+    "system_jobs": {
+      "label": "Kazi za Mfumo"
+    },
+    "system_logs": {
+      "label": "Hitilafu za Mfumo"
+    }
   },
   "member_service_groups": {
     "today": "Leo",
@@ -739,6 +1412,37 @@
     "giving": "Michango",
     "community": "Jumuiya na Huduma",
     "media": "Media"
+  },
+  "member_services_page": {
+    "title": "Zaidi",
+    "subtitle": "Pata huduma na maeneo mengine ya Kanisa Connect.",
+    "search_label": "Tafuta huduma",
+    "search_placeholder": "Tafuta huduma...",
+    "search_results": "Matokeo",
+    "no_results": "Hakuna huduma iliyopatikana.",
+    "open_service": "Fungua {{label}}",
+    "groups": {
+      "account_other": {
+        "label": "Akaunti / Nyingine",
+        "description": "Historia, arifa, na zana nyingine salama."
+      },
+      "media": {
+        "label": "Media",
+        "description": "Sikiliza au tazama huduma zinazopatikana sasa."
+      },
+      "parish_services": {
+        "label": "Huduma za Parokia",
+        "description": "Huduma za kushiriki na kufuatilia maisha ya parokia."
+      },
+      "spiritual": {
+        "label": "Kiroho",
+        "description": "Maeneo ya sala, Neno la Mungu, na malezi ya imani."
+      }
+    },
+    "livestream": {
+      "live_description": "Tazama Misa moja kwa moja",
+      "upcoming_description": "Misa inaanza hivi karibuni"
+    }
   },
   "member_mobile": {
     "back_from": "Rudi kutoka {{title}}"
@@ -822,6 +1526,25 @@
         "yes": "Ndiyo"
       },
       "saving": "Inahifadhi..."
+    },
+    "verse": {
+      "title": "Neno la Leo",
+      "subtitle": "Soma kwa utulivu na tafakari.",
+      "empty": "Hakuna mistari iliyopo",
+      "focus": {
+        "sound_on": "Usomaji wa kina wenye sauti tulivu ya kuchapa",
+        "sound_off": "Hali ya usomaji wa kina"
+      },
+      "actions": {
+        "open_focus": "Fungua hali ya kutazama kwa makini",
+        "close_focus": "Funga hali ya kutazama kwa makini",
+        "mute_sound": "Zima sauti ya kuchapa",
+        "enable_sound": "Washa sauti ya kuchapa"
+      },
+      "advanced": {
+        "locked": "Zana za juu za mstari ZIMEFUNGWA 🔒",
+        "description": "Panda hadi mpango wa Intermediate au zaidi ili kufungua Focus Mode, sauti ya typewriter, na mwingiliano wa juu wa mistari."
+      }
     }
   },
   "member_my_parish": {
@@ -894,35 +1617,510 @@
       "upcoming_events": "Matukio yajayo"
     }
   },
+  "member_today": {
+    "readings": {
+      "title": "Masomo ya leo",
+      "read_all": "Soma yote",
+      "unavailable_title": "Masomo ya leo hayajapatikana",
+      "unavailable_description": "Masomo yaliyochapishwa hayapatikani kwa sasa."
+    },
+    "sections": {
+      "saint": "Mtakatifu wa leo",
+      "next_mass": "Misa ijayo",
+      "event": "Tukio la leo",
+      "announcement": "Tangazo la karibuni"
+    },
+    "errors": {
+      "partial": "Baadhi ya taarifa hazikupatikana. Taarifa nyingine bado zinaweza kutumika."
+    },
+    "quick_actions": {
+      "aria": "Njia za haraka"
+    }
+  },
+  "member_daily_readings": {
+    "hero": {
+      "eyebrow": "Masomo ya Leo",
+      "title": "Masomo ya Leo",
+      "subtitle": "Neno la Mungu kwa siku ya leo."
+    },
+    "saint": {
+      "title": "Mtakatifu wa Leo",
+      "empty": "Hakuna mtakatifu aliyeunganishwa na sikukuu ya leo bado.",
+      "action": "Soma Mtakatifu"
+    },
+    "search": {
+      "title": "Tafuta Masomo",
+      "helper": "Tafuta kwa tarehe, rejea ya Biblia, kitabu, au neno.",
+      "label": "Tafuta masomo yaliyotangulia",
+      "placeholder": "Tarehe, kitabu, rejea, neno...",
+      "no_results": "Hakuna masomo yanayolingana na utafutaji wako."
+    },
+    "sections": {
+      "reflection": "Tafakari",
+      "prayer": "Sala",
+      "readings": "Masomo",
+      "source": "Chanzo:",
+      "liturgical_detail": "Taarifa ya liturujia"
+    },
+    "reading_labels": {
+      "first": "Somo la Kwanza",
+      "psalm": "Zaburi ya Kujibu",
+      "second": "Somo la Pili",
+      "gospel_acclamation": "Shangilio la Injili",
+      "gospel": "Injili"
+    },
+    "states": {
+      "empty_title": "Masomo ya siku hiyo bado hayajachapishwa.",
+      "empty_description": "Tutayaonyesha hapa mara tu yatakapokuwa tayari kwa waumini.",
+      "error_title": "Hatukuweza kupakia masomo kwa sasa.",
+      "error_description": "Tafadhali jaribu tena.",
+      "retry": "Jaribu tena",
+      "retry_aria": "Jaribu kupakia masomo tena",
+      "loading_label": "Inapakia masomo ya leo"
+    },
+    "actions": {
+      "read_in_bible": "Soma kwenye Biblia"
+    }
+  },
+  "member_prayers": {
+    "title": "Sala",
+    "subtitle": "Sala zilizochapishwa kwa ukuaji wa maisha ya kiroho.",
+    "loading": "Inapakia sala",
+    "loading_detail": "Inapakia sala",
+    "error": "Sala hazikuweza kupakiwa. Tafadhali jaribu tena.",
+    "empty": "Hakuna sala iliyochapishwa kwa sasa.",
+    "list_aria": "Sala zilizochapishwa",
+    "featured": "Imependekezwa",
+    "actions": {
+      "read": "Soma sala",
+      "back": "Rudi",
+      "back_to_prayers": "Rudi kwenye sala"
+    },
+    "not_found": {
+      "title": "Sala haijapatikana.",
+      "description": "Huenda sala hii haijachapishwa au haipatikani tena."
+    }
+  },
+  "member_reflections": {
+    "title": "Tafakari",
+    "subtitle": "Tafakari zilizochapishwa pamoja na masomo ya kila siku.",
+    "loading": "Inapakia tafakari",
+    "loading_detail": "Inapakia tafakari",
+    "error": "Tafakari hazikuweza kupakiwa. Tafadhali jaribu tena.",
+    "empty": "Hakuna tafakari iliyochapishwa kwa sasa.",
+    "list_aria": "Tafakari zilizochapishwa",
+    "card_title": "Tafakari ya {{date}}",
+    "actions": {
+      "read": "Soma tafakari",
+      "back": "Rudi",
+      "back_to_reflections": "Rudi kwenye tafakari"
+    },
+    "sections": {
+      "gospel": "Injili",
+      "reflection": "Tafakari"
+    },
+    "not_found": {
+      "title": "Tafakari haijapatikana.",
+      "description": "Huenda tafakari hii haijachapishwa au haipatikani tena."
+    }
+  },
+  "member_liturgical_calendar": {
+    "hero": {
+      "eyebrow": "Watakatifu",
+      "title": "Kalenda ya Liturujia",
+      "subtitle": "Fuatilia maadhimisho ya Kanisa na watakatifu katika mwaka mzima."
+    },
+    "today": {
+      "label": "Adhimisho la Leo",
+      "empty_title": "Hakuna adhimisho la jumla lililowekwa kwa leo.",
+      "empty_description": "Tazama maadhimisho ya mwezi huu hapa chini na uendelee kukua kupitia maisha ya watakatifu.",
+      "other_aria": "Maadhimisho mengine ya leo",
+      "read_more": "Soma zaidi"
+    },
+    "month": {
+      "selector_aria": "Chagua mwezi",
+      "previous": "Mwezi uliopita",
+      "next": "Mwezi unaofuata"
+    },
+    "search": {
+      "label": "Tafuta maadhimisho",
+      "placeholder": "Tafuta jina, mwezi, mlezi, nchi, au lebo...",
+      "results": "Matokeo {{count}}",
+      "clear": "Futa"
+    },
+    "agenda": {
+      "empty": "Hakuna watakatifu wanaolingana na utafutaji wako.",
+      "aria": "Orodha ya maadhimisho",
+      "open": "Fungua"
+    },
+    "calendar": {
+      "aria": "Kalenda ya {{month}}",
+      "title": "Kalenda ya {{month}}",
+      "helper": "Siku zenye watakatifu waliochapishwa zimeunganishwa hapa chini.",
+      "count": "Maadhimisho {{count}}",
+      "open_saint": "Fungua {{name}}",
+      "more": "+{{count}} zaidi"
+    },
+    "error": {
+      "message": "Kalenda ya Liturujia haikuweza kupakiwa: {{message}}",
+      "fallback": "Jaribu tena."
+    }
+  },
+  "member_pledges": {
+    "title": "Ahadi za Michango",
+    "subtitle": "Fuatilia ahadi zako na maendeleo ya michango yako.",
+    "fallback_member": "Mwanachama",
+    "fallback_pledge": "Ahadi ya Parokia",
+    "actions": {
+      "create": "Weka Ahadi",
+      "pay": "Wasilisha Malipo"
+    },
+    "summary": {
+      "total_pledged": "Jumla ya Ahadi",
+      "total_paid": "Niliyolipa",
+      "remaining": "Salio",
+      "progress": "Maendeleo"
+    },
+    "progress": {
+      "title": "Maendeleo ya Ahadi",
+      "percent_complete": "{{percent}}% imetimia",
+      "remaining": "Salio {{amount}}"
+    },
+    "list": {
+      "title": "Ahadi Zinazoendelea"
+    },
+    "metrics": {
+      "pledged": "Ahadi",
+      "paid": "Imelipwa",
+      "balance": "Salio"
+    },
+    "status": {
+      "pending": "Inasubiri",
+      "partial": "Inaendelea",
+      "completed": "Imekamilika"
+    },
+    "states": {
+      "loading": "Inapakia ahadi zako...",
+      "loading_aria": "Inapakia ahadi zako",
+      "empty_title": "Bado hujaweka ahadi ya mchango.",
+      "empty_description": "Unaweza kuweka ahadi mpya na kufuatilia maendeleo yake hapa.",
+      "checking_community": "Tunakagua taarifa ya Jumuiya yako...",
+      "searching_community": "Inatafutwa...",
+      "no_community_short": "Hujaunganishwa na Jumuiya",
+      "no_community_create": "Unahitaji kuunganishwa na Jumuiya kabla ya kuweka ahadi ya mchango.",
+      "no_community_page": "Unahitaji kuunganishwa na Jumuiya kabla ya kuweka ahadi inayojumuishwa kwenye takwimu za Jumuiya."
+    },
+    "create": {
+      "title": "Weka Ahadi",
+      "community_label": "Jumuiya",
+      "amount_label": "Kiasi cha Ahadi (TZS)",
+      "amount_placeholder": "Weka kiasi",
+      "helper": "Weka kiasi unachoahidi kuchangia. Malipo yatarekodiwa kando baada ya kuwasilishwa na kuthibitishwa.",
+      "submitting": "Inaweka ahadi...",
+      "success_title": "Ahadi imewekwa",
+      "success_description": "{{amount}} imeongezwa kwenye {{community}}.",
+      "error_title": "Ahadi haikuwekwa",
+      "error_description": "Tatizo limetokea wakati wa kuweka ahadi."
+    },
+    "payment": {
+      "title": "Wasilisha Malipo ya Ahadi",
+      "title_with_pledge": "Wasilisha malipo ya {{pledge}}",
+      "fallback_title_subject": "ahadi",
+      "success_title": "Malipo yametumwa kwa uthibitisho",
+      "success_description": "Salio la ahadi litasasishwa baada ya msimamizi wa kanisa au padre kuthibitisha malipo."
+    }
+  },
+  "pledge_payment_dialog": {
+    "description": "Salio lililobaki: {{balance}}. Weka kiasi ambacho kanisa linapaswa kupokea na ada ya mfumo ya {{feePercentage}}% itaongezwa juu.",
+    "amount_label": "Kiasi cha kanisa (TZS)",
+    "amount_placeholder": "Weka kiasi kanisa litakachopokea",
+    "transaction_id_label": "Namba ya muamala",
+    "transaction_id_placeholder": "mf. kumbukumbu ya malipo ya simu",
+    "proof_label": "Njia ya picha ya uthibitisho (kama hakuna namba ya muamala)",
+    "proof_placeholder": "Njia au URL ya risiti iliyopakiwa",
+    "approval_helper": "Msimamizi wa kanisa au padre lazima athibitishe malipo haya kabla salio la ahadi halijabadilika.",
+    "payment_method_label": "Njia ya malipo",
+    "payment_method_placeholder": "Chagua njia ya malipo",
+    "payment_methods": {
+      "cash": "Taslimu",
+      "mobile_money": "Malipo ya simu",
+      "bank_transfer": "Uhamisho wa benki",
+      "card": "Kadi",
+      "other": "Nyingine"
+    },
+    "breakdown": {
+      "church_receives": "Kanisa linapokea",
+      "platform_fee": "Ada ya mfumo ({{feePercentage}}%)",
+      "you_pay": "Jumla ya kuwasilisha"
+    },
+    "submit": "Wasilisha kwa Uthibitisho",
+    "submitting": "Inawasilisha..."
+  },
+  "member_give": {
+    "title": "Michango",
+    "subtitle": "Rekodi mchango wako kwa parokia.",
+    "history_link": "Historia ya Michango",
+    "amount_label": "Kiasi cha mchango",
+    "amount_placeholder": "Weka kiasi",
+    "category_label": "Aina ya mchango",
+    "category_placeholder": "Chagua aina ya mchango",
+    "optional": "Si lazima",
+    "phone_label": "Namba ya simu",
+    "phone_placeholder": "+255...",
+    "phone_helper": "Unaweza kutumia namba iliyohifadhiwa kwenye akaunti yako.",
+    "payment_reference_label": "Kumbukumbu ya malipo",
+    "payment_reference_placeholder": "Mfano: M-Pesa au benki",
+    "payment_reference_helper": "Kama tayari umelipa kupitia M-Pesa, benki au njia nyingine, weka namba ya kumbukumbu hapa.",
+    "submit": "Rekodi Mchango",
+    "submit_with_amount": "Rekodi {{amount}}",
+    "submitting": "Inarekodi...",
+    "member_attribution": "Unarekodi kama mwanachama aliyesajiliwa",
+    "after_submit_title": "Baada ya kutuma",
+    "after_submit_description": "Kanisa Connect itahifadhi taarifa ya mchango wako kwa ajili ya kumbukumbu za parokia. Hii si uthibitisho wa malipo ya kielektroniki.",
+    "success": {
+      "title": "Mchango umerekodiwa",
+      "description": "Tumerekodi mchango wako wa {{amount}}. Taarifa hii itaonekana kwenye historia yako baada ya kusawazishwa.",
+      "record_another": "Rekodi Mchango Mwingine",
+      "toast_title": "Mchango umerekodiwa",
+      "toast_description": "Tumerekodi mchango wako wa {{amount}}."
+    },
+    "errors": {
+      "toast_title": "Hitilafu",
+      "no_church_context": "Hakuna muktadha wa kanisa",
+      "invalid_amount": "Weka kiasi halali",
+      "not_recorded": "Mchango haukurekodiwa."
+    }
+  },
+  "member_contribution_history": {
+    "eyebrow": "Michango yangu",
+    "title": "Historia ya Michango",
+    "subtitle": "Angalia michango iliyorekodiwa na ufungue risiti yake.",
+    "loading_aria": "Inapakia historia ya michango",
+    "error": "Historia haikuweza kupakiwa. Jaribu tena.",
+    "member_not_linked": "Akaunti yako haijaunganishwa na rekodi ya mwanachama.",
+    "empty": "Hakuna michango iliyorekodiwa bado.",
+    "fallback_category": "Mchango",
+    "reference_prefix": "Ref: {{reference}}",
+    "no_reference": "-",
+    "table": {
+      "date": "Tarehe",
+      "category": "Aina",
+      "reference": "Rejea",
+      "amount": "Kiasi"
+    },
+    "pagination": {
+      "previous": "Nyuma",
+      "next": "Mbele",
+      "page": "Ukurasa {{page}}"
+    }
+  },
+  "member_contribution_receipt": {
+    "title": "Risiti ya Mchango",
+    "fallback_member": "Mwanachama",
+    "fallback_category": "Mchango",
+    "no_payment_reference": "-",
+    "labels": {
+      "member": "Mwanachama",
+      "amount": "Kiasi",
+      "category": "Aina ya mchango",
+      "date": "Tarehe",
+      "receipt_reference": "Rejea ya risiti",
+      "payment_reference": "Rejea ya malipo",
+      "notes": "Maelezo"
+    },
+    "actions": {
+      "print": "Chapisha / Hifadhi PDF",
+      "back": "Rudi kwenye historia"
+    },
+    "unavailable": {
+      "title": "Risiti haipatikani",
+      "description": "Rekodi hii haipo au huna ruhusa ya kuiona.",
+      "history_link": "Historia ya Michango"
+    }
+  },
+  "member_radio": {
+    "loading": "Radio inapakiwa",
+    "header": {
+      "eyebrow": "RADIO"
+    },
+    "error": {
+      "title": "Radio haikuweza kupakiwa",
+      "description": "Jaribu tena baada ya muda mfupi."
+    },
+    "unavailable": {
+      "title": "Radio haipatikani"
+    },
+    "playback_error": {
+      "description": "Hatujaweza kuunganisha radio kwa sasa."
+    },
+    "status": {
+      "error": "Hitilafu ya uchezaji",
+      "playing": "Inacheza sasa",
+      "ready": "Tayari kusikiliza",
+      "paused": "Imesitishwa"
+    },
+    "actions": {
+      "retry": "Jaribu tena",
+      "retry_radio": "Jaribu tena radio",
+      "pause": "Sitisha",
+      "listen": "Sikiliza",
+      "pause_radio": "Sitisha radio",
+      "resume_listening": "Endelea kusikiliza",
+      "close_radio": "Funga radio",
+      "open_website": "Fungua tovuti ya radio"
+    },
+    "volume": {
+      "label": "Sauti",
+      "radio_label": "Sauti ya radio"
+    },
+    "station_selector": {
+      "title": "Chagua radio"
+    },
+    "persistent_player": {
+      "aria_label": "Kicheza Radio"
+    }
+  },
   "member_services": {
-    "announcements": { "label": "Matangazo", "description": "Taarifa mpya za parokia", "back_title": "Matangazo" },
-    "bible": { "label": "Biblia", "description": "Soma Biblia", "back_title": "Biblia", "chapter_title": "Sura ya Biblia" },
-    "calendar": { "label": "Ratiba ya Parokia", "description": "Misa na matukio yajayo ya parokia", "back_title": "Ratiba" },
-    "channels": { "label": "Mawasiliano", "description": "Soma na jibu ujumbe wa vikundi vyako", "back_title": "Njia za Mawasiliano" },
-    "contribution_history": { "label": "Historia ya Michango", "description": "Angalia michango na risiti", "back_title": "Historia ya Michango", "receipt_title": "Risiti ya Mchango" },
-    "daily_readings": { "label": "Masomo ya Leo", "description": "Masomo kamili ya leo", "back_title": "Masomo ya Leo" },
-    "dashboard": { "label": "Historia Yangu", "description": "Historia na wasifu", "back_title": "Historia Yangu" },
-    "event_requests": { "label": "Huduma za Ofisi", "description": "Omba huduma na fuatilia maombi yako", "back_title": "Huduma za Ofisi" },
-    "events": { "label": "Matukio", "description": "Matukio yajayo ya parokia", "back_title": "Matukio" },
-    "give": { "label": "Toa Mchango", "description": "Changia parokia yako", "back_title": "Michango" },
-    "home": { "label": "Nyumbani", "description": "Nyumbani" },
-    "jumuiya": { "label": "Jumuiya Yangu", "description": "Angalia Jumuiya ya parokia uliyopewa", "back_title": "Jumuiya Yangu" },
-    "kanisa_ai": { "label": "Uliza Kanisa", "description": "Uliza kuhusu huduma za kanisa lako" },
-    "library": { "label": "Watakatifu", "description": "Maktaba ya imani", "back_title": "Watakatifu", "detail_title": "Mtakatifu" },
-    "liturgical_calendar": { "label": "Kalenda ya Liturujia", "description": "Sikukuu na majira ya Kanisa", "back_title": "Kalenda ya Liturujia" },
-    "livestream": { "label": "Misa Mubashara", "description": "Tazama Misa mubashara", "back_title": "Misa Mubashara" },
-    "mass_intentions": { "label": "Nia za Misa", "description": "Wasilisha au fuatilia nia", "back_title": "Nia za Misa" },
-    "ministries": { "label": "Huduma za Parokia", "description": "Omba kujiunga na huduma ya parokia", "back_title": "Huduma za Parokia" },
-    "my_parish": { "label": "Parokia Yangu", "description": "Misa, matukio na huduma za parokia", "back_title": "Parokia Yangu" },
-    "notifications": { "label": "Arifa", "description": "Taarifa na vikumbusho vyako", "back_title": "Arifa" },
-    "pledges": { "label": "Ahadi za Michango", "description": "Angalia ahadi zako", "back_title": "Ahadi za Michango" },
-    "prayer_requests": { "label": "Ombi la Maombi", "description": "Tuma na fuatilia ombi", "back_title": "Maombi" },
-    "prayers": { "label": "Sala", "description": "Soma sala zilizochapishwa", "back_title": "Sala" },
-    "radio": { "label": "Radio", "description": "Sikiliza radio ya parokia", "back_title": "Radio" },
-    "reflections": { "label": "Tafakari", "description": "Tafakari za masomo ya kila siku", "back_title": "Tafakari" },
-    "sermons": { "label": "Mahubiri", "description": "Soma mahubiri ya parokia", "back_title": "Mahubiri" },
-    "services": { "label": "Huduma", "description": "Huduma zote" },
-    "today": { "label": "Leo", "description": "Masomo, mtakatifu na maisha ya leo", "back_title": "Leo" }
+    "announcements": {
+      "label": "Matangazo",
+      "description": "Taarifa mpya za parokia",
+      "back_title": "Matangazo"
+    },
+    "bible": {
+      "label": "Biblia",
+      "description": "Soma Biblia",
+      "back_title": "Biblia",
+      "chapter_title": "Sura ya Biblia"
+    },
+    "calendar": {
+      "label": "Ratiba ya Parokia",
+      "description": "Misa na matukio yajayo ya parokia",
+      "back_title": "Ratiba"
+    },
+    "channels": {
+      "label": "Mawasiliano",
+      "description": "Soma na jibu ujumbe wa vikundi vyako",
+      "back_title": "Njia za Mawasiliano"
+    },
+    "contribution_history": {
+      "label": "Historia ya Michango",
+      "description": "Angalia michango na risiti",
+      "back_title": "Historia ya Michango",
+      "receipt_title": "Risiti ya Mchango"
+    },
+    "daily_readings": {
+      "label": "Masomo ya Leo",
+      "description": "Masomo kamili ya leo",
+      "back_title": "Masomo ya Leo"
+    },
+    "dashboard": {
+      "label": "Historia Yangu",
+      "description": "Historia na wasifu",
+      "back_title": "Historia Yangu"
+    },
+    "event_requests": {
+      "label": "Huduma za Ofisi",
+      "description": "Omba huduma na fuatilia maombi yako",
+      "back_title": "Huduma za Ofisi"
+    },
+    "events": {
+      "label": "Matukio",
+      "description": "Matukio yajayo ya parokia",
+      "back_title": "Matukio"
+    },
+    "give": {
+      "label": "Toa Mchango",
+      "description": "Changia parokia yako",
+      "back_title": "Michango"
+    },
+    "home": {
+      "label": "Nyumbani",
+      "description": "Nyumbani"
+    },
+    "jumuiya": {
+      "label": "Jumuiya Yangu",
+      "description": "Angalia Jumuiya ya parokia uliyopewa",
+      "back_title": "Jumuiya Yangu"
+    },
+    "kanisa_ai": {
+      "label": "Uliza Kanisa",
+      "description": "Uliza kuhusu huduma za kanisa lako"
+    },
+    "library": {
+      "label": "Watakatifu",
+      "description": "Maktaba ya imani",
+      "back_title": "Watakatifu",
+      "detail_title": "Mtakatifu"
+    },
+    "liturgical_calendar": {
+      "label": "Kalenda ya Liturujia",
+      "description": "Sikukuu na majira ya Kanisa",
+      "back_title": "Kalenda ya Liturujia"
+    },
+    "livestream": {
+      "label": "Misa Mubashara",
+      "description": "Tazama Misa mubashara",
+      "back_title": "Misa Mubashara"
+    },
+    "mass_intentions": {
+      "label": "Nia za Misa",
+      "description": "Wasilisha au fuatilia nia",
+      "back_title": "Nia za Misa"
+    },
+    "ministries": {
+      "label": "Huduma za Parokia",
+      "description": "Omba kujiunga na huduma ya parokia",
+      "back_title": "Huduma za Parokia"
+    },
+    "my_parish": {
+      "label": "Parokia Yangu",
+      "description": "Misa, matukio na huduma za parokia",
+      "back_title": "Parokia Yangu"
+    },
+    "notifications": {
+      "label": "Arifa",
+      "description": "Taarifa na vikumbusho vyako",
+      "back_title": "Arifa"
+    },
+    "pledges": {
+      "label": "Ahadi za Michango",
+      "description": "Angalia ahadi zako",
+      "back_title": "Ahadi za Michango"
+    },
+    "prayer_requests": {
+      "label": "Ombi la Maombi",
+      "description": "Tuma na fuatilia ombi",
+      "back_title": "Maombi"
+    },
+    "prayers": {
+      "label": "Sala",
+      "description": "Soma sala zilizochapishwa",
+      "back_title": "Sala"
+    },
+    "radio": {
+      "label": "Radio",
+      "description": "Sikiliza radio ya parokia",
+      "back_title": "Radio"
+    },
+    "reflections": {
+      "label": "Tafakari",
+      "description": "Tafakari za masomo ya kila siku",
+      "back_title": "Tafakari"
+    },
+    "sermons": {
+      "label": "Mahubiri",
+      "description": "Soma mahubiri ya parokia",
+      "back_title": "Mahubiri"
+    },
+    "services": {
+      "label": "Huduma",
+      "description": "Huduma zote"
+    },
+    "today": {
+      "label": "Leo",
+      "description": "Masomo, mtakatifu na maisha ya leo",
+      "back_title": "Leo"
+    }
   },
   "church_admin_layout": {
     "workspaces": {
@@ -1265,14 +2463,30 @@
   },
   "mass_intentions_form": {
     "page_title": "Nia za Misa",
-    "page_description": "Wasilisha nia za maombi zitakazosomwa kwenye Misa.",
+    "page_description": "Wasilisha nia yako kwa Misa utakayochagua, kisha parokia itaipokea kwa ajili ya maandalizi na kumbukumbu.",
     "submit_intention": "Wasilisha Nia",
     "dialog_title": "Wasilisha Nia ya Misa",
-    "intention_type_label": "Aina ya Nia *",
+    "intention_type_label": "Aina ya Nia ya Misa *",
     "select_type": "Chagua aina",
-    "message_label": "Ujumbe *",
-    "message_placeholder": "Nia yako...",
-    "offering_label": "Kiasi cha Sadaka (TZS) *",
+    "intention_descriptions": {
+      "shukrani": "Nia ya kumshukuru Mungu",
+      "marehemu": "Kwa roho za waliofariki",
+      "maombi_maalum": "Nia maalum ya familia au binafsi",
+      "wagonjwa": "Kwa uponyaji na faraja",
+      "safari": "Kwa ulinzi na baraka safarini",
+      "mtakatifu_wa_familia": "Kwa maombezi ya mtakatifu wa familia",
+      "other": "Nia nyingine ya Misa"
+    },
+    "mass_selection_label": "Chagua Misa *",
+    "mass_loading": "Inapakia Misa...",
+    "mass_select_placeholder": "Chagua Misa inayopatikana",
+    "mass_requires_connection": "Uchaguzi wa Misa unahitaji muunganisho ili kuthibitisha nafasi.",
+    "remaining_slots": "nafasi {{count}}",
+    "remaining_slots_plural": "nafasi {{count}}",
+    "mass_date": "Tarehe ya Misa: {{date}}",
+    "message_label": "Nia / Ujumbe *",
+    "message_placeholder": "Andika jina, familia, au ujumbe wa nia ya Misa...",
+    "offering_label": "Kiasi cha sadaka ya Misa *",
     "offering_placeholder": "Kiasi ambacho kanisa lipokee",
     "offering_hint": "Sadaka ya nia ya Misa inahitajika. Chaguo-msingi ni {{amount}}.",
     "church_receives": "Parokia inapokea",
@@ -1294,9 +2508,14 @@
     "empty_all": "Bado hakuna nia za misa zilizowasilishwa.",
     "empty_mine": "Bado hujawasilisha nia yoyote ya misa.",
     "offering": "Sadaka: {{amount}}",
+    "member_context": "Nia zako zinaunganishwa na ushiriki wako wa parokia.",
+    "before_submit_title": "Kabla ya kuwasilisha",
+    "before_submit_description": "Chagua Misa yenye nafasi, andika nia yako kwa utulivu, na hakiki kiasi cha sadaka kinachoonekana kwenye ratiba ya parokia.",
     "error_no_church": "Hakuna muktadha wa kanisa",
     "error_no_member": "Wasifu wa mwanachama haujapatikana",
     "error_message_required": "Ujumbe unahitajika",
+    "error_mass_required": "Tafadhali chagua Misa inayopatikana.",
+    "error_mass_requires_connection": "Unganisha intaneti ili kuthibitisha nafasi ya Misa.",
     "error_minimum_offering": "Kiwango cha chini cha sadaka ni TZS 1,000"
   },
   "mass_intentions_admin": {
@@ -1376,6 +2595,13 @@
     }
   },
   "mass_intentions_labels": {
+    "shukrani": "Shukrani",
+    "marehemu": "Marehemu",
+    "maombi_maalum": "Maombi Maalum",
+    "wagonjwa": "Wagonjwa",
+    "safari": "Safari",
+    "mtakatifu_wa_familia": "Mtakatifu wa Familia",
+    "other": "Nyingine",
     "departed": "Marehemu",
     "healing": "Uponyaji",
     "remembrance": "Kumbukumbu",
@@ -1658,6 +2884,207 @@
       "delete_family_for": "Futa familia {{name}}"
     }
   },
+  "member_announcements": {
+    "title": "Matangazo",
+    "subtitle": "Pata taarifa na habari mpya kutoka parokiani.",
+    "loading": "Matangazo yanapakiwa...",
+    "fallback_member": "Mwanachama",
+    "image_alt_suffix": "picha ya tangazo",
+    "badges": {
+      "celebration": "Sherehe"
+    },
+    "error": {
+      "title": "Imeshindikana kupakia matangazo.",
+      "description": "Jaribu tena kupata taarifa mpya za parokia."
+    },
+    "empty": {
+      "title": "Hakuna matangazo kwa sasa.",
+      "description": "Matangazo mapya yataonekana hapa yatakapochapishwa."
+    },
+    "comments": {
+      "heading": "Maoni",
+      "placeholder": "Andika ujumbe mwema...",
+      "empty": "Hakuna maoni bado. Kuwa wa kwanza kusherehekea."
+    },
+    "footer": {
+      "celebration_note": "Maoni na hisia za emoji huonekana kwenye matangazo ya siku za kuzaliwa na maadhimisho ya ndoa."
+    },
+    "errors": {
+      "sign_in_to_react": "Unahitaji kuingia ili kujibu.",
+      "sign_in_to_comment": "Unahitaji kuingia ili kutoa maoni.",
+      "comment_required": "Andika maoni kwanza.",
+      "save_reaction": "Imeshindikana kuhifadhi hisia",
+      "add_comment": "Imeshindikana kuongeza maoni",
+      "save_comment_reaction": "Imeshindikana kuhifadhi hisia ya maoni"
+    }
+  },
+  "member_events": {
+    "title": "Matukio",
+    "subtitle": "Angalia matukio yajayo ya parokia.",
+    "loading": "Matukio yanapakiwa...",
+    "fallback_description": "Jiunge nasi katika tukio hili.",
+    "error": {
+      "title": "Imeshindikana kupakia matukio.",
+      "description": "Jaribu tena kuona matukio mapya ya parokia."
+    },
+    "empty": {
+      "title": "Hakuna matukio yajayo kwa sasa.",
+      "description": "Matukio mapya yataonekana hapa yatakapochapishwa."
+    },
+    "rsvp": {
+      "prompt": "Utahudhuria {{title}}?",
+      "helper": "Chagua ndiyo ili kusajiliwa kwa tukio hili.",
+      "yes": "Ndiyo",
+      "no": "Hapana",
+      "current_response": "Jibu lako:",
+      "attending": "Utahudhuria",
+      "not_attending": "Hutahudhuria"
+    },
+    "membership": {
+      "loading": "Uanachama wako unapakiwa...",
+      "required": "Wasifu wako wa mwanachama unahitajika ili kujibu."
+    },
+    "toast": {
+      "confirmed_title": "Mahudhurio yamethibitishwa",
+      "updated_title": "Mahudhurio yamesasishwa",
+      "confirmed_description": "Umesajiliwa kwa tukio hili.",
+      "updated_description": "Jibu lako limehifadhiwa."
+    },
+    "errors": {
+      "no_church_context": "Hakuna muktadha wa kanisa",
+      "no_member_profile": "Wasifu wa mwanachama haujapatikana",
+      "save_response": "Imeshindikana kuhifadhi jibu"
+    }
+  },
+  "member_calendar": {
+    "title": "Ratiba ya Parokia",
+    "subtitle": "Misa na matukio yajayo katika parokia yako.",
+    "loading": "Ratiba inapakia",
+    "time_missing": "Muda haujawekwa",
+    "error": {
+      "title": "Ratiba haikupatikana.",
+      "description": "Jaribu tena baada ya muda mfupi."
+    },
+    "empty": {
+      "title": "Hakuna ratiba ijayo kwa sasa.",
+      "description": "Misa na matukio yajayo yataonekana hapa yakichapishwa."
+    },
+    "groups": {
+      "today": "Leo",
+      "week": "Wiki Hii",
+      "later": "Baadaye",
+      "until": "Hadi {{date}}",
+      "later_label": "Ratiba nyingine zijazo"
+    },
+    "activity": {
+      "event": "Tukio"
+    },
+    "registration": {
+      "registered": "Umesajiliwa - {{status}}",
+      "paid": "Usajili wa malipo",
+      "parish_event": "Tukio la parokia"
+    },
+    "admin": {
+      "title": "Kalenda ya Parokia",
+      "subtitle": "Matukio na Misa zijazo katika parokia yako.",
+      "error": "Kalenda haikupatikana. Jaribu tena.",
+      "empty": "Hakuna tukio lijalo."
+    }
+  },
+  "member_prayer_requests": {
+    "title": "Maombi",
+    "subtitle": "Shiriki ombi lako la maombi au ungana na waumini wengine katika kuwaombea.",
+    "anonymous_requester": "Muumini",
+    "actions": {
+      "create": "Tuma Ombi la Maombi",
+      "submit": "Tuma Ombi",
+      "submit_with_offering": "Tuma Ombi na Sadaka {{amount}}",
+      "pray": "Nimeombea",
+      "prayed": "Umeombea"
+    },
+    "form": {
+      "submitting_as": "Unatuma kama",
+      "request_label": "Ombi lako la Maombi *",
+      "request_placeholder": "Andika unachohitaji kuombewa kwa utulivu...",
+      "privacy_label": "Nani anaweza kuona ombi hili?",
+      "draft_saved": "Rasimu hii inahifadhiwa kwenye kifaa hiki unapoandika."
+    },
+    "privacy": {
+      "public_to_church": {
+        "label": "Waumini wa Kanisa",
+        "description": "Waumini wa Kanisa: litaonekana kwa waumini baada ya mapitio."
+      },
+      "private_to_pastor_admin": {
+        "label": "Mchungaji/Uongozi pekee",
+        "description": "Mchungaji/Uongozi pekee: halitakuwa ombi la waumini wote."
+      },
+      "anonymous_public": {
+        "label": "Bila kutaja jina",
+        "description": "Bila kutaja jina: linaweza kuonekana baada ya mapitio bila kuonyesha jina lako kwa waumini."
+      }
+    },
+    "offering": {
+      "label": "Sadaka ya Hiari (TZS)",
+      "helper": "Sadaka ni ya hiari kabisa na si sharti la kutuma ombi la maombi.",
+      "placeholder": "Hiari - kiasi kitakachopokelewa na kanisa",
+      "reassurance": "Maombi yako yatapokelewa hata kama hutachagua kutoa sadaka.",
+      "badge": "Sadaka ya hiari",
+      "request_amount": "Sadaka: {{amount}}",
+      "church_receives": "Kanisa linapokea",
+      "platform_fee": "Ada ya mfumo ({{percent}}%)",
+      "total": "Jumla"
+    },
+    "status": {
+      "approved": "Imepokelewa",
+      "pending": "Inasubiri mapitio",
+      "rejected": "Haikuchapishwa"
+    },
+    "status_help": {
+      "pending": "Ombi lako limepokelewa na linasubiri mapitio kabla ya kuonekana kwa waumini.",
+      "rejected": "Ombi hili halijawekwa kwenye maombi ya waumini, lakini bado lipo kwenye historia yako."
+    },
+    "comments": {
+      "heading": "Ujumbe wa Faraja",
+      "placeholder": "Andika ujumbe wa faraja au sala fupi...",
+      "empty": "Hakuna ujumbe bado. Unaweza kuacha faraja au sala fupi."
+    },
+    "offline": {
+      "title": "Maombi yaliyosubiri kutumwa",
+      "description": "Yatatumiwa kiotomatiki mtandao utakaporudi.",
+      "count": "{{count}} imesubiri kutumwa",
+      "saved_at": "Ilihifadhiwa {{date}}"
+    },
+    "tabs": {
+      "community": "Maombi ya Waumini",
+      "mine": "Maombi Yangu ({{count}})"
+    },
+    "states": {
+      "loading": "Inapakia maombi...",
+      "community_empty_title": "Hakuna maombi yaliyoshirikiwa kwa sasa.",
+      "community_empty_description": "Unaweza kuwa wa kwanza kushiriki ombi la maombi.",
+      "mine_empty_title": "Bado hujatuma ombi la maombi.",
+      "mine_empty_description": "Ukiwa tayari, tuma ombi lako kwa utulivu. Litasubiri mapitio kabla ya kushirikiwa."
+    },
+    "toasts": {
+      "queued_title": "Ombi la maombi limesubiri kutumwa",
+      "submitted_title": "Ombi la maombi limetumwa",
+      "queued_description": "Ombi lako litatumwa kiotomatiki mtandao utakaporudi.",
+      "submitted_with_offering": "{{churchAmount}} itaenda kanisani. Jumla iliyorekodiwa ni {{totalAmount}}, ikijumuisha ada ya mfumo ya {{feeAmount}}.",
+      "submitted_without_offering": "Ombi lako limepokelewa kwa maombi.",
+      "prayer_mark_removed": "Alama ya maombi imeondolewa",
+      "marked_as_prayed": "Umeweka alama kuwa umeombea",
+      "comment_posted": "Ujumbe umechapishwa"
+    },
+    "errors": {
+      "no_church_context": "Hakuna muktadha wa kanisa",
+      "no_member_profile": "Wasifu wa mwanachama haujapatikana",
+      "member_profile_required": "Wasifu wako wa mwanachama unahitajika",
+      "offering_negative": "Kiasi cha sadaka hakiwezi kuwa hasi.",
+      "comment_empty": "Ujumbe hauwezi kuwa tupu",
+      "sign_in_to_react": "Unahitaji kuingia ili kujibu.",
+      "sync_failed": "Sawazisho halikufaulu"
+    }
+  },
   "event_requests_admin": {
     "page_title": "Huduma za Ofisi",
     "page_description": "Pitia na simamia maombi ya ibada na matukio kutoka kwa wanachama.",
@@ -1698,5 +3125,117 @@
     "error_missing_church": "Muktadha wa kanisa haupo.",
     "error_update_blocked": "Usasishaji wa ombi la tukio umezuiwa au rekodi haikupatikana.",
     "error_multiple_rows": "Usasishaji wa ombi la tukio umerejesha rekodi nyingi bila kutarajiwa."
+  },
+  "member_livestream": {
+    "loading": "Misa Mubashara inapakiwa",
+    "error": {
+      "title": "Misa Mubashara haikuweza kupakiwa",
+      "description": "Jaribu tena baada ya muda mfupi."
+    },
+    "unavailable": {
+      "title": "Misa Mubashara haipatikani"
+    },
+    "actions": {
+      "retry": "Jaribu tena"
+    },
+    "persistent_player": {
+      "expand": "Fungua Misa Mubashara: {{title}}",
+      "close": "Funga Misa Mubashara"
+    }
+  },
+  "member_jumuiya": {
+    "description": "Angalia Jumuiya ya parokia uliyopewa. Mabadiliko ya uanachama hufanywa na ofisi ya parokia au kiongozi aliyeidhinishwa.",
+    "assignment": {
+      "position": "Jumuiya {{current}} kati ya {{total}}",
+      "single_label": "Jumuiya uliyopewa",
+      "multiple_label": "Jumuiya ulizopewa",
+      "no_description": "Maelezo ya Jumuiya hii bado hayajawekwa."
+    },
+    "loading": {
+      "aria_label": "Inapakia taarifa ya Jumuiya",
+      "message": "Tunaangalia taarifa ya Jumuiya yako..."
+    },
+    "error": {
+      "title": "Taarifa ya Jumuiya haikuweza kupakiwa kwa sasa.",
+      "description": "Jaribu tena ili kuona Jumuiya uliyopewa."
+    },
+    "unassigned": {
+      "title": "Hujapangiwa Jumuiya kwa sasa.",
+      "description": "Wasiliana na ofisi ya parokia ili kuthibitisha au kusasisha taarifa ya Jumuiya yako."
+    }
+  },
+  "member_ministries": {
+    "hero": {
+      "title": "Tumikia pamoja na jumuiya yako",
+      "description": "Tafuta huduma, soma maelezo yake, na utume ombi la kujiunga."
+    },
+    "status": {
+      "joined": "Umejiunga",
+      "pending": "Ombi linasubiri"
+    },
+    "card": {
+      "no_description": "Maelezo bado hayajawekwa.",
+      "member_count": "Wanachama {{count}}"
+    },
+    "actions": {
+      "details": "Maelezo",
+      "leave": "Ondoka kwenye huduma",
+      "cancel": "Ghairi",
+      "confirm_leave": "Thibitisha kuondoka",
+      "request_join": "Omba kujiunga",
+      "back_to_all": "Rudi kwenye huduma zote",
+      "all": "Huduma zote"
+    },
+    "leave": {
+      "title": "Ondoka kwenye huduma?",
+      "description": "Unakaribia kuondoka kwenye huduma ya {{name}}. Uanachama wako utaondolewa baada ya kuthibitisha."
+    },
+    "toast": {
+      "leave_success_title": "Umeondoka kwenye huduma",
+      "join_success_title": "Ombi limetumwa",
+      "leave_success_description": "Uanachama wako umesasishwa.",
+      "join_success_description": "Parokia itakagua ombi lako.",
+      "leave_error_title": "Ombi halijakamilika",
+      "join_error_title": "Ombi halijatumwa",
+      "leave_error_description": "Hatukuweza kukamilisha ombi lako kwa sasa. Jaribu tena.",
+      "join_error_description": "Hatukuweza kutuma ombi lako kwa sasa. Jaribu tena."
+    },
+    "error": {
+      "load": "Huduma hazikuweza kupakiwa kwa sasa. Jaribu tena.",
+      "member_profile": "Wasifu wa mshirika haujapatikana kwa parokia hii."
+    },
+    "detail": {
+      "unavailable": "Huduma hii haipatikani.",
+      "label": "Maelezo ya huduma",
+      "description": "Angalia taarifa za huduma hii na hali yako ya ushiriki."
+    },
+    "search": {
+      "aria_label": "Tafuta huduma",
+      "placeholder": "Tafuta huduma..."
+    },
+    "empty": {
+      "no_configured": "Hakuna huduma zilizowekwa kwa parokia hii.",
+      "no_results": "Hakuna huduma zinazolingana na utafutaji wako."
+    },
+    "sections": {
+      "joined": "Huduma zangu",
+      "other": "Huduma nyingine"
+    }
+  },
+  "member_notifications": {
+    "bell": {
+      "label": "Arifa",
+      "unread": "Arifa, {{displayCount}} hazijasomwa",
+      "more_than_nine": "zaidi ya 9"
+    },
+    "new": "Mpya",
+    "loading": "Arifa zinapakiwa",
+    "load_error": "Imeshindikana kupakia arifa.",
+    "retry": "Jaribu tena.",
+    "empty": "Huna arifa kwa sasa.",
+    "list_label": "Orodha ya arifa",
+    "mark_read": "Weka arifa {{title}} kuwa imesomwa",
+    "updating": "Inasasisha",
+    "update_error": "Arifa haikuweza kusasishwa"
   }
 }

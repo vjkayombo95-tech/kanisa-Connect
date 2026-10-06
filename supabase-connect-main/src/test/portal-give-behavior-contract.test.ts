@@ -12,7 +12,7 @@ describe("PortalGive Michango behavior contract", () => {
   it("keeps amount validation finite and greater than zero", () => {
     expect(portalGive).toContain("const parsedAmount = Number(amount)");
     expect(portalGive).toContain("!Number.isFinite(parsedAmount) || parsedAmount <= 0");
-    expect(portalGive).toContain('throw new Error("Enter a valid amount")');
+    expect(portalGive).toContain('throw new Error(t("member_give.errors.invalid_amount"))');
   });
 
   it("keeps contribution category optional in current submission behavior", () => {
@@ -25,7 +25,7 @@ describe("PortalGive Michango behavior contract", () => {
     expect(matches(portalGive, /paymentMethod|payment_method/), "PortalGive must not introduce a payment method field").toBe(false);
     expect(portalGive).toContain("const [paymentRef, setPaymentRef] = useState(\"\")");
     expect(portalGive).toContain("p_payment_reference: paymentRef || null");
-    expect(portalGive).toContain("<Label>Kumbukumbu ya malipo</Label>");
+    expect(portalGive).toContain('t("member_give.payment_reference_label")');
   });
 
   it("keeps phone and payment reference optional", () => {
@@ -35,7 +35,7 @@ describe("PortalGive Michango behavior contract", () => {
 
   it("exposes contribution history navigation from the giving page", () => {
     expect(portalGive).toContain('import { Link } from "react-router-dom"');
-    expect(portalGive).toContain('<Link to="/portal/contribution-history">Historia ya Michango</Link>');
+    expect(portalGive).toContain('<Link to="/portal/contribution-history">{t("member_give.history_link")}</Link>');
   });
 
   it("submits through the contribution RPC and protects payload field names", () => {
@@ -91,11 +91,11 @@ describe("PortalGive Michango behavior contract", () => {
     expect(matches(portalGive, /useNavigate\(\)/), "PortalGive must not depend on route navigation for success").toBe(false);
     expect(portalGive).not.toContain("/portal/contribution-receipt/");
     expect(portalGive).toContain("setSubmitted(true)");
-    expect(portalGive).toContain('toast({ title: "Mchango umerekodiwa"');
+    expect(portalGive).toContain('title: t("member_give.success.toast_title")');
     expect(portalGive).toContain("if (submitted)");
-    expect(portalGive).toContain("Mchango umerekodiwa");
-    expect(portalGive).toContain('Tumerekodi mchango wako wa {formatTZS(parseFloat(amount || "0"))}.');
-    expect(portalGive).toContain("Rekodi Mchango Mwingine");
+    expect(portalGive).toContain('t("member_give.success.title")');
+    expect(portalGive).toContain('t("member_give.success.description", { amount: formatTZS(parseFloat(amount || "0")) })');
+    expect(portalGive).toContain('t("member_give.success.record_another")');
   });
 
   it("keeps Give Again resetting the current draft fields and idempotency key", () => {
@@ -115,13 +115,13 @@ describe("PortalGive Michango behavior contract", () => {
 
   it("keeps unsuccessful RPC results as failures", () => {
     expect(portalGive).toContain("if (!result?.success)");
-    expect(portalGive).toContain('throw new Error(result?.error || "Contribution was not recorded.")');
+    expect(portalGive).toContain('throw new Error(result?.error || t("member_give.errors.not_recorded"))');
   });
 
   it("uses result.success as the success contract without requiring a receipt id", () => {
     expect(portalGive).toContain("const result = data as { success?: boolean; error?: string } | null");
     expect(portalGive).toContain("if (!result?.success)");
-    expect(portalGive).toContain('throw new Error(result?.error || "Contribution was not recorded.")');
+    expect(portalGive).toContain('throw new Error(result?.error || t("member_give.errors.not_recorded"))');
     expect(matches(portalGive, /result\?\.(?:id|contribution_id|contributionId)/), "PortalGive must not require a receipt/contribution id").toBe(false);
   });
 
@@ -143,5 +143,6 @@ describe("PortalGive Michango behavior contract", () => {
     expect(portalGive).toContain('.from("contribution_categories")');
     expect(portalGive).toContain('.eq("church_id", churchId)');
     expect(portalGive).toContain("enabled: !!churchId");
+    expect(portalGive).toContain("translateLabels={false}");
   });
 });

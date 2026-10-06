@@ -5,6 +5,7 @@ import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { changeAppLanguage } from "@/i18n";
 
 const state = vi.hoisted(() => ({
   auth: { churchId: "church-a", activeChurchId: "church-a", user: { id: "user-a", email: "member@example.test" } },
@@ -44,10 +45,10 @@ describe("Wave 3C member polish runtime", () => {
   afterEach(() => { act(() => root.unmount()); host.remove(); client.clear(); });
 
   it("keeps Radio and Livestream request failures distinct from unavailable success states", () => { state.radio = { ...state.radio, isError: true }; render(<MemberRadioPage />); expect(host.querySelector('[data-testid="radio-error"]')).not.toBeNull(); expect(host.querySelector('[data-testid="radio-unavailable"]')).toBeNull(); state.livestream = { ...state.livestream, isError: true }; render(<MemberLivestreamPage />); expect(host.querySelector('[data-testid="livestream-error"]')).not.toBeNull(); expect(host.querySelector('[data-testid="livestream-unavailable"]')).toBeNull(); });
-  it("shows production Radio station details, website, and volume without staging-only fields", () => { state.radio = { ...state.radio, data: [{ id: "radio-a", name: "Radio Maria", streamUrl: "https://radio.example/live", websiteUrl: "https://radio.example", logoUrl: null, description: "Parish-approved station", isActive: true, isApproved: true, selectionId: "selection-a", churchId: "church-a", enabled: true, isDefault: true, sortOrder: 0 }] }; render(<MemberRadioPage />); expect(host.querySelector('[data-testid="member-radio-page"]')).not.toBeNull(); expect(host.textContent).toContain("Radio Maria"); expect(host.textContent).toContain("Parish-approved station"); expect(host.querySelector('a[href="https://radio.example"]')?.getAttribute("rel")).toBe("noopener noreferrer"); expect(host.querySelector('input[aria-label="Sauti"]')).not.toBeNull(); expect(host.textContent).not.toContain("stream_format"); expect(host.textContent).not.toContain("provider"); });
+  it("shows production Radio station details, website, and volume without staging-only fields", () => { state.radio = { ...state.radio, data: [{ id: "radio-a", name: "Radio Maria", streamUrl: "https://radio.example/live", websiteUrl: "https://radio.example", logoUrl: null, description: "Parish-approved station", isActive: true, isApproved: true, selectionId: "selection-a", churchId: "church-a", enabled: true, isDefault: true, sortOrder: 0 }] }; render(<MemberRadioPage />); expect(host.querySelector('[data-testid="member-radio-page"]')).not.toBeNull(); expect(host.textContent).toContain("Radio Maria"); expect(host.textContent).toContain("Parish-approved station"); expect(host.querySelector('a[href="https://radio.example"]')?.getAttribute("rel")).toBe("noopener noreferrer"); expect(host.querySelector('input[type="range"]')).not.toBeNull(); expect(host.textContent).not.toContain("stream_format"); expect(host.textContent).not.toContain("provider"); });
   it("hides the Radio website action when no website URL exists", () => { state.radio = { ...state.radio, data: [{ id: "radio-a", name: "Radio Maria", streamUrl: "https://radio.example/live", websiteUrl: null, logoUrl: null, description: null, isActive: true, isApproved: true, selectionId: "selection-a", churchId: "church-a", enabled: true, isDefault: true, sortOrder: 0 }] }; render(<MemberRadioPage />); expect(host.querySelector('[data-testid="member-radio-page"]')).not.toBeNull(); expect(host.querySelector('a[target="_blank"]')).toBeNull(); });
   it("shows playback retry when the selected production Radio stream fails", () => { state.radio = { ...state.radio, data: [{ id: "radio-a", name: "Radio Maria", streamUrl: "https://radio.example/live", websiteUrl: null, logoUrl: null, description: null, isActive: true, isApproved: true, selectionId: "selection-a", churchId: "church-a", enabled: true, isDefault: true, sortOrder: 0 }] }; state.radioPlayer = { ...state.radioPlayer, station: state.radio.data[0], state: "error" }; render(<MemberRadioPage />); expect(host.querySelector('[data-testid="radio-playback-error"]')).not.toBeNull(); host.querySelector<HTMLButtonElement>('[data-testid="radio-playback-error"] button')?.click(); expect(state.radioPlayer.retry).toHaveBeenCalledTimes(1); });
-  it("keeps Events and Sermons request failures distinct from empty collections", async () => { state.tableErrors.add("events"); render(<PortalEvents />); await waitFor(() => host.textContent?.includes("Imeshindikana kupakia matukio.") === true); expect(host.textContent).not.toContain("No events at this time"); client.clear(); state.tableErrors.clear(); state.tableErrors.add("sermons"); render(<PortalSermons />); await waitFor(() => host.textContent?.includes("Imeshindikana kupakia mahubiri.") === true); expect(host.textContent).not.toContain("No sermons available"); });
+  it("keeps Events and Sermons request failures distinct from empty collections", async () => { await changeAppLanguage("sw"); state.tableErrors.add("events"); render(<PortalEvents />); await waitFor(() => host.textContent?.includes("Imeshindikana kupakia matukio.") === true); expect(host.textContent).not.toContain("No events at this time"); client.clear(); state.tableErrors.clear(); state.tableErrors.add("sermons"); render(<PortalSermons />); await waitFor(() => host.textContent?.includes("Imeshindikana kupakia mahubiri.") === true); expect(host.textContent).not.toContain("No sermons available"); });
   it("suppresses community-leader discovery until the profile menu needs it", async () => { function Probe({ enabled }: { enabled: boolean }) { const query = useLedCommunities(enabled); return <output>{query.fetchStatus}</output>; } render(<Probe enabled={false} />); expect(host.textContent).toBe("idle"); expect(state.rpcCalls).toBe(0); render(<Probe enabled />); await waitFor(() => state.rpcCalls === 1); });
   it("scopes led communities to the active church for multi-church members", async () => {
     state.rpcLedCommunities = [
@@ -72,13 +73,13 @@ describe("Wave 3C member polish runtime", () => {
     expect(state.rpcCalls).toBe(2);
   });
   it("uses canonical labels for the same member destinations", () => { const labels = new Map(memberServiceRegistry.map((service) => [service.id, service.label])); expect(labels.get("radio")).toBe("Radio"); expect(labels.get("livestream")).toBe("Misa Mubashara"); expect(labels.get("daily-readings")).toBe("Masomo ya Leo"); expect(labels.get("liturgical-calendar")).toBe("Kalenda ya Liturujia"); expect(labels.get("library")).toBe("Watakatifu"); expect(labels.get("dashboard")).toBe("Historia Yangu"); expect(getMemberBackTitle("/portal/live/stream-a")).toBe("Misa Mubashara"); });
-  it("keeps Historia Yangu profile labels in Kiswahili", () => {
+  it("keeps Historia Yangu profile labels routed through dashboard localization", () => {
     const dashboard = readFileSync(join(process.cwd(), "src/pages/portal/PortalDashboard.tsx"), "utf8");
-    for (const label of ["Wasifu Binafsi", "Jina Kamili", "Jinsia", "Namba ya Mwanachama", "Ushiriki Wangu"]) {
-      expect(dashboard).toContain(label);
+    for (const key of ["member_dashboard.profile.personal_title", "member_dashboard.profile.full_name", "member_dashboard.profile.gender", "member_dashboard.profile.member_number", "member_dashboard.participation.title"]) {
+      expect(dashboard).toContain(key);
     }
-    for (const label of ["Personal Profile", "Full Name", "Gender", "Member ID", "My Participation"]) {
-      expect(dashboard).not.toContain(label);
+    for (const label of ["Wasifu Binafsi", "Jina Kamili", "Jinsia", "Namba ya Mwanachama", "Ushiriki Wangu", "Personal Profile", "Full Name", "Gender", "Member ID", "My Participation"]) {
+      expect(dashboard).not.toMatch(new RegExp(`[>={]"${label}"|>${label}<`));
     }
   });
 });

@@ -548,6 +548,7 @@
     "cancel": "Cancel",
     "remove": "Remove",
     "sync_now": "Sync now",
+    "error": "Error",
     "pending": "Pending",
     "approved": "Approved",
     "rejected": "Rejected",
@@ -649,6 +650,599 @@
     "treasurer": "Treasurer",
     "community": "Community Leadership"
   },
+  "member_dashboard": {
+    "common": {
+      "not_set": "Not set"
+    },
+    "actions": {
+      "retry": "Retry",
+      "view_all": "View all"
+    },
+    "limited": {
+      "title": "Limited portal access",
+      "description": "Your profile is available, but full history and member services need an active member record.",
+      "badge": "Limited"
+    },
+    "locked": {
+      "contributions_title": "Contributions are locked",
+      "contributions_description": "Your contribution records are preserved and will show when your member profile is active.",
+      "prayers_title": "Prayer services are locked",
+      "prayers_description": "Prayer requests and Mass intentions need an active member profile.",
+      "communication_title": "Parish updates are locked",
+      "communication_description": "Announcements, events, and other member updates will unlock with your active profile."
+    },
+    "welcome": {
+      "eyebrow": "Member portal",
+      "subtitle": "Your profile, history, and services for {{church}}.",
+      "parish_fallback": "your parish",
+      "community": "Jumuiya: {{value}}",
+      "ministry": "Ministry: {{value}}"
+    },
+    "profile": {
+      "section_title": "My Profile",
+      "section_description": "Your parish member details and participation records.",
+      "personal_title": "Personal Profile",
+      "full_name": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "gender": "Gender",
+      "since": "Since",
+      "joined_date": "Joined Date",
+      "member_number": "Member ID"
+    },
+    "parish": {
+      "title": "Parish",
+      "parish": "Parish",
+      "role": "Role"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    },
+    "roles": {
+      "jumuiya_leader": "Jumuiya Leader",
+      "community_leader": "Community Leader",
+      "ministry_leader": "Ministry Leader"
+    },
+    "family_roles": {
+      "head": "Head",
+      "spouse": "Spouse",
+      "child": "Child",
+      "dependent": "Dependent",
+      "guardian": "Guardian"
+    },
+    "record_preservation": {
+      "title": "Record Preservation",
+      "status": {
+        "active": "Active",
+        "pending": "Pending",
+        "inactive": "Inactive"
+      },
+      "active_until": "Active until {{date}}",
+      "pending_description": "Your preservation request is being reviewed.",
+      "inactive_description": "Save older member records by activating preservation.",
+      "limited_history_notice": "This month's activity is shown here. Your records are preserved safely. Upgrade to view all older history.",
+      "extend_action": "Extend preservation",
+      "save_action": "Save my records",
+      "monthly_price": "Monthly preservation: {{amount}}",
+      "yearly_price": "Yearly preservation: {{amount}}",
+      "payment_help": "Pay using the parish payment instructions, then submit your transaction reference.",
+      "plan_label": "Plan",
+      "plan_placeholder": "Choose a plan",
+      "monthly_option": "Monthly - {{amount}}",
+      "yearly_option": "Yearly - {{amount}}",
+      "transaction_label": "Transaction ID",
+      "transaction_placeholder": "Enter transaction ID",
+      "proof_label": "Proof of payment",
+      "submit_action": "Submit request"
+    },
+    "summary": {
+      "total_contributions": "Total Contributions",
+      "this_month": "This Month",
+      "this_year": "This Year",
+      "member_since": "Member Since",
+      "today": "Today",
+      "records": "Records",
+      "last_contribution": "Last Contribution",
+      "status": "Status"
+    },
+    "contributions": {
+      "analytics_title": "Contribution Analytics",
+      "analytics_empty_title": "No contributions yet",
+      "analytics_empty_description": "Your contribution analytics will appear here once you start giving.",
+      "monthly_trend": "Monthly Trend (6 months)",
+      "category_breakdown": "Category Breakdown",
+      "last_month": "Last Month",
+      "history_title": "Contribution History",
+      "search_label": "Search contributions",
+      "search_placeholder": "Search...",
+      "category_filter_label": "Filter by category",
+      "category_placeholder": "Category",
+      "all_categories": "All categories",
+      "empty_title": "No records found",
+      "empty_description": "Your contribution history will appear here.",
+      "date": "Date",
+      "category": "Category",
+      "amount": "Amount",
+      "note": "Note"
+    },
+    "pagination": {
+      "page_of": "Page {{page}} of {{total}}",
+      "previous": "Previous page",
+      "next": "Next page"
+    },
+    "prayers": {
+      "title": "My Prayers",
+      "empty_title": "No prayers yet",
+      "empty_description": "Submit a prayer request and it will appear here."
+    },
+    "mass_intentions": {
+      "title": "My Mass Intentions",
+      "empty_title": "No Mass intentions yet",
+      "empty_description": "Submit a Mass intention and it will appear here."
+    },
+    "announcements": {
+      "title": "Latest Announcements",
+      "empty_title": "No announcements",
+      "empty_description": "Check back later for parish updates."
+    },
+    "events": {
+      "title": "Upcoming Events",
+      "empty_title": "No upcoming events",
+      "empty_description": "New events will appear here."
+    },
+    "community_leadership": {
+      "title": "Jumuiya Leadership Dashboards",
+      "description": "Open members, contributions, reports, and leadership insights.",
+      "open_dashboard": "Open dashboard"
+    },
+    "quick_actions": {
+      "title": "Quick Actions",
+      "give": "Give Now",
+      "pledges": "Pledges",
+      "prayer_request": "Prayer Request",
+      "mass_intention": "Mass Intention",
+      "events": "View Events",
+      "sermons": "View Sermons",
+      "announcements": "Announcements",
+      "leader_dashboard": "Leader Dashboard",
+      "home": "Home"
+    },
+    "pledges": {
+      "title": "My Pledges",
+      "open": "Open Pledges",
+      "empty_title": "No pledges yet",
+      "empty_description": "Your pledges will appear here once recorded.",
+      "pledged": "Pledged",
+      "paid": "Paid",
+      "balance": "Balance",
+      "progress": "{{percent}}% completed",
+      "count": "{{count}} pledge",
+      "count_plural": "{{count}} pledges"
+    },
+    "verse": {
+      "title": "Verse of the Day"
+    },
+    "participation": {
+      "title": "My Participation",
+      "description": "Your Jumuiya, ministries, family, and role in the parish.",
+      "jumuiya": "Jumuiya",
+      "community_loading": "Loading your Jumuiya...",
+      "community_error": "Your Jumuiya could not be loaded.",
+      "community_empty": "No Jumuiya assigned yet.",
+      "ministry": "Ministry",
+      "ministry_empty": "No ministry assigned yet.",
+      "family": "Family",
+      "family_role": "Family Role",
+      "family_empty": "No family assigned yet.",
+      "personal_role": "Personal Role",
+      "role_empty": "No role assigned yet."
+    },
+    "leadership": {
+      "title": "Leadership",
+      "description": "Administrative and Jumuiya leadership areas available to you.",
+      "summary": {
+        "community": "You lead {{name}}.",
+        "admin": "You help manage {{name}}."
+      },
+      "this_church": "this church",
+      "church_leadership": "Church Leadership",
+      "leader": "Leader",
+      "managing": "Managing",
+      "church_members_operations": "Church members and operations",
+      "member_count": "Member Count",
+      "view_members": "View members",
+      "add_member": "Add member",
+      "manage_attendance_contributions": "Manage attendance and contributions"
+    },
+    "toasts": {
+      "photo_updated": "Profile photo updated",
+      "preservation_submitted_title": "Request submitted",
+      "preservation_submitted_description": "Your record preservation request has been sent for review.",
+      "preservation_submit_failed": "Request was not submitted"
+    },
+    "validation": {
+      "member_profile_missing": "Member profile is missing",
+      "transaction_required": "Transaction ID is required",
+      "transaction_invalid": "Enter a valid transaction ID",
+      "proof_size": "Proof file must be 5 MB or smaller"
+    }
+  },
+  "member_community_help": {
+    "title": "Community Help",
+    "description": "Support members of your community who need help.",
+    "actions": {
+      "request_help": "Request Help",
+      "cancel": "Cancel",
+      "submit": "Submit",
+      "submitting": "Submitting..."
+    },
+    "dialog": {
+      "title": "Request Community Help"
+    },
+    "categories": {
+      "medical": "Medical",
+      "education": "Education",
+      "housing": "Housing",
+      "food": "Food",
+      "emergency": "Emergency",
+      "funeral": "Funeral",
+      "other": "Other"
+    },
+    "form": {
+      "category_label": "Category *",
+      "category_placeholder": "Select category",
+      "description_label": "Description *",
+      "description_placeholder": "Describe the need...",
+      "target_amount_label": "Target Amount (TZS)",
+      "target_amount_placeholder": "Optional goal amount",
+      "review_notice": "Your request will be reviewed by a church admin before being visible to the community.",
+      "draft_notice": "This draft is saved on this device while you type."
+    },
+    "offline": {
+      "pending_title": "Pending offline help requests",
+      "pending_description": "These will sync automatically when internet returns.",
+      "pending_count": "{{count}} pending",
+      "sync_now": "Sync now",
+      "syncing": "Syncing...",
+      "saved_at": "Saved {{date}}",
+      "remove": "Remove"
+    },
+    "tabs": {
+      "community_requests": "Community Requests",
+      "my_requests": "My Requests ({{count}})"
+    },
+    "states": {
+      "loading": "Loading...",
+      "empty_approved": "No approved help requests at this time.",
+      "empty_mine": "You haven't submitted any help requests yet."
+    },
+    "amounts": {
+      "raised": "{{amount}} raised",
+      "goal": "{{amount}} goal"
+    },
+    "donation": {
+      "action": "Donate",
+      "title": "Donate to Help Request",
+      "amount_label": "Amount (TZS) *",
+      "amount_placeholder": "Amount help request should receive",
+      "net_label": "Help request receives",
+      "platform_fee_label": "Platform fee ({{percent}}%)",
+      "total_label": "You pay",
+      "submit": "Donate",
+      "submit_with_amount": "Donate {{amount}}"
+    },
+    "comments": {
+      "toggle": "Comments ({{count}})",
+      "heading": "Comments",
+      "placeholder": "Share encouragement or ask a follow-up question...",
+      "empty": "No comments yet. Offer encouragement or ask how you can help."
+    },
+    "toasts": {
+      "request_queued_title": "Help request queued",
+      "request_submitted_title": "Help request submitted",
+      "request_queued_description": "Your help request will sync automatically when internet returns.",
+      "request_submitted_description": "Your request will be reviewed by a church admin before being published.",
+      "sync_failed": "Sync failed",
+      "donation_recorded_title": "Donation recorded!",
+      "donation_recorded_description": "{{net}} will go to the help request. Total paid was {{gross}}, including a {{fee}} platform fee.",
+      "comment_posted": "Comment posted"
+    },
+    "errors": {
+      "no_church_context": "No church context",
+      "no_member_profile": "No member profile found",
+      "invalid_amount": "Enter a valid amount",
+      "comment_required": "Comment cannot be empty",
+      "sign_in_to_react": "You need to sign in to react."
+    }
+  },
+  "member_assistant": {
+    "title": "Kanisa Assistant",
+    "subtitle": "Ask about your church services",
+    "greeting": "Hello {{firstName}}",
+    "intro": "I can help you find approved services and information for {{churchName}}. Choose a service or type a simple question.",
+    "loading": "Loading information...",
+    "loading_service": "Loading service...",
+    "fallbacks": {
+      "first_name": "Member",
+      "church_name": "your parish"
+    },
+    "quick_questions": {
+      "heading": "Quick Questions",
+      "contributions": "My Contributions",
+      "mass": "Mass Intentions",
+      "announcements": "Announcements",
+      "readings": "Today's Readings",
+      "calendar": "Calendar",
+      "prayers": "Prayers",
+      "reflections": "Reflections",
+      "saints": "Saints",
+      "radio": "Radio"
+    },
+    "responses": {
+      "contribution_summary_checking": "I am checking your contribution total.",
+      "contribution_summary_unlinked": "Your account is not linked to a member record. Use Contribution History for more help.",
+      "contribution_summary_total": "Your recorded contributions total {{amount}}.",
+      "contribution_summary_zero": "No contributions are recorded on your account right now.",
+      "contribution_summary_error": "Contribution information could not be loaded right now. Please try again later.",
+      "contribution_history": "Open your contribution history and receipts.",
+      "contribute": "You can open the giving service here.",
+      "mass_intentions": "You can submit or follow up on Mass intentions here.",
+      "mass_schedule": "View your parish Mass schedule.",
+      "announcements": "Read announcements published by your parish.",
+      "reflections": "Open published spiritual reflections.",
+      "daily_readings": "Read today's readings here.",
+      "bible": "Open the Bible and choose the book you want to read.",
+      "prayers": "Open published prayers.",
+      "saints": "Learn about the lives of the saints here.",
+      "calendar": "Open your parish calendar.",
+      "radio_available": "Your parish radio is available.",
+      "radio_unavailable": "Radio is not available for your parish right now.",
+      "live_mass_available": "Live Mass is available on your home page.",
+      "live_mass_unavailable": "No live Mass is available right now.",
+      "parish_information": "Basic parish information is available on your home page.",
+      "unknown": "I did not understand clearly. You can choose one of the services below."
+    },
+    "actions": {
+      "open": "Open",
+      "contribution_history": "View History",
+      "contribute": "Give",
+      "mass_intentions": "Mass Intentions",
+      "mass_schedule": "Mass Schedule",
+      "announcements": "Announcements",
+      "reflections": "Reflections",
+      "daily_readings": "Today's Readings",
+      "bible": "Bible",
+      "prayers": "Prayers",
+      "saints": "Saints",
+      "calendar": "Calendar",
+      "radio": "Open Radio",
+      "live_mass": "View Live Mass"
+    },
+    "suggestions": {
+      "announcements": "Announcements",
+      "readings": "Today's Readings"
+    },
+    "input": {
+      "label": "Type your question",
+      "placeholder": "Type your question...",
+      "send_aria": "Send question"
+    }
+  },
+  "member_bible_verse_popup": {
+    "aria_label": "Daily Bible verse",
+    "daily_blessing": "Daily Blessing",
+    "verse_of_day": "Bible Verse of the Day",
+    "welcome": "Welcome, {{name}}",
+    "logo_alt": "{{church}} logo",
+    "fallbacks": {
+      "church": "Your Church",
+      "reference": "Daily Verse"
+    },
+    "greetings": {
+      "admin": "May wisdom guide your leadership and every decision you make today.",
+      "pastor": "May grace and strength cover you as you shepherd the church today.",
+      "member": "May peace fill your heart as you begin your day in faith."
+    },
+    "blessings": {
+      "admin": "May God bless the work of your hands and the church you serve.",
+      "pastor": "May the Lord renew your spirit and pour fresh favor on your ministry.",
+      "member": "May God bless your journey today and keep your home in peace."
+    },
+    "actions": {
+      "amen": "Amen",
+      "continue": "Continue"
+    }
+  },
+  "member_comments": {
+    "heading": "Comments",
+    "empty": "No comments yet. Start the conversation.",
+    "placeholder": "Write a comment...",
+    "add_voice": "Add Your Voice",
+    "posting": "Posting...",
+    "post_comment": "Post Comment"
+  },
+  "member_channels": {
+    "title": "Channels",
+    "description": "Stay aligned with ministry, community, and leadership updates in one place.",
+    "states": {
+      "load_error_title": "We could not load channels.",
+      "load_error_description": "Please refresh and try again.",
+      "empty_channels": "No channels yet.",
+      "no_description": "No description yet."
+    },
+    "conversation": {
+      "title": "Channel conversation",
+      "select_channel": "Select a channel to start reading updates.",
+      "empty_messages": "No messages yet. Start this channel with a message.",
+      "load_earlier": "Load earlier messages",
+      "you": "You"
+    },
+    "attachments": {
+      "attached_pdf": "Attached PDF",
+      "pdf_document": "PDF document",
+      "remove": "Remove"
+    },
+    "composer": {
+      "reactions_hint": "React with emojis on any message.",
+      "member_chat_only": "Members can chat only.",
+      "placeholder": "Type your message..."
+    },
+    "audience": {
+      "ministry": "Ministry",
+      "community_leaders": "Community Leaders",
+      "all_community_leaders": "All Community Leaders",
+      "admin_roles": "Administrative Team",
+      "community_members": "Community Members",
+      "channel": "Channel"
+    }
+  },
+  "member_bible": {
+    "common": {
+      "bible": "Bible",
+      "try_again": "Please try again.",
+      "retry": "Retry"
+    },
+    "testaments": {
+      "old": "Old Testament",
+      "new": "New Testament",
+      "deuterocanonical": "Deuterocanonical"
+    },
+    "home": {
+      "title": "Holy Bible",
+      "books_error_title": "Unable to load books",
+      "empty_books_title": "No books found",
+      "empty_books_description": "Bible books are not available yet.",
+      "books_count": "{{count}} books"
+    },
+    "search": {
+      "label": "Search Bible",
+      "placeholder": "Search words, phrases, or references",
+      "results_title": "Search Results",
+      "results_limit": "Showing up to 50 matching verses.",
+      "results_count": "{{count}} found",
+      "error_title": "Unable to search Bible",
+      "empty_title": "No verses found",
+      "empty_description": "Try another word, phrase, or reference.",
+      "chapter_verse": "Chapter {{chapter}}, Verse {{verse}}"
+    },
+    "book": {
+      "chapter_label": "Chapter {{number}}",
+      "open_chapter": "Open chapter",
+      "error_title": "Unable to load chapters",
+      "book_number": "Book {{number}}",
+      "chapters_count_label": "chapters",
+      "empty_title": "No chapters found",
+      "empty_description": "Chapters are not available for this book yet.",
+      "chapters_title": "Chapters",
+      "ordered_by_chapter": "Ordered by chapter number"
+    },
+    "chapter": {
+      "back_to_chapters": "Back to Chapters",
+      "error_title": "Unable to load chapter",
+      "invalid_link": "The chapter link is invalid.",
+      "empty_verses": "No verses found for this chapter.",
+      "navigation_aria": "Chapter navigation",
+      "previous": "Previous Chapter",
+      "next": "Next Chapter"
+    }
+  },
+  "member_library": {
+    "feast_day_not_set": "Feast day not set",
+    "hero": {
+      "eyebrow": "Catholic formation",
+      "title": "Saints",
+      "description": "Grow in faith through the lives of the saints."
+    },
+    "search": {
+      "label": "Search saints",
+      "placeholder": "Search by name, title, patronage, country, or tags..."
+    },
+    "categories": {
+      "aria_label": "Saint categories",
+      "all": "All Saints",
+      "apostles": "Apostles",
+      "holy_family": "Holy Family",
+      "doctors": "Doctors of the Church",
+      "african": "African Saints",
+      "modern": "Modern Saints",
+      "martyrs": "Martyrs",
+      "popes": "Popes",
+      "religious_orders": "Religious Orders"
+    },
+    "card": {
+      "featured": "Featured",
+      "read_more": "Read More"
+    },
+    "results_count_one": "{{count}} saint found",
+    "results_count_other": "{{count}} saints found",
+    "actions": {
+      "clear_filters": "Clear filters"
+    },
+    "states": {
+      "load_error": "Unable to load saints: {{message}}",
+      "load_error_fallback": "Please try again.",
+      "empty_published": "No saints have been published yet.",
+      "empty_search": "No saints match your search."
+    },
+    "grid_aria": "Saints",
+    "pagination": {
+      "aria_label": "Saints pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "page_of": "Page {{page}} of {{total}}"
+    },
+    "detail": {
+      "share_text": "Read about {{name}} in the Kanisa Connect Catholic Library.",
+      "link_copied": "Link copied",
+      "link_copied_description": "{{name}} can now be shared.",
+      "load_error": "Unable to load this saint: {{message}}",
+      "load_error_fallback": "Please try again.",
+      "not_found": "Saint not found.",
+      "return_to_library": "Return to Saints",
+      "back": "Back",
+      "share": "Share",
+      "badge": "Today's saint and Catholic library",
+      "not_listed": "Not listed",
+      "fields": {
+        "feast_day": "Feast Day",
+        "patron_of": "Patron Of",
+        "country": "Country",
+        "scripture": "Scripture"
+      },
+      "sections": {
+        "long_biography": "Long Biography",
+        "reflection": "Reflection",
+        "prayer": "Prayer",
+        "tags": "Tags",
+        "related_saints": "Related Saints"
+      },
+      "no_tags": "No tags listed.",
+      "related_empty": "Related saints will appear as the library grows."
+    }
+  },
+  "member_sermons": {
+    "title": "Sermons",
+    "description": "Listen to or watch sermons shared by your parish.",
+    "loading": "Sermons are loading...",
+    "error": {
+      "title": "Sermons could not be loaded.",
+      "description": "Try again to get parish sermons."
+    },
+    "actions": {
+      "retry": "Try again",
+      "watch_video": "Watch video",
+      "listen_audio": "Listen to audio"
+    },
+    "empty": {
+      "title": "No sermons right now.",
+      "description": "New sermons will appear here when published."
+    },
+    "fallbacks": {
+      "no_notes": "No notes available."
+    }
+  },
   "staff_mobile": {
     "all_services": "All services",
     "back_as_member": "Back as Member",
@@ -692,45 +1286,124 @@
     "system": "System"
   },
   "staff_services": {
-    "activity": { "label": "User Activity" },
-    "analytics": { "label": "Analytics" },
-    "announcements": { "label": "Announcements" },
-    "audit_logs": { "label": "Audit Logs" },
-    "bible_verses": { "label": "Bible Verses" },
-    "billing": { "label": "Church Billing" },
-    "billing_verification": { "label": "Billing Verification" },
-    "calendar": { "label": "Parish Calendar" },
-    "channels": { "label": "Communication" },
-    "churches": { "label": "Churches" },
-    "communities": { "label": "Communities" },
-    "community_help": { "label": "Community Help" },
-    "contributions": { "label": "Contributions" },
-    "event_requests": { "label": "Parish Office Services" },
-    "events": { "label": "Events" },
-    "families": { "label": "Families" },
-    "features": { "label": "Features" },
-    "invite_members": { "label": "Invite Members" },
-    "leadership": { "label": "Leadership" },
-    "livestreams": { "label": "Livestreams" },
-    "mass_intentions": { "label": "Mass Intentions", "short_label": "Intentions" },
-    "mass_timetable": { "label": "Mass Timetable" },
-    "members": { "label": "Members" },
-    "ministries": { "label": "Ministries" },
-    "notifications": { "label": "Notifications" },
-    "pledges": { "label": "Pledges" },
-    "prayer_requests": { "label": "Prayer Requests" },
-    "qr_payments": { "label": "QR Payments" },
-    "radio": { "label": "Radio" },
-    "record_preservation": { "label": "Record Preservation" },
-    "reports": { "label": "Reports" },
-    "revenue": { "label": "Revenue" },
-    "roles": { "label": "Invitations and Roles" },
-    "sermons": { "label": "Sermons" },
-    "settings": { "label": "Settings" },
-    "subscriptions": { "label": "Subscriptions" },
-    "system_health": { "label": "System Health" },
-    "system_jobs": { "label": "System Jobs" },
-    "system_logs": { "label": "System Logs" }
+    "activity": {
+      "label": "User Activity"
+    },
+    "analytics": {
+      "label": "Analytics"
+    },
+    "announcements": {
+      "label": "Announcements"
+    },
+    "audit_logs": {
+      "label": "Audit Logs"
+    },
+    "bible_verses": {
+      "label": "Bible Verses"
+    },
+    "billing": {
+      "label": "Church Billing"
+    },
+    "billing_verification": {
+      "label": "Billing Verification"
+    },
+    "calendar": {
+      "label": "Parish Calendar"
+    },
+    "channels": {
+      "label": "Communication"
+    },
+    "churches": {
+      "label": "Churches"
+    },
+    "communities": {
+      "label": "Communities"
+    },
+    "community_help": {
+      "label": "Community Help"
+    },
+    "contributions": {
+      "label": "Contributions"
+    },
+    "event_requests": {
+      "label": "Parish Office Services"
+    },
+    "events": {
+      "label": "Events"
+    },
+    "families": {
+      "label": "Families"
+    },
+    "features": {
+      "label": "Features"
+    },
+    "invite_members": {
+      "label": "Invite Members"
+    },
+    "leadership": {
+      "label": "Leadership"
+    },
+    "livestreams": {
+      "label": "Livestreams"
+    },
+    "mass_intentions": {
+      "label": "Mass Intentions",
+      "short_label": "Intentions"
+    },
+    "mass_timetable": {
+      "label": "Mass Timetable"
+    },
+    "members": {
+      "label": "Members"
+    },
+    "ministries": {
+      "label": "Ministries"
+    },
+    "notifications": {
+      "label": "Notifications"
+    },
+    "pledges": {
+      "label": "Pledges"
+    },
+    "prayer_requests": {
+      "label": "Prayer Requests"
+    },
+    "qr_payments": {
+      "label": "QR Payments"
+    },
+    "radio": {
+      "label": "Radio"
+    },
+    "record_preservation": {
+      "label": "Record Preservation"
+    },
+    "reports": {
+      "label": "Reports"
+    },
+    "revenue": {
+      "label": "Revenue"
+    },
+    "roles": {
+      "label": "Invitations and Roles"
+    },
+    "sermons": {
+      "label": "Sermons"
+    },
+    "settings": {
+      "label": "Settings"
+    },
+    "subscriptions": {
+      "label": "Subscriptions"
+    },
+    "system_health": {
+      "label": "System Health"
+    },
+    "system_jobs": {
+      "label": "System Jobs"
+    },
+    "system_logs": {
+      "label": "System Logs"
+    }
   },
   "member_service_groups": {
     "today": "Today",
@@ -739,6 +1412,37 @@
     "giving": "Giving",
     "community": "Community and Ministry",
     "media": "Media"
+  },
+  "member_services_page": {
+    "title": "More",
+    "subtitle": "Find more Kanisa Connect services and spaces.",
+    "search_label": "Search services",
+    "search_placeholder": "Search services...",
+    "search_results": "Results",
+    "no_results": "No services found.",
+    "open_service": "Open {{label}}",
+    "groups": {
+      "account_other": {
+        "label": "Account / Other",
+        "description": "History, notifications, and other secure tools."
+      },
+      "media": {
+        "label": "Media",
+        "description": "Listen to or watch services available now."
+      },
+      "parish_services": {
+        "label": "Parish Services",
+        "description": "Services for participating in and following parish life."
+      },
+      "spiritual": {
+        "label": "Spiritual",
+        "description": "Prayer, Scripture, and faith formation spaces."
+      }
+    },
+    "livestream": {
+      "live_description": "Watch Mass live",
+      "upcoming_description": "Mass starts soon"
+    }
   },
   "member_mobile": {
     "back_from": "Back from {{title}}"
@@ -822,6 +1526,25 @@
         "yes": "Yes"
       },
       "saving": "Saving..."
+    },
+    "verse": {
+      "title": "Verse of the Day",
+      "subtitle": "Read slowly and reflect.",
+      "empty": "No verses available",
+      "focus": {
+        "sound_on": "Immersive reading with soft typing ambience",
+        "sound_off": "Immersive reading mode"
+      },
+      "actions": {
+        "open_focus": "Open focus mode",
+        "close_focus": "Close focus mode",
+        "mute_sound": "Mute typing sound",
+        "enable_sound": "Enable typing sound"
+      },
+      "advanced": {
+        "locked": "Advanced verse tools are LOCKED 🔒",
+        "description": "Upgrade to Intermediate or higher to unlock Focus Mode, typewriter sound, and premium verse interactions."
+      }
     }
   },
   "member_my_parish": {
@@ -894,35 +1617,510 @@
       "upcoming_events": "Upcoming events"
     }
   },
+  "member_today": {
+    "readings": {
+      "title": "Today's readings",
+      "read_all": "Read all",
+      "unavailable_title": "Today's readings are not available",
+      "unavailable_description": "Published readings are not available right now."
+    },
+    "sections": {
+      "saint": "Saint of the Day",
+      "next_mass": "Next Mass",
+      "event": "Today's Event",
+      "announcement": "Latest announcement"
+    },
+    "errors": {
+      "partial": "Some information could not be loaded. Other details may still be available."
+    },
+    "quick_actions": {
+      "aria": "Quick actions"
+    }
+  },
+  "member_daily_readings": {
+    "hero": {
+      "eyebrow": "Daily Readings",
+      "title": "Daily Readings",
+      "subtitle": "God's Word for today."
+    },
+    "saint": {
+      "title": "Saint of the Day",
+      "empty": "No saint has been linked to today's feast yet.",
+      "action": "Read saint"
+    },
+    "search": {
+      "title": "Search Readings",
+      "helper": "Search by date, Bible reference, book, or word.",
+      "label": "Search previous readings",
+      "placeholder": "Date, book, reference, word...",
+      "no_results": "No readings match your search."
+    },
+    "sections": {
+      "reflection": "Reflection",
+      "prayer": "Prayer",
+      "readings": "Readings",
+      "source": "Source:",
+      "liturgical_detail": "Liturgical detail"
+    },
+    "reading_labels": {
+      "first": "First Reading",
+      "psalm": "Responsorial Psalm",
+      "second": "Second Reading",
+      "gospel_acclamation": "Gospel Acclamation",
+      "gospel": "Gospel"
+    },
+    "states": {
+      "empty_title": "Readings for this day have not been published yet.",
+      "empty_description": "We will show them here once they are ready for members.",
+      "error_title": "We could not load readings right now.",
+      "error_description": "Please try again.",
+      "retry": "Try again",
+      "retry_aria": "Try loading readings again",
+      "loading_label": "Loading today's readings"
+    },
+    "actions": {
+      "read_in_bible": "Read in Bible"
+    }
+  },
+  "member_prayers": {
+    "title": "Prayers",
+    "subtitle": "Published prayers for spiritual growth.",
+    "loading": "Loading prayers",
+    "loading_detail": "Loading prayer",
+    "error": "Prayers could not be loaded. Please try again.",
+    "empty": "No prayers have been published right now.",
+    "list_aria": "Published prayers",
+    "featured": "Featured",
+    "actions": {
+      "read": "Read prayer",
+      "back": "Back",
+      "back_to_prayers": "Back to prayers"
+    },
+    "not_found": {
+      "title": "Prayer not found.",
+      "description": "This prayer may not be published or available anymore."
+    }
+  },
+  "member_reflections": {
+    "title": "Reflections",
+    "subtitle": "Published reflections with the daily readings.",
+    "loading": "Loading reflections",
+    "loading_detail": "Loading reflection",
+    "error": "Reflections could not be loaded. Please try again.",
+    "empty": "No reflections have been published right now.",
+    "list_aria": "Published reflections",
+    "card_title": "Reflection for {{date}}",
+    "actions": {
+      "read": "Read reflection",
+      "back": "Back",
+      "back_to_reflections": "Back to reflections"
+    },
+    "sections": {
+      "gospel": "Gospel",
+      "reflection": "Reflection"
+    },
+    "not_found": {
+      "title": "Reflection not found.",
+      "description": "This reflection may not be published or available anymore."
+    }
+  },
+  "member_liturgical_calendar": {
+    "hero": {
+      "eyebrow": "Saints",
+      "title": "Liturgical Calendar",
+      "subtitle": "Follow Church celebrations and saints throughout the year."
+    },
+    "today": {
+      "label": "Today's Feast",
+      "empty_title": "No universal feast is set for today.",
+      "empty_description": "View this month's celebrations below and continue growing through the lives of the saints.",
+      "other_aria": "Other feasts today",
+      "read_more": "Read more"
+    },
+    "month": {
+      "selector_aria": "Choose month",
+      "previous": "Previous month",
+      "next": "Next month"
+    },
+    "search": {
+      "label": "Search feasts",
+      "placeholder": "Search name, month, patronage, country, or tag...",
+      "results": "{{count}} results",
+      "clear": "Clear"
+    },
+    "agenda": {
+      "empty": "No saints match your search.",
+      "aria": "Feast list",
+      "open": "Open"
+    },
+    "calendar": {
+      "aria": "{{month}} calendar",
+      "title": "{{month}} calendar",
+      "helper": "Days with published saints are linked below.",
+      "count": "{{count}} feasts",
+      "open_saint": "Open {{name}}",
+      "more": "+{{count}} more"
+    },
+    "error": {
+      "message": "The Liturgical Calendar could not be loaded: {{message}}",
+      "fallback": "Please try again."
+    }
+  },
+  "member_pledges": {
+    "title": "Pledges",
+    "subtitle": "Track your pledges and contribution progress.",
+    "fallback_member": "Member",
+    "fallback_pledge": "Parish pledge",
+    "actions": {
+      "create": "Create Pledge",
+      "pay": "Submit Payment"
+    },
+    "summary": {
+      "total_pledged": "Total pledged",
+      "total_paid": "Paid",
+      "remaining": "Remaining",
+      "progress": "Progress"
+    },
+    "progress": {
+      "title": "Pledge Progress",
+      "percent_complete": "{{percent}}% complete",
+      "remaining": "Remaining {{amount}}"
+    },
+    "list": {
+      "title": "Active Pledges"
+    },
+    "metrics": {
+      "pledged": "Pledged",
+      "paid": "Paid",
+      "balance": "Balance"
+    },
+    "status": {
+      "pending": "Pending",
+      "partial": "In progress",
+      "completed": "Completed"
+    },
+    "states": {
+      "loading": "Loading your pledges...",
+      "loading_aria": "Loading your pledges",
+      "empty_title": "You have not created a pledge yet.",
+      "empty_description": "You can create a new pledge and track its progress here.",
+      "checking_community": "Checking your Jumuiya information...",
+      "searching_community": "Searching...",
+      "no_community_short": "Not linked to a Jumuiya",
+      "no_community_create": "You need to be linked to a Jumuiya before creating a pledge.",
+      "no_community_page": "You need to be linked to a Jumuiya before creating a pledge that is included in Jumuiya statistics."
+    },
+    "create": {
+      "title": "Create Pledge",
+      "community_label": "Jumuiya",
+      "amount_label": "Pledge amount (TZS)",
+      "amount_placeholder": "Enter amount",
+      "helper": "Enter the amount you pledge to contribute. Payments are recorded separately after they are submitted and approved.",
+      "submitting": "Creating pledge...",
+      "success_title": "Pledge created",
+      "success_description": "{{amount}} has been added to {{community}}.",
+      "error_title": "Pledge was not created",
+      "error_description": "A problem occurred while creating the pledge."
+    },
+    "payment": {
+      "title": "Submit Pledge Payment",
+      "title_with_pledge": "Submit payment for {{pledge}}",
+      "fallback_title_subject": "pledge",
+      "success_title": "Payment submitted for approval",
+      "success_description": "The pledge balance will update after a church admin or pastor approves the payment."
+    }
+  },
+  "pledge_payment_dialog": {
+    "description": "Remaining balance: {{balance}}. Enter the amount the church should receive and the {{feePercentage}}% platform fee will be added on top.",
+    "amount_label": "Amount for church (TZS)",
+    "amount_placeholder": "Enter amount church should receive",
+    "transaction_id_label": "Transaction ID",
+    "transaction_id_placeholder": "e.g. mobile-money reference",
+    "proof_label": "Proof image path (if no transaction ID)",
+    "proof_placeholder": "Uploaded receipt path or URL",
+    "approval_helper": "A church admin or pastor must approve this payment before the pledge balance changes.",
+    "payment_method_label": "Payment method",
+    "payment_method_placeholder": "Choose payment method",
+    "payment_methods": {
+      "cash": "Cash",
+      "mobile_money": "Mobile Money",
+      "bank_transfer": "Bank Transfer",
+      "card": "Card",
+      "other": "Other"
+    },
+    "breakdown": {
+      "church_receives": "Church receives",
+      "platform_fee": "Platform fee ({{feePercentage}}%)",
+      "you_pay": "Total to submit"
+    },
+    "submit": "Submit for Approval",
+    "submitting": "Submitting..."
+  },
+  "member_give": {
+    "title": "Give",
+    "subtitle": "Record your contribution to the parish.",
+    "history_link": "Contribution History",
+    "amount_label": "Contribution amount",
+    "amount_placeholder": "Enter amount",
+    "category_label": "Contribution type",
+    "category_placeholder": "Choose contribution type",
+    "optional": "Optional",
+    "phone_label": "Phone number",
+    "phone_placeholder": "+255...",
+    "phone_helper": "You can use the number saved on your account.",
+    "payment_reference_label": "Payment reference",
+    "payment_reference_placeholder": "Example: M-Pesa or bank",
+    "payment_reference_helper": "If you already paid through M-Pesa, bank, or another channel, enter the reference number here.",
+    "submit": "Record Contribution",
+    "submit_with_amount": "Record {{amount}}",
+    "submitting": "Recording...",
+    "member_attribution": "Recording as a registered member",
+    "after_submit_title": "After submitting",
+    "after_submit_description": "Kanisa Connect will save your contribution details for parish records. This is not electronic payment confirmation.",
+    "success": {
+      "title": "Contribution recorded",
+      "description": "We recorded your contribution of {{amount}}. This information will appear in your history after syncing.",
+      "record_another": "Record Another Contribution",
+      "toast_title": "Contribution recorded",
+      "toast_description": "We recorded your contribution of {{amount}}."
+    },
+    "errors": {
+      "toast_title": "Error",
+      "no_church_context": "No church context",
+      "invalid_amount": "Enter a valid amount",
+      "not_recorded": "Contribution was not recorded."
+    }
+  },
+  "member_contribution_history": {
+    "eyebrow": "My contributions",
+    "title": "Contribution History",
+    "subtitle": "View recorded contributions and open their receipts.",
+    "loading_aria": "Loading contribution history",
+    "error": "Contribution history could not be loaded. Please try again.",
+    "member_not_linked": "Your account is not linked to a member record.",
+    "empty": "No contributions have been recorded yet.",
+    "fallback_category": "Contribution",
+    "reference_prefix": "Ref: {{reference}}",
+    "no_reference": "-",
+    "table": {
+      "date": "Date",
+      "category": "Type",
+      "reference": "Reference",
+      "amount": "Amount"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {{page}}"
+    }
+  },
+  "member_contribution_receipt": {
+    "title": "Contribution Receipt",
+    "fallback_member": "Member",
+    "fallback_category": "Contribution",
+    "no_payment_reference": "-",
+    "labels": {
+      "member": "Member",
+      "amount": "Amount",
+      "category": "Contribution type",
+      "date": "Date",
+      "receipt_reference": "Receipt reference",
+      "payment_reference": "Payment reference",
+      "notes": "Notes"
+    },
+    "actions": {
+      "print": "Print / Save PDF",
+      "back": "Back to history"
+    },
+    "unavailable": {
+      "title": "Receipt unavailable",
+      "description": "This record does not exist or you do not have permission to view it.",
+      "history_link": "Contribution History"
+    }
+  },
+  "member_radio": {
+    "loading": "Radio is loading",
+    "header": {
+      "eyebrow": "RADIO"
+    },
+    "error": {
+      "title": "Radio could not be loaded",
+      "description": "Try again in a moment."
+    },
+    "unavailable": {
+      "title": "Radio is unavailable"
+    },
+    "playback_error": {
+      "description": "We could not connect to the radio right now."
+    },
+    "status": {
+      "error": "Playback error",
+      "playing": "Playing now",
+      "ready": "Ready to listen",
+      "paused": "Paused"
+    },
+    "actions": {
+      "retry": "Try again",
+      "retry_radio": "Try radio again",
+      "pause": "Pause",
+      "listen": "Listen",
+      "pause_radio": "Pause radio",
+      "resume_listening": "Resume listening",
+      "close_radio": "Close radio",
+      "open_website": "Open radio website"
+    },
+    "volume": {
+      "label": "Volume",
+      "radio_label": "Radio volume"
+    },
+    "station_selector": {
+      "title": "Choose a station"
+    },
+    "persistent_player": {
+      "aria_label": "Radio player"
+    }
+  },
   "member_services": {
-    "announcements": { "label": "Announcements", "description": "New parish notices", "back_title": "Announcements" },
-    "bible": { "label": "Bible", "description": "Read the Bible", "back_title": "Bible", "chapter_title": "Bible Chapter" },
-    "calendar": { "label": "Parish Calendar", "description": "Upcoming Masses and parish events", "back_title": "Schedule" },
-    "channels": { "label": "Communication", "description": "Read and reply to your group messages", "back_title": "Communication Channels" },
-    "contribution_history": { "label": "Contribution History", "description": "View contributions and receipts", "back_title": "Contribution History", "receipt_title": "Contribution Receipt" },
-    "daily_readings": { "label": "Daily Readings", "description": "Today's full readings", "back_title": "Daily Readings" },
-    "dashboard": { "label": "My History", "description": "History and profile", "back_title": "My History" },
-    "event_requests": { "label": "Parish Office Services", "description": "Request services and track your requests", "back_title": "Parish Office Services" },
-    "events": { "label": "Events", "description": "Upcoming parish events", "back_title": "Events" },
-    "give": { "label": "Give", "description": "Contribute to your parish", "back_title": "Contributions" },
-    "home": { "label": "Home", "description": "Home" },
-    "jumuiya": { "label": "My Small Christian Community", "description": "View your assigned parish community", "back_title": "My Small Christian Community" },
-    "kanisa_ai": { "label": "Ask Kanisa", "description": "Ask about your church services" },
-    "library": { "label": "Saints", "description": "Faith library", "back_title": "Saints", "detail_title": "Saint" },
-    "liturgical_calendar": { "label": "Liturgical Calendar", "description": "Church feasts and seasons", "back_title": "Liturgical Calendar" },
-    "livestream": { "label": "Live Mass", "description": "Watch live Mass", "back_title": "Live Mass" },
-    "mass_intentions": { "label": "Mass Intentions", "description": "Submit or track intentions", "back_title": "Mass Intentions" },
-    "ministries": { "label": "Parish Ministries", "description": "Request to join a parish ministry", "back_title": "Parish Ministries" },
-    "my_parish": { "label": "My Parish", "description": "Masses, events and parish services", "back_title": "My Parish" },
-    "notifications": { "label": "Notifications", "description": "Your alerts and reminders", "back_title": "Notifications" },
-    "pledges": { "label": "Pledges", "description": "View your pledges", "back_title": "Pledges" },
-    "prayer_requests": { "label": "Prayer Request", "description": "Send and track a request", "back_title": "Prayers" },
-    "prayers": { "label": "Prayers", "description": "Read published prayers", "back_title": "Prayers" },
-    "radio": { "label": "Radio", "description": "Listen to parish radio", "back_title": "Radio" },
-    "reflections": { "label": "Reflections", "description": "Daily reading reflections", "back_title": "Reflections" },
-    "sermons": { "label": "Sermons", "description": "Read parish sermons", "back_title": "Sermons" },
-    "services": { "label": "Services", "description": "All services" },
-    "today": { "label": "Today", "description": "Readings, saints and today's parish life", "back_title": "Today" }
+    "announcements": {
+      "label": "Announcements",
+      "description": "New parish notices",
+      "back_title": "Announcements"
+    },
+    "bible": {
+      "label": "Bible",
+      "description": "Read the Bible",
+      "back_title": "Bible",
+      "chapter_title": "Bible Chapter"
+    },
+    "calendar": {
+      "label": "Parish Calendar",
+      "description": "Upcoming Masses and parish events",
+      "back_title": "Schedule"
+    },
+    "channels": {
+      "label": "Communication",
+      "description": "Read and reply to your group messages",
+      "back_title": "Communication Channels"
+    },
+    "contribution_history": {
+      "label": "Contribution History",
+      "description": "View contributions and receipts",
+      "back_title": "Contribution History",
+      "receipt_title": "Contribution Receipt"
+    },
+    "daily_readings": {
+      "label": "Daily Readings",
+      "description": "Today's full readings",
+      "back_title": "Daily Readings"
+    },
+    "dashboard": {
+      "label": "My History",
+      "description": "History and profile",
+      "back_title": "My History"
+    },
+    "event_requests": {
+      "label": "Parish Office Services",
+      "description": "Request services and track your requests",
+      "back_title": "Parish Office Services"
+    },
+    "events": {
+      "label": "Events",
+      "description": "Upcoming parish events",
+      "back_title": "Events"
+    },
+    "give": {
+      "label": "Give",
+      "description": "Contribute to your parish",
+      "back_title": "Contributions"
+    },
+    "home": {
+      "label": "Home",
+      "description": "Home"
+    },
+    "jumuiya": {
+      "label": "My Small Christian Community",
+      "description": "View your assigned parish community",
+      "back_title": "My Small Christian Community"
+    },
+    "kanisa_ai": {
+      "label": "Ask Kanisa",
+      "description": "Ask about your church services"
+    },
+    "library": {
+      "label": "Saints",
+      "description": "Faith library",
+      "back_title": "Saints",
+      "detail_title": "Saint"
+    },
+    "liturgical_calendar": {
+      "label": "Liturgical Calendar",
+      "description": "Church feasts and seasons",
+      "back_title": "Liturgical Calendar"
+    },
+    "livestream": {
+      "label": "Live Mass",
+      "description": "Watch live Mass",
+      "back_title": "Live Mass"
+    },
+    "mass_intentions": {
+      "label": "Mass Intentions",
+      "description": "Submit or track intentions",
+      "back_title": "Mass Intentions"
+    },
+    "ministries": {
+      "label": "Parish Ministries",
+      "description": "Request to join a parish ministry",
+      "back_title": "Parish Ministries"
+    },
+    "my_parish": {
+      "label": "My Parish",
+      "description": "Masses, events and parish services",
+      "back_title": "My Parish"
+    },
+    "notifications": {
+      "label": "Notifications",
+      "description": "Your alerts and reminders",
+      "back_title": "Notifications"
+    },
+    "pledges": {
+      "label": "Pledges",
+      "description": "View your pledges",
+      "back_title": "Pledges"
+    },
+    "prayer_requests": {
+      "label": "Prayer Request",
+      "description": "Send and track a request",
+      "back_title": "Prayers"
+    },
+    "prayers": {
+      "label": "Prayers",
+      "description": "Read published prayers",
+      "back_title": "Prayers"
+    },
+    "radio": {
+      "label": "Radio",
+      "description": "Listen to parish radio",
+      "back_title": "Radio"
+    },
+    "reflections": {
+      "label": "Reflections",
+      "description": "Daily reading reflections",
+      "back_title": "Reflections"
+    },
+    "sermons": {
+      "label": "Sermons",
+      "description": "Read parish sermons",
+      "back_title": "Sermons"
+    },
+    "services": {
+      "label": "Services",
+      "description": "All services"
+    },
+    "today": {
+      "label": "Today",
+      "description": "Readings, saints and today's parish life",
+      "back_title": "Today"
+    }
   },
   "church_admin_layout": {
     "workspaces": {
@@ -1265,14 +2463,30 @@
   },
   "mass_intentions_form": {
     "page_title": "Mass Intentions",
-    "page_description": "Submit intentions for prayers during Mass.",
+    "page_description": "Submit your intention for the Mass you choose, and your parish will receive it for preparation and records.",
     "submit_intention": "Submit Intention",
     "dialog_title": "Submit Mass Intention",
-    "intention_type_label": "Intention Type *",
+    "intention_type_label": "Mass intention type *",
     "select_type": "Select type",
-    "message_label": "Message *",
-    "message_placeholder": "Your intention...",
-    "offering_label": "Offering Amount (TZS) *",
+    "intention_descriptions": {
+      "shukrani": "An intention of thanksgiving to God",
+      "marehemu": "For the souls of the departed",
+      "maombi_maalum": "A special family or personal intention",
+      "wagonjwa": "For healing and comfort",
+      "safari": "For protection and blessing while traveling",
+      "mtakatifu_wa_familia": "For the intercession of a family saint",
+      "other": "Another Mass intention"
+    },
+    "mass_selection_label": "Select Mass *",
+    "mass_loading": "Loading Masses...",
+    "mass_select_placeholder": "Select an available Mass",
+    "mass_requires_connection": "Mass selection requires a connection so availability can be confirmed.",
+    "remaining_slots": "{{count}} slot",
+    "remaining_slots_plural": "{{count}} slots",
+    "mass_date": "Mass date: {{date}}",
+    "message_label": "Intention / Message *",
+    "message_placeholder": "Write the name, family, or message for the Mass intention...",
+    "offering_label": "Mass offering amount *",
     "offering_placeholder": "Amount church should receive",
     "offering_hint": "Mass intention offering is mandatory. Default: {{amount}}",
     "church_receives": "Church receives",
@@ -1294,9 +2508,14 @@
     "empty_all": "No mass intentions submitted yet.",
     "empty_mine": "You have not submitted any mass intentions yet.",
     "offering": "Offering: {{amount}}",
+    "member_context": "Your intentions are connected to your parish participation.",
+    "before_submit_title": "Before submitting",
+    "before_submit_description": "Choose a Mass with available space, write your intention calmly, and review the offering amount shown on the parish schedule.",
     "error_no_church": "No church context",
     "error_no_member": "No member profile found",
     "error_message_required": "Message is required",
+    "error_mass_required": "Please select an available Mass.",
+    "error_mass_requires_connection": "Connect to the internet to confirm Mass availability.",
     "error_minimum_offering": "Minimum offering is TZS 1,000"
   },
   "mass_intentions_admin": {
@@ -1376,6 +2595,13 @@
     }
   },
   "mass_intentions_labels": {
+    "shukrani": "Thanksgiving",
+    "marehemu": "Departed",
+    "maombi_maalum": "Special Prayer",
+    "wagonjwa": "Sick",
+    "safari": "Travel",
+    "mtakatifu_wa_familia": "Family Saint",
+    "other": "Other",
     "departed": "For the departed",
     "healing": "Healing",
     "remembrance": "Remembrance",
@@ -1658,6 +2884,207 @@
       "delete_family_for": "Delete family {{name}}"
     }
   },
+  "member_announcements": {
+    "title": "Announcements",
+    "subtitle": "Get parish updates and news.",
+    "loading": "Announcements are loading...",
+    "fallback_member": "Member",
+    "image_alt_suffix": "announcement image",
+    "badges": {
+      "celebration": "Celebration"
+    },
+    "error": {
+      "title": "Could not load announcements.",
+      "description": "Try again to get the latest parish updates."
+    },
+    "empty": {
+      "title": "No announcements right now.",
+      "description": "New announcements will appear here when they are published."
+    },
+    "comments": {
+      "heading": "Comments",
+      "placeholder": "Write a kind message...",
+      "empty": "No comments yet. Be the first to celebrate."
+    },
+    "footer": {
+      "celebration_note": "Comments and emoji reactions appear on birthday and wedding anniversary announcements."
+    },
+    "errors": {
+      "sign_in_to_react": "You need to sign in to react.",
+      "sign_in_to_comment": "You need to sign in to comment.",
+      "comment_required": "Write a comment first.",
+      "save_reaction": "Unable to save reaction",
+      "add_comment": "Unable to add comment",
+      "save_comment_reaction": "Unable to save comment reaction"
+    }
+  },
+  "member_events": {
+    "title": "Events",
+    "subtitle": "See upcoming parish events.",
+    "loading": "Events are loading...",
+    "fallback_description": "Join us for this event.",
+    "error": {
+      "title": "Could not load events.",
+      "description": "Try again to see the latest parish events."
+    },
+    "empty": {
+      "title": "No upcoming events right now.",
+      "description": "New events will appear here when they are published."
+    },
+    "rsvp": {
+      "prompt": "Will you attend {{title}}?",
+      "helper": "Choose yes to register for this event.",
+      "yes": "Yes",
+      "no": "No",
+      "current_response": "Your response:",
+      "attending": "You are attending",
+      "not_attending": "You are not attending"
+    },
+    "membership": {
+      "loading": "Loading your membership...",
+      "required": "Your member profile is required to RSVP."
+    },
+    "toast": {
+      "confirmed_title": "Attendance confirmed",
+      "updated_title": "Attendance updated",
+      "confirmed_description": "You have been registered for this event.",
+      "updated_description": "Your response has been saved."
+    },
+    "errors": {
+      "no_church_context": "No church context",
+      "no_member_profile": "No member profile found",
+      "save_response": "Unable to save response"
+    }
+  },
+  "member_calendar": {
+    "title": "Parish Schedule",
+    "subtitle": "Upcoming Masses and events in your parish.",
+    "loading": "Schedule is loading",
+    "time_missing": "Time not set",
+    "error": {
+      "title": "Schedule could not be loaded.",
+      "description": "Try again after a short while."
+    },
+    "empty": {
+      "title": "No upcoming schedule right now.",
+      "description": "Upcoming Masses and events will appear here when they are published."
+    },
+    "groups": {
+      "today": "Today",
+      "week": "This Week",
+      "later": "Later",
+      "until": "Until {{date}}",
+      "later_label": "Other upcoming schedule"
+    },
+    "activity": {
+      "event": "Event"
+    },
+    "registration": {
+      "registered": "Registered - {{status}}",
+      "paid": "Paid registration",
+      "parish_event": "Parish event"
+    },
+    "admin": {
+      "title": "Parish Calendar",
+      "subtitle": "Upcoming events and Masses in your parish.",
+      "error": "Calendar could not be loaded. Try again.",
+      "empty": "No upcoming event."
+    }
+  },
+  "member_prayer_requests": {
+    "title": "Prayer Requests",
+    "subtitle": "Share a prayer request or join other members in prayer.",
+    "anonymous_requester": "Member",
+    "actions": {
+      "create": "Submit Prayer Request",
+      "submit": "Submit Request",
+      "submit_with_offering": "Submit Request and Offering {{amount}}",
+      "pray": "I prayed",
+      "prayed": "Prayed"
+    },
+    "form": {
+      "submitting_as": "Submitting as",
+      "request_label": "Your Prayer Request *",
+      "request_placeholder": "Write what you would like prayer for...",
+      "privacy_label": "Who can see this request?",
+      "draft_saved": "This draft is saved on this device as you type."
+    },
+    "privacy": {
+      "public_to_church": {
+        "label": "Church members",
+        "description": "Church members: visible to members after review."
+      },
+      "private_to_pastor_admin": {
+        "label": "Pastor/leadership only",
+        "description": "Pastor/leadership only: not shown as a community prayer."
+      },
+      "anonymous_public": {
+        "label": "Without showing my name",
+        "description": "Without showing my name: may appear after review without showing your name to members."
+      }
+    },
+    "offering": {
+      "label": "Optional Offering (TZS)",
+      "helper": "The offering is completely optional and is not required to submit a prayer request.",
+      "placeholder": "Optional - amount the church will receive",
+      "reassurance": "Your prayer request will be received even if you do not choose to give an offering.",
+      "badge": "Optional offering",
+      "request_amount": "Offering: {{amount}}",
+      "church_receives": "Church receives",
+      "platform_fee": "Platform fee ({{percent}}%)",
+      "total": "Total"
+    },
+    "status": {
+      "approved": "Received",
+      "pending": "Pending review",
+      "rejected": "Not published"
+    },
+    "status_help": {
+      "pending": "Your request has been received and is awaiting review before it appears to members.",
+      "rejected": "This request was not placed in community prayers, but it remains in your history."
+    },
+    "comments": {
+      "heading": "Messages of Comfort",
+      "placeholder": "Write a message of comfort or a short prayer...",
+      "empty": "No messages yet. You can leave comfort or a short prayer."
+    },
+    "offline": {
+      "title": "Prayer requests waiting to send",
+      "description": "They will be sent automatically when the connection returns.",
+      "count": "{{count}} waiting to send",
+      "saved_at": "Saved {{date}}"
+    },
+    "tabs": {
+      "community": "Community Prayers",
+      "mine": "My Requests ({{count}})"
+    },
+    "states": {
+      "loading": "Loading prayer requests...",
+      "community_empty_title": "No prayer requests have been shared yet.",
+      "community_empty_description": "You can be the first to share a prayer request.",
+      "mine_empty_title": "You have not submitted a prayer request yet.",
+      "mine_empty_description": "When you are ready, submit your request calmly. It will wait for review before being shared."
+    },
+    "toasts": {
+      "queued_title": "Prayer request queued",
+      "submitted_title": "Prayer request submitted",
+      "queued_description": "Your request will be sent automatically when the connection returns.",
+      "submitted_with_offering": "{{churchAmount}} will go to the church. Total recorded is {{totalAmount}}, including a system fee of {{feeAmount}}.",
+      "submitted_without_offering": "Your request has been received for prayer.",
+      "prayer_mark_removed": "Prayer mark removed",
+      "marked_as_prayed": "Marked as prayed",
+      "comment_posted": "Comment posted"
+    },
+    "errors": {
+      "no_church_context": "No church context",
+      "no_member_profile": "No member profile found",
+      "member_profile_required": "Your member profile is required",
+      "offering_negative": "Offering amount cannot be negative.",
+      "comment_empty": "Comment cannot be empty",
+      "sign_in_to_react": "You need to sign in to react.",
+      "sync_failed": "Sync failed"
+    }
+  },
   "event_requests_admin": {
     "page_title": "Parish Office Services",
     "page_description": "Review and manage service and event requests from members.",
@@ -1698,5 +3125,117 @@
     "error_missing_church": "Church context is missing.",
     "error_update_blocked": "Event request update was blocked or the row was not found.",
     "error_multiple_rows": "Event request update returned multiple rows unexpectedly."
+  },
+  "member_livestream": {
+    "loading": "Live Mass is loading",
+    "error": {
+      "title": "Live Mass could not be loaded",
+      "description": "Please try again shortly."
+    },
+    "unavailable": {
+      "title": "Live Mass is unavailable"
+    },
+    "actions": {
+      "retry": "Try again"
+    },
+    "persistent_player": {
+      "expand": "Open Live Mass: {{title}}",
+      "close": "Close Live Mass"
+    }
+  },
+  "member_jumuiya": {
+    "description": "View the parish community assigned to you. Membership changes are managed by the parish office or an authorized leader.",
+    "assignment": {
+      "position": "Community {{current}} of {{total}}",
+      "single_label": "Your assigned community",
+      "multiple_label": "Your assigned communities",
+      "no_description": "A description for this community has not been added yet."
+    },
+    "loading": {
+      "aria_label": "Loading your community information",
+      "message": "Checking your community information..."
+    },
+    "error": {
+      "title": "Your community information could not be loaded right now.",
+      "description": "Try again to see your assigned community."
+    },
+    "unassigned": {
+      "title": "You have not been assigned to a community yet.",
+      "description": "Contact the parish office to confirm or update your community information."
+    }
+  },
+  "member_ministries": {
+    "hero": {
+      "title": "Serve together with your parish community",
+      "description": "Find a ministry, read about it, and send a request to join."
+    },
+    "status": {
+      "joined": "Joined",
+      "pending": "Request pending"
+    },
+    "card": {
+      "no_description": "No description has been added yet.",
+      "member_count": "Members: {{count}}"
+    },
+    "actions": {
+      "details": "Details",
+      "leave": "Leave ministry",
+      "cancel": "Cancel",
+      "confirm_leave": "Confirm leave",
+      "request_join": "Request to join",
+      "back_to_all": "Back to all ministries",
+      "all": "All ministries"
+    },
+    "leave": {
+      "title": "Leave this ministry?",
+      "description": "You are about to leave {{name}}. Your membership will be removed after you confirm."
+    },
+    "toast": {
+      "leave_success_title": "You have left the ministry",
+      "join_success_title": "Request sent",
+      "leave_success_description": "Your membership has been updated.",
+      "join_success_description": "Your parish will review your request.",
+      "leave_error_title": "Request not completed",
+      "join_error_title": "Request not sent",
+      "leave_error_description": "We could not complete your request right now. Try again.",
+      "join_error_description": "We could not send your request right now. Try again."
+    },
+    "error": {
+      "load": "Ministries could not be loaded right now. Try again.",
+      "member_profile": "Your member profile could not be found for this parish."
+    },
+    "detail": {
+      "unavailable": "This ministry is unavailable.",
+      "label": "Ministry details",
+      "description": "View this ministry's information and your participation status."
+    },
+    "search": {
+      "aria_label": "Search ministries",
+      "placeholder": "Search ministries..."
+    },
+    "empty": {
+      "no_configured": "No ministries have been configured for this parish.",
+      "no_results": "No ministries match your search."
+    },
+    "sections": {
+      "joined": "My ministries",
+      "other": "Other ministries"
+    }
+  },
+  "member_notifications": {
+    "bell": {
+      "label": "Notifications",
+      "unread": "Notifications, {{displayCount}} unread",
+      "more_than_nine": "more than 9"
+    },
+    "new": "New",
+    "loading": "Loading notifications",
+    "load_error": "Unable to load notifications.",
+    "retry": "Try again.",
+    "empty": "You have no notifications right now.",
+    "list_label": "Notification list",
+    "mark_read": "Mark notification {{title}} as read",
+    "updating": "Updating",
+    "update_error": "Notification could not be updated"
   }
 }

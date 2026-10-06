@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, CalendarDays, ChevronLeft, ChevronRight, Search, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -11,29 +12,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import {
   SAINT_SELECT,
-  formatFeastDay,
   getSaintImageAlt,
   normalizeTags,
   saintMatchesSearch,
   type LibrarySaint,
 } from "@/lib/catholic-library";
-
-const MONTHS = [
-  "Januari",
-  "Februari",
-  "Machi",
-  "Aprili",
-  "Mei",
-  "Juni",
-  "Julai",
-  "Agosti",
-  "Septemba",
-  "Oktoba",
-  "Novemba",
-  "Desemba",
-];
-
-const WEEKDAYS = ["Jpl", "Jtt", "Jnn", "Jtn", "Alh", "Ijm", "Jms"];
+import { formatAppDate, getAppDateLocale } from "@/lib/localization";
 
 function getCurrentMonth() {
   return new Date().getMonth() + 1;
@@ -49,6 +33,27 @@ function getTodayParts() {
 
 function saintDetailPath(slug: string) {
   return `/portal/library/${slug}`;
+}
+
+function getMonthLabel(month: number, language: string | undefined) {
+  return new Intl.DateTimeFormat(getAppDateLocale(language), { month: "long", timeZone: "UTC" }).format(
+    new Date(Date.UTC(2026, month - 1, 1)),
+  );
+}
+
+function getWeekdayLabels(language: string | undefined) {
+  return Array.from({ length: 7 }, (_, index) =>
+    new Intl.DateTimeFormat(getAppDateLocale(language), { weekday: "short", timeZone: "UTC" }).format(
+      new Date(Date.UTC(2026, 0, 4 + index)),
+    ),
+  );
+}
+
+function formatFeastDayLabel(month: number, day: number, language: string | undefined) {
+  return formatAppDate(`2026-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`, language, {
+    month: "long",
+    day: "numeric",
+  });
 }
 
 function saintMatchesCalendarSearch(saint: LibrarySaint, search: string, monthLabel: string) {
@@ -85,6 +90,8 @@ function SaintImage({ saint, className = "h-16 w-16" }: { saint: LibrarySaint; c
 }
 
 function TodayFeast({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: boolean }) {
+  const { t } = useTranslation();
+
   if (isLoading) {
     return <Skeleton className="h-44 rounded-[28px]" />;
   }
@@ -99,10 +106,10 @@ function TodayFeast({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: 
             <div className="space-y-2">
               <p className="flex items-center gap-2 text-sm font-medium text-primary">
                 <CalendarDays className="h-4 w-4" aria-hidden="true" />
-                Adhimisho la Leo
+                {t("member_liturgical_calendar.today.label")}
               </p>
               <h2 id="today-feast-title" className="text-2xl font-bold tracking-tight">
-                {primarySaint ? primarySaint.name : "Hakuna adhimisho la jumla lililowekwa kwa leo."}
+                {primarySaint ? primarySaint.name : t("member_liturgical_calendar.today.empty_title")}
               </h2>
               {primarySaint?.quote ? (
                 <p className="max-w-2xl text-sm italic leading-6 text-muted-foreground">"{primarySaint.quote}"</p>
@@ -110,7 +117,7 @@ function TodayFeast({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: 
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{primarySaint.biography_short}</p>
               ) : (
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  Tazama maadhimisho ya mwezi huu hapa chini na uendelee kukua kupitia maisha ya watakatifu.
+                  {t("member_liturgical_calendar.today.empty_description")}
                 </p>
               )}
             </div>
@@ -120,7 +127,7 @@ function TodayFeast({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: 
                 <SaintImage saint={primarySaint} className="h-20 w-20" />
                 <Button asChild className="rounded-2xl">
                   <Link to={saintDetailPath(primarySaint.slug)}>
-                    Soma Zaidi
+                    {t("member_liturgical_calendar.today.read_more")}
                     <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
@@ -129,7 +136,7 @@ function TodayFeast({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: 
           </div>
 
           {saints.length > 1 ? (
-            <div className="mt-4 flex flex-wrap gap-2" aria-label="Maadhimisho mengine ya leo">
+            <div className="mt-4 flex flex-wrap gap-2" aria-label={t("member_liturgical_calendar.today.other_aria")}>
               {saints.slice(1).map((saint) => (
                 <Button key={saint.id} asChild variant="outline" size="sm" className="rounded-full">
                   <Link to={saintDetailPath(saint.slug)}>{saint.name}</Link>
@@ -150,23 +157,25 @@ function MonthSelector({
   selectedMonth: number;
   onMonthChange: (month: number) => void;
 }) {
+  const { i18n, t } = useTranslation();
+  const months = useMemo(() => Array.from({ length: 12 }, (_, index) => getMonthLabel(index + 1, i18n.language)), [i18n.language]);
   const goToPrevious = () => onMonthChange(selectedMonth === 1 ? 12 : selectedMonth - 1);
   const goToNext = () => onMonthChange(selectedMonth === 12 ? 1 : selectedMonth + 1);
 
   return (
-    <section aria-label="Chagua mwezi" className="space-y-3">
+    <section aria-label={t("member_liturgical_calendar.month.selector_aria")} className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <Button type="button" variant="outline" size="icon" className="rounded-2xl" onClick={goToPrevious} aria-label="Mwezi uliopita">
+        <Button type="button" variant="outline" size="icon" className="rounded-2xl" onClick={goToPrevious} aria-label={t("member_liturgical_calendar.month.previous")}>
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         </Button>
-        <p className="text-lg font-semibold">{MONTHS[selectedMonth - 1]}</p>
-        <Button type="button" variant="outline" size="icon" className="rounded-2xl" onClick={goToNext} aria-label="Mwezi unaofuata">
+        <p className="text-lg font-semibold">{months[selectedMonth - 1]}</p>
+        <Button type="button" variant="outline" size="icon" className="rounded-2xl" onClick={goToNext} aria-label={t("member_liturgical_calendar.month.next")}>
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {MONTHS.map((month, index) => {
+        {months.map((month, index) => {
           const monthNumber = index + 1;
           return (
             <Button
@@ -186,6 +195,8 @@ function MonthSelector({
 }
 
 function FeastAgenda({ saints, isLoading }: { saints: LibrarySaint[]; isLoading: boolean }) {
+  const { i18n, t } = useTranslation();
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -201,20 +212,20 @@ function FeastAgenda({ saints, isLoading }: { saints: LibrarySaint[]; isLoading:
       <Card className="rounded-[28px] border-border/70 bg-card/85">
         <CardContent className="flex flex-col items-center justify-center px-6 py-14 text-center">
           <CalendarDays className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
-          <p className="mt-4 text-lg font-semibold">Hakuna watakatifu wanaolingana na utafutaji wako.</p>
+          <p className="mt-4 text-lg font-semibold">{t("member_liturgical_calendar.agenda.empty")}</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <section aria-label="Orodha ya maadhimisho" className="space-y-3">
+    <section aria-label={t("member_liturgical_calendar.agenda.aria")} className="space-y-3">
       {saints.map((saint) => (
         <Card key={saint.id} className="rounded-[24px] border-border/70 bg-card/85 transition-colors hover:border-primary/25">
           <CardContent className="p-4">
             <div className="grid gap-4 sm:grid-cols-[84px_1fr_auto] sm:items-center">
               <div className="text-sm font-semibold text-primary">
-                {formatFeastDay(saint.feast_month, saint.feast_day)}
+                {formatFeastDayLabel(saint.feast_month, saint.feast_day, i18n.language)}
               </div>
               <div className="flex min-w-0 gap-4">
                 <SaintImage saint={saint} className="h-16 w-16 shrink-0" />
@@ -226,7 +237,7 @@ function FeastAgenda({ saints, isLoading }: { saints: LibrarySaint[]; isLoading:
               </div>
               <Button asChild variant="outline" className="rounded-2xl">
                 <Link to={saintDetailPath(saint.slug)}>
-                  Fungua
+                  {t("member_liturgical_calendar.agenda.open")}
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Link>
               </Button>
@@ -239,9 +250,12 @@ function FeastAgenda({ saints, isLoading }: { saints: LibrarySaint[]; isLoading:
 }
 
 function MonthlyCalendar({ saints, selectedMonth }: { saints: LibrarySaint[]; selectedMonth: number }) {
+  const { i18n, t } = useTranslation();
   const year = new Date().getFullYear();
   const daysInMonth = new Date(year, selectedMonth, 0).getDate();
   const firstWeekday = new Date(year, selectedMonth - 1, 1).getDay();
+  const monthLabel = getMonthLabel(selectedMonth, i18n.language);
+  const weekdays = useMemo(() => getWeekdayLabels(i18n.language), [i18n.language]);
   const saintsByDay = saints.reduce<Record<number, LibrarySaint[]>>((groups, saint) => {
     const day = saint.feast_day;
     groups[day] = [...(groups[day] ?? []), saint];
@@ -254,21 +268,21 @@ function MonthlyCalendar({ saints, selectedMonth }: { saints: LibrarySaint[]; se
   ];
 
   return (
-    <section aria-label={`Kalenda ya ${MONTHS[selectedMonth - 1]}`}>
+    <section aria-label={t("member_liturgical_calendar.calendar.aria", { month: monthLabel })}>
       <Card className="rounded-[28px] border-border/70 bg-card/85">
         <CardContent className="p-4 sm:p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold">Kalenda ya {MONTHS[selectedMonth - 1]}</h2>
-              <p className="text-sm text-muted-foreground">Siku zenye watakatifu waliochapishwa zimeunganishwa hapa chini.</p>
+              <h2 className="text-xl font-bold">{t("member_liturgical_calendar.calendar.title", { month: monthLabel })}</h2>
+              <p className="text-sm text-muted-foreground">{t("member_liturgical_calendar.calendar.helper")}</p>
             </div>
             <Badge variant="outline" className="rounded-full">
-              Maadhimisho {saints.length}
+              {t("member_liturgical_calendar.calendar.count", { count: saints.length })}
             </Badge>
           </div>
 
           <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {WEEKDAYS.map((day) => (
+            {weekdays.map((day) => (
               <div key={day} className="py-2">
                 {day}
               </div>
@@ -292,13 +306,15 @@ function MonthlyCalendar({ saints, selectedMonth }: { saints: LibrarySaint[]; se
                             key={saint.id}
                             to={saintDetailPath(saint.slug)}
                             className="block truncate rounded-lg px-1.5 py-1 text-[11px] text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                            aria-label={`Fungua ${saint.name}`}
+                            aria-label={t("member_liturgical_calendar.calendar.open_saint", { name: saint.name })}
                           >
                             &bull; {saint.name}
                           </Link>
                         ))}
                         {daySaints.length > 3 ? (
-                          <span className="block px-1.5 text-[11px] text-muted-foreground">+{daySaints.length - 3} zaidi</span>
+                          <span className="block px-1.5 text-[11px] text-muted-foreground">
+                            {t("member_liturgical_calendar.calendar.more", { count: daySaints.length - 3 })}
+                          </span>
                         ) : null}
                       </div>
                     </>
@@ -314,10 +330,11 @@ function MonthlyCalendar({ saints, selectedMonth }: { saints: LibrarySaint[]; se
 }
 
 export default function LiturgicalCalendarPage() {
+  const { i18n, t } = useTranslation();
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth);
   const [search, setSearch] = useState("");
   const today = useMemo(() => getTodayParts(), []);
-  const selectedMonthLabel = MONTHS[selectedMonth - 1];
+  const selectedMonthLabel = getMonthLabel(selectedMonth, i18n.language);
 
   const {
     data: monthSaints = [],
@@ -370,11 +387,13 @@ export default function LiturgicalCalendarPage() {
           <div className="max-w-3xl">
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
               <CalendarDays className="h-4 w-4" aria-hidden="true" />
-              Watakatifu
+              {t("member_liturgical_calendar.hero.eyebrow")}
             </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Kalenda ya Liturujia</h1>
+            <h1 className="mt-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+              {t("member_liturgical_calendar.hero.title")}
+            </h1>
             <p className="mt-3 text-base text-muted-foreground">
-              Fuatilia maadhimisho ya Kanisa na watakatifu katika mwaka mzima.
+              {t("member_liturgical_calendar.hero.subtitle")}
             </p>
           </div>
         </section>
@@ -389,7 +408,7 @@ export default function LiturgicalCalendarPage() {
 
                 <div>
                   <label htmlFor="feast-search" className="sr-only">
-                    Tafuta maadhimisho
+                    {t("member_liturgical_calendar.search.label")}
                   </label>
                   <div className="relative">
                     <Search
@@ -400,19 +419,17 @@ export default function LiturgicalCalendarPage() {
                       id="feast-search"
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Tafuta jina, mwezi, mlezi, nchi, au lebo..."
+                      placeholder={t("member_liturgical_calendar.search.placeholder")}
                       className="h-12 rounded-2xl border-border/70 bg-background/70 pl-12"
                     />
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground" aria-live="polite">
-                  <span>
-                    Matokeo {filteredSaints.length}
-                  </span>
+                  <span>{t("member_liturgical_calendar.search.results", { count: filteredSaints.length })}</span>
                   {search ? (
                     <Button type="button" variant="ghost" size="sm" className="rounded-xl" onClick={() => setSearch("")}>
-                      Futa
+                      {t("member_liturgical_calendar.search.clear")}
                     </Button>
                   ) : null}
                 </div>
@@ -424,7 +441,9 @@ export default function LiturgicalCalendarPage() {
             {isError ? (
               <Card className="rounded-[28px] border-destructive/25 bg-destructive/5">
                 <CardContent className="p-6 text-sm text-destructive">
-                  Kalenda ya Liturujia haikuweza kupakiwa: {(error as Error)?.message || "Jaribu tena."}
+                  {t("member_liturgical_calendar.error.message", {
+                    message: (error as Error)?.message || t("member_liturgical_calendar.error.fallback"),
+                  })}
                 </CardContent>
               </Card>
             ) : (

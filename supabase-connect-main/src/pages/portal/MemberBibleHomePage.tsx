@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 type BibleBookRow = {
   id: string;
@@ -29,12 +30,6 @@ type BibleVerseSearchRow = {
     id: string;
     name: string;
   } | null;
-};
-
-const TESTAMENT_LABELS: Record<BibleBookRow["testament"], string> = {
-  old: "Old Testament",
-  new: "New Testament",
-  deuterocanonical: "Deuterocanonical",
 };
 
 const TESTAMENT_ORDER: BibleBookRow["testament"][] = ["old", "new", "deuterocanonical"];
@@ -107,12 +102,13 @@ function getVerseText(verse: BibleVerseSearchRow) {
   return verse.verse_text ?? verse.text ?? "";
 }
 
-function getBookName(verse: BibleVerseSearchRow) {
-  return verse.bible_books?.name ?? verse.reference?.replace(/\s+\d+:\d+.*$/, "") ?? "Bible";
+function getBookName(verse: BibleVerseSearchRow, fallback: string) {
+  return verse.bible_books?.name ?? verse.reference?.replace(/\s+\d+:\d+.*$/, "") ?? fallback;
 }
 
 function SearchResultCard({ verse }: { verse: BibleVerseSearchRow }) {
-  const bookName = getBookName(verse);
+  const { t } = useTranslation();
+  const bookName = getBookName(verse, t("member_bible.common.bible"));
 
   return (
     <Link to={`/portal/bible/${verse.book_id}/chapter/${verse.chapter_number}`} className="group block">
@@ -122,7 +118,7 @@ function SearchResultCard({ verse }: { verse: BibleVerseSearchRow }) {
             <div>
               <p className="text-sm font-semibold text-primary">{bookName}</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Chapter {verse.chapter_number}, Verse {verse.verse_number}
+                {t("member_bible.search.chapter_verse", { chapter: verse.chapter_number, verse: verse.verse_number })}
               </p>
             </div>
             <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden="true" />
@@ -138,6 +134,7 @@ function SearchResultCard({ verse }: { verse: BibleVerseSearchRow }) {
 }
 
 export default function MemberBibleHomePage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
   const normalizedSearch = normalizeSearchTerm(debouncedSearch);
@@ -196,13 +193,13 @@ export default function MemberBibleHomePage() {
           <div className="max-w-3xl">
             <p className="flex items-center gap-2 text-sm font-medium text-primary">
               <BookOpen className="h-4 w-4" aria-hidden="true" />
-              Bible
+              {t("member_bible.common.bible")}
             </p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Biblia Takatifu</h1>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t("member_bible.home.title")}</h1>
           </div>
           <div className="mt-5 max-w-2xl">
             <label htmlFor="bible-search" className="sr-only">
-              Search Bible
+              {t("member_bible.search.label")}
             </label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
@@ -210,7 +207,7 @@ export default function MemberBibleHomePage() {
                 id="bible-search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search words, phrases, or references"
+                placeholder={t("member_bible.search.placeholder")}
                 className="h-12 rounded-lg border-border/70 bg-background/70 pl-12 text-base"
               />
             </div>
@@ -221,10 +218,10 @@ export default function MemberBibleHomePage() {
           <section className="space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h2 className="text-xl font-bold tracking-tight text-foreground">Search Results</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Showing up to 50 matching verses.</p>
+                <h2 className="text-xl font-bold tracking-tight text-foreground">{t("member_bible.search.results_title")}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{t("member_bible.search.results_limit")}</p>
               </div>
-              {!isSearchLoading && !isSearchError ? <p className="text-sm text-muted-foreground">{searchResults.length} found</p> : null}
+              {!isSearchLoading && !isSearchError ? <p className="text-sm text-muted-foreground">{t("member_bible.search.results_count", { count: searchResults.length })}</p> : null}
             </div>
 
             {isSearchLoading ? <SearchResultsSkeleton /> : null}
@@ -232,8 +229,8 @@ export default function MemberBibleHomePage() {
             {isSearchError ? (
               <Alert variant="destructive" className="rounded-lg">
                 <AlertCircle className="h-4 w-4" aria-hidden="true" />
-                <AlertTitle>Unable to search Bible</AlertTitle>
-                <AlertDescription>{searchError instanceof Error ? searchError.message : "Please try again."}</AlertDescription>
+                <AlertTitle>{t("member_bible.search.error_title")}</AlertTitle>
+                <AlertDescription>{searchError instanceof Error ? searchError.message : t("member_bible.common.try_again")}</AlertDescription>
               </Alert>
             ) : null}
 
@@ -243,8 +240,8 @@ export default function MemberBibleHomePage() {
                   <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                     <Search className="h-7 w-7" aria-hidden="true" />
                   </div>
-                  <h2 className="text-lg font-semibold">No verses found</h2>
-                  <p className="mt-2 max-w-md text-sm text-muted-foreground">Try another word, phrase, or reference.</p>
+                  <h2 className="text-lg font-semibold">{t("member_bible.search.empty_title")}</h2>
+                  <p className="mt-2 max-w-md text-sm text-muted-foreground">{t("member_bible.search.empty_description")}</p>
                 </CardContent>
               </Card>
             ) : null}
@@ -264,8 +261,8 @@ export default function MemberBibleHomePage() {
             {isError ? (
               <Alert variant="destructive" className="rounded-lg">
                 <AlertCircle className="h-4 w-4" aria-hidden="true" />
-                <AlertTitle>Unable to load books</AlertTitle>
-                <AlertDescription>{error instanceof Error ? error.message : "Please try again."}</AlertDescription>
+                <AlertTitle>{t("member_bible.home.books_error_title")}</AlertTitle>
+                <AlertDescription>{error instanceof Error ? error.message : t("member_bible.common.try_again")}</AlertDescription>
               </Alert>
             ) : null}
 
@@ -275,8 +272,8 @@ export default function MemberBibleHomePage() {
                   <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                     <BookOpen className="h-7 w-7" aria-hidden="true" />
                   </div>
-                  <h2 className="text-lg font-semibold">No books found</h2>
-                  <p className="mt-2 max-w-md text-sm text-muted-foreground">Bible books are not available yet.</p>
+                  <h2 className="text-lg font-semibold">{t("member_bible.home.empty_books_title")}</h2>
+                  <p className="mt-2 max-w-md text-sm text-muted-foreground">{t("member_bible.home.empty_books_description")}</p>
                 </CardContent>
               </Card>
             ) : null}
@@ -286,8 +283,8 @@ export default function MemberBibleHomePage() {
                 {booksByTestament.map((section) => (
                   <section key={section.testament} className="space-y-3">
                     <div className="flex items-end justify-between gap-3">
-                      <h2 className="text-xl font-bold tracking-tight text-foreground">{TESTAMENT_LABELS[section.testament]}</h2>
-                      <p className="text-sm text-muted-foreground">{section.books.length} books</p>
+                      <h2 className="text-xl font-bold tracking-tight text-foreground">{t(`member_bible.testaments.${section.testament}`)}</h2>
+                      <p className="text-sm text-muted-foreground">{t("member_bible.home.books_count", { count: section.books.length })}</p>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                       {section.books.map((book) => (

@@ -22,25 +22,31 @@ import { useOfflineSyncQueue } from "@/hooks/useOfflineSyncQueue";
 import { readOfflineCache, withOfflineCache } from "@/lib/offline-cache";
 import { useTranslation } from "react-i18next";
 import { translateStatus } from "@/lib/translation-helpers";
+import { formatAppDate } from "@/lib/localization";
 import { assertClientRateLimit } from "@/lib/client-rate-limit";
 import { logSupabaseError } from "@/lib/error-logger";
 
 const intentionTypeOptions = [
-  { value: "shukrani", label: "Shukrani", description: "Nia ya kumshukuru Mungu" },
-  { value: "marehemu", label: "Marehemu", description: "Kwa roho za waliofariki" },
-  { value: "maombi_maalum", label: "Maombi Maalum", description: "Nia maalum ya familia au binafsi" },
-  { value: "wagonjwa", label: "Wagonjwa", description: "Kwa uponyaji na faraja" },
-  { value: "safari", label: "Safari", description: "Kwa ulinzi na baraka safarini" },
-  { value: "mtakatifu_wa_familia", label: "Mtakatifu wa Familia", description: "Kwa maombezi ya mtakatifu wa familia" },
-  { value: "other", label: "Nyingine", description: "Nia nyingine ya Misa" },
+  { value: "shukrani", labelKey: "mass_intentions_labels.shukrani", descriptionKey: "mass_intentions_form.intention_descriptions.shukrani" },
+  { value: "marehemu", labelKey: "mass_intentions_labels.marehemu", descriptionKey: "mass_intentions_form.intention_descriptions.marehemu" },
+  { value: "maombi_maalum", labelKey: "mass_intentions_labels.maombi_maalum", descriptionKey: "mass_intentions_form.intention_descriptions.maombi_maalum" },
+  { value: "wagonjwa", labelKey: "mass_intentions_labels.wagonjwa", descriptionKey: "mass_intentions_form.intention_descriptions.wagonjwa" },
+  { value: "safari", labelKey: "mass_intentions_labels.safari", descriptionKey: "mass_intentions_form.intention_descriptions.safari" },
+  { value: "mtakatifu_wa_familia", labelKey: "mass_intentions_labels.mtakatifu_wa_familia", descriptionKey: "mass_intentions_form.intention_descriptions.mtakatifu_wa_familia" },
+  { value: "other", labelKey: "mass_intentions_labels.other", descriptionKey: "mass_intentions_form.intention_descriptions.other" },
 ] as const;
 
 type IntentionTypeValue = (typeof intentionTypeOptions)[number]["value"];
 
 const DEFAULT_OFFERING = 5000;
 
-function getIntentionTypeLabel(value: string) {
-  return intentionTypeOptions.find((option) => option.value === value)?.label ?? value;
+function getIntentionTypeLabel(t: ReturnType<typeof useTranslation>["t"], value: string) {
+  const option = intentionTypeOptions.find((item) => item.value === value);
+  return option ? t(option.labelKey) : value;
+}
+
+function formatMassOptionDate(value: string, language: string) {
+  return formatAppDate(value, language, { day: "numeric", month: "short", year: "numeric" }) || value;
 }
 
 function useMemberRecord() {
@@ -75,7 +81,7 @@ export default function PortalMassIntentions() {
   const { churchId } = useAuth();
   const { isOnline } = useNetworkStatus();
   const { toast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const { data: member } = useMemberRecord();
   const offlineQueue = useOfflineSyncQueue();
@@ -193,11 +199,11 @@ export default function PortalMassIntentions() {
       if (!member?.id) throw new Error(t("mass_intentions_form.error_no_member"));
       const netAmount = parseFloat(offeringAmount) || DEFAULT_OFFERING;
       if (!message.trim()) throw new Error(t("mass_intentions_form.error_message_required"));
-      if (!massOccurrenceId) throw new Error("Please select an available Mass.");
+      if (!massOccurrenceId) throw new Error(t("mass_intentions_form.error_mass_required"));
       if (netAmount < 1000) throw new Error(t("mass_intentions_form.error_minimum_offering"));
       assertClientRateLimit(`mass-intention:${churchId}:${member.id}`, 5, 60 * 60 * 1000, "mass intention submissions");
 
-      if (!isOnline) throw new Error("Unganisha intaneti ili kuthibitisha nafasi ya Misa.");
+      if (!isOnline) throw new Error(t("mass_intentions_form.error_mass_requires_connection"));
       await submitPortalMassIntentionForOccurrence({
         intention_type: intentionType,
         message,
@@ -249,7 +255,7 @@ export default function PortalMassIntentions() {
         table: "mass_intentions",
         metadata: { member_id: member?.id, intention_type: intentionType, offering_amount: offeringAmount },
       });
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: err.message, variant: "destructive" });
     },
   });
 
@@ -272,12 +278,12 @@ export default function PortalMassIntentions() {
                     {translateStatus(t, intention.status)}
                   </Badge>
                 </div>
-                <p className="mb-1 text-xs text-primary">{getIntentionTypeLabel(intention.intention_type)}</p>
+                <p className="mb-1 text-xs text-primary">{getIntentionTypeLabel(t, intention.intention_type)}</p>
                 <p className="break-words text-sm leading-6 text-muted-foreground">{intention.message}</p>
                 {intention.offering_amount && (
                   <p className="mt-2 text-xs text-primary">{t("mass_intentions_form.offering", { amount: formatTZS(intention.offering_amount) })}</p>
                 )}
-                <p className="mt-2 text-xs text-muted-foreground/60">{new Date(intention.created_at).toLocaleDateString()}</p>
+                <p className="mt-2 text-xs text-muted-foreground/60">{formatAppDate(intention.created_at, i18n.language)}</p>
               </div>
             </div>
           </CardContent>
@@ -295,21 +301,21 @@ export default function PortalMassIntentions() {
               <Heart className="h-6 w-6" />
             </div>
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">Kanisa Connect</p>
-            <h1 className="mt-1 font-serif text-3xl font-bold tracking-normal text-foreground sm:text-4xl">Nia za Misa</h1>
+            <h1 className="mt-1 font-serif text-3xl font-bold tracking-normal text-foreground sm:text-4xl">{t("mass_intentions_form.page_title")}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-              Wasilisha nia yako kwa Misa utakayochagua, kisha parokia itaipokea kwa ajili ya maandalizi na kumbukumbu.
+              {t("mass_intentions_form.page_description")}
             </p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="min-h-12 w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
-                Wasilisha Nia
+                {t("mass_intentions_form.submit_intention")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="font-serif">Wasilisha Nia ya Misa</DialogTitle>
+                <DialogTitle className="font-serif">{t("mass_intentions_form.dialog_title")}</DialogTitle>
               </DialogHeader>
               <form
                 className="space-y-4"
@@ -325,7 +331,7 @@ export default function PortalMassIntentions() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label>Aina ya Nia ya Misa *</Label>
+                  <Label>{t("mass_intentions_form.intention_type_label")}</Label>
                   <div className="grid min-w-0 gap-2 sm:grid-cols-2">
                     {intentionTypeOptions.map((option) => {
                       const selected = intentionType === option.value;
@@ -352,8 +358,8 @@ export default function PortalMassIntentions() {
                               <Heart className="h-4 w-4" />
                             </span>
                             <span className="min-w-0">
-                              <span className="block text-sm font-semibold">{option.label}</span>
-                              <span className="mt-1 block text-xs leading-5 text-muted-foreground">{option.description}</span>
+                              <span className="block text-sm font-semibold">{t(option.labelKey)}</span>
+                              <span className="mt-1 block text-xs leading-5 text-muted-foreground">{t(option.descriptionKey)}</span>
                             </span>
                           </span>
                         </button>
@@ -362,21 +368,21 @@ export default function PortalMassIntentions() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="mass_occurrence">Chagua Misa *</Label>
+                  <Label htmlFor="mass_occurrence">{t("mass_intentions_form.mass_selection_label")}</Label>
                   <div className="relative">
                     <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <select id="mass_occurrence" value={massOccurrenceId} onChange={(event) => { const selected = availableMasses.find(item => item.id === event.target.value); setMassOccurrenceId(event.target.value); setMassDate(selected?.occurrence_date ?? ""); setOfferingAmount(String(selected?.intention_fee ?? 0)); }} className="h-12 w-full min-w-0 rounded-md border bg-background pl-9 pr-3" required disabled={massesLoading || !isOnline}>
-                      <option value="">{massesLoading ? "Inapakia Misa..." : "Chagua Misa inayopatikana"}</option>
-                      {availableMasses.filter(item => !item.is_full).map(item => <option key={item.id} value={item.id}>{item.occurrence_date} · {item.start_time.slice(0,5)} · {item.name}{item.remaining_slots == null ? "" : ` · nafasi ${item.remaining_slots}`}</option>)}
+                      <option value="">{massesLoading ? t("mass_intentions_form.mass_loading") : t("mass_intentions_form.mass_select_placeholder")}</option>
+                      {availableMasses.filter(item => !item.is_full).map(item => <option key={item.id} value={item.id}>{formatMassOptionDate(item.occurrence_date, i18n.language)} - {item.start_time.slice(0,5)} - {item.name}{item.remaining_slots == null ? "" : ` - ${t("mass_intentions_form.remaining_slots", { count: item.remaining_slots })}`}</option>)}
                     </select>
                   </div>
-                  {!isOnline ? <p className="text-xs text-destructive">Uchaguzi wa Misa unahitaji muunganisho ili kuthibitisha nafasi.</p> : null}
+                  {!isOnline ? <p className="text-xs text-destructive">{t("mass_intentions_form.mass_requires_connection")}</p> : null}
                 </div>
                 <div className="space-y-2">
-                  <Label>Nia / Ujumbe *</Label>
+                  <Label>{t("mass_intentions_form.message_label")}</Label>
                   <Textarea
                     rows={4}
-                    placeholder="Andika jina, familia, au ujumbe wa nia ya Misa..."
+                    placeholder={t("mass_intentions_form.message_placeholder")}
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
                     className="min-h-32"
@@ -384,7 +390,7 @@ export default function PortalMassIntentions() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Kiasi cha sadaka ya Misa *</Label>
+                  <Label>{t("mass_intentions_form.offering_label")}</Label>
                   <Input
                     type="number"
                     min="1000"
@@ -464,13 +470,13 @@ export default function PortalMassIntentions() {
                   <div key={item.id} className="rounded-2xl border border-border/60 bg-background/70 p-3">
                     <div className="flex min-w-0 items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium">{getIntentionTypeLabel(item.payload.intentionType)}</p>
+                        <p className="text-sm font-medium">{getIntentionTypeLabel(t, item.payload.intentionType)}</p>
                         {item.payload.requestedMassDate ? (
-                          <p className="mt-1 text-xs text-muted-foreground">Tarehe ya Misa: {item.payload.requestedMassDate}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{t("mass_intentions_form.mass_date", { date: formatMassOptionDate(item.payload.requestedMassDate, i18n.language) })}</p>
                         ) : null}
                         <p className="mt-1 break-words text-sm text-muted-foreground">{item.payload.message}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {t("mass_intentions_form.saved_at", { date: new Date(item.createdAt).toLocaleString() })}
+                          {t("mass_intentions_form.saved_at", { date: formatAppDate(item.createdAt, i18n.language, { dateStyle: "medium", timeStyle: "short" }) })}
                         </p>
                       </div>
                       <Button
@@ -517,16 +523,16 @@ export default function PortalMassIntentions() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{member.full_name}</p>
-                    <p className="text-xs text-muted-foreground">Nia zako zinaunganishwa na ushiriki wako wa parokia.</p>
+                    <p className="text-xs text-muted-foreground">{t("mass_intentions_form.member_context")}</p>
                   </div>
                 </div>
               </div>
             )}
 
             <div className="rounded-2xl bg-muted/50 p-5">
-              <h2 className="text-sm font-semibold text-foreground">Kabla ya kuwasilisha</h2>
+              <h2 className="text-sm font-semibold text-foreground">{t("mass_intentions_form.before_submit_title")}</h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Chagua Misa yenye nafasi, andika nia yako kwa utulivu, na hakiki kiasi cha sadaka kinachoonekana kwenye ratiba ya parokia.
+                {t("mass_intentions_form.before_submit_description")}
               </p>
             </div>
           </aside>

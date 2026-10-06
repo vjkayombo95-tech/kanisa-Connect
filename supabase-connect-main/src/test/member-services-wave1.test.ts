@@ -30,7 +30,7 @@ describe("production Wave 1 member services", () => {
 
   it("supports feature visibility, local search, and simplified intent groups", () => {
     expect(services).toContain("state.visible");
-    expect(services).toContain('placeholder="Tafuta huduma..."');
+    expect(services).toContain('placeholder={t("member_services_page.search_placeholder")}');
     expect(services).toContain("normalizeSearch");
     expect(services).toContain("presentationGroups");
     expect(services).toContain("groupedServices.map");
@@ -38,12 +38,12 @@ describe("production Wave 1 member services", () => {
 
   it("renders Zaidi as a calm grouped secondary navigation hub", () => {
     expect(services).toContain("<h1");
-    expect(services).toContain("Zaidi");
-    expect(services).toContain("Pata huduma na maeneo mengine ya Kanisa Connect.");
-    expect(services).toContain('label: "Huduma za Parokia"');
-    expect(services).toContain('label: "Kiroho"');
-    expect(services).toContain('label: "Media"');
-    expect(services).toContain('label: "Akaunti / Nyingine"');
+    expect(services).toContain('t("member_services_page.title")');
+    expect(services).toContain('t("member_services_page.subtitle")');
+    expect(services).toContain('"member_services_page.groups.parish_services.label"');
+    expect(services).toContain('"member_services_page.groups.spiritual.label"');
+    expect(services).toContain('"member_services_page.groups.media.label"');
+    expect(services).toContain('"member_services_page.groups.account_other.label"');
     expect(services).toContain("rounded-[22px]");
     expect(services).toContain("min-h-[68px]");
   });
@@ -106,8 +106,10 @@ describe("production Wave 1 member services", () => {
     expect(services).toContain("if (!item.featureKey) return true;");
     expect(services).toContain("if (item.requiresExplicitChurchEnable) return isFeatureExplicitlyEnabledForChurch(item.featureKey);");
     expect(services).toContain("return (!item.requiresExistingFeature || state.exists) && state.visible;");
-    expect(services).toContain("const filtered = query ? visibleServices.filter");
-    expect(services).toContain("normalizeSearch(`${item.label} ${item.description}`).includes(query)");
+    expect(services).toContain("const filtered = query");
+    expect(services).toContain("visibleServices.filter((item)");
+    expect(services).toContain("translateMemberServiceLabel(t, item)");
+    expect(services).toContain("translateMemberServiceDescription(t, item)");
   });
 
   it("keeps livestream dynamic and never exposes a generic livestream destination", () => {
@@ -123,7 +125,7 @@ describe("production Wave 1 member services", () => {
     expect(services).toContain("max-w-4xl");
     expect(services).toContain("space-y-5");
     expect(services).toContain("overflow-x-hidden");
-    expect(services).toContain("<ServiceRows items={group.items} />");
+    expect(services).toContain("<ServiceRows items={group.items} t={t} />");
     expect(services).not.toContain("grid-cols-");
   });
 });

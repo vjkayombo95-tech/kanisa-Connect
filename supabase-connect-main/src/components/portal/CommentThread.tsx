@@ -2,7 +2,9 @@ import { MessageCircle, Send, SmilePlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { formatAppDate } from "@/lib/localization";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 export type CommentReactionSummary = {
   emoji: string;
@@ -44,13 +46,18 @@ export function CommentThread({
   submitPending,
   reactionPending,
   className,
-  headingLabel = "Comments",
-  emptyState = "No comments yet. Start the conversation.",
-  draftPlaceholder = "Write a comment...",
+  headingLabel,
+  emptyState,
+  draftPlaceholder,
   quickEmojis = [],
   reactionEmojis = [],
   onToggleReaction,
 }: CommentThreadProps) {
+  const { t, i18n } = useTranslation();
+  const resolvedHeadingLabel = headingLabel ?? t("member_comments.heading");
+  const resolvedEmptyState = emptyState ?? t("member_comments.empty");
+  const resolvedDraftPlaceholder = draftPlaceholder ?? t("member_comments.placeholder");
+
   return (
     <div
       className={cn(
@@ -60,13 +67,13 @@ export function CommentThread({
     >
       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
         <MessageCircle className="h-4 w-4 text-primary" />
-        <span>{headingLabel}</span>
+        <span>{resolvedHeadingLabel}</span>
         <span className="text-muted-foreground">({comments.length})</span>
       </div>
 
       {comments.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border/60 bg-muted/10 px-4 py-5 text-sm text-muted-foreground">
-          {emptyState}
+          {resolvedEmptyState}
         </div>
       ) : (
         <div className="space-y-3">
@@ -84,7 +91,7 @@ export function CommentThread({
                     <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{comment.body}</p>
                   </div>
                   <p className="shrink-0 text-[11px] text-muted-foreground">
-                    {new Date(comment.created_at).toLocaleString()}
+                    {formatAppDate(comment.created_at, i18n.language, { dateStyle: "medium", timeStyle: "short" })}
                   </p>
                 </div>
 
@@ -134,7 +141,7 @@ export function CommentThread({
       <div className="space-y-3 rounded-2xl border border-primary/10 bg-primary/[0.04] p-3">
         <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.22em] text-primary/80">
           <SmilePlus className="h-3.5 w-3.5" />
-          Add Your Voice
+          {t("member_comments.add_voice")}
         </div>
 
         {quickEmojis.length > 0 ? (
@@ -164,14 +171,14 @@ export function CommentThread({
           <Textarea
             value={draft}
             onChange={(event) => onDraftChange(event.target.value)}
-            placeholder={draftPlaceholder}
+            placeholder={resolvedDraftPlaceholder}
             className="min-h-[92px] resize-none rounded-2xl border-white/10 bg-background/70 text-sm leading-6"
           />
 
           <div className="flex justify-end">
             <Button type="submit" disabled={submitDisabled} className="gap-2">
               <Send className="h-4 w-4" />
-              {submitPending ? "Posting..." : "Post Comment"}
+              {submitPending ? t("member_comments.posting") : t("member_comments.post_comment")}
             </Button>
           </div>
         </form>

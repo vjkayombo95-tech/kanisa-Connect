@@ -42,7 +42,9 @@ describe("production member ministry parity", () => {
   });
 
   it("uses the portal's safe mobile back header without rendering a duplicate", () => {
-    expect(mobileBack).toContain('"/portal/ministries": "Huduma za Parokia"');
+    expect(registry).toContain('backTitleKey: "member_services.ministries.back_title"');
+    expect(mobileBack).toContain("getMemberBackTitleKey(pathname)");
+    expect(mobileBack).not.toContain('"/portal/ministries": "Huduma za Parokia"');
     expect(mobileBack).toContain("/ministries\\/[^/]+$");
     expect(page).not.toContain("navigate(-1)");
     expect(page).not.toContain("ArrowLeft");
@@ -54,22 +56,23 @@ describe("production member ministry parity", () => {
   });
 
   it("separates member ministry states without changing the backend contract", () => {
-    expect(page).toContain("Huduma zangu");
-    expect(page).toContain("Huduma nyingine");
-    expect(page).toContain("Ombi linasubiri");
+    expect(page).toContain("member_ministries.sections.joined");
+    expect(page).toContain("member_ministries.sections.other");
+    expect(page).toContain("member_ministries.status.pending");
     expect(page).toContain("Number(right.requestPending) - Number(left.requestPending)");
   });
 
   it("confirms a tenant-owned leave before invoking the existing mutation", () => {
     expect(page).toContain("AlertDialogTrigger");
-    expect(page).toContain("Unakaribia kuondoka kwenye huduma ya {ministry.name}");
+    expect(page).toContain("member_ministries.leave.description");
+    expect(page).toContain("{ name: ministry.name }");
     expect(page).toContain("leaveRequested.current");
-    expect(page).toContain("Thibitisha kuondoka");
+    expect(page).toContain("member_ministries.actions.confirm_leave");
     expect(queries).toContain("leaveMemberMinistry");
   });
 
   it("distinguishes no configured ministries from an empty search", () => {
-    expect(page).toContain("Hakuna huduma zilizowekwa kwa parokia hii.");
-    expect(page).toContain("Hakuna huduma zinazolingana na utafutaji wako.");
+    expect(page).toContain("member_ministries.empty.no_configured");
+    expect(page).toContain("member_ministries.empty.no_results");
   });
 });

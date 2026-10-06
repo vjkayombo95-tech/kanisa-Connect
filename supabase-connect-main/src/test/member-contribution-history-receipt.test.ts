@@ -35,7 +35,7 @@ describe("Wave 4B member contribution authorization", () => {
   it("renders safe unavailable states for missing, foreign, and unknown records", () => {
     expect(receipt).toContain("if (!contributionId) return <Unavailable />");
     expect(receipt).toContain("receipt.isError || !member || !contribution");
-    expect(receipt).toContain("huna ruhusa ya kuiona");
+    expect(receipt).toContain("member_contribution_receipt.unavailable.description");
   });
 
   it("mounts history and direct-refresh receipt routes for portal and member aliases", () => {

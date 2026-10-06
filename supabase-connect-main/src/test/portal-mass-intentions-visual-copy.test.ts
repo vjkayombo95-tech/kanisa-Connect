@@ -7,16 +7,24 @@ const read = (relative: string) => fs.readFileSync(path.join(root, relative), "u
 
 describe("PortalMassIntentions visual copy contract", () => {
   const page = read("src/pages/portal/PortalMassIntentions.tsx");
-  const en = read("src/locales/en.json");
-  const sw = read("src/locales/sw.json");
-  const massCopy = `${page}\n${en}\n${sw}`;
+  const en = JSON.parse(read("src/locales/en.json"));
+  const sw = JSON.parse(read("src/locales/sw.json"));
+  const massCopy = [
+    page,
+    JSON.stringify(en.mass_intentions_form),
+    JSON.stringify(en.mass_intentions_labels),
+    JSON.stringify(sw.mass_intentions_form),
+    JSON.stringify(sw.mass_intentions_labels),
+  ].join("\n");
 
-  it("keeps Nia za Misa framed as a member-facing service", () => {
-    expect(page).toContain(">Nia za Misa</h1>");
-    expect(page).toContain("Wasilisha nia yako kwa Misa utakayochagua");
+  it("keeps Mass Intentions framed as a localized member-facing service", () => {
+    expect(page).toContain('t("mass_intentions_form.page_title")');
+    expect(page).toContain('t("mass_intentions_form.page_description")');
     expect(page).toContain("Kanisa Connect");
-    expect(page).toContain("Nia zako zinaunganishwa na ushiriki wako wa parokia.");
-    expect(page).toContain("Kabla ya kuwasilisha");
+    expect(page).toContain('t("mass_intentions_form.member_context")');
+    expect(page).toContain('t("mass_intentions_form.before_submit_title")');
+    expect(en.mass_intentions_form.page_title).toBe("Mass Intentions");
+    expect(sw.mass_intentions_form.page_title).toBe("Nia za Misa");
   });
 
   it("uses neutral offering language without checkout claims", () => {
@@ -25,18 +33,21 @@ describe("PortalMassIntentions visual copy contract", () => {
     expect(massCopy).toContain("Parokia inapokea");
     expect(massCopy).toContain("Ada ya mfumo ({{percent}}%)");
     expect(massCopy).toContain("Jumla ya sadaka");
-    expect(massCopy).toContain('"submit_and_pay": "Wasilisha Nia"');
-    expect(massCopy).toContain('"submit_and_pay": "Submit Intention"');
+    expect(sw.mass_intentions_form.submit_and_pay).toBe("Wasilisha Nia");
+    expect(en.mass_intentions_form.submit_and_pay).toBe("Submit Intention");
     expect(massCopy).not.toMatch(/Submit & Pay|Wasilisha na Lipa|You pay|Unalipa|Total paid|Jumla iliyolipwa/i);
   });
 
   it("keeps common status and form actions localized for Kiswahili members", () => {
-    expect(sw).toContain('"my_intentions": "Nia Zangu ({{count}})"');
-    expect(sw).toContain('"completed": "Imekamilika"');
-    expect(sw).toContain('"offering": "Sadaka: {{amount}}"');
-    expect(sw).toContain('"draft_saved": "Rasimu hii inahifadhiwa kwenye kifaa hiki unapoandika."');
-    expect(sw).toContain('"cancel": "Ghairi"');
-    expect(page).toContain('label: "Nyingine"');
+    expect(sw.mass_intentions_form.my_intentions).toBe("Nia Zangu ({{count}})");
+    expect(page).toContain("translateStatus(t, intention.status)");
+    expect(sw.common.completed).toBe("Imekamilika");
+    expect(sw.mass_intentions_form.offering).toBe("Sadaka: {{amount}}");
+    expect(sw.mass_intentions_form.draft_saved).toBe("Rasimu hii inahifadhiwa kwenye kifaa hiki unapoandika.");
+    expect(page).toContain('t("common.cancel")');
+    expect(sw.common.cancel).toBe("Ghairi");
+    expect(page).toContain('value: "other"');
+    expect(page).toContain('labelKey: "mass_intentions_labels.other"');
     expect(page).not.toContain('label: "Other"');
   });
 

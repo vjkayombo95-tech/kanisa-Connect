@@ -6,10 +6,13 @@ import { AlertCircle, BookMarked, Video, Headphones } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
+import { formatAppDate } from "@/lib/localization";
+import { useTranslation } from "react-i18next";
 
 export default function PortalSermons() {
   const { churchId } = useAuth();
   const { isFeatureEnabled } = useFeatureAccess();
+  const { t, i18n } = useTranslation();
 
   const { data: sermons = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["portal-sermons", churchId],
@@ -32,9 +35,9 @@ export default function PortalSermons() {
       <div className="mx-auto max-w-5xl space-y-5">
         <header className="space-y-1">
           <p className="text-sm font-bold text-primary">Kanisa Connect</p>
-          <h1 className="break-words font-serif text-2xl font-bold md:text-3xl">Mahubiri</h1>
+          <h1 className="break-words font-serif text-2xl font-bold md:text-3xl">{t("member_sermons.title")}</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Sikiliza au tazama mahubiri yaliyoshirikiwa na parokia.
+            {t("member_sermons.description")}
           </p>
         </header>
 
@@ -42,17 +45,17 @@ export default function PortalSermons() {
           <div role="status" aria-live="polite" className="space-y-3">
             <Skeleton className="h-32 rounded-[24px]" />
             <Skeleton className="h-32 rounded-[24px]" />
-            <span className="sr-only">Mahubiri yanapakiwa...</span>
+            <span className="sr-only">{t("member_sermons.loading")}</span>
           </div>
         ) : isError ? (
           <Card className="rounded-[24px] border-destructive/30 bg-card/85">
             <CardContent className="flex flex-col items-center gap-3 px-5 py-8 text-center" role="alert">
               <AlertCircle className="h-9 w-9 text-destructive" />
               <div>
-                <p className="font-semibold text-destructive">Imeshindikana kupakia mahubiri.</p>
-                <p className="mt-1 text-sm text-muted-foreground">Jaribu tena kupata mahubiri ya parokia.</p>
+                <p className="font-semibold text-destructive">{t("member_sermons.error.title")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("member_sermons.error.description")}</p>
               </div>
-              <Button type="button" variant="outline" onClick={() => void refetch()}>Jaribu tena</Button>
+              <Button type="button" variant="outline" onClick={() => void refetch()}>{t("member_sermons.actions.retry")}</Button>
             </CardContent>
           </Card>
         ) : sermons.length === 0 ? (
@@ -62,8 +65,8 @@ export default function PortalSermons() {
                 <BookMarked className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-semibold text-foreground">Hakuna mahubiri kwa sasa.</p>
-                <p className="mt-1 text-sm">Mahubiri mapya yataonekana hapa yatakapochapishwa.</p>
+                <p className="font-semibold text-foreground">{t("member_sermons.empty.title")}</p>
+                <p className="mt-1 text-sm">{t("member_sermons.empty.description")}</p>
               </div>
             </CardContent>
           </Card>
@@ -76,21 +79,21 @@ export default function PortalSermons() {
                     <div className="min-w-0">
                       <h3 className="break-words font-semibold">{s.title}</h3>
                       {s.preacher && <p className="text-sm text-primary mt-0.5">{s.preacher}</p>}
-                      <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{s.content || "No notes available."}</p>
+                      <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{s.content || t("member_sermons.fallbacks.no_notes")}</p>
                       <div className="flex gap-3 mt-3">
                         {s.video_url && (
                           <a href={s.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
-                            <Video className="h-3.5 w-3.5" /> Tazama video
+                            <Video className="h-3.5 w-3.5" /> {t("member_sermons.actions.watch_video")}
                           </a>
                         )}
                         {s.audio_url && (
                           <a href={s.audio_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
-                            <Headphones className="h-3.5 w-3.5" /> Sikiliza sauti
+                            <Headphones className="h-3.5 w-3.5" /> {t("member_sermons.actions.listen_audio")}
                           </a>
                         )}
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground shrink-0">{new Date(s.date).toLocaleDateString()}</p>
+                    <p className="text-xs text-muted-foreground shrink-0">{formatAppDate(s.date, i18n.language, { dateStyle: "medium" })}</p>
                   </div>
                 </CardContent>
               </Card>

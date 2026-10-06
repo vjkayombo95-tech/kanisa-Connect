@@ -6,6 +6,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { changeAppLanguage } from "@/i18n";
+
 type Row = Record<string, unknown>;
 
 const database: Record<string, Row[]> = {};
@@ -153,7 +155,10 @@ function mount(path: string, routes: Array<{ path: string; element: ReactNode }>
   return router;
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  await act(async () => {
+    await changeAppLanguage("sw");
+  });
   for (const key of Object.keys(database)) delete database[key];
   queryLog.length = 0;
   tableError = null;
@@ -161,11 +166,14 @@ beforeEach(() => {
   vi.stubGlobal("scrollTo", vi.fn());
 });
 
-afterEach(() => {
+afterEach(async () => {
   if (root) act(() => root!.unmount());
   container?.remove();
   root = null;
   container = null;
+  await act(async () => {
+    await changeAppLanguage("en");
+  });
 });
 
 describe("member Sala behavior contract", () => {

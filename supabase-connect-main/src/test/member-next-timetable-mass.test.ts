@@ -156,12 +156,13 @@ describe("member next timetable Mass", () => {
 
   it("keeps the member parish calendar on display labels for all timetable activity types", () => {
     const calendar = read("pages/ParishCalendarPage.tsx");
+    const sw = JSON.parse(read("locales/sw.json"));
 
     expect(calendar).toContain("function getActivityKind");
-    expect(calendar).toContain('case "confession"');
-    expect(calendar).toContain("Maungamo");
-    expect(calendar).toContain("Kuabudu Ekaristi");
-    expect(calendar).toContain("Haijaainishwa");
-    expect(calendar).toContain("kind: getActivityKind(mass.activity_type ?? null)");
+    expect(calendar).toContain("TIMETABLE_ACTIVITY_LABEL_KEYS");
+    expect(sw.mass_timetable_admin.activity_types.confession).toBe("Maungamo");
+    expect(sw.mass_timetable_admin.activity_types.adoration).toBe("Kuabudu Ekaristi");
+    expect(sw.mass_timetable_admin.activity_types.unclassified).toBe("Haijaainishwa");
+    expect(calendar).toContain("kind: getActivityKind(t, mass.activity_type ?? null)");
   });
 });
