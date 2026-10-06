@@ -147,11 +147,11 @@ describe("member prayer requests localization D2", () => {
     );
   });
 
-  it("localizes CommentThread framing through existing page props only", () => {
+  it("localizes CommentThread framing through page props while shared fallbacks remain localized", () => {
     expect(pageSource).toContain('headingLabel={t("member_prayer_requests.comments.heading")}');
     expect(pageSource).toContain('draftPlaceholder={t("member_prayer_requests.comments.placeholder")}');
     expect(pageSource).toContain('emptyState={t("member_prayer_requests.comments.empty")}');
-    expect(commentThreadSource).toContain('headingLabel = "Comments"');
-    expect(commentThreadSource).toContain('draftPlaceholder = "Write a comment..."');
+    expect(commentThreadSource).toContain('headingLabel ?? t("member_comments.heading")');
+    expect(commentThreadSource).toContain('draftPlaceholder ?? t("member_comments.placeholder")');
   });
 });

@@ -1026,6 +1026,14 @@
       "send_aria": "Send question"
     }
   },
+  "member_comments": {
+    "heading": "Comments",
+    "empty": "No comments yet. Start the conversation.",
+    "placeholder": "Write a comment...",
+    "add_voice": "Add Your Voice",
+    "posting": "Posting...",
+    "post_comment": "Post Comment"
+  },
   "staff_mobile": {
     "all_services": "All services",
     "back_as_member": "Back as Member",

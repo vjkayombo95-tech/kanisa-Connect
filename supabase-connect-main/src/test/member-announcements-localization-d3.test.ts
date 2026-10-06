@@ -65,7 +65,7 @@ describe("member announcements localization D3", () => {
     expect(routesSource).toContain('<Route path="announcements" element={<PortalAnnouncements />} />');
   });
 
-  it("preserves comment and reaction mutations while localizing only page-provided labels", () => {
+  it("preserves comment and reaction mutations while keeping page-provided labels localized", () => {
     expect(pageSource).toContain('.from("announcement_reactions" as never)');
     expect(pageSource).toContain("announcement_id: announcementId");
     expect(pageSource).toContain("user_id: user.id");
@@ -79,7 +79,7 @@ describe("member announcements localization D3", () => {
     expect(pageSource).toContain('headingLabel={t("member_announcements.comments.heading")}');
     expect(pageSource).toContain('draftPlaceholder={t("member_announcements.comments.placeholder")}');
     expect(pageSource).toContain('emptyState={t("member_announcements.comments.empty")}');
-    expect(commentThreadSource).toContain('headingLabel = "Comments"');
+    expect(commentThreadSource).toContain('headingLabel ?? t("member_comments.heading")');
   });
 
   it("localizes date and app-owned image alt copy without changing image keys or dynamic title", () => {

@@ -1026,6 +1026,14 @@
       "send_aria": "Tuma swali"
     }
   },
+  "member_comments": {
+    "heading": "Maoni",
+    "empty": "Hakuna maoni bado. Anzisha mazungumzo.",
+    "placeholder": "Andika maoni...",
+    "add_voice": "Ongeza Sauti Yako",
+    "posting": "Inachapisha...",
+    "post_comment": "Chapisha Maoni"
+  },
   "staff_mobile": {
     "all_services": "Huduma zote",
     "back_as_member": "Rudi kama Mwanachama",
