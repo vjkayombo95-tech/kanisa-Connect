@@ -1326,6 +1326,48 @@
       "history_link": "Contribution History"
     }
   },
+  "member_radio": {
+    "loading": "Radio is loading",
+    "header": {
+      "eyebrow": "RADIO"
+    },
+    "error": {
+      "title": "Radio could not be loaded",
+      "description": "Try again in a moment."
+    },
+    "unavailable": {
+      "title": "Radio is unavailable"
+    },
+    "playback_error": {
+      "description": "We could not connect to the radio right now."
+    },
+    "status": {
+      "error": "Playback error",
+      "playing": "Playing now",
+      "ready": "Ready to listen",
+      "paused": "Paused"
+    },
+    "actions": {
+      "retry": "Try again",
+      "retry_radio": "Try radio again",
+      "pause": "Pause",
+      "listen": "Listen",
+      "pause_radio": "Pause radio",
+      "resume_listening": "Resume listening",
+      "close_radio": "Close radio",
+      "open_website": "Open radio website"
+    },
+    "volume": {
+      "label": "Volume",
+      "radio_label": "Radio volume"
+    },
+    "station_selector": {
+      "title": "Choose a station"
+    },
+    "persistent_player": {
+      "aria_label": "Radio player"
+    }
+  },
   "member_services": {
     "announcements": {
       "label": "Announcements",

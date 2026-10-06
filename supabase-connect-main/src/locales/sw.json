@@ -1326,6 +1326,48 @@
       "history_link": "Historia ya Michango"
     }
   },
+  "member_radio": {
+    "loading": "Radio inapakiwa",
+    "header": {
+      "eyebrow": "RADIO"
+    },
+    "error": {
+      "title": "Radio haikuweza kupakiwa",
+      "description": "Jaribu tena baada ya muda mfupi."
+    },
+    "unavailable": {
+      "title": "Radio haipatikani"
+    },
+    "playback_error": {
+      "description": "Hatujaweza kuunganisha radio kwa sasa."
+    },
+    "status": {
+      "error": "Hitilafu ya uchezaji",
+      "playing": "Inacheza sasa",
+      "ready": "Tayari kusikiliza",
+      "paused": "Imesitishwa"
+    },
+    "actions": {
+      "retry": "Jaribu tena",
+      "retry_radio": "Jaribu tena radio",
+      "pause": "Sitisha",
+      "listen": "Sikiliza",
+      "pause_radio": "Sitisha radio",
+      "resume_listening": "Endelea kusikiliza",
+      "close_radio": "Funga radio",
+      "open_website": "Fungua tovuti ya radio"
+    },
+    "volume": {
+      "label": "Sauti",
+      "radio_label": "Sauti ya radio"
+    },
+    "station_selector": {
+      "title": "Chagua radio"
+    },
+    "persistent_player": {
+      "aria_label": "Kicheza Radio"
+    }
+  },
   "member_services": {
     "announcements": {
       "label": "Matangazo",
