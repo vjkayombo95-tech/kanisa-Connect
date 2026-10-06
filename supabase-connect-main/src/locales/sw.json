@@ -866,6 +866,94 @@
       "proof_size": "Faili ya uthibitisho iwe MB 5 au chini"
     }
   },
+  "member_community_help": {
+    "title": "Msaada wa Jamii",
+    "description": "Saidia wanachama wa jumuiya yako wanaohitaji msaada.",
+    "actions": {
+      "request_help": "Omba Msaada",
+      "cancel": "Ghairi",
+      "submit": "Wasilisha",
+      "submitting": "Inawasilishwa..."
+    },
+    "dialog": {
+      "title": "Omba Msaada wa Jamii"
+    },
+    "categories": {
+      "medical": "Matibabu",
+      "education": "Elimu",
+      "housing": "Makazi",
+      "food": "Chakula",
+      "emergency": "Dharura",
+      "funeral": "Msiba",
+      "other": "Nyingine"
+    },
+    "form": {
+      "category_label": "Aina *",
+      "category_placeholder": "Chagua aina",
+      "description_label": "Maelezo *",
+      "description_placeholder": "Eleza hitaji...",
+      "target_amount_label": "Kiasi Kinacholengwa (TZS)",
+      "target_amount_placeholder": "Kiasi cha lengo, hiari",
+      "review_notice": "Ombi lako litakaguliwa na msimamizi wa kanisa kabla halijaonekana kwa jumuiya.",
+      "draft_notice": "Rasimu hii inahifadhiwa kwenye kifaa hiki unapoandika."
+    },
+    "offline": {
+      "pending_title": "Maombi ya msaada yanayosubiri nje ya mtandao",
+      "pending_description": "Yatasawazishwa kiotomatiki intaneti itakaporejea.",
+      "pending_count": "{{count}} yanasubiri",
+      "sync_now": "Sawazisha sasa",
+      "syncing": "Inasawazisha...",
+      "saved_at": "Imehifadhiwa {{date}}",
+      "remove": "Ondoa"
+    },
+    "tabs": {
+      "community_requests": "Maombi ya Jamii",
+      "my_requests": "Maombi Yangu ({{count}})"
+    },
+    "states": {
+      "loading": "Inapakia...",
+      "empty_approved": "Hakuna maombi ya msaada yaliyoidhinishwa kwa sasa.",
+      "empty_mine": "Bado hujawasilisha ombi la msaada."
+    },
+    "amounts": {
+      "raised": "{{amount}} zimekusanywa",
+      "goal": "Lengo {{amount}}"
+    },
+    "donation": {
+      "action": "Changia",
+      "title": "Changia Ombi la Msaada",
+      "amount_label": "Kiasi (TZS) *",
+      "amount_placeholder": "Kiasi ambacho ombi lipokee",
+      "net_label": "Ombi la msaada linapokea",
+      "platform_fee_label": "Ada ya jukwaa ({{percent}}%)",
+      "total_label": "Utalipa",
+      "submit": "Changia",
+      "submit_with_amount": "Changia {{amount}}"
+    },
+    "comments": {
+      "toggle": "Maoni ({{count}})",
+      "heading": "Maoni",
+      "placeholder": "Toa faraja au uliza swali la kufuatilia...",
+      "empty": "Hakuna maoni bado. Toa faraja au uliza jinsi unaweza kusaidia."
+    },
+    "toasts": {
+      "request_queued_title": "Ombi la msaada limewekwa foleni",
+      "request_submitted_title": "Ombi la msaada limewasilishwa",
+      "request_queued_description": "Ombi lako la msaada litasawazishwa kiotomatiki intaneti itakaporejea.",
+      "request_submitted_description": "Ombi lako litakaguliwa na msimamizi wa kanisa kabla ya kuchapishwa.",
+      "sync_failed": "Usawazishaji umeshindikana",
+      "donation_recorded_title": "Mchango umerekodiwa!",
+      "donation_recorded_description": "{{net}} zitaenda kwenye ombi la msaada. Jumla iliyolipwa ilikuwa {{gross}}, ikijumuisha ada ya jukwaa ya {{fee}}.",
+      "comment_posted": "Maoni yamechapishwa"
+    },
+    "errors": {
+      "no_church_context": "Hakuna muktadha wa kanisa",
+      "no_member_profile": "Wasifu wa mwanachama haujapatikana",
+      "invalid_amount": "Weka kiasi halali",
+      "comment_required": "Maoni hayawezi kuwa tupu",
+      "sign_in_to_react": "Unahitaji kuingia ili kujibu."
+    }
+  },
   "staff_mobile": {
     "all_services": "Huduma zote",
     "back_as_member": "Rudi kama Mwanachama",

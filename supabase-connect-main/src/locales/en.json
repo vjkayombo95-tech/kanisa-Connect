@@ -866,6 +866,94 @@
       "proof_size": "Proof file must be 5 MB or smaller"
     }
   },
+  "member_community_help": {
+    "title": "Community Help",
+    "description": "Support members of your community who need help.",
+    "actions": {
+      "request_help": "Request Help",
+      "cancel": "Cancel",
+      "submit": "Submit",
+      "submitting": "Submitting..."
+    },
+    "dialog": {
+      "title": "Request Community Help"
+    },
+    "categories": {
+      "medical": "Medical",
+      "education": "Education",
+      "housing": "Housing",
+      "food": "Food",
+      "emergency": "Emergency",
+      "funeral": "Funeral",
+      "other": "Other"
+    },
+    "form": {
+      "category_label": "Category *",
+      "category_placeholder": "Select category",
+      "description_label": "Description *",
+      "description_placeholder": "Describe the need...",
+      "target_amount_label": "Target Amount (TZS)",
+      "target_amount_placeholder": "Optional goal amount",
+      "review_notice": "Your request will be reviewed by a church admin before being visible to the community.",
+      "draft_notice": "This draft is saved on this device while you type."
+    },
+    "offline": {
+      "pending_title": "Pending offline help requests",
+      "pending_description": "These will sync automatically when internet returns.",
+      "pending_count": "{{count}} pending",
+      "sync_now": "Sync now",
+      "syncing": "Syncing...",
+      "saved_at": "Saved {{date}}",
+      "remove": "Remove"
+    },
+    "tabs": {
+      "community_requests": "Community Requests",
+      "my_requests": "My Requests ({{count}})"
+    },
+    "states": {
+      "loading": "Loading...",
+      "empty_approved": "No approved help requests at this time.",
+      "empty_mine": "You haven't submitted any help requests yet."
+    },
+    "amounts": {
+      "raised": "{{amount}} raised",
+      "goal": "{{amount}} goal"
+    },
+    "donation": {
+      "action": "Donate",
+      "title": "Donate to Help Request",
+      "amount_label": "Amount (TZS) *",
+      "amount_placeholder": "Amount help request should receive",
+      "net_label": "Help request receives",
+      "platform_fee_label": "Platform fee ({{percent}}%)",
+      "total_label": "You pay",
+      "submit": "Donate",
+      "submit_with_amount": "Donate {{amount}}"
+    },
+    "comments": {
+      "toggle": "Comments ({{count}})",
+      "heading": "Comments",
+      "placeholder": "Share encouragement or ask a follow-up question...",
+      "empty": "No comments yet. Offer encouragement or ask how you can help."
+    },
+    "toasts": {
+      "request_queued_title": "Help request queued",
+      "request_submitted_title": "Help request submitted",
+      "request_queued_description": "Your help request will sync automatically when internet returns.",
+      "request_submitted_description": "Your request will be reviewed by a church admin before being published.",
+      "sync_failed": "Sync failed",
+      "donation_recorded_title": "Donation recorded!",
+      "donation_recorded_description": "{{net}} will go to the help request. Total paid was {{gross}}, including a {{fee}} platform fee.",
+      "comment_posted": "Comment posted"
+    },
+    "errors": {
+      "no_church_context": "No church context",
+      "no_member_profile": "No member profile found",
+      "invalid_amount": "Enter a valid amount",
+      "comment_required": "Comment cannot be empty",
+      "sign_in_to_react": "You need to sign in to react."
+    }
+  },
   "staff_mobile": {
     "all_services": "All services",
     "back_as_member": "Back as Member",
