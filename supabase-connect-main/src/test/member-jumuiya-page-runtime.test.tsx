@@ -257,7 +257,7 @@ describe("Wave 12 Slice 4B route and navigation contract", () => {
     expect(registry).toContain('backTitleKey: "member_services.channels.back_title"');
     expect(backHeader).not.toContain('"/portal/channels": "Njia za Mawasiliano"');
     expect(registry).not.toContain('path: "/portal/channels", label: "Jumuiya');
-    expect(channels).toContain('title="Channels"');
+    expect(channels).toContain('title={t("member_channels.title")}');
     expect(channels).toContain("ChannelWorkspace");
     expect(page).not.toMatch(/join|leave|change|edit|roster|phone|email|contribution|pledge|member_id|community_id|church_id/i);
   });

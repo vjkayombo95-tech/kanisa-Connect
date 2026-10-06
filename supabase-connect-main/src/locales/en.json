@@ -1037,6 +1037,41 @@
     "posting": "Posting...",
     "post_comment": "Post Comment"
   },
+  "member_channels": {
+    "title": "Channels",
+    "description": "Stay aligned with ministry, community, and leadership updates in one place.",
+    "states": {
+      "load_error_title": "We could not load channels.",
+      "load_error_description": "Please refresh and try again.",
+      "empty_channels": "No channels yet.",
+      "no_description": "No description yet."
+    },
+    "conversation": {
+      "title": "Channel conversation",
+      "select_channel": "Select a channel to start reading updates.",
+      "empty_messages": "No messages yet. Start this channel with a message.",
+      "load_earlier": "Load earlier messages",
+      "you": "You"
+    },
+    "attachments": {
+      "attached_pdf": "Attached PDF",
+      "pdf_document": "PDF document",
+      "remove": "Remove"
+    },
+    "composer": {
+      "reactions_hint": "React with emojis on any message.",
+      "member_chat_only": "Members can chat only.",
+      "placeholder": "Type your message..."
+    },
+    "audience": {
+      "ministry": "Ministry",
+      "community_leaders": "Community Leaders",
+      "all_community_leaders": "All Community Leaders",
+      "admin_roles": "Administrative Team",
+      "community_members": "Community Members",
+      "channel": "Channel"
+    }
+  },
   "member_sermons": {
     "title": "Sermons",
     "description": "Listen to or watch sermons shared by your parish.",

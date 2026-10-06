@@ -13,7 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { resolveChannelRecipients, type ChannelAudienceType, type ChannelRecord, getChannelAudienceLabel } from "@/lib/channels";
 import { formatBytes, uploadFile, validateFile } from "@/lib/file-upload";
+import { formatAppDate } from "@/lib/localization";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 type WorkspaceScope = "church_admin" | "community_leader" | "member";
 
@@ -60,6 +62,7 @@ export function ChannelWorkspace({
   description,
 }: ChannelWorkspaceProps) {
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [selectedChannelId, setSelectedChannelId] = useState<string>("");
   const [newMessage, setNewMessage] = useState("");
@@ -75,9 +78,10 @@ export function ChannelWorkspace({
   const [selectedAdminRoles, setSelectedAdminRoles] = useState<string[]>(["pastor", "treasurer"]);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
   const canUploadAttachments = scope !== "member";
+  const memberLabel = (key: string, fallback: string) => (scope === "member" ? t(key) : fallback);
   const composerPlaceholder = canUploadAttachments
     ? "Type an update, report, or discussion message..."
-    : "Type your message...";
+    : t("member_channels.composer.placeholder");
 
   const audienceOptions = scope === "church_admin" ? ADMIN_AUDIENCE_OPTIONS : COMMUNITY_AUDIENCE_OPTIONS;
 
@@ -171,6 +175,14 @@ export function ChannelWorkspace({
   }, [channels, selectedChannelId]);
 
   const selectedChannel = channels.find((channel) => channel.id === selectedChannelId) || null;
+  const getAudienceLabel = (channel: Partial<ChannelRecord>) =>
+    scope === "member"
+      ? t(`member_channels.audience.${channel.audience_type ?? "channel"}`, { defaultValue: t("member_channels.audience.channel") })
+      : getChannelAudienceLabel(channel);
+  const formatMessageTime = (createdAt: string) =>
+    scope === "member"
+      ? formatAppDate(createdAt, i18n.language, { dateStyle: "medium", timeStyle: "short" })
+      : new Date(createdAt).toLocaleString();
 
   const messageQueryKey = ["chat-messages", selectedChannelId] as const;
   const {
@@ -628,7 +640,7 @@ export function ChannelWorkspace({
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-primary" />
-              Channels
+              {memberLabel("member_channels.title", "Channels")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -639,13 +651,15 @@ export function ChannelWorkspace({
             ) : channelsError ? (
               <div className="py-8 text-center text-muted-foreground">
                 <EmptyIcon className="h-10 w-10 mx-auto mb-3 text-destructive/50" />
-                <p className="text-sm font-medium text-foreground">We could not load channels.</p>
-                <p className="mt-1 text-xs">{channelsError instanceof Error ? channelsError.message : "Please refresh and try again."}</p>
+                <p className="text-sm font-medium text-foreground">{memberLabel("member_channels.states.load_error_title", "We could not load channels.")}</p>
+                <p className="mt-1 text-xs">
+                  {scope === "member" ? t("member_channels.states.load_error_description") : channelsError instanceof Error ? channelsError.message : "Please refresh and try again."}
+                </p>
               </div>
             ) : channels.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground">
                 <EmptyIcon className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-                <p className="text-sm">No channels yet.</p>
+                <p className="text-sm">{memberLabel("member_channels.states.empty_channels", "No channels yet.")}</p>
                 {scope !== "member" && (
                   <div className="mt-4 flex justify-center">
                     {createChannelButton}
@@ -666,10 +680,10 @@ export function ChannelWorkspace({
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate">{channel.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{channel.description || "No description yet."}</p>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{channel.description || memberLabel("member_channels.states.no_description", "No description yet.")}</p>
                     </div>
                     <Badge variant="outline" className="text-[10px] shrink-0">
-                      {getChannelAudienceLabel(channel)}
+                      {getAudienceLabel(channel)}
                     </Badge>
                   </div>
                 </button>
@@ -681,11 +695,11 @@ export function ChannelWorkspace({
         <Card className="glass-card min-h-[520px]">
           <CardHeader className="border-b border-border/50">
             <CardTitle className="text-base">
-              {selectedChannel ? selectedChannel.name : "Channel conversation"}
+              {selectedChannel ? selectedChannel.name : memberLabel("member_channels.conversation.title", "Channel conversation")}
             </CardTitle>
             {selectedChannel && (
               <p className="text-sm text-muted-foreground">
-                {selectedChannel.description || getChannelAudienceLabel(selectedChannel)}
+                {selectedChannel.description || getAudienceLabel(selectedChannel)}
               </p>
             )}
           </CardHeader>
@@ -694,7 +708,7 @@ export function ChannelWorkspace({
               <div className="flex min-h-[420px] items-center justify-center text-center text-muted-foreground">
                 <div>
                   <MessageSquare className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
-                  <p>Select a channel to start reading updates.</p>
+                  <p>{memberLabel("member_channels.conversation.select_channel", "Select a channel to start reading updates.")}</p>
                 </div>
               </div>
             ) : (
@@ -707,7 +721,7 @@ export function ChannelWorkspace({
                   ) : messages.length === 0 ? (
                     <div className="py-12 text-center text-muted-foreground">
                       <Bell className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-                      <p>No messages yet. Start this channel with a message.</p>
+                      <p>{memberLabel("member_channels.conversation.empty_messages", "No messages yet. Start this channel with a message.")}</p>
                     </div>
                   ) : (
                     <>
@@ -721,7 +735,7 @@ export function ChannelWorkspace({
                             disabled={isFetchingNextPage}
                           >
                             {isFetchingNextPage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                            Load earlier messages
+                            {memberLabel("member_channels.conversation.load_earlier", "Load earlier messages")}
                           </Button>
                         </div>
                       )}
@@ -731,7 +745,7 @@ export function ChannelWorkspace({
                         <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                           <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${mine ? "bg-primary text-primary-foreground" : "bg-muted/40"}`}>
                             <div className={`text-xs font-medium ${mine ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                              {mine ? "You" : message.sender_name}
+                              {mine ? memberLabel("member_channels.conversation.you", "You") : message.sender_name}
                             </div>
                             {message.body && <p className="mt-1 whitespace-pre-wrap text-sm">{message.body}</p>}
                             {message.attachment_url && (
@@ -749,15 +763,15 @@ export function ChannelWorkspace({
                                   <FileText className={`h-4 w-4 ${mine ? "text-primary-foreground" : "text-primary"}`} />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <p className="truncate font-medium">{message.attachment_name || "Attached PDF"}</p>
+                                  <p className="truncate font-medium">{message.attachment_name || memberLabel("member_channels.attachments.attached_pdf", "Attached PDF")}</p>
                                   <p className={`text-xs ${mine ? "text-primary-foreground/75" : "text-muted-foreground"}`}>
-                                    {message.attachment_size ? formatBytes(Number(message.attachment_size)) : "PDF document"}
+                                    {message.attachment_size ? formatBytes(Number(message.attachment_size)) : memberLabel("member_channels.attachments.pdf_document", "PDF document")}
                                   </p>
                                 </div>
                               </a>
                             )}
                             <p className={`mt-2 text-[11px] ${mine ? "text-primary-foreground/70" : "text-muted-foreground/70"}`}>
-                              {new Date(message.created_at).toLocaleString()}
+                              {formatMessageTime(message.created_at)}
                             </p>
                             <div className="mt-3 flex flex-wrap items-center gap-2">
                               {message.reactions?.map((reaction: any) => (
@@ -833,14 +847,14 @@ export function ChannelWorkspace({
                         <p className="text-xs text-muted-foreground">{formatBytes(attachmentFile.size)}</p>
                       </div>
                       <Button type="button" variant="ghost" size="sm" onClick={() => setAttachmentFile(null)}>
-                        Remove
+                        {memberLabel("member_channels.attachments.remove", "Remove")}
                       </Button>
                     </div>
                   )}
                   <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
                     <SmilePlus className="h-3.5 w-3.5" />
-                    React with emojis on any message.
-                    {!canUploadAttachments && <span>Members can chat only.</span>}
+                    {memberLabel("member_channels.composer.reactions_hint", "React with emojis on any message.")}
+                    {!canUploadAttachments && <span>{t("member_channels.composer.member_chat_only")}</span>}
                   </div>
                   <div className="flex gap-3">
                     <Textarea

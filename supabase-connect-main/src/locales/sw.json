@@ -1037,6 +1037,41 @@
     "posting": "Inachapisha...",
     "post_comment": "Chapisha Maoni"
   },
+  "member_channels": {
+    "title": "Mawasiliano",
+    "description": "Endelea kupata taarifa za huduma, jumuiya, na uongozi mahali pamoja.",
+    "states": {
+      "load_error_title": "Hatukuweza kupakia mawasiliano.",
+      "load_error_description": "Tafadhali pakia upya na ujaribu tena.",
+      "empty_channels": "Hakuna mawasiliano bado.",
+      "no_description": "Hakuna maelezo bado."
+    },
+    "conversation": {
+      "title": "Mazungumzo ya kituo",
+      "select_channel": "Chagua kituo ili uanze kusoma taarifa.",
+      "empty_messages": "Hakuna ujumbe bado. Anzisha kituo hiki kwa ujumbe.",
+      "load_earlier": "Pakia ujumbe wa awali",
+      "you": "Wewe"
+    },
+    "attachments": {
+      "attached_pdf": "PDF iliyoambatishwa",
+      "pdf_document": "Hati ya PDF",
+      "remove": "Ondoa"
+    },
+    "composer": {
+      "reactions_hint": "Tumia emoji kujibu ujumbe wowote.",
+      "member_chat_only": "Wanachama wanaweza kutuma ujumbe pekee.",
+      "placeholder": "Andika ujumbe wako..."
+    },
+    "audience": {
+      "ministry": "Huduma",
+      "community_leaders": "Viongozi wa Jumuiya",
+      "all_community_leaders": "Viongozi Wote wa Jumuiya",
+      "admin_roles": "Timu ya Utawala",
+      "community_members": "Wanachama wa Jumuiya",
+      "channel": "Kituo"
+    }
+  },
   "member_sermons": {
     "title": "Mahubiri",
     "description": "Sikiliza au tazama mahubiri yaliyoshirikiwa na parokia.",
