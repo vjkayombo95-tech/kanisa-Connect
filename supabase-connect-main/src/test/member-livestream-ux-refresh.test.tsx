@@ -104,7 +104,7 @@ describe("member livestream truthful presentation", () => {
     renderPage();
     expect(host.textContent).toContain("INAKUJA KARIBUNI");
     expect(host.textContent).toContain("Inaanza");
-    expect(host.textContent).toContain("Fungua Misa Ijayo");
+    expect(host.textContent).toContain("Fungua Misa ijayo");
     expect(host.textContent).not.toContain("LIVE SASA");
     expect(host.textContent).not.toContain("Tazama Moja kwa Moja");
   });

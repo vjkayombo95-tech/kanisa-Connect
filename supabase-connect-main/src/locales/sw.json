@@ -2513,5 +2513,22 @@
     "error_missing_church": "Muktadha wa kanisa haupo.",
     "error_update_blocked": "Usasishaji wa ombi la tukio umezuiwa au rekodi haikupatikana.",
     "error_multiple_rows": "Usasishaji wa ombi la tukio umerejesha rekodi nyingi bila kutarajiwa."
+  },
+  "member_livestream": {
+    "loading": "Misa Mubashara inapakiwa",
+    "error": {
+      "title": "Misa Mubashara haikuweza kupakiwa",
+      "description": "Jaribu tena baada ya muda mfupi."
+    },
+    "unavailable": {
+      "title": "Misa Mubashara haipatikani"
+    },
+    "actions": {
+      "retry": "Jaribu tena"
+    },
+    "persistent_player": {
+      "expand": "Fungua Misa Mubashara: {{title}}",
+      "close": "Funga Misa Mubashara"
+    }
   }
 }

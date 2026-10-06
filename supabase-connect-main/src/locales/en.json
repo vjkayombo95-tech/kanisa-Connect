@@ -2513,5 +2513,22 @@
     "error_missing_church": "Church context is missing.",
     "error_update_blocked": "Event request update was blocked or the row was not found.",
     "error_multiple_rows": "Event request update returned multiple rows unexpectedly."
+  },
+  "member_livestream": {
+    "loading": "Live Mass is loading",
+    "error": {
+      "title": "Live Mass could not be loaded",
+      "description": "Please try again shortly."
+    },
+    "unavailable": {
+      "title": "Live Mass is unavailable"
+    },
+    "actions": {
+      "retry": "Try again"
+    },
+    "persistent_player": {
+      "expand": "Open Live Mass: {{title}}",
+      "close": "Close Live Mass"
+    }
   }
 }
