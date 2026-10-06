@@ -2551,5 +2551,63 @@
       "title": "You have not been assigned to a community yet.",
       "description": "Contact the parish office to confirm or update your community information."
     }
+  },
+  "member_ministries": {
+    "hero": {
+      "title": "Serve together with your parish community",
+      "description": "Find a ministry, read about it, and send a request to join."
+    },
+    "status": {
+      "joined": "Joined",
+      "pending": "Request pending"
+    },
+    "card": {
+      "no_description": "No description has been added yet.",
+      "member_count": "Members: {{count}}"
+    },
+    "actions": {
+      "details": "Details",
+      "leave": "Leave ministry",
+      "cancel": "Cancel",
+      "confirm_leave": "Confirm leave",
+      "request_join": "Request to join",
+      "back_to_all": "Back to all ministries",
+      "all": "All ministries"
+    },
+    "leave": {
+      "title": "Leave this ministry?",
+      "description": "You are about to leave {{name}}. Your membership will be removed after you confirm."
+    },
+    "toast": {
+      "leave_success_title": "You have left the ministry",
+      "join_success_title": "Request sent",
+      "leave_success_description": "Your membership has been updated.",
+      "join_success_description": "Your parish will review your request.",
+      "leave_error_title": "Request not completed",
+      "join_error_title": "Request not sent",
+      "leave_error_description": "We could not complete your request right now. Try again.",
+      "join_error_description": "We could not send your request right now. Try again."
+    },
+    "error": {
+      "load": "Ministries could not be loaded right now. Try again.",
+      "member_profile": "Your member profile could not be found for this parish."
+    },
+    "detail": {
+      "unavailable": "This ministry is unavailable.",
+      "label": "Ministry details",
+      "description": "View this ministry's information and your participation status."
+    },
+    "search": {
+      "aria_label": "Search ministries",
+      "placeholder": "Search ministries..."
+    },
+    "empty": {
+      "no_configured": "No ministries have been configured for this parish.",
+      "no_results": "No ministries match your search."
+    },
+    "sections": {
+      "joined": "My ministries",
+      "other": "Other ministries"
+    }
   }
 }

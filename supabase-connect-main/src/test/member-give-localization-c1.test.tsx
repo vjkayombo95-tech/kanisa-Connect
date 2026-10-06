@@ -86,6 +86,7 @@ vi.mock("@/integrations/supabase/client", () => ({
         eq: () => CategoryBuilder;
         ilike: () => CategoryBuilder;
         order: () => Promise<{ data: Array<{ id: string; name: string }>; error: null }>;
+        maybeSingle: () => Promise<{ data: { id: string; full_name: string; phone: string; email: string }; error: null }>;
       };
       const builder: CategoryBuilder = {
         select: () => builder,

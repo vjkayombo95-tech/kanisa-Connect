@@ -2551,5 +2551,63 @@
       "title": "Hujapangiwa Jumuiya kwa sasa.",
       "description": "Wasiliana na ofisi ya parokia ili kuthibitisha au kusasisha taarifa ya Jumuiya yako."
     }
+  },
+  "member_ministries": {
+    "hero": {
+      "title": "Tumikia pamoja na jumuiya yako",
+      "description": "Tafuta huduma, soma maelezo yake, na utume ombi la kujiunga."
+    },
+    "status": {
+      "joined": "Umejiunga",
+      "pending": "Ombi linasubiri"
+    },
+    "card": {
+      "no_description": "Maelezo bado hayajawekwa.",
+      "member_count": "Wanachama {{count}}"
+    },
+    "actions": {
+      "details": "Maelezo",
+      "leave": "Ondoka kwenye huduma",
+      "cancel": "Ghairi",
+      "confirm_leave": "Thibitisha kuondoka",
+      "request_join": "Omba kujiunga",
+      "back_to_all": "Rudi kwenye huduma zote",
+      "all": "Huduma zote"
+    },
+    "leave": {
+      "title": "Ondoka kwenye huduma?",
+      "description": "Unakaribia kuondoka kwenye huduma ya {{name}}. Uanachama wako utaondolewa baada ya kuthibitisha."
+    },
+    "toast": {
+      "leave_success_title": "Umeondoka kwenye huduma",
+      "join_success_title": "Ombi limetumwa",
+      "leave_success_description": "Uanachama wako umesasishwa.",
+      "join_success_description": "Parokia itakagua ombi lako.",
+      "leave_error_title": "Ombi halijakamilika",
+      "join_error_title": "Ombi halijatumwa",
+      "leave_error_description": "Hatukuweza kukamilisha ombi lako kwa sasa. Jaribu tena.",
+      "join_error_description": "Hatukuweza kutuma ombi lako kwa sasa. Jaribu tena."
+    },
+    "error": {
+      "load": "Huduma hazikuweza kupakiwa kwa sasa. Jaribu tena.",
+      "member_profile": "Wasifu wa mshirika haujapatikana kwa parokia hii."
+    },
+    "detail": {
+      "unavailable": "Huduma hii haipatikani.",
+      "label": "Maelezo ya huduma",
+      "description": "Angalia taarifa za huduma hii na hali yako ya ushiriki."
+    },
+    "search": {
+      "aria_label": "Tafuta huduma",
+      "placeholder": "Tafuta huduma..."
+    },
+    "empty": {
+      "no_configured": "Hakuna huduma zilizowekwa kwa parokia hii.",
+      "no_results": "Hakuna huduma zinazolingana na utafutaji wako."
+    },
+    "sections": {
+      "joined": "Huduma zangu",
+      "other": "Huduma nyingine"
+    }
   }
 }
