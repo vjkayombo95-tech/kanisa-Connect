@@ -42,7 +42,9 @@ describe("production member ministry parity", () => {
   });
 
   it("uses the portal's safe mobile back header without rendering a duplicate", () => {
-    expect(mobileBack).toContain('"/portal/ministries": "Huduma za Parokia"');
+    expect(registry).toContain('backTitleKey: "member_services.ministries.back_title"');
+    expect(mobileBack).toContain("getMemberBackTitleKey(pathname)");
+    expect(mobileBack).not.toContain('"/portal/ministries": "Huduma za Parokia"');
     expect(mobileBack).toContain("/ministries\\/[^/]+$");
     expect(page).not.toContain("navigate(-1)");
     expect(page).not.toContain("ArrowLeft");

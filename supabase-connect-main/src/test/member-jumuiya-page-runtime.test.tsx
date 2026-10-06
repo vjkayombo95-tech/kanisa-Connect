@@ -237,9 +237,11 @@ describe("Wave 12 Slice 4B route and navigation contract", () => {
     expect(registry).toContain('path: "/portal/jumuiya"');
     expect(registry).toContain('label: "Jumuiya Yangu"');
     expect(registry).toContain('labelKey: "member_services.jumuiya.label"');
+    expect(registry).toContain('backTitleKey: "member_services.jumuiya.back_title"');
     expect(registry).toContain("ordinaryMemberAllowed: true");
     expect(layout).toContain('serviceNavItem("jumuiya", "/portal/jumuiya", CommunitiesIcon)');
-    expect(backHeader).toContain('"/portal/jumuiya": "Jumuiya Yangu"');
+    expect(backHeader).toContain("getMemberBackTitleKey(pathname)");
+    expect(backHeader).not.toContain('"/portal/jumuiya": "Jumuiya Yangu"');
   });
 
   it("uses only the canonical no-argument RPC and does not recreate membership resolution client-side", () => {
@@ -252,7 +254,8 @@ describe("Wave 12 Slice 4B route and navigation contract", () => {
   });
 
   it("keeps Jumuiya distinct from Channels and avoids member mutation controls", () => {
-    expect(backHeader).toContain('"/portal/channels": "Njia za Mawasiliano"');
+    expect(registry).toContain('backTitleKey: "member_services.channels.back_title"');
+    expect(backHeader).not.toContain('"/portal/channels": "Njia za Mawasiliano"');
     expect(registry).not.toContain('path: "/portal/channels", label: "Jumuiya');
     expect(channels).toContain('title="Channels"');
     expect(channels).toContain("ChannelWorkspace");
