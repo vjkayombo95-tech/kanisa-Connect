@@ -1072,6 +1072,56 @@
       "channel": "Channel"
     }
   },
+  "member_bible": {
+    "common": {
+      "bible": "Bible",
+      "try_again": "Please try again.",
+      "retry": "Retry"
+    },
+    "testaments": {
+      "old": "Old Testament",
+      "new": "New Testament",
+      "deuterocanonical": "Deuterocanonical"
+    },
+    "home": {
+      "title": "Holy Bible",
+      "books_error_title": "Unable to load books",
+      "empty_books_title": "No books found",
+      "empty_books_description": "Bible books are not available yet.",
+      "books_count": "{{count}} books"
+    },
+    "search": {
+      "label": "Search Bible",
+      "placeholder": "Search words, phrases, or references",
+      "results_title": "Search Results",
+      "results_limit": "Showing up to 50 matching verses.",
+      "results_count": "{{count}} found",
+      "error_title": "Unable to search Bible",
+      "empty_title": "No verses found",
+      "empty_description": "Try another word, phrase, or reference.",
+      "chapter_verse": "Chapter {{chapter}}, Verse {{verse}}"
+    },
+    "book": {
+      "chapter_label": "Chapter {{number}}",
+      "open_chapter": "Open chapter",
+      "error_title": "Unable to load chapters",
+      "book_number": "Book {{number}}",
+      "chapters_count_label": "chapters",
+      "empty_title": "No chapters found",
+      "empty_description": "Chapters are not available for this book yet.",
+      "chapters_title": "Chapters",
+      "ordered_by_chapter": "Ordered by chapter number"
+    },
+    "chapter": {
+      "back_to_chapters": "Back to Chapters",
+      "error_title": "Unable to load chapter",
+      "invalid_link": "The chapter link is invalid.",
+      "empty_verses": "No verses found for this chapter.",
+      "navigation_aria": "Chapter navigation",
+      "previous": "Previous Chapter",
+      "next": "Next Chapter"
+    }
+  },
   "member_sermons": {
     "title": "Sermons",
     "description": "Listen to or watch sermons shared by your parish.",

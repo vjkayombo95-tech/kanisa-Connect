@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 type BibleBookRow = {
   id: string;
@@ -35,12 +36,6 @@ type ChapterReaderData = {
   chapters: BibleChapterRow[];
   selectedChapter: BibleChapterRow | null;
   verses: BibleVerseRow[];
-};
-
-const TESTAMENT_LABELS: Record<BibleBookRow["testament"], string> = {
-  old: "Old Testament",
-  new: "New Testament",
-  deuterocanonical: "Deuterocanonical",
 };
 
 async function fetchChapterReaderData(bookId: string, chapterNumber: number): Promise<ChapterReaderData> {
@@ -110,6 +105,7 @@ function parseVerseQueryParam(value: string | null) {
 }
 
 export default function MemberBibleChapterPage() {
+  const { t } = useTranslation();
   const { bookId, chapterNumber } = useParams();
   const [searchParams] = useSearchParams();
   const parsedChapterNumber = Number(chapterNumber);
@@ -161,15 +157,15 @@ export default function MemberBibleChapterPage() {
         <Button asChild variant="ghost" className="h-10 rounded-lg px-3">
           <Link to={backToChaptersPath}>
             <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
-            Back to Chapters
+            {t("member_bible.chapter.back_to_chapters")}
           </Link>
         </Button>
 
         {!canQuery ? (
           <Alert variant="destructive" className="rounded-lg">
             <AlertCircle className="h-4 w-4" aria-hidden="true" />
-            <AlertTitle>Unable to load chapter</AlertTitle>
-            <AlertDescription>The chapter link is invalid.</AlertDescription>
+            <AlertTitle>{t("member_bible.chapter.error_title")}</AlertTitle>
+            <AlertDescription>{t("member_bible.chapter.invalid_link")}</AlertDescription>
           </Alert>
         ) : null}
 
@@ -178,12 +174,12 @@ export default function MemberBibleChapterPage() {
         {isError ? (
           <Alert variant="destructive" className="rounded-lg">
             <AlertCircle className="h-4 w-4" aria-hidden="true" />
-            <AlertTitle>Unable to load chapter</AlertTitle>
+            <AlertTitle>{t("member_bible.chapter.error_title")}</AlertTitle>
             <AlertDescription className="space-y-4">
-              <span className="block">{error instanceof Error ? error.message : "Please try again."}</span>
+              <span className="block">{error instanceof Error ? error.message : t("member_bible.common.try_again")}</span>
               <Button type="button" variant="outline" size="sm" onClick={() => void refetch()} disabled={isFetching}>
                 <RotateCcw className="mr-2 h-4 w-4" aria-hidden="true" />
-                Retry
+                {t("member_bible.common.retry")}
               </Button>
             </AlertDescription>
           </Alert>
@@ -197,9 +193,9 @@ export default function MemberBibleChapterPage() {
                   <BookOpen className="h-6 w-6" aria-hidden="true" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-primary">{TESTAMENT_LABELS[data.book.testament]}</p>
+                  <p className="text-sm font-medium text-primary">{t(`member_bible.testaments.${data.book.testament}`)}</p>
                   <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{data.book.name}</h1>
-                  <p className="mt-2 text-lg font-semibold text-muted-foreground">Chapter {parsedChapterNumber}</p>
+                  <p className="mt-2 text-lg font-semibold text-muted-foreground">{t("member_bible.book.chapter_label", { number: parsedChapterNumber })}</p>
                 </div>
               </CardContent>
             </Card>
@@ -210,7 +206,7 @@ export default function MemberBibleChapterPage() {
                   <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                     <BookOpen className="h-7 w-7" aria-hidden="true" />
                   </div>
-                  <h2 className="text-lg font-semibold">No verses found for this chapter.</h2>
+                  <h2 className="text-lg font-semibold">{t("member_bible.chapter.empty_verses")}</h2>
                 </CardContent>
               </Card>
             ) : (
@@ -239,31 +235,31 @@ export default function MemberBibleChapterPage() {
               </article>
             )}
 
-            <nav className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" aria-label="Chapter navigation">
+            <nav className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" aria-label={t("member_bible.chapter.navigation_aria")}>
               {navigation.previous ? (
                 <Button asChild variant="outline" className="h-11 justify-center rounded-lg">
                   <Link to={`/portal/bible/${data.book.id}/chapter/${navigation.previous}`}>
                     <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
-                    Previous Chapter
+                    {t("member_bible.chapter.previous")}
                   </Link>
                 </Button>
               ) : (
                 <Button variant="outline" className="h-11 justify-center rounded-lg" disabled>
                   <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Previous Chapter
+                  {t("member_bible.chapter.previous")}
                 </Button>
               )}
 
               {navigation.next ? (
                 <Button asChild className="h-11 justify-center rounded-lg">
                   <Link to={`/portal/bible/${data.book.id}/chapter/${navigation.next}`}>
-                    Next Chapter
+                    {t("member_bible.chapter.next")}
                     <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
               ) : (
                 <Button className="h-11 justify-center rounded-lg" disabled>
-                  Next Chapter
+                  {t("member_bible.chapter.next")}
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Button>
               )}

@@ -1072,6 +1072,56 @@
       "channel": "Kituo"
     }
   },
+  "member_bible": {
+    "common": {
+      "bible": "Biblia",
+      "try_again": "Tafadhali jaribu tena.",
+      "retry": "Jaribu tena"
+    },
+    "testaments": {
+      "old": "Agano la Kale",
+      "new": "Agano Jipya",
+      "deuterocanonical": "Deuterokanoni"
+    },
+    "home": {
+      "title": "Biblia Takatifu",
+      "books_error_title": "Vitabu havikuweza kupakiwa",
+      "empty_books_title": "Hakuna vitabu vilivyopatikana",
+      "empty_books_description": "Vitabu vya Biblia bado havijapatikana.",
+      "books_count": "Vitabu {{count}}"
+    },
+    "search": {
+      "label": "Tafuta kwenye Biblia",
+      "placeholder": "Tafuta maneno, vifungu, au rejea",
+      "results_title": "Matokeo ya Utafutaji",
+      "results_limit": "Inaonyesha hadi mistari 50 inayolingana.",
+      "results_count": "{{count}} zimepatikana",
+      "error_title": "Utafutaji wa Biblia haukuweza kufanyika",
+      "empty_title": "Hakuna mistari iliyopatikana",
+      "empty_description": "Jaribu neno, kifungu, au rejea nyingine.",
+      "chapter_verse": "Sura {{chapter}}, Mstari {{verse}}"
+    },
+    "book": {
+      "chapter_label": "Sura {{number}}",
+      "open_chapter": "Fungua sura",
+      "error_title": "Sura hazikuweza kupakiwa",
+      "book_number": "Kitabu {{number}}",
+      "chapters_count_label": "sura",
+      "empty_title": "Hakuna sura zilizopatikana",
+      "empty_description": "Sura bado hazijapatikana kwa kitabu hiki.",
+      "chapters_title": "Sura",
+      "ordered_by_chapter": "Zimepangwa kwa namba ya sura"
+    },
+    "chapter": {
+      "back_to_chapters": "Rudi kwenye Sura",
+      "error_title": "Sura haikuweza kupakiwa",
+      "invalid_link": "Kiungo cha sura si sahihi.",
+      "empty_verses": "Hakuna mistari iliyopatikana kwa sura hii.",
+      "navigation_aria": "Urambazaji wa sura",
+      "previous": "Sura Iliyopita",
+      "next": "Sura Inayofuata"
+    }
+  },
   "member_sermons": {
     "title": "Mahubiri",
     "description": "Sikiliza au tazama mahubiri yaliyoshirikiwa na parokia.",

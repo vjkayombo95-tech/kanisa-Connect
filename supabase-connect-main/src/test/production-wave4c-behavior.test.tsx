@@ -227,7 +227,7 @@ describe("Wave 4C behavioral content boundaries", () => {
     database.bible_chapters = [{ id: "chapter-1", book_id: "book-1", chapter_number: 1 }];
     database.bible_verses = [{ id: "verse-1", book_id: "book-1", chapter_number: 1, verse_number: 1, verse_text: "In the beginning", text: null }];
     mount("/portal/bible/book-1", [{ path: "/portal/bible/:bookId", element: <MemberBibleBookPage /> }]);
-    expect(await screen.findByText("Chapter 1")).toBeInTheDocument();
+    expect(await screen.findByText("Sura 1")).toBeInTheDocument();
     mount("/portal/bible/book-1/chapter/1", [{ path: "/portal/bible/:bookId/chapter/:chapterNumber", element: <MemberBibleChapterPage /> }]);
     expect(await screen.findByRole("heading", { name: "Genesis", level: 1 })).toBeInTheDocument();
     await waitFor(() => expect(queryLog.some((entry) => entry.table === "bible_verses" && entry.operation === "eq")).toBe(true));

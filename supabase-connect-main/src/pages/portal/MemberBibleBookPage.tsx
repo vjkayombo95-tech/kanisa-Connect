@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 type BibleBookRow = {
   id: string;
@@ -19,12 +20,6 @@ type BibleBookRow = {
 type BibleChapterRow = {
   id: string;
   chapter_number: number;
-};
-
-const TESTAMENT_LABELS: Record<BibleBookRow["testament"], string> = {
-  old: "Old Testament",
-  new: "New Testament",
-  deuterocanonical: "Deuterocanonical",
 };
 
 function ChapterGridSkeleton() {
@@ -47,13 +42,15 @@ function ChapterGridSkeleton() {
 }
 
 function ChapterCard({ bookId, chapter }: { bookId: string; chapter: BibleChapterRow }) {
+  const { t } = useTranslation();
+
   return (
     <Link to={`/portal/bible/${bookId}/chapter/${chapter.chapter_number}`} className="group block">
       <Card className="h-full rounded-lg border-border/70 bg-card/90 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
         <CardContent className="flex h-full items-center justify-between gap-4 p-4">
           <div className="min-w-0">
-            <p className="text-base font-semibold text-foreground">Chapter {chapter.chapter_number}</p>
-            <p className="mt-1 text-sm text-muted-foreground">Open chapter</p>
+            <p className="text-base font-semibold text-foreground">{t("member_bible.book.chapter_label", { number: chapter.chapter_number })}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("member_bible.book.open_chapter")}</p>
           </div>
           <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden="true" />
         </CardContent>
@@ -63,6 +60,7 @@ function ChapterCard({ bookId, chapter }: { bookId: string; chapter: BibleChapte
 }
 
 export default function MemberBibleBookPage() {
+  const { t } = useTranslation();
   const { bookId } = useParams();
 
   const {
@@ -117,7 +115,7 @@ export default function MemberBibleBookPage() {
         <Button asChild variant="ghost" className="h-10 rounded-lg px-3">
           <Link to="/portal/bible">
             <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
-            Bible
+            {t("member_bible.common.bible")}
           </Link>
         </Button>
 
@@ -126,8 +124,8 @@ export default function MemberBibleBookPage() {
         {isError ? (
           <Alert variant="destructive" className="rounded-lg">
             <AlertCircle className="h-4 w-4" aria-hidden="true" />
-            <AlertTitle>Unable to load chapters</AlertTitle>
-            <AlertDescription>{error instanceof Error ? error.message : "Please try again."}</AlertDescription>
+            <AlertTitle>{t("member_bible.book.error_title")}</AlertTitle>
+            <AlertDescription>{error instanceof Error ? error.message : t("member_bible.common.try_again")}</AlertDescription>
           </Alert>
         ) : null}
 
@@ -140,17 +138,17 @@ export default function MemberBibleBookPage() {
                     <BookOpen className="h-6 w-6" aria-hidden="true" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-primary">{TESTAMENT_LABELS[book.testament]}</p>
+                    <p className="text-sm font-medium text-primary">{t(`member_bible.testaments.${book.testament}`)}</p>
                     <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{book.name}</h1>
                     <p className="mt-2 text-sm text-muted-foreground">
                       {book.abbreviation ? `${book.abbreviation} • ` : ""}
-                      Book {book.book_number}
+                      {t("member_bible.book.book_number", { number: book.book_number })}
                     </p>
                   </div>
                 </div>
                 <div className="rounded-lg border border-border/70 bg-background/60 px-4 py-3 text-left sm:text-right">
                   <p className="text-2xl font-bold text-foreground">{chapters.length}</p>
-                  <p className="text-sm text-muted-foreground">chapters</p>
+                  <p className="text-sm text-muted-foreground">{t("member_bible.book.chapters_count_label", { count: chapters.length })}</p>
                 </div>
               </CardContent>
             </Card>
@@ -161,15 +159,15 @@ export default function MemberBibleBookPage() {
                   <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                     <BookOpen className="h-7 w-7" aria-hidden="true" />
                   </div>
-                  <h2 className="text-lg font-semibold">No chapters found</h2>
-                  <p className="mt-2 max-w-md text-sm text-muted-foreground">Chapters are not available for this book yet.</p>
+                  <h2 className="text-lg font-semibold">{t("member_bible.book.empty_title")}</h2>
+                  <p className="mt-2 max-w-md text-sm text-muted-foreground">{t("member_bible.book.empty_description")}</p>
                 </CardContent>
               </Card>
             ) : (
               <section className="space-y-3">
                 <div className="flex items-end justify-between gap-3">
-                  <h2 className="text-xl font-bold tracking-tight text-foreground">Chapters</h2>
-                  <p className="text-sm text-muted-foreground">Ordered by chapter number</p>
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">{t("member_bible.book.chapters_title")}</h2>
+                  <p className="text-sm text-muted-foreground">{t("member_bible.book.ordered_by_chapter")}</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                   {chapters.map((chapter) => (
