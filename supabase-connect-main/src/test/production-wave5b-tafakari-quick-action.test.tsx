@@ -29,20 +29,25 @@ vi.mock("@/lib/member-contributions", () => ({
 }));
 
 import { resolveMemberAssistantIntent } from "@/lib/member-assistant";
+import { changeAppLanguage } from "@/i18n";
 import KanisaAssistantPage from "@/pages/portal/KanisaAssistantPage";
 
 describe("Wave 5B Tafakari quick-action hotfix", () => {
   let host: HTMLDivElement;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mocks.fetchMemberContributionTotal.mockReset();
     mocks.fetch.mockReset();
     vi.stubGlobal("fetch", mocks.fetch);
+    await changeAppLanguage("sw");
     host = document.createElement("div");
     document.body.append(host);
   });
 
-  afterEach(() => host.remove());
+  afterEach(async () => {
+    host.remove();
+    await changeAppLanguage("en");
+  });
 
   it("renders Tafakari and resolves its click through the existing deterministic reflection intent", async () => {
     const root = createRoot(host);

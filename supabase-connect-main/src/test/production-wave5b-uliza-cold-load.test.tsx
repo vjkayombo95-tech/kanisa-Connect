@@ -62,7 +62,13 @@ vi.mock("@/pages/portal/MemberDashboard", () => ({ default: () => <div>Member ho
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc } }));
 vi.mock("@/lib/church-radio", () => ({ fetchMemberRadioStations: mocks.fetchStations }));
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { language: "en" } }),
+  useTranslation: () => ({
+    t: (key: string) =>
+      ({
+        "member_assistant.loading_service": "Inapakia huduma...",
+      })[key] ?? key,
+    i18n: { language: "sw" },
+  }),
 }));
 
 import MemberRoutes from "@/routes/MemberRoutes";
@@ -135,7 +141,7 @@ describe("Wave 5B Uliza cold-load feature gate", () => {
     await act(async () => root.render(<Application client={client} revision="loading" />));
     await flush();
     expect(host.querySelector('[data-testid="route"]')).toHaveTextContent("/portal/kanisa-ai");
-    expect(host).toHaveTextContent("Inapakia");
+    expect(host).toHaveTextContent("Inapakia huduma...");
     expect(mocks.assistantReads).not.toHaveBeenCalled();
 
     mocks.resolution = "enabled";
