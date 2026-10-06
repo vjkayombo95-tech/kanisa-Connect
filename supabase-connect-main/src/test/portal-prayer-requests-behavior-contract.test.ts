@@ -70,10 +70,10 @@ describe("PortalPrayerRequests member behavior contract", () => {
     expect(prayerHelpers).toContain('throw new Error("Member context is required.")');
     expect(prayerHelpers).toContain('throw new Error("Church context is required.")');
     expect(prayerHelpers).toContain('throw new Error("Submission key is required.")');
-    expect(portalPrayerRequests).toContain('if (!churchId) throw new Error("No church context")');
-    expect(portalPrayerRequests).toContain('if (!member?.id) throw new Error("No member profile found")');
+    expect(portalPrayerRequests).toContain('if (!churchId) throw new Error(t("member_prayer_requests.errors.no_church_context"))');
+    expect(portalPrayerRequests).toContain('if (!member?.id) throw new Error(t("member_prayer_requests.errors.no_member_profile"))');
     expect(portalPrayerRequests).toContain("assertClientRateLimit(`prayer-request:${churchId}:${member.id}`, 5, 60 * 60 * 1000, \"prayer request submissions\")");
-    expect(portalPrayerRequests).toContain('throw new Error("Offering amount cannot be negative.")');
+    expect(portalPrayerRequests).toContain('throw new Error(t("member_prayer_requests.errors.offering_negative"))');
     expect(portalPrayerRequests).toContain('disabled={submit.isPending || !requestText.trim() || !member?.id}');
     expect(submissionRpc).toContain("if v_request_text = '' then");
     expect(submissionRpc).toContain("if v_net_amount < 0 then");
@@ -87,7 +87,7 @@ describe("PortalPrayerRequests member behavior contract", () => {
       expect(submissionRpc).toContain(value);
     }
 
-    expect(portalPrayerRequests).toContain('request.privacy === "anonymous_public" ? "Muumini" : request.member_name');
+    expect(portalPrayerRequests).toContain('request.privacy === "anonymous_public" ? t("member_prayer_requests.anonymous_requester") : request.member_name');
     expect(portalPrayerRequests).toContain('.in("privacy", ["public_to_church", "anonymous_public"])');
     expect(productionBaseline).toContain("member_id uuid");
     expect(submissionRpc).toContain("p_member_id");
@@ -184,7 +184,8 @@ describe("PortalPrayerRequests member behavior contract", () => {
       expect(offlineSync).toContain(key);
     }
 
-    expect(portalPrayerRequests).toContain('title: result?.queuedOffline ? "Ombi la maombi limesubiri kutumwa" : "Ombi la maombi limetumwa"');
+    expect(portalPrayerRequests).toContain('t("member_prayer_requests.toasts.queued_title")');
+    expect(portalPrayerRequests).toContain('t("member_prayer_requests.toasts.submitted_title")');
     expect(portalPrayerRequests).toContain("setDialogOpen(false)");
     expect(portalPrayerRequests).toContain('setRequestText("")');
     expect(portalPrayerRequests).toContain('setOfferingAmount("")');
@@ -194,10 +195,10 @@ describe("PortalPrayerRequests member behavior contract", () => {
   });
 
   it("keeps optional offering semantics and existing contribution/platform fee side effects without gateway claims", () => {
-    expect(portalPrayerRequests).toContain('placeholder="Hiari - kiasi kitakachopokelewa na kanisa"');
+    expect(portalPrayerRequests).toContain('placeholder={t("member_prayer_requests.offering.placeholder")}');
     expect(portalPrayerRequests).toContain("const PLATFORM_FEE_PERCENT = 1");
     expect(portalPrayerRequests).toContain("const requestedChurchAmount = offeringAmount ? parseFloat(offeringAmount) : 0");
-    expect(portalPrayerRequests).toContain("Tuma Ombi na Sadaka");
+    expect(portalPrayerRequests).toContain('t("member_prayer_requests.actions.submit_with_offering"');
     expect(submissionRpc).toContain("insert into public.platform_fees");
     expect(submissionRpc).toContain("insert into public.contributions");
     expect(submissionRpc).toContain("'Prayer Request Offering - '");

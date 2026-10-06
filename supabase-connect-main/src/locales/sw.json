@@ -2230,6 +2230,100 @@
       "delete_family_for": "Futa familia {{name}}"
     }
   },
+  "member_prayer_requests": {
+    "title": "Maombi",
+    "subtitle": "Shiriki ombi lako la maombi au ungana na waumini wengine katika kuwaombea.",
+    "anonymous_requester": "Muumini",
+    "actions": {
+      "create": "Tuma Ombi la Maombi",
+      "submit": "Tuma Ombi",
+      "submit_with_offering": "Tuma Ombi na Sadaka {{amount}}",
+      "pray": "Nimeombea",
+      "prayed": "Umeombea"
+    },
+    "form": {
+      "submitting_as": "Unatuma kama",
+      "request_label": "Ombi lako la Maombi *",
+      "request_placeholder": "Andika unachohitaji kuombewa kwa utulivu...",
+      "privacy_label": "Nani anaweza kuona ombi hili?",
+      "draft_saved": "Rasimu hii inahifadhiwa kwenye kifaa hiki unapoandika."
+    },
+    "privacy": {
+      "public_to_church": {
+        "label": "Waumini wa Kanisa",
+        "description": "Waumini wa Kanisa: litaonekana kwa waumini baada ya mapitio."
+      },
+      "private_to_pastor_admin": {
+        "label": "Mchungaji/Uongozi pekee",
+        "description": "Mchungaji/Uongozi pekee: halitakuwa ombi la waumini wote."
+      },
+      "anonymous_public": {
+        "label": "Bila kutaja jina",
+        "description": "Bila kutaja jina: linaweza kuonekana baada ya mapitio bila kuonyesha jina lako kwa waumini."
+      }
+    },
+    "offering": {
+      "label": "Sadaka ya Hiari (TZS)",
+      "helper": "Sadaka ni ya hiari kabisa na si sharti la kutuma ombi la maombi.",
+      "placeholder": "Hiari - kiasi kitakachopokelewa na kanisa",
+      "reassurance": "Maombi yako yatapokelewa hata kama hutachagua kutoa sadaka.",
+      "badge": "Sadaka ya hiari",
+      "request_amount": "Sadaka: {{amount}}",
+      "church_receives": "Kanisa linapokea",
+      "platform_fee": "Ada ya mfumo ({{percent}}%)",
+      "total": "Jumla"
+    },
+    "status": {
+      "approved": "Imepokelewa",
+      "pending": "Inasubiri mapitio",
+      "rejected": "Haikuchapishwa"
+    },
+    "status_help": {
+      "pending": "Ombi lako limepokelewa na linasubiri mapitio kabla ya kuonekana kwa waumini.",
+      "rejected": "Ombi hili halijawekwa kwenye maombi ya waumini, lakini bado lipo kwenye historia yako."
+    },
+    "comments": {
+      "heading": "Ujumbe wa Faraja",
+      "placeholder": "Andika ujumbe wa faraja au sala fupi...",
+      "empty": "Hakuna ujumbe bado. Unaweza kuacha faraja au sala fupi."
+    },
+    "offline": {
+      "title": "Maombi yaliyosubiri kutumwa",
+      "description": "Yatatumiwa kiotomatiki mtandao utakaporudi.",
+      "count": "{{count}} imesubiri kutumwa",
+      "saved_at": "Ilihifadhiwa {{date}}"
+    },
+    "tabs": {
+      "community": "Maombi ya Waumini",
+      "mine": "Maombi Yangu ({{count}})"
+    },
+    "states": {
+      "loading": "Inapakia maombi...",
+      "community_empty_title": "Hakuna maombi yaliyoshirikiwa kwa sasa.",
+      "community_empty_description": "Unaweza kuwa wa kwanza kushiriki ombi la maombi.",
+      "mine_empty_title": "Bado hujatuma ombi la maombi.",
+      "mine_empty_description": "Ukiwa tayari, tuma ombi lako kwa utulivu. Litasubiri mapitio kabla ya kushirikiwa."
+    },
+    "toasts": {
+      "queued_title": "Ombi la maombi limesubiri kutumwa",
+      "submitted_title": "Ombi la maombi limetumwa",
+      "queued_description": "Ombi lako litatumwa kiotomatiki mtandao utakaporudi.",
+      "submitted_with_offering": "{{churchAmount}} itaenda kanisani. Jumla iliyorekodiwa ni {{totalAmount}}, ikijumuisha ada ya mfumo ya {{feeAmount}}.",
+      "submitted_without_offering": "Ombi lako limepokelewa kwa maombi.",
+      "prayer_mark_removed": "Alama ya maombi imeondolewa",
+      "marked_as_prayed": "Umeweka alama kuwa umeombea",
+      "comment_posted": "Ujumbe umechapishwa"
+    },
+    "errors": {
+      "no_church_context": "Hakuna muktadha wa kanisa",
+      "no_member_profile": "Wasifu wa mwanachama haujapatikana",
+      "member_profile_required": "Wasifu wako wa mwanachama unahitajika",
+      "offering_negative": "Kiasi cha sadaka hakiwezi kuwa hasi.",
+      "comment_empty": "Ujumbe hauwezi kuwa tupu",
+      "sign_in_to_react": "Unahitaji kuingia ili kujibu.",
+      "sync_failed": "Sawazisho halikufaulu"
+    }
+  },
   "event_requests_admin": {
     "page_title": "Huduma za Ofisi",
     "page_description": "Pitia na simamia maombi ya ibada na matukio kutoka kwa wanachama.",

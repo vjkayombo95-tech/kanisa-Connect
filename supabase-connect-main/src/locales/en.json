@@ -2230,6 +2230,100 @@
       "delete_family_for": "Delete family {{name}}"
     }
   },
+  "member_prayer_requests": {
+    "title": "Prayer Requests",
+    "subtitle": "Share a prayer request or join other members in prayer.",
+    "anonymous_requester": "Member",
+    "actions": {
+      "create": "Submit Prayer Request",
+      "submit": "Submit Request",
+      "submit_with_offering": "Submit Request and Offering {{amount}}",
+      "pray": "I prayed",
+      "prayed": "Prayed"
+    },
+    "form": {
+      "submitting_as": "Submitting as",
+      "request_label": "Your Prayer Request *",
+      "request_placeholder": "Write what you would like prayer for...",
+      "privacy_label": "Who can see this request?",
+      "draft_saved": "This draft is saved on this device as you type."
+    },
+    "privacy": {
+      "public_to_church": {
+        "label": "Church members",
+        "description": "Church members: visible to members after review."
+      },
+      "private_to_pastor_admin": {
+        "label": "Pastor/leadership only",
+        "description": "Pastor/leadership only: not shown as a community prayer."
+      },
+      "anonymous_public": {
+        "label": "Without showing my name",
+        "description": "Without showing my name: may appear after review without showing your name to members."
+      }
+    },
+    "offering": {
+      "label": "Optional Offering (TZS)",
+      "helper": "The offering is completely optional and is not required to submit a prayer request.",
+      "placeholder": "Optional - amount the church will receive",
+      "reassurance": "Your prayer request will be received even if you do not choose to give an offering.",
+      "badge": "Optional offering",
+      "request_amount": "Offering: {{amount}}",
+      "church_receives": "Church receives",
+      "platform_fee": "Platform fee ({{percent}}%)",
+      "total": "Total"
+    },
+    "status": {
+      "approved": "Received",
+      "pending": "Pending review",
+      "rejected": "Not published"
+    },
+    "status_help": {
+      "pending": "Your request has been received and is awaiting review before it appears to members.",
+      "rejected": "This request was not placed in community prayers, but it remains in your history."
+    },
+    "comments": {
+      "heading": "Messages of Comfort",
+      "placeholder": "Write a message of comfort or a short prayer...",
+      "empty": "No messages yet. You can leave comfort or a short prayer."
+    },
+    "offline": {
+      "title": "Prayer requests waiting to send",
+      "description": "They will be sent automatically when the connection returns.",
+      "count": "{{count}} waiting to send",
+      "saved_at": "Saved {{date}}"
+    },
+    "tabs": {
+      "community": "Community Prayers",
+      "mine": "My Requests ({{count}})"
+    },
+    "states": {
+      "loading": "Loading prayer requests...",
+      "community_empty_title": "No prayer requests have been shared yet.",
+      "community_empty_description": "You can be the first to share a prayer request.",
+      "mine_empty_title": "You have not submitted a prayer request yet.",
+      "mine_empty_description": "When you are ready, submit your request calmly. It will wait for review before being shared."
+    },
+    "toasts": {
+      "queued_title": "Prayer request queued",
+      "submitted_title": "Prayer request submitted",
+      "queued_description": "Your request will be sent automatically when the connection returns.",
+      "submitted_with_offering": "{{churchAmount}} will go to the church. Total recorded is {{totalAmount}}, including a system fee of {{feeAmount}}.",
+      "submitted_without_offering": "Your request has been received for prayer.",
+      "prayer_mark_removed": "Prayer mark removed",
+      "marked_as_prayed": "Marked as prayed",
+      "comment_posted": "Comment posted"
+    },
+    "errors": {
+      "no_church_context": "No church context",
+      "no_member_profile": "No member profile found",
+      "member_profile_required": "Your member profile is required",
+      "offering_negative": "Offering amount cannot be negative.",
+      "comment_empty": "Comment cannot be empty",
+      "sign_in_to_react": "You need to sign in to react.",
+      "sync_failed": "Sync failed"
+    }
+  },
   "event_requests_admin": {
     "page_title": "Parish Office Services",
     "page_description": "Review and manage service and event requests from members.",
