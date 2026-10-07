@@ -3278,7 +3278,54 @@
       },
       "announcements": {
         "title": "Announcements",
-        "description": "Diocese announcements will be managed here."
+        "description": "Prepare and manage Diocese announcements for its parishes.",
+        "new": "New Announcement",
+        "retry": "Try again",
+        "status": {
+          "draft": "Draft",
+          "published": "Published",
+          "archived": "Archived"
+        },
+        "audience": {
+          "all_parishes": "All parishes",
+          "selected_parishes": "Selected parishes",
+          "selected_count_one": "{{count}} selected parish",
+          "selected_count_other": "{{count}} selected parishes"
+        },
+        "actions": {
+          "edit": "Edit",
+          "archive": "Archive",
+          "publish": "Publish",
+          "save_draft": "Save Draft"
+        },
+        "form": {
+          "new_title": "New announcement",
+          "edit_title": "Edit announcement",
+          "description": "Choose the message and parishes this Diocese announcement should target.",
+          "title": "Title",
+          "content": "Content",
+          "audience": "Audience",
+          "select_parishes": "Select parishes",
+          "no_parishes": "There are no active parishes to select right now.",
+          "parish_error_title": "Unable to load parishes."
+        },
+        "loading": "Loading announcements",
+        "error": {
+          "title": "Unable to load announcements.",
+          "description": "Try again to load Diocese announcements."
+        },
+        "empty": {
+          "title": "No announcements yet.",
+          "description": "Draft and published Diocese announcements will appear here."
+        },
+        "toast": {
+          "saved": "Draft saved.",
+          "published": "Announcement published.",
+          "archived": "Announcement archived.",
+          "save_error": "Unable to save announcement.",
+          "publish_error": "Unable to publish announcement.",
+          "archive_error": "Unable to archive announcement."
+        }
       },
       "events": {
         "title": "Events",

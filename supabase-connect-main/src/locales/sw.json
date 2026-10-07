@@ -3278,7 +3278,54 @@
       },
       "announcements": {
         "title": "Matangazo",
-        "description": "Matangazo ya Diocese yatasimamiwa hapa."
+        "description": "Andaa na simamia matangazo ya Diocese kwa parokia zake.",
+        "new": "Tangazo Jipya",
+        "retry": "Jaribu tena",
+        "status": {
+          "draft": "Rasimu",
+          "published": "Limechapishwa",
+          "archived": "Limehifadhiwa"
+        },
+        "audience": {
+          "all_parishes": "Parokia zote",
+          "selected_parishes": "Parokia maalum",
+          "selected_count_one": "Parokia {{count}} imechaguliwa",
+          "selected_count_other": "Parokia {{count}} zimechaguliwa"
+        },
+        "actions": {
+          "edit": "Hariri",
+          "archive": "Hifadhi",
+          "publish": "Chapisha",
+          "save_draft": "Hifadhi Rasimu"
+        },
+        "form": {
+          "new_title": "Tangazo jipya",
+          "edit_title": "Hariri tangazo",
+          "description": "Chagua ujumbe na parokia zitakazolengwa na tangazo hili.",
+          "title": "Kichwa cha tangazo",
+          "content": "Maudhui",
+          "audience": "Walengwa",
+          "select_parishes": "Chagua parokia",
+          "no_parishes": "Hakuna parokia hai za kuchagua kwa sasa.",
+          "parish_error_title": "Imeshindikana kupakia parokia."
+        },
+        "loading": "Matangazo yanapakiwa",
+        "error": {
+          "title": "Imeshindikana kupakia matangazo.",
+          "description": "Jaribu tena kupata matangazo ya Diocese."
+        },
+        "empty": {
+          "title": "Hakuna matangazo kwa sasa.",
+          "description": "Rasimu na matangazo yaliyochapishwa yataonekana hapa."
+        },
+        "toast": {
+          "saved": "Rasimu imehifadhiwa.",
+          "published": "Tangazo limechapishwa.",
+          "archived": "Tangazo limehifadhiwa.",
+          "save_error": "Imeshindikana kuhifadhi tangazo.",
+          "publish_error": "Imeshindikana kuchapisha tangazo.",
+          "archive_error": "Imeshindikana kuhifadhi tangazo."
+        }
       },
       "events": {
         "title": "Matukio",
