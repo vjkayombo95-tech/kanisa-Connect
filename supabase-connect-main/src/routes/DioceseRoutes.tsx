@@ -1,7 +1,8 @@
-﻿import { Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { DioceseLayout } from "@/components/diocese/DioceseLayout";
 import { DiocesePlaceholderPage } from "@/pages/diocese/DiocesePlaceholderPage";
+import { DioceseParishesPage } from "@/pages/diocese/DioceseParishesPage";
 
 export default function DioceseRoutes() {
   const { t } = useTranslation();
@@ -21,12 +22,7 @@ export default function DioceseRoutes() {
 
         <Route
           path="parishes"
-          element={
-            <DiocesePlaceholderPage
-              title={t("diocese_workspace.pages.parishes.title")}
-              description={t("diocese_workspace.pages.parishes.description")}
-            />
-          }
+          element={<DioceseParishesPage />}
         />
 
         <Route

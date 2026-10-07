@@ -1542,7 +1542,7 @@
         "enable_sound": "Washa sauti ya kuchapa"
       },
       "advanced": {
-        "locked": "Zana za juu za mstari ZIMEFUNGWA ðŸ”’",
+        "locked": "Zana za juu za mstari ZIMEFUNGWA Ã°Å¸â€â€™",
         "description": "Panda hadi mpango wa Intermediate au zaidi ili kufungua Focus Mode, sauti ya typewriter, na mwingiliano wa juu wa mistari."
       }
     }
@@ -3258,7 +3258,23 @@
       },
       "parishes": {
         "title": "Parokia",
-        "description": "Parokia zilizo chini ya Diocese zitaonekana hapa."
+        "description": "Angalia parokia zilizo chini ya Diocese hii.",
+        "code": "Namba",
+        "count_one": "Parokia {{count}}",
+        "count_other": "Parokia {{count}}",
+        "search_label": "Tafuta parokia",
+        "search_placeholder": "Tafuta parokia...",
+        "retry": "Jaribu tena",
+        "no_results": "Hakuna parokia inayolingana na utafutaji wako.",
+        "loading": "Parokia zinapakiwa",
+        "error": {
+          "title": "Imeshindikana kupakia parokia.",
+          "description": "Jaribu tena kupata orodha ya parokia."
+        },
+        "empty": {
+          "title": "Hakuna parokia kwa sasa.",
+          "description": "Parokia zitakazopewa Diocese hii zitaonekana hapa."
+        }
       },
       "announcements": {
         "title": "Matangazo",

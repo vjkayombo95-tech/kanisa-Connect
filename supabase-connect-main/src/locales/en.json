@@ -1542,7 +1542,7 @@
         "enable_sound": "Enable typing sound"
       },
       "advanced": {
-        "locked": "Advanced verse tools are LOCKED ðŸ”’",
+        "locked": "Advanced verse tools are LOCKED Ã°Å¸â€â€™",
         "description": "Upgrade to Intermediate or higher to unlock Focus Mode, typewriter sound, and premium verse interactions."
       }
     }
@@ -3258,7 +3258,23 @@
       },
       "parishes": {
         "title": "Parishes",
-        "description": "Parishes under this Diocese will appear here."
+        "description": "View the parishes assigned to this Diocese.",
+        "code": "Code",
+        "count_one": "{{count}} parish",
+        "count_other": "{{count}} parishes",
+        "search_label": "Search parishes",
+        "search_placeholder": "Search parishes...",
+        "retry": "Try again",
+        "no_results": "No parishes match your search.",
+        "loading": "Loading parishes",
+        "error": {
+          "title": "Unable to load parishes.",
+          "description": "Try again to load the parish directory."
+        },
+        "empty": {
+          "title": "No parishes yet.",
+          "description": "Parishes assigned to this Diocese will appear here."
+        }
       },
       "announcements": {
         "title": "Announcements",
