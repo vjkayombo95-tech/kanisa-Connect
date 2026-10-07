@@ -1,6 +1,7 @@
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { changeAppLanguage } from "@/i18n";
@@ -24,6 +25,9 @@ const state = vi.hoisted(() => ({
 }));
 
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => state.auth }));
+vi.mock("@/lib/diocese-workspace", () => ({
+  getMyDioceseWorkspaces: vi.fn().mockResolvedValue([]),
+}));
 vi.mock("@/components/auth/ProtectedRoute", () => ({ ProtectedRoute: ({ children }: { children: ReactNode }) => children }));
 vi.mock("@/components/portal/BibleVersePopup", () => ({ BibleVersePopup: () => null }));
 vi.mock("@/components/portal/MemberChurchSwitcherDialog", () => ({ MemberChurchSwitcherDialog: () => null }));
@@ -51,14 +55,24 @@ vi.mock("@/hooks/use-member-notifications", () => ({ useMemberNotifications: () 
 import { PortalLayout } from "@/components/portal/PortalLayout";
 
 function ShellApp() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
   return (
-    <MemoryRouter initialEntries={["/portal"]}>
-      <Routes>
-        <Route path="/portal" element={<PortalLayout />}>
-          <Route index element={<div data-testid="page">Portal page</div>} />
-        </Route>
-      </Routes>
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={["/portal"]}>
+        <Routes>
+          <Route path="/portal" element={<PortalLayout />}>
+            <Route index element={<div data-testid="page">Portal page</div>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 

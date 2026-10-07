@@ -1,4 +1,5 @@
 import { act, type ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -72,6 +73,9 @@ vi.mock("@/hooks/use-community-leader", () => ({
   },
 }));
 vi.mock("@/hooks/use-member-notifications", () => ({ useMemberNotifications: () => ({ data: [] }) }));
+vi.mock("@/lib/diocese-workspace", () => ({
+  getMyDioceseWorkspaces: vi.fn(async () => []),
+}));
 vi.mock("@/components/auth/ProtectedRoute", () => ({ ProtectedRoute: ({ children }: { children: ReactNode }) => children }));
 vi.mock("@/components/portal/BibleVersePopup", () => ({ BibleVersePopup: () => null }));
 vi.mock("@/components/portal/MemberMobileBackHeader", () => ({ MemberMobileBackHeader: () => null }));
@@ -108,21 +112,25 @@ import { PortalLayout } from "@/components/portal/PortalLayout";
 import MemberServicesPage from "@/pages/portal/MemberServicesPage";
 
 function PortalApplication({ basePath = "/portal", initialPath = basePath }: { basePath?: "/portal" | "/member"; initialPath?: string }) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
   return (
-    <MemoryRouter initialEntries={[initialPath]}>
-      <Routes>
-        <Route path={basePath} element={<PortalLayout />}>
-          <Route index element={<div data-testid="page">Nyumbani page</div>} />
-          <Route path="today" element={<div data-testid="page">Leo page</div>} />
-          <Route path="my-parish" element={<div data-testid="page">Parokia Yangu page</div>} />
-          <Route path="services" element={<div data-testid="page">Zaidi page</div>} />
-          <Route path="give" element={<div data-testid="page">Michango page</div>} />
-          <Route path="mass-intentions" element={<div data-testid="page">Nia page</div>} />
-          <Route path="announcements" element={<div data-testid="page">Matangazo page</div>} />
-          <Route path="jumuiya" element={<div data-testid="page">Jumuiya page</div>} />
-        </Route>
-      </Routes>
-    </MemoryRouter>
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <Routes>
+          <Route path={basePath} element={<PortalLayout />}>
+            <Route index element={<div data-testid="page">Nyumbani page</div>} />
+            <Route path="today" element={<div data-testid="page">Leo page</div>} />
+            <Route path="my-parish" element={<div data-testid="page">Parokia Yangu page</div>} />
+            <Route path="services" element={<div data-testid="page">Zaidi page</div>} />
+            <Route path="give" element={<div data-testid="page">Michango page</div>} />
+            <Route path="mass-intentions" element={<div data-testid="page">Nia page</div>} />
+            <Route path="announcements" element={<div data-testid="page">Matangazo page</div>} />
+            <Route path="jumuiya" element={<div data-testid="page">Jumuiya page</div>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 

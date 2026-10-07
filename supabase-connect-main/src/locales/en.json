@@ -1542,7 +1542,7 @@
         "enable_sound": "Enable typing sound"
       },
       "advanced": {
-        "locked": "Advanced verse tools are LOCKED 🔒",
+        "locked": "Advanced verse tools are LOCKED ðŸ”’",
         "description": "Upgrade to Intermediate or higher to unlock Focus Mode, typewriter sound, and premium verse interactions."
       }
     }
@@ -3237,5 +3237,46 @@
     "mark_read": "Mark notification {{title}} as read",
     "updating": "Updating",
     "update_error": "Notification could not be updated"
+  }
+,
+  "diocese_workspace": {
+    "workspace_label": "Diocese Workspace",
+    "my_spaces": "My Spaces",
+    "diocese": "Diocese",
+    "navigation": {
+      "overview": "Overview",
+      "parishes": "Parishes",
+      "announcements": "Announcements",
+      "events": "Events",
+      "reports": "Reports",
+      "more": "More"
+    },
+    "pages": {
+      "overview": {
+        "title": "Overview",
+        "description": "An overview of Diocese activity and information."
+      },
+      "parishes": {
+        "title": "Parishes",
+        "description": "Parishes under this Diocese will appear here."
+      },
+      "announcements": {
+        "title": "Announcements",
+        "description": "Diocese announcements will be managed here."
+      },
+      "events": {
+        "title": "Events",
+        "description": "Diocese events will be managed here."
+      },
+      "reports": {
+        "title": "Reports",
+        "description": "A summary of non-sensitive Diocese information will appear here."
+      },
+      "more": {
+        "title": "More",
+        "description": "Other Diocese services and settings will appear here."
+      }
+    },
+    "placeholder": "This section will be added in the next phase."
   }
 }

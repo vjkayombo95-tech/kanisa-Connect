@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
@@ -122,6 +123,7 @@ const translations: Record<string, string> = {
 };
 
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => state.auth }));
+vi.mock("@/lib/diocese-workspace", () => ({ getMyDioceseWorkspaces: vi.fn().mockResolvedValue([]) }));
 vi.mock("@/components/auth/ProtectedRoute", () => ({ ProtectedRoute: ({ children }: { children: ReactNode }) => children }));
 vi.mock("@/components/portal/BibleVersePopup", () => ({ BibleVersePopup: () => null }));
 vi.mock("@/components/portal/MemberMobileBackHeader", () => ({ MemberMobileBackHeader: () => null }));
@@ -170,8 +172,16 @@ function renderPortal(initialPath = "/portal") {
   const host = document.createElement("div");
   document.body.append(host);
   const root = createRoot(host);
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
   act(() => {
     root.render(
+      <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialPath]}>
         <LocationProbe />
         <Routes>
@@ -183,7 +193,8 @@ function renderPortal(initialPath = "/portal") {
           </Route>
           <Route path="/church-admin" element={<div>Staff workspace</div>} />
         </Routes>
-      </MemoryRouter>,
+      </MemoryRouter>
+      </QueryClientProvider>,
     );
   });
   mounted = { host, root };
