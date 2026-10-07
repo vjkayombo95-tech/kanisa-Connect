@@ -7,6 +7,7 @@ import { ChurchThemeProvider } from "@/contexts/ChurchThemeContext";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { PreviewViewport } from "@/components/PreviewViewport";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { DioceseRouteGuard } from "@/components/diocese/DioceseRouteGuard";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { isSupabaseConfigured } from "@/integrations/supabase/client";
@@ -30,6 +31,7 @@ const MemberRoutes = lazy(() => import("./routes/MemberRoutes"));
 const StaffRoutes = lazy(() => import("./routes/StaffRoutes"));
 const AdminRoutes = lazy(() => import("./routes/AdminRoutes"));
 const SuperAdminRoutes = lazy(() => import("./routes/SuperAdminRoutes"));
+const DioceseRoutes = lazy(() => import("./routes/DioceseRoutes"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -122,6 +124,14 @@ function AppRoutes() {
             <ProtectedRoute requireChurch requireAdmin>
               <AdminRoutes />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/diocese/:dioceseId/*"
+          element={
+            <DioceseRouteGuard>
+              <DioceseRoutes />
+            </DioceseRouteGuard>
           }
         />
         <Route

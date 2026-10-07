@@ -1542,7 +1542,7 @@
         "enable_sound": "Washa sauti ya kuchapa"
       },
       "advanced": {
-        "locked": "Zana za juu za mstari ZIMEFUNGWA 🔒",
+        "locked": "Zana za juu za mstari ZIMEFUNGWA ðŸ”’",
         "description": "Panda hadi mpango wa Intermediate au zaidi ili kufungua Focus Mode, sauti ya typewriter, na mwingiliano wa juu wa mistari."
       }
     }
@@ -3237,5 +3237,46 @@
     "mark_read": "Weka arifa {{title}} kuwa imesomwa",
     "updating": "Inasasisha",
     "update_error": "Arifa haikuweza kusasishwa"
+  }
+,
+  "diocese_workspace": {
+    "workspace_label": "Eneo la Diocese",
+    "my_spaces": "Nafasi Zangu",
+    "diocese": "Diocese",
+    "navigation": {
+      "overview": "Muhtasari",
+      "parishes": "Parokia",
+      "announcements": "Matangazo",
+      "events": "Matukio",
+      "reports": "Ripoti",
+      "more": "Zaidi"
+    },
+    "pages": {
+      "overview": {
+        "title": "Muhtasari",
+        "description": "Muhtasari wa shughuli na taarifa za Diocese."
+      },
+      "parishes": {
+        "title": "Parokia",
+        "description": "Parokia zilizo chini ya Diocese zitaonekana hapa."
+      },
+      "announcements": {
+        "title": "Matangazo",
+        "description": "Matangazo ya Diocese yatasimamiwa hapa."
+      },
+      "events": {
+        "title": "Matukio",
+        "description": "Matukio ya Diocese yatasimamiwa hapa."
+      },
+      "reports": {
+        "title": "Ripoti",
+        "description": "Muhtasari wa taarifa zisizo nyeti utaonekana hapa."
+      },
+      "more": {
+        "title": "Zaidi",
+        "description": "Huduma na mipangilio mingine ya Diocese itaonekana hapa."
+      }
+    },
+    "placeholder": "Sehemu hii itaongezwa katika hatua inayofuata."
   }
 }

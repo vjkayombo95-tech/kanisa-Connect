@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -5,6 +6,7 @@ import {
   Building2,
   Church,
   Lock,
+  Landmark,
   LogOut,
   Menu,
   PanelLeftClose,
@@ -38,6 +40,7 @@ import { MemberChurchSwitcherDialog } from "@/components/portal/MemberChurchSwit
 import { MemberMobileBackHeader } from "@/components/portal/MemberMobileBackHeader";
 import { formatTZS } from "@/lib/currency";
 import { cn } from "@/lib/utils";
+import { getMyDioceseWorkspaces } from "@/lib/diocese-workspace";
 import { getPortalFeatureForPath, type PortalFeatureKey } from "@/lib/portal-features";
 import { translateMemberServiceLabel, translateSystemLabel } from "@/lib/localization";
 import { getMemberServiceForPath, isOrdinaryMemberPathAllowed, memberServiceRegistry } from "@/lib/member-service-registry";
@@ -401,6 +404,7 @@ function ProfileMenu({
   setProfileMenuOpen,
   profile,
   ledCommunities,
+  dioceseWorkspaces,
   activeChurchName,
   canSwitchChurch,
   hasStaffAccess,
@@ -418,6 +422,7 @@ function ProfileMenu({
   setProfileMenuOpen: (open: boolean) => void;
   profile: ReturnType<typeof useAuth>["profile"];
   ledCommunities: Awaited<ReturnType<typeof useLedCommunities>["data"]>;
+  dioceseWorkspaces: Awaited<ReturnType<typeof getMyDioceseWorkspaces>>;
   activeChurchName: string | null;
   canSwitchChurch: boolean;
   hasStaffAccess: boolean;
@@ -464,6 +469,36 @@ function ProfileMenu({
             >
               {t("church_switcher.switch_church")}
             </DropdownMenuItem>
+          </>
+        ) : null}
+        {dioceseWorkspaces.length > 0 ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              {t("diocese_workspace.my_spaces")}
+            </DropdownMenuItem>
+            {dioceseWorkspaces.map((workspace) => (
+              <DropdownMenuItem key={workspace.staff_membership_id} asChild>
+                <AppLink
+                  to={`/diocese/${workspace.diocese_id}`}
+                  onClick={() => {
+                    setProfileMenuOpen(false);
+                    setMobileOpen(false);
+                  }}
+                  className="flex min-w-0 items-start gap-2 whitespace-normal"
+                >
+                  <Landmark className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span className="min-w-0">
+                    <span className="block break-words font-medium leading-snug">
+                      {workspace.diocese_name}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      {t("diocese_workspace.diocese")}
+                    </span>
+                  </span>
+                </AppLink>
+              </DropdownMenuItem>
+            ))}
           </>
         ) : null}
         {hasStaffAccess && (
@@ -549,6 +584,13 @@ export function PortalLayout() {
   const { getFeatureState, isLoading: featuresLoading } = useFeatureAccess();
   const { t, i18n } = useTranslation();
   const profileMenuWasOpen = useRef(false);
+  const { data: dioceseWorkspaces = [] } = useQuery({
+    queryKey: ["diocese-workspaces", user?.id],
+    queryFn: getMyDioceseWorkspaces,
+    enabled: Boolean(user),
+    staleTime: 60_000,
+    retry: 1,
+  });
 
   const handleSignOut = async () => {
     await signOut();
@@ -771,6 +813,7 @@ export function PortalLayout() {
                   setProfileMenuOpen={setProfileMenuOpen}
                   profile={profile}
                   ledCommunities={ledCommunities}
+                  dioceseWorkspaces={dioceseWorkspaces}
                   activeChurchName={activeChurchName}
                   canSwitchChurch={canSwitchChurch}
                   hasStaffAccess={hasStaffAccess}
@@ -1034,7 +1077,7 @@ export function PortalLayout() {
                 <span className="text-sm font-semibold font-serif">Kanisa Connect</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                © {new Date().getFullYear()} Kanisa Connect. {t("all_rights_reserved")}
+                &copy; {new Date().getFullYear()} Kanisa Connect. {t("all_rights_reserved")}
               </p>
             </div>
           </footer>

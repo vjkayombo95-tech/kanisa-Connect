@@ -142,7 +142,7 @@ describe("Wave 5A disabled Radio real member layout", () => {
     await waitForText(host, "Member services");
     expect(radioAudioCount()).toBe(0);
     expect(mocks.fetchStations).not.toHaveBeenCalled();
-    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalledWith("has_radio_permission", expect.anything());
     await act(async () => root.unmount());
     host.remove();
     vi.restoreAllMocks();
