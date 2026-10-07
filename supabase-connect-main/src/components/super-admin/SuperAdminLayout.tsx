@@ -16,6 +16,7 @@ import { STAFF_MOBILE_CONFIGS } from "@/lib/staff-mobile-registry";
 
 const pageTitles: Array<{ match: string; title: string; description: string }> = [
   { match: "/super-admin/settings", title: "Platform Settings", description: "Control platform-wide behavior" },
+  { match: "/super-admin/dioceses", title: "Dioceses", description: "Manage Dioceses, parishes, and Diocese staff" },
   { match: "/super-admin/churches", title: "Church Management", description: "Review and manage church workspaces" },
   { match: "/super-admin/subscriptions", title: "Subscriptions", description: "Monitor plans, billing, and renewals" },
   { match: "/super-admin/record-preservation", title: "Record Preservation", description: "Review platform record preservation payments" },

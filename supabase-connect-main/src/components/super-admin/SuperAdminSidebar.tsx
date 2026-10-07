@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Building2, CreditCard, Receipt, ToggleRight,
   TrendingUp, FileText, Activity, Settings, Shield, Archive, MonitorCheck, CalendarClock, BookOpen,
-  Library, Cross, Upload, Radio,
+  Library, Cross, Upload, Radio, Landmark,
 } from "lucide-react";
 import { AppLink } from "@/components/AppLink";
 import {
@@ -16,6 +16,7 @@ import { useUnresolvedSystemLogCount } from "@/hooks/use-system-log-alert";
 const items = [
   { title: "Platform Dashboard", url: "/super-admin", icon: LayoutDashboard },
   { title: "Church Management", url: "/super-admin/churches", icon: Building2 },
+  { title: "Dioceses", url: "/super-admin/dioceses", icon: Landmark },
   { title: "Subscriptions", url: "/super-admin/subscriptions", icon: CreditCard },
   { title: "Billing Verification", url: "/super-admin/billing-verification", icon: Receipt },
   { title: "Record Preservation", url: "/super-admin/record-preservation", icon: Archive },
