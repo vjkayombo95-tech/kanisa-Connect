@@ -9,6 +9,7 @@ const SuperAdminLayout = lazy(() =>
 );
 const PlatformDashboard = lazy(() => import("@/pages/super-admin/PlatformDashboard"));
 const ChurchManagement = lazy(() => import("@/pages/super-admin/ChurchManagement"));
+const DioceseManagement = lazy(() => import("@/pages/super-admin/DioceseManagement"));
 const SASubscriptionsPage = lazy(() => import("@/pages/super-admin/SubscriptionsPage"));
 const BillingVerificationPage = lazy(() => import("@/pages/super-admin/BillingVerificationPage"));
 const MemberRecordSubscriptionsPage = lazy(() => import("@/pages/super-admin/MemberRecordSubscriptionsPage"));
@@ -48,6 +49,8 @@ export default function SuperAdminRoutes() {
           <Route index element={<PlatformDashboard />} />
           <Route path="services" element={<StaffServicesPage config={STAFF_MOBILE_CONFIGS.super_admin} />} />
           <Route path="churches" element={<ChurchManagement />} />
+          <Route path="dioceses" element={<DioceseManagement />} />
+          <Route path="dioceses/:dioceseId" element={<DioceseManagement />} />
           <Route path="subscriptions" element={<SASubscriptionsPage />} />
           <Route path="billing-verification" element={<BillingVerificationPage />} />
           <Route path="record-preservation" element={<MemberRecordSubscriptionsPage />} />

@@ -4471,6 +4471,131 @@ export type Database = {
           },
         ]
       }
+      diocese_churches: {
+        Row: {
+          added_by: string | null
+          church_id: string
+          diocese_id: string
+          ended_at: string | null
+          id: string
+          joined_at: string
+          status: string
+        }
+        Insert: {
+          added_by?: string | null
+          church_id: string
+          diocese_id: string
+          ended_at?: string | null
+          id?: string
+          joined_at?: string
+          status?: string
+        }
+        Update: {
+          added_by?: string | null
+          church_id?: string
+          diocese_id?: string
+          ended_at?: string | null
+          id?: string
+          joined_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diocese_churches_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "diocese_churches_diocese_id_fkey"
+            columns: ["diocese_id"]
+            isOneToOne: false
+            referencedRelation: "dioceses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      diocese_staff: {
+        Row: {
+          created_at: string
+          diocese_id: string
+          id: string
+          role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          diocese_id: string
+          id?: string
+          role: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          diocese_id?: string
+          id?: string
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diocese_staff_diocese_id_fkey"
+            columns: ["diocese_id"]
+            isOneToOne: false
+            referencedRelation: "dioceses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dioceses: {
+        Row: {
+          cover_photo_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          slug: string
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          cover_photo_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          slug: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          cover_photo_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           archived_at: string | null
@@ -7763,6 +7888,14 @@ export type Database = {
         Returns: number
       }
       accept_invitation: { Args: { _token: string }; Returns: Json }
+      search_super_admin_user_directory: {
+        Args: { _search?: string; _limit?: number }
+        Returns: {
+          user_id: string
+          full_name: string | null
+          email: string | null
+        }[]
+      }
       apply_livestream_provider_check: {
         Args: {
           _actual_ended_at?: string
