@@ -55,7 +55,8 @@ insert into public.churches (id, name, slug, code, created_by)
 values
   ('b2000000-0000-4000-8000-000000000001', 'Slice 5A Parish A', 'slice-5a-parish-a', 'S5A-A', 'b1000000-0000-4000-8000-000000000005'),
   ('b2000000-0000-4000-8000-000000000002', 'Slice 5A Parish B', 'slice-5a-parish-b', 'S5A-B', 'b1000000-0000-4000-8000-000000000006'),
-  ('b2000000-0000-4000-8000-000000000003', 'Slice 5A Inactive Parish', 'slice-5a-inactive-parish', 'S5A-I', 'b1000000-0000-4000-8000-000000000006');
+  ('b2000000-0000-4000-8000-000000000003', 'Slice 5A Inactive Parish', 'slice-5a-inactive-parish', 'S5A-I', 'b1000000-0000-4000-8000-000000000006'),
+  ('b2000000-0000-4000-8000-000000000004', 'Slice 5A Later Ended Parish', 'slice-5a-later-ended-parish', 'S5A-E', 'b1000000-0000-4000-8000-000000000006');
 
 insert into public.user_roles (id, user_id, church_id, role)
 values (
@@ -74,7 +75,8 @@ insert into public.diocese_churches (id, diocese_id, church_id, status, added_by
 values
   ('b4000000-0000-4000-8000-000000000001', 'b3000000-0000-4000-8000-000000000001', 'b2000000-0000-4000-8000-000000000001', 'active', 'b1000000-0000-4000-8000-000000000001'),
   ('b4000000-0000-4000-8000-000000000002', 'b3000000-0000-4000-8000-000000000002', 'b2000000-0000-4000-8000-000000000002', 'active', 'b1000000-0000-4000-8000-000000000002'),
-  ('b4000000-0000-4000-8000-000000000003', 'b3000000-0000-4000-8000-000000000001', 'b2000000-0000-4000-8000-000000000003', 'inactive', 'b1000000-0000-4000-8000-000000000001');
+  ('b4000000-0000-4000-8000-000000000003', 'b3000000-0000-4000-8000-000000000001', 'b2000000-0000-4000-8000-000000000003', 'inactive', 'b1000000-0000-4000-8000-000000000001'),
+  ('b4000000-0000-4000-8000-000000000004', 'b3000000-0000-4000-8000-000000000001', 'b2000000-0000-4000-8000-000000000004', 'active', 'b1000000-0000-4000-8000-000000000001');
 
 insert into public.diocese_staff (id, diocese_id, user_id, role, status)
 values
@@ -139,6 +141,103 @@ select pg_temp.assert_true(
       and target_count = 1
   ),
   'Selected active parish in the same Diocese succeeds'
+);
+
+select public.publish_diocese_announcement(
+  'b3000000-0000-4000-8000-000000000001',
+  (select id from public.diocese_announcements where title = 'Selected Parish Draft')
+);
+
+select pg_temp.assert_true(
+  exists (
+    select 1
+    from public.diocese_announcements
+    where title = 'Selected Parish Draft'
+      and status = 'published'
+      and published_at is not null
+  ),
+  'Publish selected-parishes announcement with active Diocese-parish target succeeds'
+);
+
+select public.save_diocese_announcement(
+  'b3000000-0000-4000-8000-000000000001',
+  null,
+  'Ended Target Draft',
+  'Content for stale selected parish',
+  'draft',
+  'selected_parishes',
+  array['b2000000-0000-4000-8000-000000000004']::uuid[]
+);
+
+update public.diocese_churches
+set status = 'ended', ended_at = now()
+where id = 'b4000000-0000-4000-8000-000000000004';
+
+select pg_temp.assert_raises(
+  'select public.publish_diocese_announcement(''b3000000-0000-4000-8000-000000000001'', (select id from public.diocese_announcements where title = ''Ended Target Draft''))',
+  'Publish selected-parishes announcement rejects a target whose Diocese link later ended'
+);
+
+select pg_temp.assert_false(
+  exists (
+    select 1
+    from public.diocese_announcements
+    where title = 'Ended Target Draft'
+      and status = 'published'
+  ),
+  'Ended target draft remains unpublished after rejected publish'
+);
+
+select public.save_diocese_announcement(
+  'b3000000-0000-4000-8000-000000000001',
+  null,
+  'Missing Target Draft',
+  'Content for missing selected target',
+  'draft',
+  'selected_parishes',
+  array['b2000000-0000-4000-8000-000000000001']::uuid[]
+);
+
+reset role;
+
+delete from public.diocese_announcement_parish_targets
+where announcement_id = (select id from public.diocese_announcements where title = 'Missing Target Draft');
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', 'b1000000-0000-4000-8000-000000000001', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claim.email', 'slice5a-diocese-a-manager@test.invalid', true);
+select set_config('request.jwt.claims', '{"email":"slice5a-diocese-a-manager@test.invalid"}', true);
+
+select pg_temp.assert_raises(
+  'select public.publish_diocese_announcement(''b3000000-0000-4000-8000-000000000001'', (select id from public.diocese_announcements where title = ''Missing Target Draft''))',
+  'Publish selected-parishes announcement rejects an empty selected target set'
+);
+
+select public.save_diocese_announcement(
+  'b3000000-0000-4000-8000-000000000001',
+  null,
+  'All Parishes Publish Draft',
+  'Content for all parishes publish',
+  'draft',
+  'all_parishes',
+  '{}'::uuid[]
+);
+
+select public.publish_diocese_announcement(
+  'b3000000-0000-4000-8000-000000000001',
+  (select id from public.diocese_announcements where title = 'All Parishes Publish Draft')
+);
+
+select pg_temp.assert_true(
+  exists (
+    select 1
+    from public.diocese_announcements
+    where title = 'All Parishes Publish Draft'
+      and status = 'published'
+      and published_at is not null
+  ),
+  'Publish all-parishes announcement does not require selected parish targets'
 );
 
 select pg_temp.assert_raises(
@@ -273,6 +372,11 @@ select pg_temp.assert_raises(
 );
 
 select pg_temp.assert_raises(
+  'select public.publish_diocese_announcement(''b3000000-0000-4000-8000-000000000001'', (select id from public.diocese_announcements where title = ''Ended Target Draft''))',
+  'Ordinary Diocese viewer cannot publish announcements'
+);
+
+select pg_temp.assert_raises(
   'insert into public.diocese_announcements (diocese_id, title, content, status, target_mode) values (''b3000000-0000-4000-8000-000000000001'', ''Viewer direct insert'', ''Bypass attempt'', ''draft'', ''all_parishes'')',
   'Direct table DML cannot bypass RLS for ordinary Diocese viewer'
 );
@@ -323,6 +427,18 @@ select pg_temp.assert_false(
 );
 
 select pg_temp.assert_false(
+  has_table_privilege('authenticated', 'public.diocese_announcement_parish_targets', 'INSERT')
+    or has_table_privilege('authenticated', 'public.diocese_announcement_parish_targets', 'UPDATE')
+    or has_table_privilege('authenticated', 'public.diocese_announcement_parish_targets', 'DELETE'),
+  'authenticated cannot directly mutate Diocese announcement parish targets'
+);
+
+select pg_temp.assert_true(
+  has_table_privilege('authenticated', 'public.diocese_announcement_parish_targets', 'SELECT'),
+  'authenticated retains select on Diocese announcement parish targets'
+);
+
+select pg_temp.assert_false(
   has_function_privilege('authenticated', 'public.is_diocese_staff(uuid,uuid)', 'EXECUTE'),
   'authenticated still cannot directly execute internal is_diocese_staff(uuid, uuid)'
 );
@@ -353,6 +469,37 @@ select pg_temp.assert_true(
       and with_check like '%current_user_can_manage_diocese%'
   ),
   'Diocese announcement write RLS uses Diocese manage helper'
+);
+
+select pg_temp.assert_true(
+  pg_get_functiondef('public.publish_diocese_announcement(uuid,uuid)'::regprocedure)
+    like '%pg_advisory_xact_lock%'
+    and pg_get_functiondef('public.publish_diocese_announcement(uuid,uuid)'::regprocedure)
+      like '%diocese_announcement_targets:%'
+    and pg_get_functiondef('public.publish_diocese_announcement(uuid,uuid)'::regprocedure)
+      like '%order by dat.church_id asc, dat.id asc%'
+    and pg_get_functiondef('public.publish_diocese_announcement(uuid,uuid)'::regprocedure)
+      like '%for update of dat%'
+    and pg_get_functiondef('public.publish_diocese_announcement(uuid,uuid)'::regprocedure)
+      like '%order by dc.church_id asc, dc.id asc%'
+    and pg_get_functiondef('public.publish_diocese_announcement(uuid,uuid)'::regprocedure)
+      like '%for update of dc%',
+  'Publish RPC uses deterministic row-lock ordering for selected parish targets'
+);
+
+select pg_temp.assert_true(
+  pg_get_functiondef('public.lock_diocese_announcement_target_mutation()'::regprocedure)
+    like '%pg_advisory_xact_lock%'
+    and pg_get_functiondef('public.lock_diocese_announcement_target_mutation()'::regprocedure)
+      like '%diocese_announcement_targets:%'
+    and exists (
+      select 1
+      from pg_trigger
+      where tgrelid = 'public.diocese_announcement_parish_targets'::regclass
+        and tgname = 'lock_diocese_announcement_target_mutation_before_write'
+        and not tgisinternal
+    ),
+  'Direct target row writes serialize with publish validation per announcement'
 );
 
 rollback;
