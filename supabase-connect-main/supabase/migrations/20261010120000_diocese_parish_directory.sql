@@ -1,4 +1,4 @@
-﻿-- Slice 4: Diocese parish directory
+-- Slice 4: Diocese parish directory
 --
 -- Provides a deliberately narrow, read-only parish directory to users who
 -- are authorized to view the requested Diocese.
