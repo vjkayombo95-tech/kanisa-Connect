@@ -15,6 +15,9 @@ describe("Diocese announcements Slice 5A contract", () => {
   const securityTest = read(
     "supabase/tests/diocese_announcements_security.sql",
   );
+  const publishHardeningMigration = read(
+    "supabase/migrations/20261014120000_harden_diocese_announcement_publish_targets.sql",
+  );
   const service = read("src/lib/diocese-announcements.ts");
   const parishService = read("src/lib/diocese-workspace.ts");
   const page = read("src/pages/diocese/DioceseAnnouncementsPage.tsx");
@@ -100,6 +103,83 @@ describe("Diocese announcements Slice 5A contract", () => {
     );
     expect(securityTest).toContain(
       "Cross-Diocese target row cannot be inserted directly",
+    );
+  });
+
+  it("revalidates selected parish targets when publishing stale drafts", () => {
+    expect(publishHardeningMigration).toContain(
+      "create or replace function public.publish_diocese_announcement",
+    );
+    expect(publishHardeningMigration).toContain(
+      "create or replace function public.save_diocese_announcement",
+    );
+    expect(publishHardeningMigration).toContain(
+      "public.current_user_can_manage_diocese(_diocese_id)",
+    );
+    expect(publishHardeningMigration).toContain(
+      "v_announcement.target_mode = 'selected_parishes'",
+    );
+    expect(publishHardeningMigration).toContain(
+      "create or replace function public.lock_diocese_announcement_target_mutation",
+    );
+    expect(publishHardeningMigration).toContain(
+      "before insert or update or delete on public.diocese_announcement_parish_targets",
+    );
+    expect(publishHardeningMigration).toContain(
+      "pg_advisory_xact_lock",
+    );
+    expect(publishHardeningMigration).toContain(
+      "diocese_announcement_targets:",
+    );
+    expect(publishHardeningMigration).toContain(
+      "if _announcement_id is not null then",
+    );
+    expect(publishHardeningMigration).toMatch(
+      /if _announcement_id is not null then[\s\S]*pg_advisory_xact_lock[\s\S]*if v_title = '' then/,
+    );
+    expect(publishHardeningMigration).toMatch(
+      /public\.current_user_can_manage_diocese\(_diocese_id\)[\s\S]*pg_advisory_xact_lock[\s\S]*select da\.id, da\.status, da\.target_mode/,
+    );
+    expect(publishHardeningMigration).toContain(
+      "revoke insert, update, delete on table public.diocese_announcement_parish_targets",
+    );
+    expect(publishHardeningMigration).toContain(
+      "grant select on table public.diocese_announcement_parish_targets",
+    );
+    expect(publishHardeningMigration).not.toContain(
+      "lock table public.diocese_announcement_parish_targets in share mode",
+    );
+    expect(publishHardeningMigration).toContain(
+      "At least one active parish target is required",
+    );
+    expect(publishHardeningMigration).toContain(
+      "All selected parishes must be active in this Diocese",
+    );
+    expect(publishHardeningMigration).toContain(
+      "order by dat.church_id asc, dat.id asc",
+    );
+    expect(publishHardeningMigration).toContain(
+      "for update of dat",
+    );
+    expect(publishHardeningMigration).toContain(
+      "order by dc.church_id asc, dc.id asc",
+    );
+    expect(publishHardeningMigration).toContain("for update of dc");
+
+    expect(securityTest).toContain(
+      "Publish selected-parishes announcement with active Diocese-parish target succeeds",
+    );
+    expect(securityTest).toContain(
+      "Publish selected-parishes announcement rejects a target whose Diocese link later ended",
+    );
+    expect(securityTest).toContain(
+      "Publish selected-parishes announcement rejects an empty selected target set",
+    );
+    expect(securityTest).toContain(
+      "Publish all-parishes announcement does not require selected parish targets",
+    );
+    expect(securityTest).toContain(
+      "Ordinary Diocese viewer cannot publish announcements",
     );
   });
 
