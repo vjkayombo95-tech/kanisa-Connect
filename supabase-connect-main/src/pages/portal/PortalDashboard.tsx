@@ -9,6 +9,7 @@ import { useLedCommunities } from "@/hooks/use-community-leader";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { MASS_INTENTION_SELECT, mapMassIntentionRecord } from "@/lib/member-linked-requests";
 import { useMemberPledges } from "@/lib/pledges";
+import { fetchMemberDioceseAnnouncements } from "@/lib/member-diocese-announcements";
 import { fetchPortalAnnouncements } from "@/lib/portal-announcements";
 import { announcementHtmlToPlainText } from "@/lib/announcement-content";
 import {
@@ -81,6 +82,28 @@ function formatGenderLabel(t: ReturnType<typeof useTranslation>["t"], value: str
   if (!value) return null;
   const normalizedGender = value.trim().toLowerCase();
   return t(`member_dashboard.gender.${normalizedGender}`, { defaultValue: startCase(normalizedGender) });
+}
+
+function dashboardAnnouncementDate(announcement: any) {
+  const value = announcement?.published_at ?? announcement?.publish_at ?? announcement?.created_at;
+  return value ? new Date(value).getTime() || 0 : 0;
+}
+
+function mergeDashboardAnnouncements(parishAnnouncements: any[], dioceseAnnouncements: any[]) {
+  return [
+    ...parishAnnouncements.map((announcement) => ({
+      ...announcement,
+      source: "parish" as const,
+      sourceKey: `parish:${announcement.id}`,
+    })),
+    ...dioceseAnnouncements.map((announcement) => ({
+      ...announcement,
+      source: "diocese" as const,
+      sourceKey: `diocese:${announcement.id}`,
+    })),
+  ]
+    .sort((left, right) => dashboardAnnouncementDate(right) - dashboardAnnouncementDate(left))
+    .slice(0, 3);
 }
 
 function translateFamilyRole(t: ReturnType<typeof useTranslation>["t"], value: string | null | undefined) {
@@ -641,11 +664,32 @@ export default function PortalDashboard() {
   }, [member?.id, activeRecordPreservation, searchQ, catFilter]);
 
   // Announcements & events
-  const { data: announcements = [] } = useQuery({
+  const {
+    data: announcements = [],
+    isLoading: announcementsLoading,
+    isError: announcementsError,
+    refetch: retryAnnouncements,
+  } = useQuery({
     queryKey: ["dash-announcements", churchId],
     queryFn: async () => {
       if (!churchId) return [];
-      return fetchPortalAnnouncements(churchId, 3);
+      const [parishResult, dioceseResult] = await Promise.allSettled([
+        fetchPortalAnnouncements(churchId, 3),
+        fetchMemberDioceseAnnouncements(churchId, 3),
+      ]);
+
+      if (parishResult.status === "rejected") {
+        throw parishResult.reason;
+      }
+
+      if (dioceseResult.status === "rejected") {
+        console.warn("Diocese announcements unavailable; showing parish dashboard announcements only.", dioceseResult.reason);
+      }
+
+      return mergeDashboardAnnouncements(
+        parishResult.value,
+        dioceseResult.status === "fulfilled" ? dioceseResult.value : [],
+      );
     },
     enabled: !!churchId,
   });
@@ -1381,13 +1425,34 @@ export default function PortalDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            {announcements.length === 0 ? (
+            {announcementsLoading ? (
+              <div role="status" aria-live="polite" className="space-y-3">
+                <Skeleton className="h-12 rounded-xl" />
+                <Skeleton className="h-12 rounded-xl" />
+                <span className="sr-only">{t("member_dashboard.announcements.loading")}</span>
+              </div>
+            ) : announcementsError ? (
+              <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
+                <p className="font-medium text-destructive">{t("member_dashboard.announcements.error_title")}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t("member_dashboard.announcements.error_description")}</p>
+                <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => void retryAnnouncements()}>
+                  {t("member_dashboard.actions.retry")}
+                </Button>
+              </div>
+            ) : announcements.length === 0 ? (
               <EmptyState icon={Megaphone} title={t("member_dashboard.announcements.empty_title")} desc={t("member_dashboard.announcements.empty_description")} />
             ) : (
               <div className="space-y-3">
                 {announcements.map((a: any) => (
-                  <div key={a.id} className="pb-3 border-b border-border/50 last:border-0">
-                    <p className="text-sm font-medium">{a.title}</p>
+                  <div key={a.sourceKey ?? a.id} className="pb-3 border-b border-border/50 last:border-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-medium">{a.title}</p>
+                      {a.source === "diocese" && (
+                        <Badge variant="outline" className="shrink-0 border-accent/40 bg-accent/10 text-[10px] text-accent-foreground">
+                          {t("member_announcements.badges.diocese")}
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{announcementHtmlToPlainText(a.content)}</p>
                     <p className="text-xs text-muted-foreground/60 mt-1">{formatDashboardDate(a.created_at, i18n.language, undefined, missingValue)}</p>
                   </div>

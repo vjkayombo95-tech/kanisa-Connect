@@ -11,13 +11,32 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { CommentThread, type CommentReactionSummary } from "@/components/portal/CommentThread";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
-import { fetchPortalAnnouncements, getPortalAnnouncementsCache } from "@/lib/portal-announcements";
+import { fetchMemberDioceseAnnouncements, type MemberDioceseAnnouncement } from "@/lib/member-diocese-announcements";
+import { fetchPortalAnnouncements, getPortalAnnouncementsCache, type PortalAnnouncementRecord } from "@/lib/portal-announcements";
 import { getAnnouncementImageUrl } from "@/lib/announcement-media";
 import { AnnouncementContent } from "@/components/announcements/AnnouncementContent";
 import { formatAppDate } from "@/lib/localization";
 
 const ANNOUNCEMENT_REACTION_EMOJIS = ["🎉", "❤️", "🙏", "🥳", "👏", "😊"] as const;
 const ANNOUNCEMENT_COMMENT_EMOJIS = ["🎉", "❤️", "🙏", "👏", "😊"] as const;
+
+type ParishMemberAnnouncement = PortalAnnouncementRecord & {
+  source: "parish";
+  sourceKey: string;
+  isCelebration: boolean;
+  reactions: Array<{ emoji: string; count: number; reacted: boolean }>;
+  comments: any[];
+};
+
+type DioceseMemberAnnouncementRow = MemberDioceseAnnouncement & {
+  source: "diocese";
+  sourceKey: string;
+  isCelebration: false;
+  reactions: [];
+  comments: [];
+};
+
+type MemberAnnouncementRow = ParishMemberAnnouncement | DioceseMemberAnnouncementRow;
 
 function isCelebrationAnnouncement(title: string, content: string) {
   const text = `${title} ${content}`.toLowerCase();
@@ -28,6 +47,33 @@ function isCelebrationAnnouncement(title: string, content: string) {
     text.includes("wedding anniversary") ||
     text.includes("wedding")
   );
+}
+
+function announcementDateValue(announcement: {
+  published_at?: string | null;
+  publish_at?: string | null;
+  created_at?: string | null;
+}) {
+  const value = announcement.published_at ?? announcement.publish_at ?? announcement.created_at;
+  return value ? new Date(value).getTime() || 0 : 0;
+}
+
+function sortMemberAnnouncements<
+  T extends {
+    id: string;
+    source: "parish" | "diocese";
+    published_at?: string | null;
+    publish_at?: string | null;
+    created_at?: string | null;
+  },
+>(
+  announcements: T[],
+): T[] {
+  return [...announcements].sort((left, right) => {
+    const dateDelta = announcementDateValue(right) - announcementDateValue(left);
+    if (dateDelta !== 0) return dateDelta;
+    return `${left.source}:${left.id}`.localeCompare(`${right.source}:${right.id}`);
+  });
 }
 
 export default function PortalAnnouncements() {
@@ -42,19 +88,45 @@ export default function PortalAnnouncements() {
     queryKey: ["portal-announcements-all", user?.id, churchId],
     queryFn: async () => {
       if (!churchId) return [];
-      const announcementRows = await fetchPortalAnnouncements(churchId, 25);
+      const [parishResult, dioceseResult] = await Promise.allSettled([
+        fetchPortalAnnouncements(churchId, 25),
+        fetchMemberDioceseAnnouncements(churchId, 25),
+      ]);
+
+      if (parishResult.status === "rejected") {
+        throw parishResult.reason;
+      }
+
+      const announcementRows = parishResult.value;
+      const dioceseRows = dioceseResult.status === "fulfilled" ? dioceseResult.value : [];
+      if (dioceseResult.status === "rejected") {
+        console.warn("Diocese announcements unavailable; showing parish announcements only.", dioceseResult.reason);
+      }
+
       const celebrationRows = announcementRows.filter((announcement) =>
         isCelebrationAnnouncement(announcement.title, announcement.content),
       );
       const announcementIds = celebrationRows.map((row) => row.id);
 
       if (announcementIds.length === 0) {
-        return announcementRows.map((announcement) => ({
-          ...announcement,
-          isCelebration: false,
-          reactions: [],
-          comments: [],
-        }));
+        return sortMemberAnnouncements<MemberAnnouncementRow>([
+          ...announcementRows.map((announcement): ParishMemberAnnouncement => ({
+            ...announcement,
+            source: "parish",
+            sourceKey: `parish:${announcement.id}`,
+            isCelebration: false,
+            reactions: [],
+            comments: [],
+          })),
+          ...dioceseRows.map((announcement): DioceseMemberAnnouncementRow => ({
+            ...announcement,
+            source: "diocese",
+            sourceKey: `diocese:${announcement.id}`,
+            isCelebration: false,
+            reactions: [],
+            comments: [],
+          })),
+        ]);
       }
 
       const [{ data: reactions, error: reactionsError }, { data: comments, error: commentsError }] = await Promise.all([
@@ -71,12 +143,24 @@ export default function PortalAnnouncements() {
 
       if (reactionsError || commentsError) {
         console.warn("Announcement reactions/comments unavailable; showing announcements only.", reactionsError || commentsError);
-        return announcementRows.map((announcement) => ({
-          ...announcement,
-          isCelebration: isCelebrationAnnouncement(announcement.title, announcement.content),
-          reactions: [],
-          comments: [],
-        }));
+        return sortMemberAnnouncements<MemberAnnouncementRow>([
+          ...announcementRows.map((announcement): ParishMemberAnnouncement => ({
+            ...announcement,
+            source: "parish",
+            sourceKey: `parish:${announcement.id}`,
+            isCelebration: isCelebrationAnnouncement(announcement.title, announcement.content),
+            reactions: [],
+            comments: [],
+          })),
+          ...dioceseRows.map((announcement): DioceseMemberAnnouncementRow => ({
+            ...announcement,
+            source: "diocese",
+            sourceKey: `diocese:${announcement.id}`,
+            isCelebration: false,
+            reactions: [],
+            comments: [],
+          })),
+        ]);
       }
 
       const commenterIds = [...new Set(((comments as any[]) ?? []).map((comment) => comment.user_id).filter(Boolean))];
@@ -155,21 +239,36 @@ export default function PortalAnnouncements() {
         commentsMap.set(comment.announcement_id, list);
       });
 
-      return announcementRows.map((announcement) => ({
-        ...announcement,
-        isCelebration: isCelebrationAnnouncement(announcement.title, announcement.content),
-        reactions: reactionMap.get(announcement.id) ?? [],
-        comments: commentsMap.get(announcement.id) ?? [],
-      }));
+      return sortMemberAnnouncements<MemberAnnouncementRow>([
+        ...announcementRows.map((announcement): ParishMemberAnnouncement => ({
+          ...announcement,
+          source: "parish",
+          sourceKey: `parish:${announcement.id}`,
+          isCelebration: isCelebrationAnnouncement(announcement.title, announcement.content),
+          reactions: reactionMap.get(announcement.id) ?? [],
+          comments: commentsMap.get(announcement.id) ?? [],
+        })),
+        ...dioceseRows.map((announcement): DioceseMemberAnnouncementRow => ({
+          ...announcement,
+          source: "diocese",
+          sourceKey: `diocese:${announcement.id}`,
+          isCelebration: false,
+          reactions: [],
+          comments: [],
+        })),
+      ]);
     },
     enabled: !!churchId && isFeatureEnabled("announcements"),
     initialData: () =>
       getPortalAnnouncementsCache(churchId, 25).map((announcement) => ({
         ...announcement,
+        source: "parish" as const,
+        sourceKey: `parish:${announcement.id}`,
         isCelebration: isCelebrationAnnouncement(announcement.title, announcement.content),
         reactions: [],
         comments: [],
       })),
+    initialDataUpdatedAt: 0,
     staleTime: 30_000,
   });
 
@@ -314,10 +413,10 @@ export default function PortalAnnouncements() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {announcements.map((announcement: any) => (
-              <Card key={announcement.id} className="rounded-[24px] border-border/70 bg-card/85 shadow-sm">
+            {announcements.map((announcement: MemberAnnouncementRow) => (
+              <Card key={announcement.sourceKey} className="rounded-[24px] border-border/70 bg-card/85 shadow-sm">
                 <CardContent className="p-5 sm:p-6">
-                  {getAnnouncementImageUrl(announcement.image_key) && (
+                  {announcement.source === "parish" && getAnnouncementImageUrl(announcement.image_key) && (
                     <img
                       src={getAnnouncementImageUrl(announcement.image_key) ?? undefined}
                       alt={`${announcement.title} ${t("member_announcements.image_alt_suffix")}`}
@@ -333,6 +432,14 @@ export default function PortalAnnouncements() {
                           {t("member_announcements.badges.celebration")}
                         </Badge>
                       )}
+                      {announcement.source === "diocese" && (
+                        <Badge variant="outline" className="mt-2 border-accent/40 bg-accent/10 text-accent-foreground">
+                          {t("member_announcements.badges.diocese")}
+                        </Badge>
+                      )}
+                      {announcement.source === "diocese" && announcement.diocese_name && (
+                        <p className="mt-1 text-xs text-muted-foreground">{announcement.diocese_name}</p>
+                      )}
                     </div>
                   </div>
 
@@ -341,7 +448,7 @@ export default function PortalAnnouncements() {
                     {formatAppDate(announcement.created_at, i18n.language, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
                   </p>
 
-                  {announcement.isCelebration && (
+                  {announcement.source === "parish" && announcement.isCelebration && (
                     <div className="mt-5 space-y-4 rounded-2xl border border-border/60 bg-muted/20 p-4">
                       <div className="flex flex-wrap items-center gap-2">
                         {announcement.reactions.map((reaction: any) => (
