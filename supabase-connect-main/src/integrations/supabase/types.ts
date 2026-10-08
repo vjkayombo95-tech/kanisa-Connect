@@ -8635,6 +8635,22 @@ export type Database = {
           status: string
         }[]
       }
+      get_member_diocese_announcements: {
+        Args: { _church_id: string; _limit?: number }
+        Returns: {
+          church_id: string
+          content: string
+          created_at: string
+          diocese_id: string
+          diocese_name: string
+          id: string
+          published_at: string | null
+          source: string
+          target_mode: string
+          title: string
+          updated_at: string
+        }[]
+      }
       get_my_canonical_church_context: { Args: never; Returns: Json }
       get_my_church_memberships: {
         Args: never

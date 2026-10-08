@@ -784,6 +784,9 @@
     },
     "announcements": {
       "title": "Matangazo Mapya",
+      "loading": "Matangazo yanapakiwa...",
+      "error_title": "Matangazo hayakuweza kupakiwa.",
+      "error_description": "Tafadhali jaribu tena. Sehemu nyingine za dashibodi bado zinapatikana.",
       "empty_title": "Hakuna matangazo",
       "empty_description": "Rudi baadaye kuona taarifa za parokia."
     },
@@ -2891,7 +2894,8 @@
     "fallback_member": "Mwanachama",
     "image_alt_suffix": "picha ya tangazo",
     "badges": {
-      "celebration": "Sherehe"
+      "celebration": "Sherehe",
+      "diocese": "Diocese"
     },
     "error": {
       "title": "Imeshindikana kupakia matangazo.",

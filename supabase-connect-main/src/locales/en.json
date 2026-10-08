@@ -784,6 +784,9 @@
     },
     "announcements": {
       "title": "Latest Announcements",
+      "loading": "Loading announcements...",
+      "error_title": "Announcements could not be loaded.",
+      "error_description": "Please try again. Other dashboard sections remain available.",
       "empty_title": "No announcements",
       "empty_description": "Check back later for parish updates."
     },
@@ -2891,7 +2894,8 @@
     "fallback_member": "Member",
     "image_alt_suffix": "announcement image",
     "badges": {
-      "celebration": "Celebration"
+      "celebration": "Celebration",
+      "diocese": "Diocese"
     },
     "error": {
       "title": "Could not load announcements.",
