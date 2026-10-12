@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,8 +27,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, HandCoins, TrendingUp, Receipt, Loader2, Pencil, Trash2, MoreHorizontal, QrCode } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, HandCoins, TrendingUp, Receipt, Loader2, Pencil, Trash2, MoreHorizontal, QrCode, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 import { StatCard } from "@/components/church-admin/StatCard";
 import { ContributionForm, type ContributionFormValues } from "@/components/church-admin/ContributionForm";
 import { formatTZS } from "@/lib/currency";
@@ -43,12 +45,126 @@ import { translateContributionCategory } from "@/lib/translation-helpers";
 import { usePaginatedQuery } from "@/hooks/use-paginated-query";
 import { PaginationFooter } from "@/components/ui/pagination-footer";
 
+type PendingPublicGivingSubmission = {
+  submission_id: string;
+  church_id: string;
+  contribution_type: string;
+  amount: number | string;
+  currency: string;
+  donor_name: string;
+  phone: string | null;
+  payment_reference: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+type PublicGivingReviewResult = {
+  success?: boolean;
+  submission_id?: string;
+  contribution_id?: string;
+  status?: "approved" | "rejected" | string;
+  error?: string;
+};
+
+type PublicGivingRpcName =
+  | "list_pending_public_giving_submissions"
+  | "approve_public_giving_submission"
+  | "reject_public_giving_submission";
+
+async function callPublicGivingRpc<TData>(name: PublicGivingRpcName, args: Record<string, unknown>): Promise<TData> {
+  const { data, error } = await supabase.rpc(name as never, args as never);
+  if (error) throw error;
+  return data as unknown as TData;
+}
+
+function normalizePendingSubmission(row: unknown): PendingPublicGivingSubmission {
+  if (!row || typeof row !== "object") {
+    throw new Error("Pending submission response was not valid.");
+  }
+
+  const value = row as Partial<PendingPublicGivingSubmission>;
+  if (
+    typeof value.submission_id !== "string" ||
+    typeof value.church_id !== "string" ||
+    typeof value.contribution_type !== "string" ||
+    (typeof value.amount !== "number" && typeof value.amount !== "string") ||
+    typeof value.currency !== "string" ||
+    typeof value.donor_name !== "string" ||
+    typeof value.created_at !== "string"
+  ) {
+    throw new Error("Pending submission response was missing required fields.");
+  }
+
+  return {
+    submission_id: value.submission_id,
+    church_id: value.church_id,
+    contribution_type: value.contribution_type,
+    amount: value.amount,
+    currency: value.currency,
+    donor_name: value.donor_name,
+    phone: value.phone ?? null,
+    payment_reference: value.payment_reference ?? null,
+    notes: value.notes ?? null,
+    created_at: value.created_at,
+  };
+}
+
+function normalizeReviewResult(data: unknown, expectedStatus: "approved" | "rejected"): PublicGivingReviewResult {
+  if (!data || typeof data !== "object") {
+    throw new Error(`Submission was not ${expectedStatus}.`);
+  }
+
+  const result = data as PublicGivingReviewResult;
+  if (result.success !== true || result.status !== expectedStatus || typeof result.submission_id !== "string") {
+    throw new Error(result.error || `Submission was not ${expectedStatus}.`);
+  }
+  return result;
+}
+
+function isStaleReviewError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || "");
+  return /already been reviewed|not found|no longer exists/i.test(message);
+}
+
+const pendingPublicGivingRpc = {
+  async list(churchId: string) {
+    const data = await callPublicGivingRpc<unknown[]>("list_pending_public_giving_submissions", {
+      p_church_id: churchId,
+    });
+
+    return (data ?? []).map(normalizePendingSubmission);
+  },
+
+  async approve(submissionId: string) {
+    const data = await callPublicGivingRpc<unknown>("approve_public_giving_submission", {
+      p_submission_id: submissionId,
+      p_payment_verified: true,
+    });
+
+    return normalizeReviewResult(data, "approved");
+  },
+
+  async reject(submissionId: string, reason: string) {
+    const data = await callPublicGivingRpc<unknown>("reject_public_giving_submission", {
+      p_submission_id: submissionId,
+      p_reason: reason,
+    });
+
+    return normalizeReviewResult(data, "rejected");
+  },
+};
+
 export default function ContributionsPage() {
+  const [activeTab, setActiveTab] = useState("recorded");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialog, setEditDialog] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<any>(null);
   const [deleteReason, setDeleteReason] = useState("");
   const [editingContrib, setEditingContrib] = useState<any>(null);
+  const [approvalDialog, setApprovalDialog] = useState<PendingPublicGivingSubmission | null>(null);
+  const [approvalVerified, setApprovalVerified] = useState(false);
+  const [rejectionDialog, setRejectionDialog] = useState<PendingPublicGivingSubmission | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
   const [categories, setCategories] = useState<any[]>([]);
   const [contributions, setContributions] = useState<any[]>([]);
   const [pledgePayments, setPledgePayments] = useState<any[]>([]);
@@ -62,10 +178,24 @@ export default function ContributionsPage() {
   const { toast } = useToast();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const approvePublicGivingInFlightRef = useRef(false);
+  const rejectPublicGivingInFlightRef = useRef(false);
   const offlineQueue = useOfflineSyncQueue();
   const contributionsCacheKey = churchId ? `offline-cache:church-contributions:${churchId}` : null;
   const pledgePaymentsCacheKey = churchId ? `offline-cache:church-pledge-payments:${churchId}` : null;
   const pagination = usePaginatedQuery({ totalCount: transactionTotalCount, resetKey: churchId });
+  const pendingQueryKey = ["public-giving-pending-submissions", churchId, user?.id];
+
+  const pendingPublicGiving = useQuery({
+    queryKey: pendingQueryKey,
+    queryFn: async () => {
+      if (!churchId || !user?.id) return [];
+      if (!isOnline) throw new Error("Pending verification requires an active internet connection.");
+      return pendingPublicGivingRpc.list(churchId);
+    },
+    enabled: !!churchId && !!user?.id && isOnline,
+    retry: 1,
+  });
 
   const fetchContributions = useCallback(async () => {
     setIsLoading(true);
@@ -188,6 +318,15 @@ export default function ContributionsPage() {
     if (!churchId || !isOnline) return;
     fetchContributions();
   }, [churchId, fetchContributions, isOnline, offlineQueue]);
+
+  useEffect(() => {
+    setApprovalDialog(null);
+    setApprovalVerified(false);
+    setRejectionDialog(null);
+    setRejectionReason("");
+    approvePublicGivingInFlightRef.current = false;
+    rejectPublicGivingInFlightRef.current = false;
+  }, [churchId, user?.id]);
 
   useEffect(() => {
     if (!churchId) return;
@@ -359,6 +498,87 @@ export default function ContributionsPage() {
     onError: (error: any) => toast({ title: "Error", description: error.message, variant: "destructive" }),
   });
 
+  const refreshAfterPublicGivingReview = async () => {
+    await queryClient.invalidateQueries({ queryKey: pendingQueryKey });
+    await fetchContributions();
+    queryClient.invalidateQueries({ queryKey: ["contributions"] });
+  };
+
+  const approvePublicGiving = useMutation({
+    mutationFn: async (submission: PendingPublicGivingSubmission) => {
+      if (approvePublicGivingInFlightRef.current) {
+        throw new Error("Approval is already in progress.");
+      }
+      if (!isOnline) throw new Error("Approval requires an active internet connection.");
+      if (!churchId || submission.church_id !== churchId) {
+        throw new Error("This submission belongs to a different parish. Refresh pending verification and try again.");
+      }
+      if (!approvalVerified) {
+        throw new Error("Confirm independent payment verification before approval.");
+      }
+      approvePublicGivingInFlightRef.current = true;
+      try {
+        return await pendingPublicGivingRpc.approve(submission.submission_id);
+      } finally {
+        approvePublicGivingInFlightRef.current = false;
+      }
+    },
+    onSuccess: async (_, submission) => {
+      await refreshAfterPublicGivingReview();
+      toast({
+        title: "Public giving approved",
+        description: `${formatTZS(Number(submission.amount || 0))} is now recorded as confirmed income.`,
+      });
+      setApprovalDialog(null);
+      setApprovalVerified(false);
+    },
+    onError: async (error: any) => {
+      approvePublicGivingInFlightRef.current = false;
+      if (isStaleReviewError(error)) {
+        await queryClient.invalidateQueries({ queryKey: pendingQueryKey });
+      }
+      toast({ title: "Approval failed", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const rejectPublicGiving = useMutation({
+    mutationFn: async ({ submission, reason }: { submission: PendingPublicGivingSubmission; reason: string }) => {
+      if (rejectPublicGivingInFlightRef.current) {
+        throw new Error("Rejection is already in progress.");
+      }
+      if (!isOnline) throw new Error("Rejection requires an active internet connection.");
+      if (!churchId || submission.church_id !== churchId) {
+        throw new Error("This submission belongs to a different parish. Refresh pending verification and try again.");
+      }
+      const trimmedReason = reason.trim();
+      if (trimmedReason.length < 5) {
+        throw new Error("Add a rejection reason with at least 5 characters.");
+      }
+      rejectPublicGivingInFlightRef.current = true;
+      try {
+        return await pendingPublicGivingRpc.reject(submission.submission_id, trimmedReason);
+      } finally {
+        rejectPublicGivingInFlightRef.current = false;
+      }
+    },
+    onSuccess: async (_, { submission }) => {
+      await refreshAfterPublicGivingReview();
+      toast({
+        title: "Public giving rejected",
+        description: `${formatTZS(Number(submission.amount || 0))} remains excluded from confirmed income.`,
+      });
+      setRejectionDialog(null);
+      setRejectionReason("");
+    },
+    onError: async (error: any) => {
+      rejectPublicGivingInFlightRef.current = false;
+      if (isStaleReviewError(error)) {
+        await queryClient.invalidateQueries({ queryKey: pendingQueryKey });
+      }
+      toast({ title: "Rejection failed", description: error.message, variant: "destructive" });
+    },
+  });
+
   const openEdit = (contribution: any) => {
     setEditingContrib(contribution);
     setEditDialog(true);
@@ -438,6 +658,8 @@ export default function ContributionsPage() {
   }, [contributions, pendingOfflineContributions, pledgePayments, t]);
 
   const pendingContributionCount = pendingOfflineContributions.length;
+  const pendingPublicGivingRows = pendingPublicGiving.data ?? [];
+  const pendingPublicGivingCount = pendingPublicGivingRows.length;
   const visibleTransactions = useMemo(
     () => transactions.slice(pagination.from, pagination.to + 1),
     [pagination.from, pagination.to, transactions],
@@ -548,6 +770,18 @@ export default function ContributionsPage() {
         </Card>
       ) : null}
 
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid h-auto w-full grid-cols-1 gap-2 bg-transparent p-0 sm:w-auto sm:grid-cols-2">
+          <TabsTrigger value="recorded" className="min-h-11 whitespace-normal bg-secondary px-4">
+            Recorded Contributions
+          </TabsTrigger>
+          <TabsTrigger value="pending" className="min-h-11 whitespace-normal bg-secondary px-4">
+            Pending Verification
+            {pendingPublicGivingCount > 0 ? <Badge className="ml-2">{pendingPublicGivingCount}</Badge> : null}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="recorded" className="mt-0">
       <Card className="glass-card">
         <CardContent className="p-0">
           <Table>
@@ -627,6 +861,149 @@ export default function ContributionsPage() {
           />
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="pending" className="mt-0">
+          <Card className="glass-card">
+            <CardContent className="space-y-4 p-4 sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-base font-semibold">Pending Public Giving Verification</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Review donor-submitted gifts for this parish only. A transaction reference is not proof of payment.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!isOnline || pendingPublicGiving.isFetching}
+                  onClick={() => pendingPublicGiving.refetch()}
+                >
+                  {pendingPublicGiving.isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                  Retry
+                </Button>
+              </div>
+
+              {!isOnline ? (
+                <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm text-warning">
+                  Pending verification requires an active online connection.
+                </div>
+              ) : pendingPublicGiving.isLoading ? (
+                <div className="flex min-h-32 items-center justify-center text-sm text-muted-foreground">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading pending submissions...
+                </div>
+              ) : pendingPublicGiving.isError ? (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4">
+                  <p className="text-sm font-medium text-destructive">Pending submissions could not be loaded.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {pendingPublicGiving.error instanceof Error ? pendingPublicGiving.error.message : "Please try again."}
+                  </p>
+                </div>
+              ) : pendingPublicGivingRows.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+                  No pending public giving submissions for this parish.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="hidden overflow-hidden rounded-lg border sm:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead>Donor</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Reference</TableHead>
+                          <TableHead>Submitted</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pendingPublicGivingRows.map((submission) => (
+                          <TableRow key={submission.submission_id}>
+                            <TableCell className="font-medium">{submission.donor_name}</TableCell>
+                            <TableCell>{submission.contribution_type}</TableCell>
+                            <TableCell className="font-medium text-primary">{formatTZS(Number(submission.amount || 0))}</TableCell>
+                            <TableCell className="text-muted-foreground">{submission.payment_reference || "N/A"}</TableCell>
+                            <TableCell className="text-muted-foreground">{new Date(submission.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell><Badge variant="outline">Pending</Badge></TableCell>
+                            <TableCell>
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  size="sm"
+                                  aria-label={`Review public giving submission from ${submission.donor_name}`}
+                                  onClick={() => { setApprovalDialog(submission); setApprovalVerified(false); }}
+                                >
+                                  Review
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-destructive"
+                                  aria-label={`Reject public giving submission from ${submission.donor_name}`}
+                                  onClick={() => { setRejectionDialog(submission); setRejectionReason(""); }}
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  <div className="space-y-3 sm:hidden">
+                    {pendingPublicGivingRows.map((submission) => (
+                      <div key={submission.submission_id} className="rounded-lg border p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium">{submission.donor_name}</p>
+                            <p className="text-sm text-muted-foreground">{submission.contribution_type}</p>
+                          </div>
+                          <Badge variant="outline">Pending</Badge>
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <p className="text-muted-foreground">Amount</p>
+                            <p className="font-medium text-primary">{formatTZS(Number(submission.amount || 0))}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Submitted</p>
+                            <p>{new Date(submission.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <div className="col-span-2">
+                            <p className="text-muted-foreground">Reference</p>
+                            <p className="break-words">{submission.payment_reference || "N/A"}</p>
+                          </div>
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-2">
+                          <Button
+                            size="sm"
+                            aria-label={`Review public giving submission from ${submission.donor_name}`}
+                            onClick={() => { setApprovalDialog(submission); setApprovalVerified(false); }}
+                          >
+                            Review
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive"
+                            aria-label={`Reject public giving submission from ${submission.donor_name}`}
+                            onClick={() => { setRejectionDialog(submission); setRejectionReason(""); }}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog
         open={editDialog}
@@ -721,6 +1098,121 @@ export default function ContributionsPage() {
               }}
             >
               {deleteContribution.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!approvalDialog}
+        onOpenChange={(open) => {
+          if (!open && !approvePublicGiving.isPending) {
+            setApprovalDialog(null);
+            setApprovalVerified(false);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Approve public giving submission?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Confirm only after checking the church payment account. A donor-entered transaction reference is not proof of payment.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {approvalDialog ? (
+            <div className="space-y-3 rounded-lg border p-4 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Donor</span>
+                <span className="text-right font-medium">{approvalDialog.donor_name}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Type</span>
+                <span className="text-right">{approvalDialog.contribution_type}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Amount</span>
+                <span className="text-right font-medium text-primary">{formatTZS(Number(approvalDialog.amount || 0))}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Reference</span>
+                <span className="break-all text-right">{approvalDialog.payment_reference || "N/A"}</span>
+              </div>
+            </div>
+          ) : null}
+          <label className="flex items-start gap-3 rounded-lg border p-3 text-sm">
+            <Checkbox
+              checked={approvalVerified}
+              onCheckedChange={(checked) => setApprovalVerified(checked === true)}
+              disabled={approvePublicGiving.isPending}
+            />
+            <span>I have independently verified that this payment was received in the church&apos;s payment account.</span>
+          </label>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={approvePublicGiving.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!approvalVerified || approvePublicGiving.isPending || !approvalDialog || !isOnline}
+              onClick={(event) => {
+                event.preventDefault();
+                if (!approvalDialog) return;
+                if (approvePublicGivingInFlightRef.current || approvePublicGiving.isPending) return;
+                approvePublicGiving.mutate(approvalDialog);
+              }}
+            >
+              {approvePublicGiving.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+              Approve
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!rejectionDialog}
+        onOpenChange={(open) => {
+          if (!open && !rejectPublicGiving.isPending) {
+            setRejectionDialog(null);
+            setRejectionReason("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject public giving submission?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Rejected submissions will not become confirmed income. Provide a clear reason before continuing.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {rejectionDialog ? (
+            <div className="rounded-lg border p-4 text-sm">
+              <p className="font-medium">{rejectionDialog.donor_name}</p>
+              <p className="mt-1 text-muted-foreground">
+                {rejectionDialog.contribution_type} - {formatTZS(Number(rejectionDialog.amount || 0))}
+              </p>
+              <p className="mt-1 break-all text-muted-foreground">Reference: {rejectionDialog.payment_reference || "N/A"}</p>
+            </div>
+          ) : null}
+          <div className="space-y-2">
+            <Label className="text-warning">Rejection reason *</Label>
+            <Textarea
+              placeholder="Why is this submission being rejected?"
+              value={rejectionReason}
+              onChange={(event) => setRejectionReason(event.target.value)}
+              disabled={rejectPublicGiving.isPending}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={rejectPublicGiving.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={rejectionReason.trim().length < 5 || rejectPublicGiving.isPending || !rejectionDialog || !isOnline}
+              onClick={(event) => {
+                event.preventDefault();
+                if (!rejectionDialog) return;
+                if (rejectPublicGivingInFlightRef.current || rejectPublicGiving.isPending) return;
+                rejectPublicGiving.mutate({ submission: rejectionDialog, reason: rejectionReason });
+              }}
+            >
+              {rejectPublicGiving.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
+              Reject
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
