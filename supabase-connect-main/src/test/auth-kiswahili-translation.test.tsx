@@ -235,6 +235,52 @@ describe("auth Kiswahili translation", () => {
     expect(host.querySelector("[aria-label='Badili lugha kwenda Kiingereza']")).toBeTruthy();
   });
 
+  it("passes a normalized internal redirect to Google OAuth login", async () => {
+    render(
+      <MemoryRouter initialEntries={["/login?redirect=%2Fportal%2Fdashboard%3Ftab%3Dhistory"]}>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+
+    const googleButton = Array.from(host.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Continue with Google"),
+    );
+    expect(googleButton).toBeTruthy();
+
+    await act(async () => {
+      googleButton!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+    });
+
+    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/portal/dashboard?tab=history` },
+    });
+  });
+
+  it("falls back before passing an unsafe redirect to Google OAuth login", async () => {
+    render(
+      <MemoryRouter initialEntries={["/login?redirect=https%3A%2F%2Fevil.example%2Fportal"]}>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+
+    const googleButton = Array.from(host.querySelectorAll("button")).find((button) =>
+      button.textContent?.includes("Continue with Google"),
+    );
+    expect(googleButton).toBeTruthy();
+
+    await act(async () => {
+      googleButton!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      await Promise.resolve();
+    });
+
+    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/portal` },
+    });
+  });
+
   it("renders ForgotPasswordPage in both languages", async () => {
     render(
       <MemoryRouter initialEntries={["/forgot-password"]}>
