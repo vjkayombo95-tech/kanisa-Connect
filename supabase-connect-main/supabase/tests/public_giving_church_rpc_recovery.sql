@@ -7,6 +7,7 @@ declare
   v_search_path text[];
   v_anon_execute boolean;
   v_authenticated_execute boolean;
+  v_service_role_execute boolean;
   v_public_execute boolean;
 begin
   select exists (
@@ -32,8 +33,8 @@ begin
     raise exception 'get_public_giving_church(text) must be SECURITY DEFINER';
   end if;
 
-  if v_search_path is null or not ('search_path=public' = any(v_search_path)) then
-    raise exception 'get_public_giving_church(text) must set search_path=public';
+  if v_search_path is null or not ('search_path=pg_catalog, public' = any(v_search_path)) then
+    raise exception 'get_public_giving_church(text) must set search_path=pg_catalog, public';
   end if;
 
   select has_function_privilege('anon', 'public.get_public_giving_church(text)', 'EXECUTE')
@@ -41,6 +42,9 @@ begin
 
   select has_function_privilege('authenticated', 'public.get_public_giving_church(text)', 'EXECUTE')
   into v_authenticated_execute;
+
+  select has_function_privilege('service_role', 'public.get_public_giving_church(text)', 'EXECUTE')
+  into v_service_role_execute;
 
   select has_function_privilege('public', 'public.get_public_giving_church(text)', 'EXECUTE')
   into v_public_execute;
@@ -51,6 +55,10 @@ begin
 
   if not v_authenticated_execute then
     raise exception 'authenticated must have EXECUTE on get_public_giving_church(text)';
+  end if;
+
+  if not v_service_role_execute then
+    raise exception 'service_role must have EXECUTE on get_public_giving_church(text)';
   end if;
 
   if v_public_execute then
