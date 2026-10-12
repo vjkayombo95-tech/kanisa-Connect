@@ -20,6 +20,7 @@ import {
 import { assertClientRateLimit } from "@/lib/client-rate-limit";
 import { logSupabaseError } from "@/lib/error-logger";
 import { isTransientAuthorizationFailure } from "@/lib/authorization-bootstrap";
+import { DEFAULT_LOGIN_REDIRECT, normalizeLoginRedirect } from "@/lib/login-redirect";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PENDING_REGISTRATION_REDIRECT_PREFIX = "pending-registration-redirect:";
@@ -86,9 +87,9 @@ export default function LoginPage() {
   );
   const redirectTarget = useMemo(() => {
     const rawRedirect = searchParams.get("redirect");
-    if (rawRedirect && rawRedirect.startsWith("/")) return rawRedirect;
-    if (pendingRegistrationRedirect && pendingRegistrationRedirect.startsWith("/")) return pendingRegistrationRedirect;
-    return "/portal";
+    const normalizedRedirect = rawRedirect ? normalizeLoginRedirect(rawRedirect, { fallback: "" }) : "";
+    if (normalizedRedirect) return normalizedRedirect;
+    return normalizeLoginRedirect(pendingRegistrationRedirect, { fallback: DEFAULT_LOGIN_REDIRECT });
   }, [pendingRegistrationRedirect, searchParams]);
   const initialMode = searchParams.get("mode");
   const presetEmail = searchParams.get("email");
